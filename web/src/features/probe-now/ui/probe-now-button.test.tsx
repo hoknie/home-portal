@@ -38,11 +38,11 @@ it("asks for a probe, shows progress and polls until the result changes", async 
   const client = testQueryClient();
   client.setQueryData(servicesKey, { data: { services }, revision: '"r"' });
   renderWithProviders(<Live />, client);
-  await userEvent.click(await screen.findByRole("button", { name: "Проверить сейчас" }));
-  expect(await screen.findByRole("button", { name: "Проверяем…" })).toBeDisabled();
+  await userEvent.click(await screen.findByRole("button", { name: "Check now" }));
+  expect(await screen.findByRole("button", { name: "Checking…" })).toBeDisabled();
   expect(fetch).toHaveBeenCalledWith("/api/services/media/probe", expect.objectContaining({ method: "POST" }));
   checked = "2026-09-22T11:00:00Z";
-  expect(await screen.findByRole("button", { name: "Проверить сейчас" }, { timeout: 3000 })).toBeEnabled();
+  expect(await screen.findByRole("button", { name: "Check now" }, { timeout: 3000 })).toBeEnabled();
   expect(fetch.mock.calls.some((call) => String(call[0]) === "/api/services")).toBe(true);
 });
 
@@ -58,12 +58,12 @@ it("gives up waiting after the timeout plus two seconds", async () => {
     ),
   );
   renderWithProviders(<ProbeNowButton service={media} />);
-  await userEvent.setup({ advanceTimers: vi.advanceTimersByTime }).click(screen.getByRole("button", { name: "Проверить сейчас" }));
-  expect(await screen.findByRole("button", { name: "Проверяем…" })).toBeDisabled();
+  await userEvent.setup({ advanceTimers: vi.advanceTimersByTime }).click(screen.getByRole("button", { name: "Check now" }));
+  expect(await screen.findByRole("button", { name: "Checking…" })).toBeDisabled();
   await act(async () => {
     vi.advanceTimersByTime((media.probe.timeout_seconds + 3) * 1000);
   });
-  expect(await screen.findByRole("button", { name: "Проверить сейчас" })).toBeEnabled();
+  expect(await screen.findByRole("button", { name: "Check now" })).toBeEnabled();
 });
 
 it("tells the person to wait when asked too often", async () => {
@@ -72,12 +72,12 @@ it("tells the person to wait when asked too often", async () => {
     vi.fn(async () => new Response("too many", { status: 429, headers: { "Retry-After": "4" } })),
   );
   renderWithProviders(<ProbeNowButton service={services[0]} />);
-  await userEvent.click(screen.getByRole("button", { name: "Проверить сейчас" }));
-  expect(await screen.findByText("Слишком часто — повторите через 4 с")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Check now" }));
+  expect(await screen.findByText("Too often: try again in 4 s")).toBeInTheDocument();
 });
 
 it("is not offered for a service whose probing is off", () => {
   renderWithProviders(<ProbeNowButton service={services[2]} />);
-  expect(screen.getByRole("button", { name: "Проверить сейчас" })).toBeDisabled();
-  expect(screen.getByText("Проверка отключена в настройках сервиса")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Check now" })).toBeDisabled();
+  expect(screen.getByText("Checking is off in the service's settings")).toBeInTheDocument();
 });

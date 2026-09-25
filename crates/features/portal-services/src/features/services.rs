@@ -2,18 +2,17 @@ use std::sync::Arc;
 
 use axum::Router;
 use axum::routing::{get, post, put};
-use portal_config::ConfigStore;
-use portal_feature::{Feature, Loop, StatusObserver, Validator};
+use portal_config::{ConfigStore, Storage};
+use portal_feature::{Feature, Loop, Validator};
 use portal_model::{Environment, ServiceStatus};
 use time::OffsetDateTime;
 
 use crate::controllers::{create, history, list, probe_now, remove, update};
 use crate::loops::HistoryWriter;
-use crate::ports::Publishing;
 use crate::probes::Probe;
 use crate::repositories::HistoryFiles;
 use crate::services::{StatusBoard, Supervisor, validate_services};
-use crate::types::{ServiceEntry, ServicesSection, ServicesState};
+use crate::types::{ServiceEntry, ServicesPorts, ServicesSection, ServicesState};
 
 pub struct ServicesFeature {
     state: ServicesState,
@@ -30,11 +29,13 @@ impl ServicesFeature {
     pub fn new(
         configuration: Arc<ConfigStore>,
         host: Environment,
-        observers: Vec<Arc<dyn StatusObserver>>,
-        publishing: Arc<dyn Publishing>,
+        ports: ServicesPorts,
     ) -> Result<ServicesFeature, String> {
-        let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), observers));
-        let files = Arc::new(HistoryFiles::beside(configuration.path()));
+        let board = Arc::new(StatusBoard::watched(
+            OffsetDateTime::now_utc(),
+            ports.observers,
+        ));
+        let files = Arc::new(HistoryFiles::at(configuration.storage(Storage::History)));
         let configured: Vec<String> = ServicesSection::read(&configuration.read().document)
             .map(|section| section.services)
             .unwrap_or_default()
@@ -42,10 +43,7 @@ impl ServicesFeature {
             .map(|entry| entry.id)
             .collect();
         board.restore(files.load(&configured));
-        let history = Arc::new(HistoryWriter {
-            board: board.clone(),
-            files,
-        });
+        let history = Arc::new(HistoryWriter::new(board.clone(), files));
         let probe = Arc::new(Probe::new()?);
         let supervisor = Arc::new(Supervisor::new(
             configuration.clone(),
@@ -58,7 +56,8 @@ impl ServicesFeature {
                 configuration,
                 board,
                 supervisor,
-                publishing,
+                publishing: ports.publishing,
+                events: ports.events,
             },
             history,
         })

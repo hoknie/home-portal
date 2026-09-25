@@ -4,15 +4,15 @@ import { expect, it } from "vitest";
 import { MetricBar, toneOf } from "./metric-bar";
 
 it("shows how full something is, as a meter and as text", () => {
-  render(<MetricBar label="Память" value="12 из 24 ГБ" percent={50} />);
-  const meter = screen.getByRole("meter", { name: "Память" });
+  render(<MetricBar label="Memory" value="12 of 24 GB" percent={50} />);
+  const meter = screen.getByRole("meter", { name: "Memory" });
   expect(meter).toHaveAttribute("aria-valuenow", "50");
-  expect(screen.getByText("12 из 24 ГБ")).toBeInTheDocument();
+  expect(screen.getByText("12 of 24 GB")).toBeInTheDocument();
 });
 
 it("keeps the bar inside its track whatever the number says", () => {
-  render(<MetricBar label="Диск" value="полон" percent={140} />);
-  expect(screen.getByRole("meter", { name: "Диск" })).toHaveAttribute("aria-valuenow", "100");
+  render(<MetricBar label="Disk" value="full" percent={140} />);
+  expect(screen.getByRole("meter", { name: "Disk" })).toHaveAttribute("aria-valuenow", "100");
 });
 
 it("turns warning and then alarm as it fills", () => {

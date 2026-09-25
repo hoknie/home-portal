@@ -1,0 +1,28 @@
+{
+  "directory": "/srv/home-portal/scripts",
+  "exists": true,
+  "scripts": [
+    {
+      "code": null,
+      "concerns": null,
+      "path": "backup/nightly.sh",
+      "problem": null,
+      "runnable": true
+    },
+    {
+      "code": "writable",
+      "concerns": "/srv/home-portal/scripts/open.sh",
+      "path": "open.sh",
+      "problem": "open.sh can be written by group or others",
+      "runnable": false
+    },
+    {
+      "code": null,
+      "concerns": null,
+      "path": "restart.sh",
+      "problem": null,
+      "runnable": true
+    }
+  ],
+  "user_id": 501
+}

@@ -8,7 +8,7 @@ use portal_config::ConfigStore;
 use portal_network::EffectiveAddress;
 use tempfile::TempDir;
 
-pub const EXAMPLE: &str = "home-portal.example.toml";
+pub const EXAMPLE: &str = "config/home-portal.example.toml";
 
 pub fn with_extra(directory: &TempDir, password: &str, extra: &str) -> PathBuf {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");

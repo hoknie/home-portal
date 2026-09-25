@@ -3,21 +3,21 @@
     "events": [
       {
         "all_day": false,
-        "calendar": "Дом",
+        "calendar": "Home",
         "end": "2026-09-22T09:30:00Z",
-        "location": "Почта",
+        "location": "Post office",
         "repeats": "never",
         "start": "2026-09-22T09:00:00Z",
-        "summary": "Забрать посылку"
+        "summary": "Pick up a parcel"
       },
       {
         "all_day": true,
-        "calendar": "Дом",
+        "calendar": "Home",
         "end": null,
         "location": null,
         "repeats": "unsupported",
         "start": "2026-09-23T00:00:00Z",
-        "summary": "День рождения"
+        "summary": "Birthday"
       }
     ]
   },

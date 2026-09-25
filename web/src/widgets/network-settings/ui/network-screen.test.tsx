@@ -18,9 +18,9 @@ function renderWith(change: (network: ReturnType<typeof networkSchema.parse>) =>
 it("shows the address in effect, the restart notice and the interfaces", () => {
   renderWith();
   expect(screen.getByText("127.0.0.1:8080")).toBeInTheDocument();
-  expect(screen.getByRole("status")).toHaveTextContent("вступят в силу после перезапуска");
+  expect(screen.getByRole("status")).toHaveTextContent("take effect after the portal restarts");
   expect(screen.getByText("en0")).toBeInTheDocument();
-  expect(screen.getByLabelText("Порт")).toHaveValue(9090);
+  expect(screen.getByLabelText("Port")).toHaveValue(9090);
 });
 
 it("explains an environment override and hides the restart notice when nothing changed", () => {

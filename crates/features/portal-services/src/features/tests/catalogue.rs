@@ -15,15 +15,15 @@ use serde_json::Value;
 use tempfile::TempDir;
 use tower::ServiceExt;
 
-use super::ServicesFeature;
+use crate::ServicesFeature;
 use crate::fakes::{Behaviour, Upstream};
 
-const FILE: &str = "# my services\n\n[[services]]\nid = \"b-first\"\nname = \"B\"\nurl = \"http://10.255.0.2\"\nprobe = { enabled = false }\n\n[[services]]\nid = \"a-second\"\nname = \"A\"\nurl = \"http://10.255.0.1\"\nprobe = { enabled = false }\n";
+pub const FILE: &str = "# my services\n\n[[services]]\nid = \"b-first\"\nname = \"B\"\nurl = \"http://10.255.0.2\"\nprobe = { enabled = false }\n\n[[services]]\nid = \"a-second\"\nname = \"A\"\nurl = \"http://10.255.0.1\"\nprobe = { enabled = false }\n";
 
-struct Portal {
-    router: Router,
-    path: std::path::PathBuf,
-    _directory: TempDir,
+pub struct Portal {
+    pub router: Router,
+    pub path: std::path::PathBuf,
+    pub _directory: TempDir,
 }
 
 fn portal() -> Portal {
@@ -34,8 +34,7 @@ fn portal() -> Portal {
     let feature = ServicesFeature::new(
         store.clone(),
         portal_model::Environment::internet(),
-        Vec::new(),
-        Arc::new(crate::fakes::Switch::on()),
+        crate::fakes::quiet_ports(Arc::new(crate::fakes::Switch::on())),
     )
     .unwrap();
     store.adopt(vec![feature.validator().unwrap()]).unwrap();
@@ -46,7 +45,7 @@ fn portal() -> Portal {
     }
 }
 
-async fn send(router: &Router, request: Request<Body>) -> (StatusCode, Option<String>, Value) {
+pub async fn send(router: &Router, request: Request<Body>) -> (StatusCode, Option<String>, Value) {
     send_from(router, request, Environment::internet()).await
 }
 
@@ -68,7 +67,7 @@ async fn send_from(
     (status, etag, body)
 }
 
-async fn revision(router: &Router) -> String {
+pub async fn revision(router: &Router) -> String {
     send(
         router,
         Request::get(ServicesFeature::COLLECTION)
@@ -80,7 +79,7 @@ async fn revision(router: &Router) -> String {
     .unwrap()
 }
 
-fn write(method: &str, uri: &str, revision: Option<&str>, body: &str) -> Request<Body> {
+pub fn write(method: &str, uri: &str, revision: Option<&str>, body: &str) -> Request<Body> {
     let mut builder = Request::builder()
         .method(method)
         .uri(uri)
@@ -91,7 +90,7 @@ fn write(method: &str, uri: &str, revision: Option<&str>, body: &str) -> Request
     builder.body(Body::from(body.to_string())).unwrap()
 }
 
-fn service_json(id: &str, url: &str) -> String {
+pub fn service_json(id: &str, url: &str) -> String {
     format!(
         r#"{{"id":"{id}","name":"New","url":"{url}","probe":{{"every_seconds":30,"timeout_seconds":1}}}}"#
     )
@@ -319,8 +318,7 @@ fn portal_with(text: &str) -> Portal {
     let feature = ServicesFeature::new(
         store.clone(),
         Environment::internet(),
-        Vec::new(),
-        Arc::new(crate::fakes::Switch::on()),
+        crate::fakes::quiet_ports(Arc::new(crate::fakes::Switch::on())),
     )
     .unwrap();
     store.adopt(vec![feature.validator().unwrap()]).unwrap();

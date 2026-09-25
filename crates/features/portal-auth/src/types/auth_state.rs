@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use portal_config::ConfigStore;
+use portal_feature::EventSink;
 
 use crate::ports::Connection;
 use crate::services::{SessionStore, Throttle};
@@ -11,4 +12,5 @@ pub struct AuthState {
     pub sessions: Arc<SessionStore>,
     pub throttle: Arc<Throttle>,
     pub connection: Arc<dyn Connection>,
+    pub events: Arc<dyn EventSink>,
 }

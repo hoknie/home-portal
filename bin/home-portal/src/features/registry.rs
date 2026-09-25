@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use portal_auth::AuthFeature;
+use portal_automations::AutomationsFeature;
 use portal_calendar::CalendarFeature;
 use portal_dashboard::DashboardFeature;
 use portal_feature::Feature;
@@ -11,13 +12,14 @@ use portal_network::{NetworkFeature, host_environment};
 use portal_proxy::{ProxyFeature, ProxyPorts};
 use portal_public::PublicFeature;
 use portal_secrets::SecretsFeature;
-use portal_services::ServicesFeature;
+use portal_services::{ServicesFeature, ServicesPorts};
 use portal_telegram::TelegramFeature;
 use portal_weather::WeatherFeature;
 use portal_widget::WidgetRegistry;
 
 use crate::adapters::{
-    NetworkConnection, ProxyPublishing, ServiceCatalogue, ServicePublications, WidgetLayout,
+    AutomationDirectory, NetworkConnection, ProxyPublishing, ServiceCatalogue, ServicePublications,
+    WidgetLayout,
 };
 use crate::types::{BootError, Registry, Wiring};
 
@@ -27,7 +29,18 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
     let connection = Arc::new(NetworkConnection {
         configuration: configuration.clone(),
     });
-    let auth = Arc::new(AuthFeature::new(configuration.clone(), connection.clone()));
+    let automations = Arc::new(AutomationsFeature::new(
+        configuration.clone(),
+        Arc::new(AutomationDirectory {
+            configuration: configuration.clone(),
+        }),
+    ));
+    let events = automations.events();
+    let auth = Arc::new(AuthFeature::new(
+        configuration.clone(),
+        connection.clone(),
+        events.clone(),
+    ));
     let host = host_environment(
         &portal_network::read_environments(&configuration.read().document).unwrap_or_default(),
     );
@@ -60,10 +73,13 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         ServicesFeature::new(
             configuration.clone(),
             host,
-            vec![telegram.observer()],
-            Arc::new(ProxyPublishing {
-                configuration: configuration.clone(),
-            }),
+            ServicesPorts {
+                observers: vec![telegram.observer(), automations.observer()],
+                publishing: Arc::new(ProxyPublishing {
+                    configuration: configuration.clone(),
+                }),
+                events: events.clone(),
+            },
         )
         .map_err(|message| BootError::Feature {
             name: ServicesFeature::NAME,
@@ -82,6 +98,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         Arc::new(telegram),
         Arc::new(SecretsFeature::new(configuration.clone())),
         Arc::new(DashboardFeature::new(configuration.clone())),
+        automations,
         Arc::new(ProxyFeature::new(
             configuration,
             ProxyPorts {
@@ -110,5 +127,6 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         features,
         gate: auth.gate(),
         configuration: wiring.configuration.clone(),
+        events,
     })
 }

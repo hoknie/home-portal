@@ -39,7 +39,9 @@ fn setup(text: &str) -> Setup {
     let catalogue = Arc::new(Catalogue {
         configuration: configuration.clone(),
     });
-    let manager = Arc::new(CaddyManager::new(CaddyHome::beside(&path)));
+    let manager = Arc::new(CaddyManager::new(CaddyHome::at(
+        path.with_file_name("caddy"),
+    )));
     let sync = Arc::new(CaddySync::new(
         configuration,
         catalogue,
@@ -152,7 +154,7 @@ async fn a_disabled_proxy_is_never_contacted() {
 #[cfg(unix)]
 fn install_fake_caddy(path: &std::path::Path) -> CaddyHome {
     use std::os::unix::fs::PermissionsExt;
-    let home = CaddyHome::beside(path);
+    let home = CaddyHome::at(path.with_file_name("caddy"));
     fs::create_dir_all(&home.directory).unwrap();
     fs::write(home.binary(), crate::fakes::SCRIPT).unwrap();
     fs::set_permissions(home.binary(), fs::Permissions::from_mode(0o755)).unwrap();

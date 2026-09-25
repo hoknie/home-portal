@@ -2,11 +2,11 @@
   "sections": [
     {
       "id": "now",
-      "title": "Сейчас"
+      "title": "Now"
     },
     {
       "id": "media",
-      "title": "Медиа"
+      "title": "Media"
     }
   ],
   "widgets": [

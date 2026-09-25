@@ -66,7 +66,7 @@ impl PublicLayout for Layout {
         }
         vec![PublicSection {
             id: "now".into(),
-            title: Some("Сейчас".into()),
+            title: Some("Now".into()),
         }]
     }
 

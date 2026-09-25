@@ -21,7 +21,7 @@ afterEach(() => {
 
 it("choosing Spanish remembers it for a year and reloads the page", async () => {
   renderWithProviders(<LanguageSwitch />);
-  await open("Язык: Русский");
+  await open("Language: English");
   await userEvent.click(screen.getByRole("menuitemradio", { name: "Español" }));
   expect(document.cookie).toContain("portal_language=es");
   expect(reload).toHaveBeenCalledOnce();
@@ -33,8 +33,8 @@ it("the cookie is shared by the whole portal, kept a year and sent on navigation
 
 it("choosing the current language does nothing", async () => {
   renderWithProviders(<LanguageSwitch />);
-  await open("Язык: Русский");
-  await userEvent.click(screen.getByRole("menuitemradio", { name: "Русский" }));
+  await open("Language: English");
+  await userEvent.click(screen.getByRole("menuitemradio", { name: "English" }));
   expect(reload).not.toHaveBeenCalled();
 });
 

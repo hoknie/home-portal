@@ -6,6 +6,13 @@ export const routes = {
   adminLayout: "/admin/layout/",
   adminNetwork: "/admin/network/",
   adminProxy: "/admin/proxy/",
+  adminAutomations: "/admin/automations/",
+  newAutomation: "/admin/automations/new/",
+  editAutomation: (id: string) => `/admin/automations/edit/?id=${encodeURIComponent(id)}`,
+  adminWebhooks: "/admin/webhooks/",
+  newWebhook: "/admin/webhooks/new/",
+  editWebhook: (id: string) => `/admin/webhooks/edit/?id=${encodeURIComponent(id)}`,
+  webhookDetails: (id: string) => `/admin/webhooks/details/?id=${encodeURIComponent(id)}`,
   newService: "/admin/services/new/",
   editService: (id: string) => `/admin/services/edit/?id=${encodeURIComponent(id)}`,
 } as const;
@@ -35,6 +42,25 @@ export const api = {
   caddyDownload: "/api/proxy/caddy/download",
   caddyStart: "/api/proxy/caddy/start",
   caddyStop: "/api/proxy/caddy/stop",
+  automations: "/api/automations",
+  automation: (id: string) => `/api/automations/${encodeURIComponent(id)}`,
+  automationRun: (id: string) => `/api/automations/${encodeURIComponent(id)}/run`,
+  automationRuns: (filter: { automation?: string | null; webhook?: string | null; text?: string | null }) => {
+    const query = new URLSearchParams();
+    for (const [name, value] of Object.entries(filter)) {
+      if (value) {
+        query.set(name, value);
+      }
+    }
+    const text = query.toString();
+    return text === "" ? "/api/automations/runs" : `/api/automations/runs?${text}`;
+  },
+  automationCatalogue: "/api/automations/catalogue",
+  automationScripts: "/api/automations/scripts",
+  automationSchedule: (cron: string) => `/api/automations/schedule?cron=${encodeURIComponent(cron)}`,
+  webhooks: "/api/webhooks",
+  webhook: (id: string) => `/api/webhooks/${encodeURIComponent(id)}`,
+  webhookToken: (id: string) => `/api/webhooks/${encodeURIComponent(id)}/token`,
 } as const;
 
 export const STATUS_REFRESH_MILLISECONDS = 10_000;

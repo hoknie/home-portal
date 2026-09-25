@@ -10,16 +10,12 @@ pub struct SessionFile {
 }
 
 impl SessionFile {
-    pub const NAME: &'static str = "sessions.json";
     pub const BROKEN_SUFFIX: &'static str = ".broken";
     pub const TEMPORARY_SUFFIX: &'static str = ".tmp";
     pub const PRIVATE_MODE: u32 = 0o600;
 
-    pub fn beside(configuration: &Path) -> SessionFile {
-        let parent = configuration.parent().unwrap_or(Path::new("."));
-        SessionFile {
-            path: parent.join(Self::NAME),
-        }
+    pub fn at(path: PathBuf) -> SessionFile {
+        SessionFile { path }
     }
 
     pub fn path(&self) -> &Path {

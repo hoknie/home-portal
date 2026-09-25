@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use axum::Router;
 use axum::routing::{get, post, put};
-use portal_config::ConfigStore;
+use portal_config::{ConfigStore, Storage};
 use portal_feature::{Feature, FieldError, Loop, Validator};
 use toml_edit::DocumentMut;
 
@@ -36,7 +36,9 @@ impl ProxyFeature {
         ports: ProxyPorts,
         portal: SocketAddr,
     ) -> ProxyFeature {
-        let manager = Arc::new(CaddyManager::new(CaddyHome::beside(configuration.path())));
+        let manager = Arc::new(CaddyManager::new(CaddyHome::at(
+            configuration.storage(Storage::Caddy),
+        )));
         let setup = SyncSetup {
             portal,
             cadence: Cadence::STANDARD,

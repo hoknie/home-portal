@@ -12,8 +12,8 @@ it("the dashboard sample parses, unknown widget types included", () => {
 it("the dashboard sample carries sections, keys, sections and sizes of its widgets", () => {
   const dashboard = dashboardSchema.parse(apiSamples.dashboard);
   expect(dashboard.sections).toEqual([
-    { id: "now", title: "Сейчас" },
-    { id: "media", title: "Медиа" },
+    { id: "now", title: "Now" },
+    { id: "media", title: "Media" },
   ]);
   expect(dashboard.widgets.map((widget) => [widget.key, widget.section, widget.size])).toEqual([
     ["#0", "now", "two-thirds"],

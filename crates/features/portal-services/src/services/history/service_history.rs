@@ -4,7 +4,7 @@ use portal_model::{ProbeOutcome, ServiceState};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    HistoryRange, HistoryView, HourBucket, LatencyPoint, Sample, Transition, Uptime,
+    HistoryLine, HistoryRange, HistoryView, HourBucket, LatencyPoint, Sample, Transition, Uptime,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -14,6 +14,12 @@ pub struct ServiceHistory {
     pub transitions: VecDeque<Transition>,
     #[serde(skip)]
     pub dirty: bool,
+    #[serde(skip)]
+    pub unwritten: Vec<HistoryLine>,
+    #[serde(skip)]
+    pub touched_hours: Vec<i64>,
+    #[serde(skip)]
+    pub rewrite: bool,
 }
 
 impl ServiceHistory {
@@ -41,20 +47,27 @@ impl ServiceHistory {
             .as_ref()
             .map_or(ServiceState::Unknown, |last| last.state);
         if from != sample.state {
-            self.transitions.push_back(Transition {
+            let transition = Transition {
                 at,
                 from,
                 to: sample.state,
                 error: outcome.error.clone(),
-            });
+            };
+            self.unwritten
+                .push(HistoryLine::Transition(transition.clone()));
+            self.transitions.push_back(transition);
         }
         self.absorb(&sample);
         match self.samples.back_mut() {
             Some(last) if at - last.at < Self::THINNING_SECONDS && last.state == sample.state => {
                 let covered = last.covered.saturating_add(sample.covered);
                 *last = Sample { covered, ..sample };
+                self.unwritten.push(HistoryLine::Replace(last.clone()));
             }
-            _ => self.samples.push_back(sample),
+            _ => {
+                self.unwritten.push(HistoryLine::Sample(sample.clone()));
+                self.samples.push_back(sample);
+            }
         }
         while self.samples.len() > Self::MAXIMUM_SAMPLES {
             self.samples.pop_front();
@@ -165,8 +178,83 @@ impl ServiceHistory {
         }
     }
 
+    pub fn take_lines(&mut self) -> Vec<HistoryLine> {
+        let mut lines = std::mem::take(&mut self.unwritten);
+        for hour in std::mem::take(&mut self.touched_hours) {
+            if let Some(bucket) = self.buckets.iter().find(|bucket| bucket.hour == hour) {
+                lines.push(HistoryLine::Hour(bucket.clone()));
+            }
+        }
+        lines
+    }
+
+    pub fn lines(&self) -> Vec<HistoryLine> {
+        self.buckets
+            .iter()
+            .cloned()
+            .map(HistoryLine::Hour)
+            .chain(
+                self.transitions
+                    .iter()
+                    .cloned()
+                    .map(HistoryLine::Transition),
+            )
+            .chain(self.samples.iter().cloned().map(HistoryLine::Sample))
+            .collect()
+    }
+
+    pub fn from_lines(lines: impl IntoIterator<Item = HistoryLine>, now: i64) -> ServiceHistory {
+        let mut history = ServiceHistory::default();
+        for line in lines {
+            match line {
+                HistoryLine::Sample(sample) => {
+                    if history
+                        .samples
+                        .back()
+                        .is_none_or(|last| last.at < sample.at)
+                    {
+                        history.samples.push_back(sample);
+                    }
+                }
+                HistoryLine::Replace(sample) => match history.samples.back_mut() {
+                    Some(last) => *last = sample,
+                    None => history.samples.push_back(sample),
+                },
+                HistoryLine::Transition(transition) => {
+                    let known = history.transitions.iter().any(|existing| {
+                        existing.at == transition.at && existing.to == transition.to
+                    });
+                    if !known {
+                        history.transitions.push_back(transition);
+                    }
+                }
+                HistoryLine::Hour(bucket) => match history
+                    .buckets
+                    .iter_mut()
+                    .find(|existing| existing.hour == bucket.hour)
+                {
+                    Some(existing) => *existing = bucket,
+                    None => history.buckets.push_back(bucket),
+                },
+            }
+        }
+        history
+            .buckets
+            .make_contiguous()
+            .sort_by_key(|bucket| bucket.hour);
+        history
+            .transitions
+            .make_contiguous()
+            .sort_by_key(|transition| transition.at);
+        history.prune(now);
+        history
+    }
+
     fn absorb(&mut self, sample: &Sample) {
         let hour = HourBucket::hour_of(sample.at);
+        if !self.touched_hours.contains(&hour) {
+            self.touched_hours.push(hour);
+        }
         if self.buckets.back().is_none_or(|bucket| bucket.hour != hour) {
             self.buckets.push_back(HourBucket::starting(hour));
         }

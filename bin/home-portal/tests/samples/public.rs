@@ -19,7 +19,7 @@ fn the_public_portal_sample_matches_its_serializer() {
             ]),
             sections: vec![PublicSection {
                 id: "now".into(),
-                title: Some("Сейчас".into()),
+                title: Some("Now".into()),
             }],
             services: vec![PublicService {
                 id: "media".into(),
@@ -27,7 +27,7 @@ fn the_public_portal_sample_matches_its_serializer() {
                 address: "http://192.168.1.10:8096".into(),
                 group: Some("Media".into()),
                 icon: Some("/api/public/icons/media".into()),
-                description: Some("Фильмы и сериалы".into()),
+                description: Some("Films and series".into()),
                 status: Some(status),
             }],
             widgets: vec![PublicWidget {

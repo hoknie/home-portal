@@ -19,6 +19,6 @@ it("reports caddy's own refusal", async () => {
       <Toaster />
     </>,
   );
-  await userEvent.click(screen.getByRole("button", { name: "Применить сейчас" }));
-  expect(await screen.findByText(/Caddy не принял конфигурацию: Caddy refused with 400: unknown module/)).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Apply now" }));
+  expect(await screen.findByText(/Caddy refused the configuration: Caddy refused with 400: unknown module/)).toBeInTheDocument();
 });

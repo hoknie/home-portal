@@ -32,7 +32,7 @@ afterEach(() => vi.unstubAllGlobals());
 it("signed out, it shows what is public in its sections, asking the public half only", async () => {
   const fetch = serve({ "/api/public/portal": apiSamples.publicPortal }, false);
   expect(await screen.findByText("12°C")).toBeInTheDocument();
-  expect(screen.getByRole("heading", { level: 2, name: "Сейчас" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 2, name: "Now" })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Media/ })).toHaveAttribute("href", "http://192.168.1.10:8096");
   const asked = fetch.mock.calls.map((call) => String(call[0]));
   expect(asked.filter((path) => !path.startsWith("/api/public/"))).toEqual(["/api/session"]);
@@ -40,7 +40,7 @@ it("signed out, it shows what is public in its sections, asking the public half 
 
 it("signed out with nothing public, it says so", async () => {
   serve({ "/api/public/portal": { environment: "internet", detected: "internet", switchable: false, sections: [], services: [], widgets: [] } }, false);
-  expect(await screen.findByText("Открытых сервисов нет")).toBeInTheDocument();
+  expect(await screen.findByText("No open services")).toBeInTheDocument();
 });
 
 it("signed in, the same screen shows every section, without the management sidebar", async () => {
@@ -52,10 +52,11 @@ it("signed in, the same screen shows every section, without the management sideb
     },
     true,
   );
-  expect(await screen.findByRole("heading", { level: 2, name: "Медиа" })).toBeInTheDocument();
-  expect(screen.getByRole("heading", { level: 2, name: "Сейчас" })).toBeInTheDocument();
-  expect(screen.queryByRole("link", { name: "На главную" })).not.toBeInTheDocument();
-  expect(screen.getAllByRole("link", { name: "Открыть Media" }).length).toBeGreaterThan(0);
+  const mediaHeadings = await screen.findAllByRole("heading", { level: 2, name: "Media" });
+  expect(mediaHeadings.some((heading) => heading.parentElement?.getAttribute("data-section") === "media")).toBe(true);
+  expect(screen.getByRole("heading", { level: 2, name: "Now" })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Back to home" })).not.toBeInTheDocument();
+  expect(screen.getAllByRole("link", { name: "Open Media" }).length).toBeGreaterThan(0);
 });
 
 it("signed in with an empty layout, it leads to the layout editor", async () => {
@@ -67,6 +68,6 @@ it("signed in with an empty layout, it leads to the layout editor", async () => 
     },
     true,
   );
-  const link = await screen.findByRole("link", { name: "Открыть редактор раскладки" });
+  const link = await screen.findByRole("link", { name: "Open the layout editor" });
   expect(link.getAttribute("href")).toMatch(/^\/admin\/layout\/?$/);
 });

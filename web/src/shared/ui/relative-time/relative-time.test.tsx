@@ -12,18 +12,18 @@ it("says how long ago a moment was", () => {
       <RelativeTime moment="2026-09-22T10:00:00Z" />
     </TestIntl>,
   );
-  expect(screen.getByText(/назад/)).toHaveAttribute("dateTime", "2026-09-22T10:00:00Z");
+  expect(screen.getByText(/ago/)).toHaveAttribute("dateTime", "2026-09-22T10:00:00Z");
   vi.useRealTimers();
 });
 
 it("falls back when there is no moment or it makes no sense", () => {
   render(
     <TestIntl>
-      <RelativeTime moment={null} fallback="никогда" />
-      <RelativeTime moment="not a date" fallback="никогда" />
+      <RelativeTime moment={null} fallback="never" />
+      <RelativeTime moment="not a date" fallback="never" />
     </TestIntl>,
   );
-  expect(screen.getAllByText("никогда")).toHaveLength(2);
+  expect(screen.getAllByText("never")).toHaveLength(2);
 });
 
 it("says it in the page's language", () => {

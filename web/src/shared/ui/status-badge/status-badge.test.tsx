@@ -12,8 +12,8 @@ it("names each known state in Russian", () => {
       <StatusBadge state="unreadable" />
     </TestIntl>,
   );
-  expect(screen.getByText("Работает")).toHaveAttribute("data-state", "up");
-  expect(screen.getByText("Не удалось проверить")).toHaveAttribute("data-state", "unreadable");
+  expect(screen.getByText("Up")).toHaveAttribute("data-state", "up");
+  expect(screen.getByText("Could not check")).toHaveAttribute("data-state", "unreadable");
 });
 
 it("shows a state it does not know as unknown instead of failing", () => {
@@ -22,7 +22,7 @@ it("shows a state it does not know as unknown instead of failing", () => {
       <StatusBadge state="maintenance" />
     </TestIntl>,
   );
-  expect(screen.getByText("Неизвестно")).toHaveAttribute("data-state", "unknown");
+  expect(screen.getByText("Unknown")).toHaveAttribute("data-state", "unknown");
 });
 
 it("colours the dot by state", () => {

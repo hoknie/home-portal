@@ -34,11 +34,11 @@ it("adds a service on its own page and returns to the list after saving", async 
   const fetch = vi.fn(async () => jsonResponse(apiSamples.services.services[1], { status: 201 }));
   vi.stubGlobal("fetch", fetch);
   renderScreen("new");
-  expect(screen.getByRole("heading", { level: 1, name: "Новый сервис" })).toBeInTheDocument();
-  expect(screen.getByLabelText("Название")).toHaveValue("");
-  await userEvent.type(screen.getByLabelText("Название"), "Scanner");
-  await userEvent.type(screen.getByLabelText(/^Адрес$/), "http://scanner.local");
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+  expect(screen.getByRole("heading", { level: 1, name: "New service" })).toBeInTheDocument();
+  expect(screen.getByLabelText("Name")).toHaveValue("");
+  await userEvent.type(screen.getByLabelText("Name"), "Scanner");
+  await userEvent.type(screen.getByLabelText(/^Address$/), "http://scanner.local");
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
   await waitFor(() => expect(push).toHaveBeenCalledWith("/admin/services/"));
   const post = (fetch.mock.calls as unknown as [string, RequestInit | undefined][]).find(([, init]) => init?.method === "POST");
   const body = JSON.parse(String(post?.[1]?.body));
@@ -48,25 +48,25 @@ it("adds a service on its own page and returns to the list after saving", async 
 it("edits the service named in the address", () => {
   search = "id=nas";
   renderScreen("edit");
-  expect(screen.getByRole("heading", { level: 1, name: "Изменить сервис" })).toBeInTheDocument();
-  expect(screen.getByLabelText("Идентификатор")).toHaveValue("nas");
+  expect(screen.getByRole("heading", { level: 1, name: "Edit service" })).toBeInTheDocument();
+  expect(screen.getByLabelText("Identifier")).toHaveValue("nas");
 });
 
 it("says an unknown service was not found and links back to the list", () => {
   search = "id=nope";
   renderScreen("edit");
-  expect(screen.getByText("Сервис не найден")).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "К списку сервисов" }).getAttribute("href")).toMatch(/^\/admin\/services\/?$/);
+  expect(screen.getByText("Service not found")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Back to the services" }).getAttribute("href")).toMatch(/^\/admin\/services\/?$/);
 });
 
 it("asks before leaving with unsaved changes", async () => {
   search = "id=nas";
   const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
   renderScreen("edit");
-  const cancel = screen.getByRole("link", { name: "Отмена" });
+  const cancel = screen.getByRole("link", { name: "Cancel" });
   fireEvent.click(cancel);
   expect(confirm).not.toHaveBeenCalled();
-  await userEvent.type(screen.getByLabelText("Название"), " box");
+  await userEvent.type(screen.getByLabelText("Name"), " box");
   fireEvent.click(cancel);
-  expect(confirm).toHaveBeenCalledWith("Изменения сервиса не сохранены. Уйти со страницы?");
+  expect(confirm).toHaveBeenCalledWith("The service has unsaved changes. Leave the page?");
 });

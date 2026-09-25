@@ -20,20 +20,20 @@ function renderWidget() {
 it("shows the processor, the memory and every disk as a meter", () => {
   renderWidget();
   const meters = screen.getAllByRole("meter").map((meter) => meter.getAttribute("aria-label"));
-  expect(meters).toEqual(["Процессор", "Память", "/", "/media"]);
-  expect(screen.getByRole("meter", { name: "Процессор" })).toHaveAttribute("aria-valuenow", "18");
+  expect(meters).toEqual(["CPU", "Memory", "/", "/media"]);
+  expect(screen.getByRole("meter", { name: "CPU" })).toHaveAttribute("aria-valuenow", "18");
 });
 
 it("counts memory and disks in gibibytes", () => {
   renderWidget();
-  expect(screen.getByText("6.4 из 16 ГиБ")).toBeInTheDocument();
-  expect(screen.getByText("340.4 из 460.4 ГиБ")).toBeInTheDocument();
+  expect(screen.getByText("6.4 of 16 GiB")).toBeInTheDocument();
+  expect(screen.getByText("340.4 of 460.4 GiB")).toBeInTheDocument();
 });
 
 it("names the host and its uptime in whole hours", () => {
   renderWidget();
   expect(screen.getByText("box")).toBeInTheDocument();
-  expect(screen.getByText("26 ч")).toBeInTheDocument();
+  expect(screen.getByText("26 h")).toBeInTheDocument();
   expect(hours(93_600)).toBe(26);
   expect(gibibytes(1024 ** 3 * 2.5)).toBe(2.5);
 });

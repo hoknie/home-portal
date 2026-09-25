@@ -1,0 +1,112 @@
+{
+  "runs": [
+    {
+      "arguments": [
+        "--",
+        "jellyfin"
+      ],
+      "automation": "backup",
+      "event": "schedule",
+      "fields": {
+        "automation.id": "backup",
+        "event.at": "2026-09-25T03:00:00Z",
+        "event.name": "schedule",
+        "run.by": "",
+        "run.id": "3",
+        "run.manual": "false"
+      },
+      "id": "3",
+      "outcome": {
+        "count": 1,
+        "duration_milliseconds": 1840,
+        "exit_code": 1,
+        "last_at": "2026-09-25T03:00:00Z",
+        "reason": null,
+        "result": "failed",
+        "stderr": {
+          "bytes": 10,
+          "tail": "disk full\n",
+          "truncated": false
+        },
+        "stdout": {
+          "bytes": 0,
+          "tail": "",
+          "truncated": false
+        }
+      },
+      "started_at": "2026-09-25T03:00:00Z"
+    },
+    {
+      "arguments": [
+        "--",
+        "jellyfin"
+      ],
+      "automation": "restart-media",
+      "event": "service.status-changed",
+      "fields": {
+        "automation.id": "restart-media",
+        "event.at": "2026-09-25T03:00:00Z",
+        "event.name": "service.status-changed",
+        "run.by": "",
+        "run.id": "2",
+        "run.manual": "false"
+      },
+      "id": "2",
+      "outcome": {
+        "count": 9,
+        "duration_milliseconds": 0,
+        "exit_code": null,
+        "last_at": "2026-09-25T03:04:00Z",
+        "reason": "cooldown",
+        "result": "skipped",
+        "stderr": {
+          "bytes": 0,
+          "tail": "",
+          "truncated": false
+        },
+        "stdout": {
+          "bytes": 0,
+          "tail": "",
+          "truncated": false
+        }
+      },
+      "started_at": "2026-09-25T03:00:00Z"
+    },
+    {
+      "arguments": [
+        "--",
+        "jellyfin"
+      ],
+      "automation": "restart-media",
+      "event": "service.status-changed",
+      "fields": {
+        "automation.id": "restart-media",
+        "event.at": "2026-09-25T03:00:00Z",
+        "event.name": "service.status-changed",
+        "run.by": "",
+        "run.id": "1",
+        "run.manual": "false"
+      },
+      "id": "1",
+      "outcome": {
+        "count": 1,
+        "duration_milliseconds": 1840,
+        "exit_code": 0,
+        "last_at": "2026-09-25T03:00:00Z",
+        "reason": null,
+        "result": "succeeded",
+        "stderr": {
+          "bytes": 0,
+          "tail": "",
+          "truncated": false
+        },
+        "stdout": {
+          "bytes": 70000,
+          "tail": "restarted jellyfin\n",
+          "truncated": true
+        }
+      },
+      "started_at": "2026-09-25T03:00:00Z"
+    }
+  ]
+}

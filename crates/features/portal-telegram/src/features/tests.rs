@@ -30,6 +30,8 @@ fn change() -> StatusChange {
         was: "up".into(),
         now: "down".into(),
         error: Some("connection refused".into()),
+        diagnosis: None,
+        notify: true,
     }
 }
 

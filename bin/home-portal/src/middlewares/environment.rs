@@ -7,6 +7,7 @@ use axum::http::{HeaderMap, Request};
 use axum::middleware::Next;
 use axum::response::Response;
 use portal_config::ConfigStore;
+use portal_feature::ClientAddress;
 use portal_model::{DetectedEnvironment, Environment, Environments};
 use portal_network::{client_address, read_environments, read_network};
 
@@ -30,6 +31,7 @@ pub async fn decide_environment(
     let detected = environments.of(address);
     let effective = chosen(&environments, &detected, request.headers());
     request.extensions_mut().insert(effective);
+    request.extensions_mut().insert(ClientAddress(address));
     request
         .extensions_mut()
         .insert(DetectedEnvironment::new(detected, &environments));

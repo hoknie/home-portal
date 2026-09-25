@@ -134,7 +134,7 @@ fn the_throttle_forgets_the_oldest_client_past_its_capacity() {
 }
 
 fn file_in(directory: &tempfile::TempDir) -> crate::repositories::SessionFile {
-    crate::repositories::SessionFile::beside(&directory.path().join("home-portal.toml"))
+    crate::repositories::SessionFile::at(directory.path().join("sessions.json"))
 }
 
 #[test]

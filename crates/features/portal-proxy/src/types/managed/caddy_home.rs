@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CaddyHome {
@@ -7,7 +7,6 @@ pub struct CaddyHome {
 }
 
 impl CaddyHome {
-    pub const DIRECTORY: &'static str = "caddy";
     pub const BINARY: &'static str = "caddy";
     pub const VERSION_FILE: &'static str = "VERSION";
     pub const ORIGIN_FILE: &'static str = "ORIGIN";
@@ -17,12 +16,7 @@ impl CaddyHome {
     pub const CONFIG: &'static str = "config";
     pub const STAGING: &'static str = "staging";
 
-    pub fn beside(configuration: &Path) -> CaddyHome {
-        let parent = configuration
-            .parent()
-            .filter(|parent| !parent.as_os_str().is_empty())
-            .unwrap_or(Path::new("."));
-        let directory = parent.join(Self::DIRECTORY);
+    pub fn at(directory: PathBuf) -> CaddyHome {
         CaddyHome {
             directory: std::path::absolute(&directory).unwrap_or(directory),
         }

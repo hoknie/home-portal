@@ -13,7 +13,7 @@ it("the public portal sample parses: the environment, its services and its widge
   expect(portal.services[0].icon).toBe("/api/public/icons/media");
   expect(portal.services[0].status?.state).toBe("up");
   expect(portal.widgets[0]).toMatchObject({ type: "weather", id: "riga", section: "now", size: "third" });
-  expect(portal.sections).toEqual([{ id: "now", title: "Сейчас" }]);
+  expect(portal.sections).toEqual([{ id: "now", title: "Now" }]);
 });
 
 it("a service the portal hides the status of still parses", () => {

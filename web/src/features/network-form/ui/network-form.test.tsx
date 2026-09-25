@@ -18,10 +18,10 @@ it("sends the changed port with the revision it loaded", async () => {
   const fetch = vi.fn(async () => jsonResponse(apiSamples.network, { headers: { ETag: '"r2"' } }));
   vi.stubGlobal("fetch", fetch);
   renderWithProviders(<NetworkForm configured={network.configured} revision='"r1"' />);
-  const port = screen.getByLabelText("Порт");
+  const port = screen.getByLabelText("Port");
   await userEvent.clear(port);
   await userEvent.type(port, "9191");
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
   await waitFor(() => expect(fetch).toHaveBeenCalled());
   const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
   expect(JSON.parse(init.body as string)).toMatchObject({ port: 9191, trusted_proxies: ["10.0.0.0/8"] });
@@ -31,9 +31,9 @@ it("sends the changed port with the revision it loaded", async () => {
 it("maps a server error on one proxy to the proxies field", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ errors: [{ field: "trusted_proxies[0]", message: "bad range" }] }, { status: 422 })));
   renderWithProviders(<NetworkForm configured={network.configured} revision='"r1"' />);
-  const port = screen.getByLabelText("Порт");
+  const port = screen.getByLabelText("Port");
   await userEvent.clear(port);
   await userEvent.type(port, "9191");
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
   expect(await screen.findByText("bad range")).toBeInTheDocument();
 });

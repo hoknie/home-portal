@@ -28,29 +28,29 @@ afterEach(() => vi.unstubAllGlobals());
 
 it("signed out, it names the environment and offers signing in, asking only public endpoints", async () => {
   const fetch = serve(false);
-  expect((await screen.findByRole("link", { name: "Войти" })).getAttribute("href")).toMatch(/^\/login\/?$/);
-  expect(await screen.findByRole("button", { name: "Окружение: local. Выбрать другое" })).toHaveAttribute("data-environment", "local");
-  expect(screen.getByRole("button", { name: "Язык: Русский" })).toBeInTheDocument();
+  expect((await screen.findByRole("link", { name: "Sign in" })).getAttribute("href")).toMatch(/^\/login\/?$/);
+  expect(await screen.findByRole("button", { name: "Environment: local. Choose another" })).toHaveAttribute("data-environment", "local");
+  expect(screen.getByRole("button", { name: "Language: English" })).toBeInTheDocument();
   const asked = fetch.mock.calls.map((call) => String(call[0]));
   expect(asked.filter((path) => !path.startsWith("/api/public/"))).toEqual(["/api/session"]);
 });
 
 it("signed in, it offers management and the account menu instead", async () => {
   serve(true);
-  expect((await screen.findByRole("link", { name: "Управление" })).getAttribute("href")).toMatch(/^\/admin\/services\/?$/);
+  expect((await screen.findByRole("link", { name: "Management" })).getAttribute("href")).toMatch(/^\/admin\/services\/?$/);
   expect(screen.getByText("admin")).toBeInTheDocument();
-  expect(screen.queryByRole("link", { name: "Войти" })).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Язык: Русский" })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Language: English" })).toBeInTheDocument();
 });
 
 it("from outside, it names the environment without offering to change it", async () => {
   serve(false, { ...apiSamples.publicPortal, environment: "internet", detected: "internet", switchable: false, environments: undefined });
   expect(await screen.findByText("internet")).toHaveAttribute("data-environment", "internet");
-  expect(screen.queryByRole("button", { name: /Окружение/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Environment/ })).not.toBeInTheDocument();
 });
 
 it("signed in and looking from outside, it says so and offers going back", async () => {
   serve(true, apiSamples.publicPortal, { ...apiSamples.environment, environment: "internet", detected: "local" });
-  expect(await screen.findByText("Вид как из «internet», вы в «local»")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Вернуть «local»" })).toBeInTheDocument();
+  expect(await screen.findByText("Viewing as from “internet”; you are in “local”")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Back to “local”" })).toBeInTheDocument();
 });

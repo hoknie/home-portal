@@ -121,11 +121,11 @@ fn the_dashboard_sample_matches_its_serializer() {
             sections: vec![
                 SectionView {
                     id: "now".into(),
-                    title: Some("Сейчас".into()),
+                    title: Some("Now".into()),
                 },
                 SectionView {
                     id: "media".into(),
-                    title: Some("Медиа".into()),
+                    title: Some("Media".into()),
                 },
             ],
             widgets: widgets

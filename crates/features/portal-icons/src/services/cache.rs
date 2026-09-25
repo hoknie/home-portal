@@ -14,15 +14,10 @@ pub struct IconCache {
 }
 
 impl IconCache {
-    pub const DIRECTORY: &'static str = "icons";
     pub const INDEX: &'static str = "index.json";
     pub const LIFETIME_DAYS: i64 = 7;
 
-    pub fn open(beside: &Path) -> IconCache {
-        let directory = beside
-            .parent()
-            .unwrap_or(Path::new("."))
-            .join(Self::DIRECTORY);
+    pub fn open(directory: PathBuf) -> IconCache {
         let _ = fs::create_dir_all(&directory);
         let entries = fs::read_to_string(directory.join(Self::INDEX))
             .ok()

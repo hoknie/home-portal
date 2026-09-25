@@ -57,7 +57,9 @@ pub fn portal_pinned(text: &str, source: &str, version: &str) -> Portal {
     let setup = SyncSetup {
         portal: "127.0.0.1:8080".parse().unwrap(),
         cadence: Cadence::STANDARD,
-        manager: Arc::new(CaddyManager::new(CaddyHome::beside(&path))),
+        manager: Arc::new(CaddyManager::new(CaddyHome::at(
+            path.with_file_name("caddy"),
+        ))),
     };
     let feature = ProxyFeature::with(
         configuration.clone(),

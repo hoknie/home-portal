@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use axum::Router;
 use axum::routing::{delete, post};
-use portal_config::ConfigStore;
-use portal_feature::{Feature, Gate, Loop, Validator};
+use portal_config::{ConfigStore, Storage};
+use portal_feature::{EventSink, Feature, Gate, Loop, Validator};
 use time::OffsetDateTime;
 
 use crate::controllers::{sign_in, sign_out, who_am_i};
@@ -22,9 +22,13 @@ impl AuthFeature {
     pub const PATH: &'static str = "/api/session";
     pub const PRUNE_EVERY: Duration = Duration::from_secs(300);
 
-    pub fn new(configuration: Arc<ConfigStore>, connection: Arc<dyn Connection>) -> AuthFeature {
+    pub fn new(
+        configuration: Arc<ConfigStore>,
+        connection: Arc<dyn Connection>,
+        events: Arc<dyn EventSink>,
+    ) -> AuthFeature {
         let sessions = SessionStore::kept_in(
-            SessionFile::beside(configuration.path()),
+            SessionFile::at(configuration.storage(Storage::Sessions)),
             OffsetDateTime::now_utc(),
         );
         AuthFeature {
@@ -33,6 +37,7 @@ impl AuthFeature {
                 sessions: Arc::new(sessions),
                 throttle: Arc::new(Throttle::default()),
                 connection,
+                events,
             },
         }
     }

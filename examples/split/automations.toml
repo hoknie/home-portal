@@ -1,6 +1,7 @@
 # Automations: scripts the portal runs on this host, on a schedule or on its own events.
 #
-# A script is named by its path inside scripts/ beside the main configuration file. The
+# A script is named by its path inside scripts/ beside the main configuration file (or where
+# [storage] puts it). The
 # portal runs it directly, without a shell, as the portal's own user, and refuses a script
 # that leaves scripts/, is not executable, or that group or others can write (the file and
 # every directory down to it: 0755 or stricter).

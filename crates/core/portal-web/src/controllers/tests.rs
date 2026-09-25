@@ -38,7 +38,7 @@ fn built() -> Files {
             "es/services/__next.services.__PAGE__.txt",
             ("text/plain", "payload"),
         ),
-        ("ru/index.html", ("text/html", "главная")),
+        ("ru/index.html", ("text/html", "home page in russian")),
         ("_next/static/chunk.js", ("text/javascript", "code")),
     ]))
 }
@@ -114,7 +114,10 @@ async fn every_page_comes_from_the_tree_of_its_language() {
         body(answer(&built(), Language::Es, "/services/")).await,
         "servicios"
     );
-    assert_eq!(body(answer(&built(), Language::Ru, "/")).await, "главная");
+    assert_eq!(
+        body(answer(&built(), Language::Ru, "/")).await,
+        "home page in russian"
+    );
     let deep = answer(&built(), Language::Es, "/services/edit/nas.local");
     assert_eq!(deep.status(), StatusCode::OK);
     assert_eq!(deep.headers()[CONTENT_LANGUAGE], "es");
@@ -148,6 +151,6 @@ async fn a_shared_asset_is_found_whatever_the_language_and_does_not_vary() {
 async fn a_route_a_language_lacks_falls_back_to_that_languages_entry_page() {
     assert_eq!(
         body(answer(&built(), Language::Ru, "/services/")).await,
-        "главная"
+        "home page in russian"
     );
 }

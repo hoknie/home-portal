@@ -13,9 +13,9 @@ const widget = (key: string, section: string | null): GridWidget => ({
 });
 
 const sections = [
-  { id: "now", title: "Сейчас" },
-  { id: "media", title: "Медиа" },
-  { id: "empty", title: "Пусто" },
+  { id: "now", title: "Now" },
+  { id: "media", title: "Media" },
+  { id: "empty", title: "Empty" },
 ];
 
 it("puts each widget in its section in order and drops sections with nothing to show", () => {

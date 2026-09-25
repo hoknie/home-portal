@@ -7,6 +7,7 @@ mod secret_string;
 mod snapshot;
 mod source;
 mod stamp;
+mod storage;
 
 pub use config_error::ConfigError;
 pub use current::Current;
@@ -17,3 +18,4 @@ pub use secret_string::SecretString;
 pub use snapshot::Snapshot;
 pub use source::Source;
 pub use stamp::Stamp;
+pub use storage::Storage;

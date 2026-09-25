@@ -21,6 +21,6 @@ pub use responses::{
 };
 pub use services::{ServiceHistory, probe_once};
 pub use types::{
-    HistoryRange, ProbeKind, ProbeReport, ProbeSettings, ServiceEntry, ServiceLink,
+    HistoryRange, ProbeKind, ProbeReport, ProbeSettings, ServiceEntry, ServiceLink, ServicesPorts,
     ServicesSection, Viewpoint,
 };

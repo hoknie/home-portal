@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import type { Locale } from "./config";
 import { dictionaries } from "./messages";
 
-export const TEST_LOCALE: Locale = "ru";
+export const TEST_LOCALE: Locale = "en";
 
 export function TestIntl({ children, locale = TEST_LOCALE }: { children: ReactNode; locale?: Locale }) {
   return (

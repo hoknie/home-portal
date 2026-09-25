@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use portal_config::ConfigStore;
+use portal_feature::EventSink;
 
 use crate::ports::Publishing;
 use crate::services::{StatusBoard, Supervisor};
@@ -11,4 +12,5 @@ pub struct ServicesState {
     pub board: Arc<StatusBoard>,
     pub supervisor: Arc<Supervisor>,
     pub publishing: Arc<dyn Publishing>,
+    pub events: Arc<dyn EventSink>,
 }

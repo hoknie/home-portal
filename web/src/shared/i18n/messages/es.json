@@ -14,7 +14,10 @@
     "optional": "opcional",
     "never": "nunca",
     "milliseconds": "{value} ms",
-    "redirecting": "Pasando a la nueva dirección…"
+    "redirecting": "Pasando a la nueva dirección…",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "copyFailed": "No se pudo copiar"
   },
   "nav": {
     "home": "Inicio",
@@ -27,7 +30,9 @@
     "layout": "Disposición",
     "backHome": "Volver al inicio",
     "management": "Administración",
-    "proxy": "Proxy"
+    "proxy": "Proxy",
+    "automations": "Automatizaciones",
+    "webhooks": "Webhooks"
   },
   "theme": {
     "label": "Tema",
@@ -264,7 +269,18 @@
     "proxyEmail": "Hace falta una dirección de correo",
     "caddySource": "Hace falta una dirección https, o http en esta máquina (127.0.0.1, localhost)",
     "caddyVersion": "latest o una versión exacta, por ejemplo 2.10.2",
-    "proxySamePorts": "Los puertos HTTP y HTTPS deben ser distintos"
+    "proxySamePorts": "Los puertos HTTP y HTTPS deben ser distintos",
+    "automationId": "De 1 a 63 letras minúsculas, dígitos y guiones",
+    "automationTitle": "Indica un título de hasta 120 caracteres",
+    "automationCooldown": "Un número entero de segundos, cero o más",
+    "automationCron": "Indica un horario",
+    "automationScript": "Elige un script del directorio de scripts",
+    "automationTimeout": "De 1 a 3600 segundos",
+    "automationPlaceholder": "El argumento nombra {field}, que este evento no tiene",
+    "automationFromUnknown": "El estado desconocido solo cuenta con «Incluir el primer estado» activado",
+    "automationReserved": "Este identificador lo usan las páginas de la interfaz: runs, catalogue, scripts, schedule",
+    "webhookVariable": "Minúsculas, dígitos y _, empezando por una letra",
+    "tags": "Como máximo 20 etiquetas de hasta 40 caracteres"
   },
   "conditions": {
     "clear": "despejado",
@@ -602,5 +618,353 @@
       "httpPort": "Puerto HTTP",
       "httpPortHint": "Para redirigir a https y para la comprobación de Let's Encrypt; 80 por defecto. Let's Encrypt llama al puerto 80 desde fuera, así que redirígelo a este puerto"
     }
+  },
+  "automations": {
+    "title": "Automatizaciones",
+    "subtitle": "Scripts en el equipo del portal, según un horario o por eventos",
+    "add": "Añadir automatización",
+    "empty": "Aún no hay automatizaciones",
+    "emptyHint": "Una automatización ejecuta tu script cuando un servicio cae, alguien inicia sesión o llega una hora programada.",
+    "columns": {
+      "title": "Automatización",
+      "trigger": "Cuándo",
+      "script": "Script",
+      "enabled": "Estado",
+      "lastRun": "Última ejecución",
+      "actions": "Acciones",
+      "when": "Cuándo",
+      "event": "Evento",
+      "outcome": "Resultado",
+      "details": "Detalles"
+    },
+    "enabled": "Activada",
+    "disabled": "Desactivada",
+    "neverRan": "Aún no se ha ejecutado",
+    "deleteTitle": "¿Eliminar la automatización «{title}»?",
+    "deleteDescription": "Desaparece de la configuración; el script se queda donde está.",
+    "deleted": "Automatización eliminada",
+    "saved": "Automatización guardada",
+    "created": "Automatización añadida",
+    "journal": "Registro de ejecuciones",
+    "journalDescription": "Las últimas 200 ejecuciones; el registro empieza de nuevo al reiniciar el portal",
+    "journalEmpty": "Aún no hay ejecuciones",
+    "journalEmptyHint": "Aquí aparecerán las ejecuciones con la salida del script.",
+    "allAutomations": "Todas las automatizaciones",
+    "filterLabel": "Mostrar ejecuciones de",
+    "openRun": "Abrir",
+    "runTitle": "Ejecución {id}: {automation}",
+    "runOutcome": "Resultado",
+    "runEvent": "Evento",
+    "runExit": "Código de salida",
+    "runReason": "Motivo",
+    "runDuration": "Duración",
+    "runRepeated": "Repeticiones",
+    "repeated": "{count, plural, one {# vez} other {# veces}}",
+    "runArguments": "Argumentos",
+    "runFields": "Campos del evento",
+    "runOutput": "Salida",
+    "runErrors": "Errores",
+    "truncated": "Los últimos 4 KiB de {bytes} bytes",
+    "noOutput": "vacío",
+    "manual": "a mano",
+    "runNow": "Ejecutar ahora",
+    "runNowTitle": "¿Ejecutar «{title}» ahora?",
+    "runNowDescription": "El script {script} se ejecuta de verdad en el equipo del portal, con valores de ejemplo para los campos del evento.",
+    "runQueued": "«{title}» está en cola para ejecutarse",
+    "runDisabled": "La automatización está desactivada",
+    "runThrottled": "Espera {seconds} s antes de la siguiente ejecución",
+    "runFailed": "No se pudo poner la ejecución en cola",
+    "triggers": {
+      "schedule": "cron {cron}",
+      "anyService": "Cualquier servicio",
+      "statusChanged": "{services}: cambio de estado",
+      "statusBecomes": "{services}: {states}"
+    },
+    "outcomes": {
+      "succeeded": "Correcta",
+      "failed": "Fallida",
+      "timed_out": "Tiempo agotado",
+      "skipped": "Omitida",
+      "refused": "Rechazada",
+      "unknown": "Desconocido"
+    },
+    "reasons": {
+      "running": "la ejecución anterior sigue en marcha",
+      "pending": "ya hay una ejecución esperando en la cola",
+      "cooldown": "la pausa entre ejecuciones",
+      "rate_limit": "más de 60 ejecuciones en una hora",
+      "dropped": "la cola estaba llena",
+      "removed": "la automatización se eliminó o se desactivó"
+    },
+    "allRuns": "Todas las ejecuciones",
+    "textFilter": "Buscar en los valores",
+    "textFilterPlaceholder": "por ejemplo, main",
+    "live": "Actualización automática",
+    "refresh": "Actualizar ahora",
+    "updatedAt": "Actualizado a las {time}"
+  },
+  "automationBuilder": {
+    "addTitle": "Nueva automatización",
+    "editTitle": "Automatización",
+    "description": "Cuando pasa algo, ejecutar un script en el equipo del portal.",
+    "notFound": "Automatización no encontrada",
+    "notFoundHint": "Puede que se haya eliminado o renombrado.",
+    "backToAutomations": "Volver a las automatizaciones",
+    "leave": "Los cambios no se han guardado. ¿Salir de la página?",
+    "identity": "Automatización",
+    "title": "Título",
+    "id": "Identificador",
+    "idHint": "Letras, dígitos y guiones; enlaza las filas del registro con la automatización",
+    "enabled": "Activada",
+    "when": "Cuándo",
+    "whenDescription": "Un evento del portal o un horario",
+    "event": "Evento",
+    "groups": {
+      "manual": "Manual",
+      "schedule": "Horario",
+      "portal": "Portal",
+      "services": "Servicios",
+      "users": "Usuarios",
+      "webhooks": "Webhooks",
+      "configuration": "Configuración"
+    },
+    "preset": "Plantilla",
+    "presets": {
+      "custom": "Expresión propia",
+      "hourly": "Cada hora",
+      "daily": "Cada día a las…",
+      "weekly": "Cada semana el…",
+      "monthly": "El día 1 de cada mes a las…"
+    },
+    "time": "Hora",
+    "weekday": "Día de la semana",
+    "weekdays": {
+      "0": "domingo",
+      "1": "lunes",
+      "2": "martes",
+      "3": "miércoles",
+      "4": "jueves",
+      "5": "viernes",
+      "6": "sábado"
+    },
+    "cron": "Expresión cron",
+    "cronHint": "Minuto, hora, día del mes, mes, día de la semana — o @hourly, @daily, @weekly, @monthly",
+    "nextTimes": "Próximas ejecuciones ({zone})",
+    "nextTimesList": "Próximas ejecuciones",
+    "onlyIf": "Solo si",
+    "onlyIfDescription": "Acota el evento; un filtro vacío coincide con todo",
+    "noFilters": "Este evento no tiene filtros.",
+    "filters": {
+      "services": "Servicios",
+      "from": "Desde el estado",
+      "to": "Al estado",
+      "users": "Usuarios",
+      "environments": "Entornos",
+      "from_unknown": "Incluir el primer estado tras el arranque",
+      "webhooks": "Webhooks"
+    },
+    "anyHint": "Nada elegido — cualquier valor coincide",
+    "fromUnknownHint": "Si no, el cambio desde desconocido al arrancar el portal o añadir un servicio no cuenta",
+    "cooldown": "Pausa entre ejecuciones, segundos",
+    "cooldownHint": "Los disparos durante la pausa se registran como omitidos",
+    "run": "Ejecutar",
+    "runDescription": "Un script del directorio de scripts, sin shell: cada argumento se pasa por separado",
+    "noScripts": "Aún no hay scripts en {directory}. Pon ahí un archivo ejecutable con permisos 0755.",
+    "scriptsMissing": "El directorio {directory} no existe. Créalo y pon ahí los scripts; [storage] en la configuración puede moverlo.",
+    "script": "Script",
+    "scriptHint": "De {directory}; los scripts no se crean ni se editan desde la interfaz",
+    "chooseScript": "Elige un script",
+    "scriptUnrunnable": "{path} — {problem}",
+    "timeout": "Tiempo límite, segundos",
+    "timeoutHint": "Después se detienen el proceso y sus hijos",
+    "arguments": "Argumentos",
+    "argumentsHint": "Pulsa un campo del evento para insertarlo en el argumento donde está el cursor. Pon -- antes de los campos para que un valor no se tome por una opción.",
+    "argumentLabel": "Argumento {number}",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "removeArgument": "Quitar argumento",
+    "addArgument": "Añadir argumento",
+    "fields": "Campos del evento",
+    "preview": "Cómo se llamará al script",
+    "previewDescription": "Con valores de ejemplo; el script también recibe variables PORTAL_* y el evento en JSON por la entrada estándar",
+    "noScript": "script.sh",
+    "variables": "Variables de entorno ({count})"
+  },
+  "automationEvents": {
+    "schedule": {
+      "title": "Según un horario",
+      "description": "Se activa según un horario cron en la zona horaria del portal."
+    },
+    "portal_started": {
+      "title": "Portal iniciado",
+      "description": "Una vez, cuando el portal ya escucha y sus ciclos en segundo plano han arrancado."
+    },
+    "portal_stopping": {
+      "title": "Portal deteniéndose",
+      "description": "Al apagarse; el portal espera el script como máximo 10 segundos."
+    },
+    "service_status_changed": {
+      "title": "Cambio de estado de un servicio",
+      "description": "Cuando una comprobación encuentra un nuevo estado del servicio: caído, de nuevo activo, etc."
+    },
+    "service_created": {
+      "title": "Servicio añadido",
+      "description": "Cuando se añade un servicio desde la interfaz."
+    },
+    "service_updated": {
+      "title": "Servicio modificado",
+      "description": "Cuando se guarda un servicio desde la interfaz."
+    },
+    "service_deleted": {
+      "title": "Servicio eliminado",
+      "description": "Cuando se elimina un servicio desde la interfaz."
+    },
+    "user_signed_in": {
+      "title": "Inicio de sesión",
+      "description": "Cuando un usuario inicia sesión en el portal."
+    },
+    "user_signed_out": {
+      "title": "Cierre de sesión",
+      "description": "Cuando un usuario cierra sesión en el portal."
+    },
+    "user_sign_in_failed": {
+      "title": "Inicio de sesión fallido",
+      "description": "Nombre o contraseña incorrectos, o demasiados intentos."
+    },
+    "configuration_changed": {
+      "title": "Configuración modificada",
+      "description": "Cualquier nueva revisión del archivo, desde la interfaz o editada a mano."
+    },
+    "webhook_received": {
+      "title": "Webhook recibido",
+      "description": "Cuando se llama a un webhook con la acción «Publicar un evento»."
+    },
+    "manual": {
+      "title": "Solo a mano",
+      "description": "Nunca se activa sola: solo con «Ejecutar ahora»."
+    },
+    "unknown": {
+      "title": "Evento desconocido",
+      "description": "Un evento que esta interfaz no conoce."
+    }
+  },
+  "automationFields": {
+    "event_name": "Nombre del evento",
+    "event_at": "Hora del evento",
+    "automation_id": "Identificador de la automatización",
+    "run_id": "Número de ejecución",
+    "run_manual": "Iniciada a mano",
+    "run_by": "Iniciada por",
+    "schedule_cron": "Horario",
+    "schedule_at": "Hora prevista",
+    "portal_address": "Dirección del portal",
+    "portal_version": "Versión del portal",
+    "service_id": "Identificador del servicio",
+    "service_name": "Nombre del servicio",
+    "service_previous_id": "Identificador anterior",
+    "status_from": "Estado anterior",
+    "status_to": "Estado nuevo",
+    "status_error": "Error",
+    "status_diagnosis": "Diagnóstico",
+    "user_name": "Usuario",
+    "client_address": "Dirección del cliente",
+    "client_environment": "Entorno del cliente",
+    "sign_in_reason": "Motivo del rechazo",
+    "configuration_revision": "Revisión",
+    "configuration_previous_revision": "Revisión anterior",
+    "webhook_id": "Identificador del webhook",
+    "webhook_title": "Título del webhook"
+  },
+  "scriptHelp": {
+    "unrunnable": "Scripts que no se pueden ejecutar: {count}",
+    "problems": {
+      "shape": "La ruta debe llevar al interior del directorio de scripts.",
+      "too-deep": "El script está a más de una subcarpeta. Muévelo directamente a scripts o a una de sus subcarpetas.",
+      "hidden": "Los archivos y carpetas ocultos (que empiezan por un punto) no se leen. Cámbiales el nombre.",
+      "not-found": "{path} no existe.",
+      "outside": "El enlace lleva fuera del directorio de scripts. Pon el propio archivo dentro de scripts.",
+      "not-a-file": "No es un archivo normal.",
+      "not-executable": "El archivo no es ejecutable. Permite ejecutarlo y comprueba que la primera línea nombra un intérprete, como #!/bin/sh.",
+      "writable": "El grupo u otros usuarios pueden modificar el archivo, así que el portal no lo ejecuta. Quita su permiso de escritura.",
+      "owner": "El archivo no pertenece al usuario del portal ni a root. Cambia su propietario.",
+      "folder-writable": "El grupo u otros pueden modificar la carpeta {path} y cambiar el script. Quita su permiso de escritura.",
+      "folder-owner": "La carpeta {path} no pertenece al usuario del portal ni a root. Cambia su propietario."
+    },
+    "guideTitle": "Cómo preparar un script",
+    "guideFolder": "Crea el directorio {directory}; [storage] en la configuración puede moverlo.",
+    "guideDepth": "Pon los scripts directamente en él o en sus subcarpetas; el portal no mira más abajo ni en carpetas ocultas.",
+    "guideShebang": "La primera línea del script nombra su intérprete, como #!/bin/sh.",
+    "guideModes": "Permite ejecutar y prohíbe escribir al grupo y a otros (0755 o más estricto):",
+    "guideOwner": "Los archivos y carpetas deben pertenecer al usuario del portal (uid {user}) o a root."
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "subtitle": "Direcciones a las que otros sistemas llaman para avisar al portal de que algo pasó",
+    "add": "Añadir webhook",
+    "empty": "Aún no hay webhooks",
+    "emptyHint": "Un webhook da una dirección /webhook/…; llamarla ejecuta un script o automatizaciones.",
+    "columns": {
+      "title": "Webhook",
+      "access": "Acceso",
+      "action": "Acción",
+      "variables": "Variables",
+      "lastReceived": "Última llamada",
+      "actions": "Acciones"
+    },
+    "protected": "Con token",
+    "open": "Abierto a todos",
+    "neverReceived": "Aún no se ha llamado",
+    "deleteTitle": "¿Eliminar el webhook «{title}»?",
+    "deleteDescription": "Su dirección deja de responder; las automatizaciones que lo filtran ya no se activarán.",
+    "deleted": "Webhook eliminado",
+    "saved": "Webhook guardado",
+    "created": "Webhook creado",
+    "addTitle": "Nuevo webhook",
+    "editTitle": "Webhook",
+    "formDescription": "Cuando un POST llega a la dirección del webhook, ejecutar un script o publicar un evento para las automatizaciones.",
+    "notFound": "Webhook no encontrado",
+    "notFoundHint": "Puede que se haya eliminado.",
+    "backToWebhooks": "Volver a los webhooks",
+    "identity": "Webhook",
+    "identityDescription": "La dirección /webhook/… se genera sola; las variables vienen del cuerpo JSON y de los parámetros de la consulta.",
+    "titleLabel": "Título",
+    "enabledLabel": "Activado",
+    "variables": "Variables obligatorias",
+    "variablesHint": "Minúsculas, dígitos y _. Una llamada sin alguna de ellas recibe 422.",
+    "action": "Qué hacer al recibir una llamada",
+    "actions": {
+      "script": "Ejecutar un script",
+      "event": "Publicar un evento"
+    },
+    "actionHints": {
+      "script": "El script recibe las variables como '{{'webhook.branch'}}', PORTAL_WEBHOOK_BRANCH y JSON por la entrada estándar.",
+      "event": "Se publica el evento «Webhook recibido»; cualquier automatización puede reaccionar a él."
+    },
+    "withToken": "Exigir un token",
+    "withTokenHint": "El portal crea un token y lo muestra una vez. Sin token, cualquiera que conozca la dirección puede llamar al webhook.",
+    "tokenRemoved": "Token eliminado: el webhook está abierto a todos",
+    "replaceToken": "Sustituir el token",
+    "createToken": "Crear un token",
+    "removeToken": "Quitar el token",
+    "removeTokenTitle": "¿Quitar el token?",
+    "removeTokenDescription": "Cualquiera que conozca la dirección podrá llamar al webhook.",
+    "tokenTitle": "El token del webhook",
+    "tokenOnce": "Cópialo ahora: el portal guarda solo su hash y no volverá a mostrarlo.",
+    "token": "Token",
+    "example": "Ejemplo de llamada",
+    "tokenSaved": "He guardado el token",
+    "detailsDescription": "Dirección, acceso, acción y últimas ejecuciones del webhook",
+    "address": "Dirección",
+    "noVariables": "Sin variables obligatorias",
+    "noListeners": "Ninguna automatización responde aún a este webhook.",
+    "lastRuns": "Últimas {count} ejecuciones"
+  },
+  "tags": {
+    "label": "Etiquetas",
+    "hint": "Compartidas por automatizaciones y webhooks; elige una existente o escribe una nueva",
+    "filter": "Etiquetas:",
+    "none": "Sin etiquetas",
+    "noMatches": "No hay coincidencias",
+    "noMatchesHint": "Ningún registro tiene todas las etiquetas elegidas. Quita alguna del filtro."
   }
 }

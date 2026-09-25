@@ -14,7 +14,10 @@
     "optional": "optional",
     "never": "never",
     "milliseconds": "{value} ms",
-    "redirecting": "Moving to the new address…"
+    "redirecting": "Moving to the new address…",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Could not copy"
   },
   "nav": {
     "home": "Home",
@@ -27,7 +30,9 @@
     "layout": "Layout",
     "backHome": "Back to home",
     "management": "Management",
-    "proxy": "Proxy"
+    "proxy": "Proxy",
+    "automations": "Automations",
+    "webhooks": "Webhooks"
   },
   "theme": {
     "label": "Theme",
@@ -264,7 +269,18 @@
     "proxyEmail": "An email address is needed",
     "caddySource": "An https address is needed, or http on this machine (127.0.0.1, localhost)",
     "caddyVersion": "latest or an exact version, for example 2.10.2",
-    "proxySamePorts": "The HTTP and HTTPS ports must differ"
+    "proxySamePorts": "The HTTP and HTTPS ports must differ",
+    "automationId": "1 to 63 lowercase letters, digits and dashes",
+    "automationTitle": "Give a title of up to 120 characters",
+    "automationCooldown": "A whole number of seconds, zero or more",
+    "automationCron": "Give a schedule",
+    "automationScript": "Choose a script from the scripts directory",
+    "automationTimeout": "1 to 3600 seconds",
+    "automationPlaceholder": "The argument names {field}, which this event does not have",
+    "automationFromUnknown": "The unknown state counts only with “Including the first state” on",
+    "automationReserved": "This id is taken by the interface's own pages: runs, catalogue, scripts, schedule",
+    "webhookVariable": "Lowercase letters, digits and _, starting with a letter",
+    "tags": "At most 20 tags of up to 40 characters"
   },
   "conditions": {
     "clear": "clear",
@@ -602,5 +618,353 @@
       "httpPort": "HTTP port",
       "httpPortHint": "For redirecting to https and for the Let's Encrypt check; 80 by default. Let's Encrypt knocks on port 80 from outside, so forward it to this port"
     }
+  },
+  "automations": {
+    "title": "Automations",
+    "subtitle": "Scripts on the portal's host, on a schedule or on events",
+    "add": "Add automation",
+    "empty": "No automations yet",
+    "emptyHint": "An automation runs your script when a service goes down, someone signs in or a scheduled time comes.",
+    "columns": {
+      "title": "Automation",
+      "trigger": "When",
+      "script": "Script",
+      "enabled": "State",
+      "lastRun": "Last run",
+      "actions": "Actions",
+      "when": "When",
+      "event": "Event",
+      "outcome": "Outcome",
+      "details": "Details"
+    },
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "neverRan": "Has not run yet",
+    "deleteTitle": "Delete the automation “{title}”?",
+    "deleteDescription": "It disappears from the configuration; the script stays where it is.",
+    "deleted": "Automation deleted",
+    "saved": "Automation saved",
+    "created": "Automation added",
+    "journal": "Run journal",
+    "journalDescription": "The last 200 runs; the journal starts over when the portal restarts",
+    "journalEmpty": "No runs yet",
+    "journalEmptyHint": "Runs with the script's output will appear here.",
+    "allAutomations": "All automations",
+    "filterLabel": "Show runs of",
+    "openRun": "Open",
+    "runTitle": "Run {id}: {automation}",
+    "runOutcome": "Outcome",
+    "runEvent": "Event",
+    "runExit": "Exit code",
+    "runReason": "Reason",
+    "runDuration": "Duration",
+    "runRepeated": "Repeats",
+    "repeated": "{count, plural, one {# time} other {# times}}",
+    "runArguments": "Arguments",
+    "runFields": "Event fields",
+    "runOutput": "Output",
+    "runErrors": "Errors",
+    "truncated": "The last 4 KiB of {bytes} bytes",
+    "noOutput": "empty",
+    "manual": "by hand",
+    "runNow": "Run now",
+    "runNowTitle": "Run “{title}” now?",
+    "runNowDescription": "The script {script} really runs on the portal's host, with sample values for the event's fields.",
+    "runQueued": "“{title}” is queued to run",
+    "runDisabled": "The automation is disabled",
+    "runThrottled": "Wait {seconds} s before the next run",
+    "runFailed": "The run could not be queued",
+    "triggers": {
+      "schedule": "cron {cron}",
+      "anyService": "Any service",
+      "statusChanged": "{services}: state changes",
+      "statusBecomes": "{services}: {states}"
+    },
+    "outcomes": {
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "timed_out": "Timed out",
+      "skipped": "Skipped",
+      "refused": "Refused",
+      "unknown": "Unknown"
+    },
+    "reasons": {
+      "running": "the previous run is still going",
+      "pending": "a run is already waiting in the queue",
+      "cooldown": "the pause between runs",
+      "rate_limit": "more than 60 runs in an hour",
+      "dropped": "the queue was full",
+      "removed": "the automation was deleted or disabled"
+    },
+    "allRuns": "All runs",
+    "textFilter": "Search in values",
+    "textFilterPlaceholder": "for example, main",
+    "live": "Auto-refresh",
+    "refresh": "Refresh now",
+    "updatedAt": "Updated at {time}"
+  },
+  "automationBuilder": {
+    "addTitle": "New automation",
+    "editTitle": "Automation",
+    "description": "When something happens, run a script on the portal's host.",
+    "notFound": "Automation not found",
+    "notFoundHint": "It may have been deleted or renamed.",
+    "backToAutomations": "Back to automations",
+    "leave": "Your changes are not saved. Leave the page?",
+    "identity": "Automation",
+    "title": "Title",
+    "id": "Id",
+    "idHint": "Letters, digits and dashes; it ties journal rows to the automation",
+    "enabled": "Enabled",
+    "when": "When",
+    "whenDescription": "A portal event or a schedule",
+    "event": "Event",
+    "groups": {
+      "manual": "Manual",
+      "schedule": "Schedule",
+      "portal": "Portal",
+      "services": "Services",
+      "users": "Users",
+      "webhooks": "Webhooks",
+      "configuration": "Configuration"
+    },
+    "preset": "Preset",
+    "presets": {
+      "custom": "Own expression",
+      "hourly": "Every hour",
+      "daily": "Every day at…",
+      "weekly": "Every week on…",
+      "monthly": "On the first of every month at…"
+    },
+    "time": "Time",
+    "weekday": "Day of the week",
+    "weekdays": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    },
+    "cron": "Cron expression",
+    "cronHint": "Minute, hour, day of month, month, day of week — or @hourly, @daily, @weekly, @monthly",
+    "nextTimes": "Next runs ({zone})",
+    "nextTimesList": "Next runs",
+    "onlyIf": "Only if",
+    "onlyIfDescription": "Narrow the event down; an empty filter matches everything",
+    "noFilters": "This event has no filters.",
+    "filters": {
+      "services": "Services",
+      "from": "From state",
+      "to": "To state",
+      "users": "Users",
+      "environments": "Environments",
+      "from_unknown": "Including the first state after start-up",
+      "webhooks": "Webhooks"
+    },
+    "anyHint": "Nothing chosen — any value matches",
+    "fromUnknownHint": "Otherwise the change from unknown when the portal starts or a service is added does not count",
+    "cooldown": "Pause between runs, seconds",
+    "cooldownHint": "Triggers during the pause are recorded as skipped",
+    "run": "Run",
+    "runDescription": "A script from the scripts directory, without a shell: each argument is passed on its own",
+    "noScripts": "There are no scripts in {directory} yet. Put an executable file there with mode 0755.",
+    "scriptsMissing": "The directory {directory} does not exist. Create it and put scripts in it; [storage] in the configuration can move it.",
+    "script": "Script",
+    "scriptHint": "From {directory}; scripts cannot be created or edited from the interface",
+    "chooseScript": "Choose a script",
+    "scriptUnrunnable": "{path} — {problem}",
+    "timeout": "Timeout, seconds",
+    "timeoutHint": "Then the process and its children are killed",
+    "arguments": "Arguments",
+    "argumentsHint": "Press an event field to insert it into the argument at the cursor. Put -- before fields so a value is never taken for an option.",
+    "argumentLabel": "Argument {number}",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "removeArgument": "Remove argument",
+    "addArgument": "Add argument",
+    "fields": "Event fields",
+    "preview": "How the script will be called",
+    "previewDescription": "With sample field values; the script also gets PORTAL_* variables and the event as JSON on standard input",
+    "noScript": "script.sh",
+    "variables": "Environment variables ({count})"
+  },
+  "automationEvents": {
+    "schedule": {
+      "title": "On a schedule",
+      "description": "Fires on a cron schedule in the portal's time zone."
+    },
+    "portal_started": {
+      "title": "Portal started",
+      "description": "Once, after the portal listens and its background loops have started."
+    },
+    "portal_stopping": {
+      "title": "Portal stopping",
+      "description": "On shutdown; the portal waits at most 10 seconds for the script."
+    },
+    "service_status_changed": {
+      "title": "Service status changed",
+      "description": "When a probe finds a new state for a service: down, back up and so on."
+    },
+    "service_created": {
+      "title": "Service added",
+      "description": "When a service is added through the interface."
+    },
+    "service_updated": {
+      "title": "Service changed",
+      "description": "When a service is saved through the interface."
+    },
+    "service_deleted": {
+      "title": "Service deleted",
+      "description": "When a service is deleted through the interface."
+    },
+    "user_signed_in": {
+      "title": "User signed in",
+      "description": "When a user signs in to the portal."
+    },
+    "user_signed_out": {
+      "title": "User signed out",
+      "description": "When a user signs out of the portal."
+    },
+    "user_sign_in_failed": {
+      "title": "Sign-in failed",
+      "description": "A wrong name or password, or too many attempts."
+    },
+    "configuration_changed": {
+      "title": "Configuration changed",
+      "description": "Any new revision of the file, from the interface or a hand edit."
+    },
+    "webhook_received": {
+      "title": "Webhook received",
+      "description": "When a webhook with the action “Publish an event” is called."
+    },
+    "manual": {
+      "title": "Manual only",
+      "description": "Never fires by itself — only from “Run now”."
+    },
+    "unknown": {
+      "title": "Unknown event",
+      "description": "An event this interface does not know."
+    }
+  },
+  "automationFields": {
+    "event_name": "Event name",
+    "event_at": "Event time",
+    "automation_id": "Automation id",
+    "run_id": "Run number",
+    "run_manual": "Started by hand",
+    "run_by": "Started by",
+    "schedule_cron": "Schedule",
+    "schedule_at": "Scheduled time",
+    "portal_address": "Portal address",
+    "portal_version": "Portal version",
+    "service_id": "Service id",
+    "service_name": "Service name",
+    "service_previous_id": "Previous id",
+    "status_from": "Previous state",
+    "status_to": "New state",
+    "status_error": "Error",
+    "status_diagnosis": "Diagnosis",
+    "user_name": "User",
+    "client_address": "Client address",
+    "client_environment": "Client environment",
+    "sign_in_reason": "Reason for refusal",
+    "configuration_revision": "Revision",
+    "configuration_previous_revision": "Previous revision",
+    "webhook_id": "Webhook id",
+    "webhook_title": "Webhook title"
+  },
+  "scriptHelp": {
+    "unrunnable": "Scripts that cannot run: {count}",
+    "problems": {
+      "shape": "The path must lead inside the scripts directory.",
+      "too-deep": "The script lies deeper than one subfolder. Move it directly into scripts or into one of its subfolders.",
+      "hidden": "Hidden files and folders (starting with a dot) are not read. Rename them.",
+      "not-found": "{path} does not exist.",
+      "outside": "The link leads outside the scripts directory. Put the file itself inside scripts.",
+      "not-a-file": "This is not a regular file.",
+      "not-executable": "The file is not executable. Allow running it, and check that its first line names an interpreter such as #!/bin/sh.",
+      "writable": "Group or others can change this file, so the portal will not run it. Remove their write permission.",
+      "owner": "The file belongs to neither the portal's user nor root. Change its owner.",
+      "folder-writable": "Group or others can change the folder {path}, which would let them swap the script. Remove their write permission.",
+      "folder-owner": "The folder {path} belongs to neither the portal's user nor root. Change its owner."
+    },
+    "guideTitle": "How to prepare a script",
+    "guideFolder": "Create the directory {directory}; [storage] in the configuration can move it.",
+    "guideDepth": "Put scripts directly in it or in its subfolders; the portal does not look deeper or into hidden folders.",
+    "guideShebang": "The script's first line names its interpreter, such as #!/bin/sh.",
+    "guideModes": "Allow running and forbid writing to group and others (0755 or stricter):",
+    "guideOwner": "Files and folders must belong to the portal's user (uid {user}) or root."
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "subtitle": "Addresses other systems call to tell the portal that something happened",
+    "add": "Add webhook",
+    "empty": "No webhooks yet",
+    "emptyHint": "A webhook gives an address /webhook/…; calling it runs a script or automations.",
+    "columns": {
+      "title": "Webhook",
+      "access": "Access",
+      "action": "Action",
+      "variables": "Variables",
+      "lastReceived": "Last call",
+      "actions": "Actions"
+    },
+    "protected": "Token required",
+    "open": "Open to anyone",
+    "neverReceived": "Not called yet",
+    "deleteTitle": "Delete the webhook “{title}”?",
+    "deleteDescription": "Its address stops answering; automations filtering it will no longer fire.",
+    "deleted": "Webhook deleted",
+    "saved": "Webhook saved",
+    "created": "Webhook created",
+    "addTitle": "New webhook",
+    "editTitle": "Webhook",
+    "formDescription": "When a POST reaches the webhook's address, run a script or publish an event for automations.",
+    "notFound": "Webhook not found",
+    "notFoundHint": "It may have been deleted.",
+    "backToWebhooks": "Back to webhooks",
+    "identity": "Webhook",
+    "identityDescription": "The address /webhook/… is generated; variables come from the request's JSON body and query parameters.",
+    "titleLabel": "Title",
+    "enabledLabel": "Enabled",
+    "variables": "Required variables",
+    "variablesHint": "Lowercase letters, digits and _. A call without any of them gets 422.",
+    "action": "What to do on a call",
+    "actions": {
+      "script": "Run a script",
+      "event": "Publish an event"
+    },
+    "actionHints": {
+      "script": "The script gets the variables as '{{'webhook.branch'}}', PORTAL_WEBHOOK_BRANCH and JSON on standard input.",
+      "event": "The event “Webhook received” is published; any automation can react to it."
+    },
+    "withToken": "Require a token",
+    "withTokenHint": "The portal creates a token and shows it once. Without a token anyone who knows the address can call the webhook.",
+    "tokenRemoved": "Token removed — the webhook is open to anyone",
+    "replaceToken": "Replace the token",
+    "createToken": "Create a token",
+    "removeToken": "Remove the token",
+    "removeTokenTitle": "Remove the token?",
+    "removeTokenDescription": "Anyone who knows the address will be able to call the webhook.",
+    "tokenTitle": "The webhook's token",
+    "tokenOnce": "Copy it now: the portal keeps only its hash and will not show it again.",
+    "token": "Token",
+    "example": "Example call",
+    "tokenSaved": "I have saved the token",
+    "detailsDescription": "The webhook's address, access, action and latest runs",
+    "address": "Address",
+    "noVariables": "No required variables",
+    "noListeners": "No automation answers this webhook yet.",
+    "lastRuns": "Last {count} runs"
+  },
+  "tags": {
+    "label": "Tags",
+    "hint": "Shared by automations and webhooks; pick an existing one or type a new one",
+    "filter": "Tags:",
+    "none": "No tags",
+    "noMatches": "Nothing matches",
+    "noMatchesHint": "No record has every chosen tag. Unselect some tags in the filter."
   }
 }

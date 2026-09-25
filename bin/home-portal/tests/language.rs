@@ -55,6 +55,7 @@ fn portal(extra: &str) -> Router {
             configuration,
             Vec::new(),
         )),
+        events: Arc::new(Silent),
     })
 }
 
@@ -163,4 +164,13 @@ fn the_portal_serves_exactly_the_languages_the_interface_has_dictionaries_for() 
         .collect();
     served.sort();
     assert_eq!(dictionaries, served);
+}
+
+struct Silent;
+
+#[async_trait::async_trait]
+impl portal_feature::EventSink for Silent {
+    fn emit(&self, _event: portal_feature::PortalEvent) {}
+
+    async fn settle(&self, _within: std::time::Duration) {}
 }

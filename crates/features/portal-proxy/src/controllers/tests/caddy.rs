@@ -84,7 +84,7 @@ async fn starting_without_a_downloaded_caddy_is_refused() {
 async fn start_and_stop_write_managed_and_need_the_revision() {
     use std::os::unix::fs::PermissionsExt;
     let portal = portal(&file("http://127.0.0.1:9"));
-    let home = CaddyHome::beside(&portal.path);
+    let home = CaddyHome::at(portal.path.with_file_name("caddy"));
     fs::create_dir_all(&home.directory).unwrap();
     fs::write(home.binary(), crate::fakes::SCRIPT).unwrap();
     fs::set_permissions(home.binary(), fs::Permissions::from_mode(0o755)).unwrap();

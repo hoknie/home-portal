@@ -10,7 +10,12 @@ use portal_services::ServicesSection;
 use toml_edit::DocumentMut;
 
 const EXAMPLES: &str = "examples";
-const SPLIT: [&str; 3] = ["home-portal.toml", "services.toml", "widgets.toml"];
+const SPLIT: [&str; 4] = [
+    "home-portal.toml",
+    "services.toml",
+    "widgets.toml",
+    "automations.toml",
+];
 const SECRETS: &str = "secrets.example.toml";
 const SECRET_VALUES: &str = "telegram_token = \"123456789:AA\"\ncalendar_password = \"example\"\n";
 const ENVIRONMENTS: &str = "[environments.local]\nnetworks = [\"192.168.1.0/24\"]\n\n[environments.vpn]\nnetworks = [\"10.8.0.0/24\"]\n";
@@ -222,9 +227,33 @@ fn the_split_layout_uses_every_size_and_every_widget_type_the_portal_serves() {
 #[test]
 fn the_main_example_points_at_the_examples_and_loads_with_a_user() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let text = fs::read_to_string(root.join("home-portal.example.toml")).unwrap();
-    assert!(text.contains("examples/README.md"));
+    let text = fs::read_to_string(root.join("config/home-portal.example.toml")).unwrap();
+    assert!(text.contains("../examples/README.md"));
+    assert!(text.contains("../README.md"));
+    assert!(root.join("README.md").is_file());
     let directory = tempfile::tempdir().unwrap();
     let path = support::with_extra(&directory, "secret", "");
     assert_eq!(every_error(&path), "");
+}
+
+#[test]
+fn the_split_example_runs_its_automations_from_its_sample_script() {
+    let main = examples().join("split/home-portal.toml");
+    let document: DocumentMut = fs::read_to_string(examples().join("split/automations.toml"))
+        .unwrap()
+        .parse()
+        .unwrap();
+    let scripts: Vec<&str> = document["automations"]
+        .as_array_of_tables()
+        .unwrap()
+        .iter()
+        .map(|table| table["run"]["script"].as_str().unwrap())
+        .collect();
+    assert_eq!(scripts.len(), 6);
+    let directory = portal_automations::ScriptsDirectory::at(main.with_file_name("scripts"));
+    for script in scripts {
+        directory
+            .resolve(script)
+            .unwrap_or_else(|refusal| panic!("{script}: {}", refusal.message));
+    }
 }

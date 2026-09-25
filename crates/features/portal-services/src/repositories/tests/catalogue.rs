@@ -1,6 +1,6 @@
 use toml_edit::DocumentMut;
 
-use super::{append, position, remove, replace};
+use crate::repositories::{append, position, remove, replace};
 use crate::types::{ProbeKind, ServiceEntry};
 
 const BEFORE: &str = r#"# services I run at home
@@ -157,112 +157,6 @@ fn switching_a_service_to_icmp_keeps_its_comment_and_drops_nothing_else() {
         "url = \"http://10.0.0.6\"\nprobe = { kind = \"icmp\" }\n",
     );
     assert_eq!(document.to_string(), expected);
-}
-
-mod history {
-    use std::fs;
-    use std::sync::Arc;
-
-    use portal_model::{ProbeOutcome, ServiceState};
-    use time::OffsetDateTime;
-
-    use crate::loops::HistoryWriter;
-    use crate::repositories::HistoryFiles;
-    use crate::services::{ServiceHistory, StatusBoard};
-    use crate::types::ServiceEntry;
-
-    fn files() -> (tempfile::TempDir, HistoryFiles) {
-        let directory = tempfile::tempdir().unwrap();
-        let files = HistoryFiles::beside(&directory.path().join("home-portal.toml"));
-        (directory, files)
-    }
-
-    fn history() -> ServiceHistory {
-        let mut history = ServiceHistory::default();
-        history.record(1_790_000_000, &ProbeOutcome::answered(ServiceState::Up, 12));
-        history.record(
-            1_790_000_030,
-            &ProbeOutcome::failed(ServiceState::Down, None, "refused".into()),
-        );
-        history
-    }
-
-    #[test]
-    fn a_saved_history_is_loaded_back_beside_the_configuration() {
-        let (directory, files) = files();
-        files.save("media", &history()).unwrap();
-        assert!(directory.path().join("history/media.json").is_file());
-        let loaded = files.load(&["media".to_string()]);
-        assert_eq!(loaded["media"].samples, history().samples);
-        assert_eq!(loaded["media"].transitions, history().transitions);
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn a_history_file_is_readable_only_by_its_owner() {
-        use std::os::unix::fs::PermissionsExt;
-        let (_directory, files) = files();
-        files.save("media", &history()).unwrap();
-        let mode = fs::metadata(files.file_of("media"))
-            .unwrap()
-            .permissions()
-            .mode();
-        assert_eq!(mode & 0o777, 0o600);
-    }
-
-    #[test]
-    fn a_garbage_file_is_set_aside_and_the_service_starts_empty() {
-        let (directory, files) = files();
-        fs::create_dir_all(directory.path().join("history")).unwrap();
-        fs::write(files.file_of("media"), "this is not json").unwrap();
-        let loaded = files.load(&["media".to_string()]);
-        assert!(loaded.is_empty());
-        assert!(!files.file_of("media").exists());
-        assert!(directory.path().join("history/media.json.broken").is_file());
-    }
-
-    #[test]
-    fn the_file_of_a_service_no_longer_configured_is_deleted_at_start() {
-        let (_directory, files) = files();
-        files.save("gone", &history()).unwrap();
-        let loaded = files.load(&["media".to_string()]);
-        assert!(loaded.is_empty());
-        assert!(!files.file_of("gone").exists());
-    }
-
-    #[test]
-    fn a_flush_writes_dirty_histories_and_deletes_forgotten_ones() {
-        let (_directory, files) = files();
-        let files = Arc::new(files);
-        let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), Vec::new()));
-        let writer = HistoryWriter {
-            board: board.clone(),
-            files: files.clone(),
-        };
-        let media = ServiceEntry::new("media", "Media", "http://10.0.0.5");
-        board.record(
-            &media,
-            ProbeOutcome::answered(ServiceState::Up, 5),
-            OffsetDateTime::now_utc(),
-        );
-        writer.flush();
-        assert!(files.file_of("media").is_file());
-        let modified = fs::metadata(files.file_of("media"))
-            .unwrap()
-            .modified()
-            .unwrap();
-        writer.flush();
-        assert_eq!(
-            fs::metadata(files.file_of("media"))
-                .unwrap()
-                .modified()
-                .unwrap(),
-            modified
-        );
-        board.forget("media");
-        writer.flush();
-        assert!(!files.file_of("media").exists());
-    }
 }
 
 #[test]

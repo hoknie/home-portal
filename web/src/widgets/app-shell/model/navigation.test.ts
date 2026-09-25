@@ -9,6 +9,13 @@ it("marks a management section on its own page and its subpages only", () => {
   expect(isActive("/admin/network/", "/admin/layout/")).toBe(false);
 });
 
-it("offers the four management pages", () => {
-  expect(NAVIGATION.map((item) => item.href)).toEqual(["/admin/services/", "/admin/layout/", "/admin/network/", "/admin/proxy/"]);
+it("offers the six management pages", () => {
+  expect(NAVIGATION.map((item) => item.href)).toEqual([
+    "/admin/services/",
+    "/admin/layout/",
+    "/admin/network/",
+    "/admin/proxy/",
+    "/admin/automations/",
+    "/admin/webhooks/",
+  ]);
 });

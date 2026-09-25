@@ -30,6 +30,9 @@ impl TelegramNotifier {
 
 impl StatusObserver for TelegramNotifier {
     fn changed(&self, change: &StatusChange) {
+        if !change.notify {
+            return;
+        }
         let settings = match TelegramSection::read(&self.configuration.read().document) {
             Ok(settings) => settings,
             Err(problem) => {
