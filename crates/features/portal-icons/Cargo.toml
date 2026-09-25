@@ -1,0 +1,25 @@
+[package]
+name = "portal-icons"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+axum.workspace = true
+mime_guess.workspace = true
+portal-config.workspace = true
+portal-feature.workspace = true
+portal-model.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+time.workspace = true
+toml_edit.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+http-body-util.workspace = true
+tempfile.workspace = true
+tower.workspace = true

@@ -1,0 +1,65 @@
+# Services shown on the home page and probed in the background.
+# More ready-made entries: ../services/*.toml
+
+# Media server, reachable from home, from the VPN and from outside.
+[[services]]
+id = "jellyfin"
+name = "Jellyfin"
+url = "http://192.168.1.10:8096"
+addresses = { local = "http://192.168.1.10:8096", vpn = "http://10.8.0.10:8096" }
+# Published by Caddy with a Let's Encrypt certificate. From the internet the portal's
+# sign-in comes first; at home and over the VPN Jellyfin opens directly.
+proxy = { host = "media.home.example.com", upstream = "http://192.168.1.10:8096", auth = ["internet"] }
+group = "Media"
+icon = "catalog:jellyfin"
+description = "Films and series"
+public = true
+public_status = true
+links = [
+  { title = "Dashboard", url = "http://192.168.1.10:8096/web/#/dashboard" },
+  { title = "Documentation", url = "https://jellyfin.org/docs/" },
+]
+notes = '''
+Films live on the NAS in `/volume1/media`.
+
+**Restart:** `docker restart jellyfin` on the NAS.'''
+widgets = ["nas-disks"]
+probe = { path = "/health", environment = "local" }
+
+# Only at home: the torrent client is not for the outside world.
+[[services]]
+id = "qbittorrent"
+name = "qBittorrent"
+url = "http://192.168.1.10:8080"
+environments = ["local", "vpn"]
+# A name that exists only inside, with a certificate from Caddy's own authority.
+proxy = { host = "torrents.home.arpa", environments = ["local", "vpn"], tls = { mode = "internal" } }
+group = "Media"
+icon = "catalog:qbittorrent"
+notes = "The web interface asks for its own password."
+
+# The NAS itself, probed over SSH because its web page needs a login.
+[[services]]
+id = "nas"
+name = "NAS"
+url = "ssh://192.168.1.10"
+group = "Home"
+icon = "catalog:synology-dsm"
+description = "Storage for everything"
+notes = "Probed on port 22. The web interface is at http://192.168.1.10:5000."
+links = [{ title = "DSM", url = "http://192.168.1.10:5000" }]
+widgets = ["nas-disks"]
+probe = { kind = "tcp", every_seconds = 60 }
+
+# The router, silent in Telegram: when it is down, so is Telegram.
+[[services]]
+id = "router"
+name = "Router"
+url = "http://192.168.1.1"
+group = "Home"
+icon = "router"
+notes = "Admin page. Password in the password manager under *router*."
+# Published at home only, with a certificate the owner issued. The files live on the
+# machine Caddy runs on.
+proxy = { host = "router.home.example.com", environments = ["local"], tls = { mode = "files", certificate = "/etc/ssl/home/router.pem", key = "/etc/ssl/home/router.key" } }
+notify = false

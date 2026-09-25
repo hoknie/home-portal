@@ -1,0 +1,66 @@
+# The home page. Sections are drawn top to bottom; a widget's size is its share of a
+# 12-column row: quarter (3), third (4), half (6), two-thirds (8), full (12).
+# On a phone every widget takes the full width. The order here is the order on the page.
+
+[[dashboard.sections]]
+id = "now"
+title = "Right now"
+
+[[dashboard.sections]]
+id = "media"
+title = "Media"
+
+[[dashboard.sections]]
+id = "home"
+title = "Home"
+
+# Counts of services per state.
+[[dashboard.widgets]]
+type = "status-summary"
+section = "now"
+size = "two-thirds"
+
+# The weather, also shown to visitors who are not signed in.
+[[dashboard.widgets]]
+type = "weather"
+id = "riga"
+section = "now"
+size = "third"
+public = true
+settings = { latitude = 56.95, longitude = 24.11, timezone = "Europe/Riga", units = "metric", days = 3 }
+
+# The family calendar, only at home and over the VPN. Its password is a secret.
+[[dashboard.widgets]]
+type = "calendar"
+id = "family"
+section = "now"
+size = "half"
+environments = ["local", "vpn"]
+settings = { url = "https://calendar.example.com/family.ics", days = 7, limit = 8, secret = "calendar_password" }
+
+# The portal host's disks; also drawn on the NAS and Jellyfin pages.
+[[dashboard.widgets]]
+type = "host-metrics"
+id = "nas-disks"
+section = "now"
+size = "half"
+settings = { disks = ["/"] }
+
+# The services of one group; the section's title already names it.
+[[dashboard.widgets]]
+type = "services"
+section = "media"
+size = "full"
+settings = { groups = ["Media"] }
+
+[[dashboard.widgets]]
+type = "services"
+section = "home"
+size = "half"
+settings = { groups = ["Home"] }
+
+# A narrow column: a quarter of the row on a wide screen, half on a tablet.
+[[dashboard.widgets]]
+type = "status-summary"
+section = "home"
+size = "quarter"

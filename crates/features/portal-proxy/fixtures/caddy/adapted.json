@@ -1,0 +1,289 @@
+{
+	"admin": {
+		"listen": "127.0.0.1:2019"
+	},
+	"apps": {
+		"http": {
+			"servers": {
+				"srv0": {
+					"listen": [
+						":443"
+					],
+					"routes": [
+						{
+							"match": [
+								{
+									"host": [
+										"portal.example.com"
+									]
+								}
+							],
+							"handle": [
+								{
+									"handler": "subroute",
+									"routes": [
+										{
+											"handle": [
+												{
+													"handler": "reverse_proxy",
+													"upstreams": [
+														{
+															"dial": "127.0.0.1:8080"
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							],
+							"terminal": true
+						},
+						{
+							"match": [
+								{
+									"host": [
+										"files.example.com"
+									]
+								}
+							],
+							"handle": [
+								{
+									"handler": "subroute",
+									"routes": [
+										{
+											"handle": [
+												{
+													"handler": "reverse_proxy",
+													"upstreams": [
+														{
+															"dial": "192.168.1.20:80"
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							],
+							"terminal": true
+						},
+						{
+							"match": [
+								{
+									"host": [
+										"nas.example.com"
+									]
+								}
+							],
+							"handle": [
+								{
+									"handler": "subroute",
+									"routes": [
+										{
+											"handle": [
+												{
+													"handle_response": [
+														{
+															"match": {
+																"status_code": [
+																	2
+																]
+															},
+															"routes": [
+																{
+																	"handle": [
+																		{
+																			"handler": "vars"
+																		}
+																	]
+																},
+																{
+																	"handle": [
+																		{
+																			"handler": "headers",
+																			"request": {
+																				"delete": [
+																					"X-Portal-User"
+																				]
+																			}
+																		}
+																	]
+																},
+																{
+																	"handle": [
+																		{
+																			"handler": "headers",
+																			"request": {
+																				"set": {
+																					"X-Portal-User": [
+																						"{http.reverse_proxy.header.X-Portal-User}"
+																					]
+																				}
+																			}
+																		}
+																	],
+																	"match": [
+																		{
+																			"not": [
+																				{
+																					"vars": {
+																						"{http.reverse_proxy.header.X-Portal-User}": [
+																							""
+																						]
+																					}
+																				}
+																			]
+																		}
+																	]
+																}
+															]
+														}
+													],
+													"handler": "reverse_proxy",
+													"headers": {
+														"request": {
+															"set": {
+																"X-Forwarded-Method": [
+																	"{http.request.method}"
+																],
+																"X-Forwarded-Uri": [
+																	"{http.request.uri}"
+																]
+															}
+														}
+													},
+													"rewrite": {
+														"method": "GET",
+														"uri": "/api/proxy/authorize"
+													},
+													"upstreams": [
+														{
+															"dial": "127.0.0.1:8080"
+														}
+													]
+												},
+												{
+													"handler": "reverse_proxy",
+													"transport": {
+														"protocol": "http",
+														"tls": {
+															"insecure_skip_verify": true
+														}
+													},
+													"upstreams": [
+														{
+															"dial": "192.168.1.5:5001"
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							],
+							"terminal": true
+						},
+						{
+							"match": [
+								{
+									"host": [
+										"media.home.arpa"
+									]
+								}
+							],
+							"handle": [
+								{
+									"handler": "subroute",
+									"routes": [
+										{
+											"handle": [
+												{
+													"handler": "headers",
+													"request": {
+														"delete": [
+															"X-Portal-User"
+														]
+													}
+												},
+												{
+													"handler": "reverse_proxy",
+													"upstreams": [
+														{
+															"dial": "192.168.1.10:8096"
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							],
+							"terminal": true
+						}
+					],
+					"tls_connection_policies": [
+						{
+							"match": {
+								"sni": [
+									"files.example.com"
+								]
+							},
+							"certificate_selection": {
+								"any_tag": [
+									"cert0"
+								]
+							}
+						},
+						{}
+					]
+				}
+			}
+		},
+		"tls": {
+			"certificates": {
+				"load_files": [
+					{
+						"certificate": "/etc/ssl/files.pem",
+						"key": "/etc/ssl/files.key",
+						"tags": [
+							"cert0"
+						]
+					}
+				]
+			},
+			"automation": {
+				"policies": [
+					{
+						"subjects": [
+							"portal.example.com",
+							"files.example.com",
+							"nas.example.com"
+						],
+						"issuers": [
+							{
+								"email": "owner@example.com",
+								"module": "acme"
+							},
+							{
+								"ca": "https://acme.zerossl.com/v2/DV90",
+								"email": "owner@example.com",
+								"module": "acme"
+							}
+						]
+					},
+					{
+						"subjects": [
+							"media.home.arpa"
+						],
+						"issuers": [
+							{
+								"module": "internal"
+							}
+						]
+					}
+				]
+			}
+		}
+	}
+}

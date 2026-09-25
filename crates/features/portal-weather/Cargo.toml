@@ -1,0 +1,16 @@
+[package]
+name = "portal-weather"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+axum.workspace = true
+portal-feature.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  A launchd agent that starts the portal at login and restarts it if it stops.
+
+    cp home-portal.plist ~/Library/LaunchAgents/lan.home.portal.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/lan.home.portal.plist
+
+  Local Network permission. Since macOS 15 a process may reach addresses on the local
+  network only with the owner's permission. Without it every probe of a LAN address fails
+  at once with "No route to host", and the portal reports the diagnosis
+  "local-network-denied" instead of calling the service down.
+
+  - Started from a terminal, the portal inherits the terminal's permission: allow the
+    terminal app in System Settings > Privacy & Security > Local Network.
+  - Started by this agent, the permission belongs to home-portal itself. If probes report
+    "local-network-denied", find home-portal in the same list and allow it.
+
+  Check from the same context the portal runs in:  home-portal probe <service id>
+
+  Adjust the paths below to where the binary and the configuration live.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>lan.home.portal</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/home-portal</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME_PORTAL_CONFIG</key>
+    <string>/Users/me/home-portal/home-portal.toml</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>/Users/me/home-portal</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/me/home-portal/portal.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/me/home-portal/portal.log</string>
+</dict>
+</plist>

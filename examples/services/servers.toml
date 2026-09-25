@@ -1,0 +1,26 @@
+# Servers and storage.
+
+# Proxmox VE uses a self-signed certificate by default, which an https probe refuses
+# (diagnosis "tls"). Probing the port avoids that until a trusted certificate is set up.
+[[services]]
+id = "proxmox"
+name = "Proxmox VE"
+url = "https://192.168.1.30:8006"
+group = "Servers"
+icon = "catalog:proxmox"
+environments = ["local", "vpn"]
+notes = "Probed over TCP on port 8006 because of the self-signed certificate."
+probe = { kind = "tcp", port = 8006 }
+# With [proxy] enabled, Caddy publishes it inside under a trusted certificate of its own
+# and talks to Proxmox without checking Proxmox's self-signed one.
+proxy = { host = "proxmox.home.arpa", environments = ["local", "vpn"], upstream_verify = false, tls = { mode = "internal" } }
+
+[[services]]
+id = "synology"
+name = "Synology DSM"
+url = "http://192.168.1.10:5000"
+group = "Servers"
+icon = "catalog:synology-dsm"
+environments = ["local", "vpn"]
+links = [{ title = "Storage Manager", url = "http://192.168.1.10:5000/#/storage" }]
+notes = "DSM on port 5000 (http) or 5001 (https)."

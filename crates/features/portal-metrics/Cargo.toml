@@ -1,0 +1,16 @@
+[package]
+name = "portal-metrics"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+axum.workspace = true
+portal-feature.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sysinfo.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "events": [
+      {
+        "all_day": false,
+        "calendar": "Дом",
+        "end": "2026-09-22T09:30:00Z",
+        "location": "Почта",
+        "repeats": "never",
+        "start": "2026-09-22T09:00:00Z",
+        "summary": "Забрать посылку"
+      },
+      {
+        "all_day": true,
+        "calendar": "Дом",
+        "end": null,
+        "location": null,
+        "repeats": "unsupported",
+        "start": "2026-09-23T00:00:00Z",
+        "summary": "День рождения"
+      }
+    ]
+  },
+  "fetched_at": "2026-09-22T10:00:00Z",
+  "problem": null,
+  "refresh_seconds": 1800,
+  "stale": false
+}

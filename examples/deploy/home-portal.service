@@ -1,0 +1,47 @@
+# A systemd unit for the portal.
+#
+#   sudo cp home-portal.service /etc/systemd/system/
+#   sudo systemctl enable --now home-portal
+#
+# ICMP probes (probe.kind = "icmp") use unprivileged echo sockets, so the portal needs
+# neither root nor CAP_NET_RAW, but its group must be inside net.ipv4.ping_group_range.
+# Many distributions allow every group already; check with
+#
+#   sysctl net.ipv4.ping_group_range
+#
+# and, when it reads "1 0", allow all groups:
+#
+#   echo 'net.ipv4.ping_group_range = 0 2147483647' | sudo tee /etc/sysctl.d/60-ping.conf
+#   sudo sysctl --system
+#
+# Without it an ICMP probe reports the diagnosis "icmp-not-permitted".
+# Check from the service's own account:  sudo -u home-portal home-portal probe <service id>
+#
+# When the portal runs Caddy itself (proxy.managed = true), Caddy inherits the portal's
+# capabilities: uncomment AmbientCapabilities so it may bind ports 80 and 443. The portal
+# writes caddy/ and sessions.json beside the configuration, hence ReadWritePaths.
+# Stopping this unit stops a managed Caddy too unless KillMode=process is set.
+
+[Unit]
+Description=home-portal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=home-portal
+Group=home-portal
+Environment=HOME_PORTAL_CONFIG=/etc/home-portal/home-portal.toml
+WorkingDirectory=/var/lib/home-portal
+ExecStart=/usr/local/bin/home-portal
+Restart=on-failure
+RestartSec=5
+# AmbientCapabilities=CAP_NET_BIND_SERVICE
+# KillMode=process
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/etc/home-portal
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+export { BoardGrid } from "./ui/board-grid";
+export type { BoardGridProps } from "./ui/board-grid";
+export { BoardWidget } from "./ui/board-widget";
+export type { BoardWidgetProps } from "./ui/board-widget";
+export { countByState, groupServices } from "./model/grouping";
+export { SIZE_SPANS, placeWidgets } from "./model/layout";
+export type { GridWidget, PlacedSection } from "./model/layout";
+export { WIDGETS, servicesSettingsSchema } from "./model/registry";
+export type { WidgetEntry, WidgetProps, WidgetTitleKey } from "./model/registry";
+export { SettingsForm } from "./ui/settings-form";
+export type { SettingsFormProps } from "./ui/settings-form";
+export { SETTINGS, settingsErrors } from "./model/settings-fields";

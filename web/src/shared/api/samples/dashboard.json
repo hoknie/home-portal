@@ -1,0 +1,66 @@
+{
+  "sections": [
+    {
+      "id": "now",
+      "title": "Сейчас"
+    },
+    {
+      "id": "media",
+      "title": "Медиа"
+    }
+  ],
+  "widgets": [
+    {
+      "environments": null,
+      "id": null,
+      "key": "#0",
+      "public": false,
+      "section": "now",
+      "settings": {},
+      "size": "two-thirds",
+      "title": null,
+      "type": "status-summary"
+    },
+    {
+      "environments": null,
+      "id": "riga",
+      "key": "riga",
+      "public": true,
+      "section": "now",
+      "settings": {
+        "city": "Riga"
+      },
+      "size": "third",
+      "title": null,
+      "type": "weather"
+    },
+    {
+      "environments": [
+        "local"
+      ],
+      "id": null,
+      "key": "#2",
+      "public": false,
+      "section": "media",
+      "settings": {
+        "groups": [
+          "Media"
+        ]
+      },
+      "size": "half",
+      "title": "Media",
+      "type": "services"
+    },
+    {
+      "environments": null,
+      "id": null,
+      "key": "#3",
+      "public": false,
+      "section": "media",
+      "settings": {},
+      "size": "half",
+      "title": null,
+      "type": "services"
+    }
+  ]
+}

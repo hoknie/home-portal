@@ -1,0 +1,10 @@
+{
+  "detected": "local",
+  "environment": "local",
+  "environments": [
+    "local",
+    "vpn",
+    "internet"
+  ],
+  "switchable": true
+}

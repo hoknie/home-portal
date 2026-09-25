@@ -1,0 +1,31 @@
+{
+	admin 127.0.0.1:2019
+	email owner@example.com
+}
+
+portal.example.com {
+	reverse_proxy 127.0.0.1:8080
+}
+
+nas.example.com {
+	forward_auth 127.0.0.1:8080 {
+		uri /api/proxy/authorize
+		copy_headers X-Portal-User
+	}
+	reverse_proxy https://192.168.1.5:5001 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}
+
+media.home.arpa {
+	tls internal
+	request_header -X-Portal-User
+	reverse_proxy 192.168.1.10:8096
+}
+
+files.example.com {
+	tls /etc/ssl/files.pem /etc/ssl/files.key
+	reverse_proxy 192.168.1.20:80
+}

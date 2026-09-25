@@ -1,0 +1,12 @@
+{
+  "errors": [
+    {
+      "field": "id",
+      "message": "must start with a lower-case letter"
+    },
+    {
+      "field": "url",
+      "message": "must use http or https"
+    }
+  ]
+}

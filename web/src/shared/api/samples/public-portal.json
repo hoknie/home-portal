@@ -1,0 +1,47 @@
+{
+  "detected": "local",
+  "environment": "local",
+  "environments": [
+    "local",
+    "vpn",
+    "internet"
+  ],
+  "sections": [
+    {
+      "id": "now",
+      "title": "Сейчас"
+    }
+  ],
+  "services": [
+    {
+      "address": "http://192.168.1.10:8096",
+      "description": "Фильмы и сериалы",
+      "group": "Media",
+      "icon": "/api/public/icons/media",
+      "id": "media",
+      "name": "Media",
+      "status": {
+        "checked_at": "2026-09-22T10:00:30Z",
+        "diagnosis": null,
+        "last_error": null,
+        "last_ok_at": "2026-09-22T10:00:30Z",
+        "latency_milliseconds": 42,
+        "since": "2026-09-22T10:00:30Z",
+        "state": "up"
+      }
+    }
+  ],
+  "switchable": true,
+  "widgets": [
+    {
+      "id": "riga",
+      "section": "now",
+      "settings": {
+        "city": "Riga"
+      },
+      "size": "third",
+      "title": null,
+      "type": "weather"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/core/portal-model",
+    "crates/core/portal-feature",
+    "crates/core/portal-config",
+    "crates/core/portal-web",
+    "crates/core/portal-widget",
+    "crates/features/portal-health",
+    "crates/features/portal-icons",
+    "crates/features/portal-auth",
+    "crates/features/portal-public",
+    "crates/features/portal-secrets",
+    "crates/features/portal-services",
+    "crates/features/portal-telegram",
+    "crates/features/portal-weather",
+    "crates/features/portal-calendar",
+    "crates/features/portal-metrics",
+    "crates/features/portal-network",
+    "crates/features/portal-dashboard",
+    "crates/features/portal-proxy",
+    "bin/home-portal",
+]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+
+[workspace.dependencies]
+async-trait = "0.1"
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tower = { version = "0.5", features = ["util"] }
+syn = { version = "2", features = ["full", "visit"] }
+proc-macro2 = { version = "1", features = ["span-locations"] }
+http-body-util = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ical = "0.11"
+sysinfo = { version = "0.39", default-features = false, features = ["disk", "system"] }
+toml = "0.9"
+toml_edit = "0.25"
+time = { version = "0.3", features = ["serde-well-known", "macros"] }
+mime_guess = "2"
+sha2 = "0.10"
+argon2 = { version = "0.5", features = ["std"] }
+rand = "0.8"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "json"] }
+url = "2"
+hyper = "1"
+socket2 = "0.6"
+rustls = { version = "0.23", default-features = false }
+ipnet = { version = "2", features = ["serde"] }
+if-addrs = "0.15"
+rust-embed = { version = "8", features = ["mime-guess", "compression"] }
+rpassword = "7"
+tempfile = "3"
+portal-model = { path = "crates/core/portal-model" }
+portal-feature = { path = "crates/core/portal-feature" }
+portal-config = { path = "crates/core/portal-config" }
+portal-web = { path = "crates/core/portal-web" }
+portal-widget = { path = "crates/core/portal-widget" }
+portal-health = { path = "crates/features/portal-health" }
+portal-icons = { path = "crates/features/portal-icons" }
+portal-auth = { path = "crates/features/portal-auth" }
+portal-public = { path = "crates/features/portal-public" }
+portal-secrets = { path = "crates/features/portal-secrets" }
+portal-services = { path = "crates/features/portal-services" }
+portal-telegram = { path = "crates/features/portal-telegram" }
+portal-weather = { path = "crates/features/portal-weather" }
+portal-calendar = { path = "crates/features/portal-calendar" }
+portal-metrics = { path = "crates/features/portal-metrics" }
+portal-network = { path = "crates/features/portal-network" }
+portal-dashboard = { path = "crates/features/portal-dashboard" }
+portal-proxy = { path = "crates/features/portal-proxy" }
+
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3

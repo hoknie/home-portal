@@ -1,0 +1,38 @@
+{
+  "data": {
+    "cpu_percent": 17.5,
+    "disks": [
+      {
+        "available_bytes": 128849018880,
+        "file_system": "apfs",
+        "mount_point": "/",
+        "total_bytes": 494384795648
+      },
+      {
+        "available_bytes": 419430400000,
+        "file_system": "ext4",
+        "mount_point": "/media",
+        "total_bytes": 3998639390720
+      }
+    ],
+    "hostname": "box",
+    "load_average": [
+      0.42,
+      0.51,
+      0.63
+    ],
+    "memory": {
+      "total_bytes": 17179869184,
+      "used_bytes": 6871947674
+    },
+    "swap": {
+      "total_bytes": 2147483648,
+      "used_bytes": 0
+    },
+    "uptime_seconds": 93600
+  },
+  "fetched_at": "2026-09-22T10:00:00Z",
+  "problem": null,
+  "refresh_seconds": 10,
+  "stale": false
+}

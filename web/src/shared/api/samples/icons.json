@@ -1,0 +1,16 @@
+[
+  {
+    "available": true,
+    "fetched_at": "2026-09-22T10:00:00Z",
+    "problem": null,
+    "service": "media",
+    "source": "auto"
+  },
+  {
+    "available": false,
+    "fetched_at": null,
+    "problem": "the catalogue answered 404",
+    "service": "router",
+    "source": "catalog:tplink"
+  }
+]

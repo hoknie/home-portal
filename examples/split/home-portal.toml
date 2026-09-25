@@ -1,0 +1,70 @@
+# A complete home-portal setup, split over four files:
+#
+#   home-portal.toml   this file: network, environments, notifications, where edits go
+#   services.toml      the services and how they are probed
+#   widgets.toml       the home page: its sections and widgets
+#   secrets.toml       tokens and passwords, mode 0600 (copy secrets.example.toml)
+#
+# Copy the directory, add a user (see below) and start the portal with
+#   HOME_PORTAL_CONFIG=/path/to/split/home-portal.toml home-portal
+
+include = ["services.toml", "widgets.toml", "secrets.toml"]
+
+# Russian for visitors whose browser asks for none of en, ru, es; each visitor can still
+# switch in the header.
+[interface]
+default_language = "ru"
+
+[network]
+address = "127.0.0.1"
+port = 8080
+# With [proxy] below, people reach the portal through Caddy at proxy.portal_host.
+# public_url = "https://portal.home.example.com"
+# Caddy runs on this host and forwards from loopback; its X-Forwarded-For is believed.
+trusted_proxies = ["127.0.0.1"]
+
+# Where a visitor is. Everyone outside these ranges is "internet".
+[environments.local]
+networks = ["192.168.1.0/24"]
+
+[environments.vpn]
+networks = ["10.8.0.0/24"]
+
+# Caddy publishes the portal and the services that carry a proxy table (see
+# services.toml). The portal writes Caddy's whole configuration through its admin API,
+# so start Caddy from deploy/caddy.plist or deploy/caddy.service and add nothing by hand.
+# Ports 80 and 443 must reach Caddy for Let's Encrypt; the state is under
+# Управление → Прокси, and `home-portal proxy render` prints what Caddy is given.
+[proxy]
+enabled = true
+admin = "http://127.0.0.1:2019"
+portal_host = "portal.home.example.com"
+# One sign-in covers every published host under this domain. Use a subdomain of your
+# own for it, not the whole domain: every host under it receives the session cookie.
+cookie_domain = "home.example.com"
+
+# How hosts get certificates unless a service says otherwise:
+#   mode = "acme"       Let's Encrypt over HTTP-01; needs ports 80 and 443 forwarded
+#   mode = "internal"   Caddy's own authority; install its root from Управление → Прокси
+#   mode = "files"      certificate and key files on Caddy's host
+[proxy.tls]
+mode = "acme"
+email = "owner@example.com"
+
+# People who may sign in. Create the hash with:  home-portal password-hash
+# [[users]]
+# name = "admin"
+# password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
+
+# Telegram messages when a service goes down and when it recovers.
+[notifications.telegram]
+enabled = true
+secret = "telegram_token"
+chat_id = "123456789"
+states = ["down", "unreadable"]
+recovered = true
+
+# The interface adds new services to services.toml. Services and the layout are
+# edited in the file they already live in.
+[configuration]
+writes_to = "services.toml"

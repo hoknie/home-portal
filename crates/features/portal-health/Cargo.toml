@@ -1,0 +1,13 @@
+[package]
+name = "portal-health"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+axum.workspace = true
+portal-feature.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+tower.workspace = true
+http-body-util.workspace = true

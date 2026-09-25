@@ -1,0 +1,29 @@
+{
+  "conditions": [
+    "clear",
+    "drizzle",
+    "fog",
+    "freezing-drizzle",
+    "freezing-rain",
+    "heavy-rain",
+    "heavy-showers",
+    "heavy-snow",
+    "mostly-clear",
+    "overcast",
+    "partly-cloudy",
+    "rain",
+    "rime-fog",
+    "showers",
+    "snow",
+    "snow-grains",
+    "snow-showers",
+    "thunderstorm",
+    "thunderstorm-hail",
+    "unknown"
+  ],
+  "kinds": [
+    "calendar",
+    "host-metrics",
+    "weather"
+  ]
+}

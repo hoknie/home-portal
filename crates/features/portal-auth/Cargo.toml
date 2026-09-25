@@ -1,0 +1,23 @@
+[package]
+name = "portal-auth"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+argon2.workspace = true
+axum.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+time.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+portal-config.workspace = true
+portal-feature.workspace = true
+toml_edit.workspace = true
+
+[dev-dependencies]
+http-body-util.workspace = true
+tempfile.workspace = true
+tower.workspace = true

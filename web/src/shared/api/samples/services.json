@@ -1,0 +1,139 @@
+{
+  "services": [
+    {
+      "address": "http://192.168.1.10:8096",
+      "addresses": {
+        "internet": "https://media.example.com",
+        "local": "http://192.168.1.10:8096"
+      },
+      "description": "Films and series",
+      "environments": null,
+      "group": "Media",
+      "icon": "film",
+      "id": "media",
+      "links": [
+        {
+          "title": "Admin",
+          "url": "http://192.168.1.10:8096/web/#/dashboard"
+        }
+      ],
+      "name": "Media",
+      "notes": "Films live on the NAS.\n\n**Restart:** `docker restart jellyfin`",
+      "notify": true,
+      "probe": {
+        "degraded_after_milliseconds": 1500,
+        "enabled": true,
+        "environment": null,
+        "every_seconds": 30,
+        "kind": "http",
+        "path": "/",
+        "port": null,
+        "timeout_seconds": 5
+      },
+      "probe_address": "http://192.168.1.10:8096",
+      "proxy": null,
+      "public": false,
+      "public_status": false,
+      "status": {
+        "checked_at": "2026-09-22T10:00:30Z",
+        "diagnosis": null,
+        "last_error": null,
+        "last_ok_at": "2026-09-22T10:00:30Z",
+        "latency_milliseconds": 42,
+        "since": "2026-09-22T10:00:30Z",
+        "state": "up"
+      },
+      "url": "http://192.168.1.10:8096",
+      "widgets": [
+        "box"
+      ]
+    },
+    {
+      "address": "https://nas.local",
+      "addresses": {},
+      "description": null,
+      "environments": null,
+      "group": null,
+      "icon": null,
+      "id": "nas",
+      "links": [],
+      "name": "NAS",
+      "notes": null,
+      "notify": true,
+      "probe": {
+        "degraded_after_milliseconds": 1500,
+        "enabled": true,
+        "environment": null,
+        "every_seconds": 60,
+        "kind": "http",
+        "path": "/",
+        "port": null,
+        "timeout_seconds": 5
+      },
+      "probe_address": "https://nas.local",
+      "proxy": {
+        "auth": [
+          "internet"
+        ],
+        "environments": [
+          "internet"
+        ],
+        "host": "nas.example.com",
+        "tls": null,
+        "upstream": null,
+        "upstream_verify": true
+      },
+      "public": false,
+      "public_status": false,
+      "status": {
+        "checked_at": "2026-09-22T10:01:00Z",
+        "diagnosis": "refused",
+        "last_error": "connection refused",
+        "last_ok_at": "2026-09-22T10:00:30Z",
+        "latency_milliseconds": null,
+        "since": "2026-09-22T10:01:00Z",
+        "state": "down"
+      },
+      "url": "https://nas.local",
+      "widgets": []
+    },
+    {
+      "address": "tcp://192.168.1.30",
+      "addresses": {},
+      "description": null,
+      "environments": null,
+      "group": null,
+      "icon": null,
+      "id": "printer",
+      "links": [],
+      "name": "Printer",
+      "notes": null,
+      "notify": true,
+      "probe": {
+        "degraded_after_milliseconds": 1500,
+        "enabled": false,
+        "environment": null,
+        "every_seconds": 30,
+        "kind": "tcp",
+        "path": "/",
+        "port": 9100,
+        "timeout_seconds": 5
+      },
+      "probe_address": "tcp://192.168.1.30",
+      "proxy": null,
+      "public": false,
+      "public_status": false,
+      "status": {
+        "checked_at": null,
+        "diagnosis": null,
+        "last_error": null,
+        "last_ok_at": null,
+        "latency_milliseconds": null,
+        "since": "2026-09-22T10:00:00Z",
+        "state": "unknown"
+      },
+      "url": "tcp://192.168.1.30",
+      "widgets": []
+    }
+  ]
+}

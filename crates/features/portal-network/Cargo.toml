@@ -1,0 +1,22 @@
+[package]
+name = "portal-network"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+axum.workspace = true
+if-addrs.workspace = true
+ipnet.workspace = true
+serde.workspace = true
+toml_edit.workspace = true
+url.workspace = true
+portal-config.workspace = true
+portal-feature.workspace = true
+portal-model.workspace = true
+
+[dev-dependencies]
+http-body-util.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+tokio.workspace = true
+tower.workspace = true

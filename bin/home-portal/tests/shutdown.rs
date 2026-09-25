@@ -1,0 +1,66 @@
+use std::fs;
+use std::io::{Read, Write};
+use std::net::TcpListener;
+use std::process::{Command, Stdio};
+use std::thread;
+use std::time::{Duration, Instant};
+
+use portal_auth::hash_password;
+
+const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
+
+fn answering_http() -> u16 {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    thread::spawn(move || {
+        for stream in listener.incoming() {
+            let Ok(mut stream) = stream else { continue };
+            let mut buffer = [0u8; 1024];
+            let _ = stream.read(&mut buffer);
+            let _ = stream
+                .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nok");
+        }
+    });
+    port
+}
+
+#[cfg(unix)]
+#[test]
+fn stopping_on_a_signal_writes_the_history_beside_the_configuration() {
+    let port = answering_http();
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("home-portal.toml");
+    let hash = hash_password("secret").unwrap();
+    fs::write(
+        &path,
+        format!(
+            "[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://127.0.0.1:{port}\"\n"
+        ),
+    )
+    .unwrap();
+    let mut child = Command::new(BINARY)
+        .env("HOME_PORTAL_CONFIG", &path)
+        .env("HOME_PORTAL_ADDRESS", "127.0.0.1:0")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    thread::sleep(Duration::from_secs(4));
+    let history = directory.path().join("history/media.json");
+    assert!(!history.exists());
+    let killed = Command::new("kill")
+        .args(["-TERM", &child.id().to_string()])
+        .status()
+        .unwrap();
+    assert!(killed.success());
+    let started = Instant::now();
+    while child.try_wait().unwrap().is_none() {
+        assert!(
+            started.elapsed() < Duration::from_secs(10),
+            "the portal did not stop"
+        );
+        thread::sleep(Duration::from_millis(50));
+    }
+    let text = fs::read_to_string(&history).unwrap();
+    assert!(text.contains("\"state\":\"up\""), "{text}");
+}

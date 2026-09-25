@@ -1,0 +1,19 @@
+[package]
+name = "portal-public"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+axum.workspace = true
+portal-feature.workspace = true
+portal-model.workspace = true
+portal-widget.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+http-body-util.workspace = true
+time.workspace = true
+tokio.workspace = true
+tower.workspace = true

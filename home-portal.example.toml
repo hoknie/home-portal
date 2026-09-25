@@ -1,0 +1,154 @@
+# home-portal configuration.
+# Copy to home-portal.toml (or point HOME_PORTAL_CONFIG at your copy).
+# The web interface edits this file in place and keeps your comments.
+#
+# More examples in examples/: a complete setup split over several files, ready-made
+# entries for Jellyfin, Plex, Home Assistant, Pi-hole, Proxmox and more, a sectioned
+# home page, and launchd and systemd files. Start with examples/README.md.
+
+# Further files read after this one, in order. Paths are relative to this file's
+# directory, must stay inside it, and may not include further files.
+# Lists such as [[services]] and [[dashboard.widgets]] are joined in this order;
+# a plain key defined twice is an error naming both files.
+# include = ["services.toml", "secrets.toml"]
+
+# The interface's language when the visitor has not chosen one with the switcher and their
+# browser asks for none of en, ru, es. English when not set.
+# [interface]
+# default_language = "ru"
+
+# Where the portal listens. HOME_PORTAL_ADDRESS=ip:port overrides address and port.
+# Changes here take effect when the portal restarts.
+[network]
+address = "127.0.0.1"
+port = 8080
+# The address people use to reach the portal. https here makes the session cookie Secure.
+# public_url = "https://portal.home.lan"
+# Reverse proxies whose X-Forwarded-For is believed. Addresses or CIDR ranges.
+trusted_proxies = []
+
+# Publishing services under their own names through Caddy, which the portal manages.
+# examples/README.md ("Publishing through Caddy") and examples/split/ show a whole setup;
+# examples/deploy/ has launchd and systemd files for Caddy. With it enabled, add
+# "127.0.0.1" to trusted_proxies above.
+# [proxy]
+# enabled = true
+# portal_host = "portal.home.example.com"
+# cookie_domain = "home.example.com"
+# tls = { mode = "acme", email = "owner@example.com" }
+# Where "Скачать Caddy" on Управление → Прокси takes Caddy from: a GitHub-compatible
+# releases API (GitHub, Gitea, Forgejo) and "latest" or an exact version. The archive
+# is checked against the release's SHA-512 checksum file. Both keys are optional.
+# caddy = { source = "https://api.github.com/repos/caddyserver/caddy/releases", version = "2.10.2" }
+
+# Where a visitor is, decided by their address. The name "internet" is reserved for
+# everyone outside every range below, and needs no section of its own.
+# A service may then carry one address per environment, and widgets may be limited
+# to some of them.
+# [environments.local]
+# networks = ["192.168.1.0/24"]
+#
+# [environments.vpn]
+# networks = ["10.8.0.0/24"]
+
+# People who may sign in. At least one is required.
+# Create a hash with:  home-portal password-hash
+# [[users]]
+# name = "admin"
+# password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
+
+# Services shown on the home page and probed in the background.
+[[services]]
+id = "router"
+name = "Router"
+url = "http://192.168.1.1"
+group = "Network"
+icon = "router"
+description = "Home router admin page"
+# Optional probe settings; these are the defaults.
+# probe = { enabled = true, kind = "http", path = "/", every_seconds = 30, timeout_seconds = 5, degraded_after_milliseconds = 1500 }
+# kind = "tcp" connects to a port (probe.port, or the one in url) for services that do not
+# speak HTTP; kind = "icmp" pings the host. Check a probe from a terminal with:
+#   home-portal probe <id>
+# links = [{ title = "Admin", url = "http://192.168.1.1/admin" }]
+# notes = "Shown on the service page; markdown."
+
+# A service reachable at a different address from each environment. The portal shows
+# the address of the visitor's environment, and probes the one its own host sees.
+# [[services]]
+# id = "media"
+# name = "Media"
+# url = "http://192.168.1.10:8096"
+# addresses = { local = "http://192.168.1.10:8096", vpn = "http://10.8.0.10:8096", internet = "https://media.example.com" }
+# environments = ["local", "vpn"]
+# icon = "auto"
+# public = true
+# public_status = true
+# notify = true
+# probe = { environment = "local" }
+
+# An icon may be:
+#   "film" or "lucide:film"        an icon drawn by the interface
+#   "auto"                         the portal takes the service's own icon
+#   "catalog:jellyfin"             an icon of the dashboard-icons catalogue
+#   "url:https://host/icon.png"    fetched once and cached
+#   "file:/srv/icons/nas.png"      a file on this host
+# Everything the portal fetches is cached in an "icons" directory beside this file.
+
+# The home page layout. Without this section: a status summary, then all services.
+# Sections are drawn top to bottom. Each widget names its section (the first one when
+# left out) and a size, its share of a 12-column row: quarter, third, half, two-thirds
+# or full (the default). Widgets fill a section's rows left to right in file order; on a
+# phone each takes the full width. The interface edits this under Управление → Раскладка.
+# [[dashboard.sections]]
+# id = "now"
+# title = "Right now"
+#
+# [[dashboard.sections]]
+# id = "services"
+#
+# A widget with data of its own needs an id: the interface asks
+# /api/widgets/<id>/data for it. public = true also shows it to visitors
+# without a session, on the portal page at /.
+# [[dashboard.widgets]]
+# type = "status-summary"
+# section = "now"
+# size = "two-thirds"
+#
+# [[dashboard.widgets]]
+# type = "services"
+# title = "Network"
+# section = "services"
+# settings = { groups = ["Network"] }
+#
+# [[dashboard.widgets]]
+# type = "host-metrics"
+# id = "box"
+# settings = { disks = ["/"] }
+#
+# [[dashboard.widgets]]
+# type = "weather"
+# id = "riga"
+# public = true
+# settings = { latitude = 56.95, longitude = 24.11, timezone = "Europe/Riga", units = "metric", days = 3 }
+#
+# [[dashboard.widgets]]
+# type = "calendar"
+# id = "home"
+# environments = ["local", "vpn"]
+# settings = { url = "https://calendar.example.com/home.ics", days = 7, limit = 10 }
+
+# Telegram messages when a service changes state. The token is a secret: name the
+# key here and keep its value in the secrets file (see secrets.example.toml).
+# A service with notify = false stays silent.
+# [notifications.telegram]
+# enabled = true
+# secret = "telegram_token"
+# chat_id = "123456789"
+# states = ["down", "unreadable"]
+# recovered = true
+
+# Which file the interface writes to. The main file by default; it must be one of
+# the files above.
+# [configuration]
+# writes_to = "services.toml"

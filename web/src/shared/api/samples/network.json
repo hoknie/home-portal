@@ -1,0 +1,30 @@
+{
+  "configured": {
+    "address": "0.0.0.0",
+    "port": 9090,
+    "public_url": "https://portal.home.lan",
+    "trusted_proxies": [
+      "10.0.0.0/8"
+    ]
+  },
+  "effective": {
+    "address": "127.0.0.1:8080",
+    "overridden": false
+  },
+  "interfaces": [
+    {
+      "addresses": [
+        "192.168.1.20",
+        "fe80::1"
+      ],
+      "name": "en0"
+    },
+    {
+      "addresses": [
+        "127.0.0.1"
+      ],
+      "name": "lo0"
+    }
+  ],
+  "restart_required": true
+}

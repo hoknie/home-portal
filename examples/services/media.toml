@@ -1,0 +1,53 @@
+# Media: players, downloads and photos. Copy an entry into your services file and
+# change the address. Icons come from the dashboard-icons catalogue.
+
+# Jellyfin answers "Healthy" on /health without a login.
+[[services]]
+id = "jellyfin"
+name = "Jellyfin"
+url = "http://192.168.1.10:8096"
+group = "Media"
+icon = "catalog:jellyfin"
+notes = "Health page: `/health`. Default port 8096."
+probe = { path = "/health" }
+
+# Plex's /identity needs no token.
+[[services]]
+id = "plex"
+name = "Plex"
+url = "http://192.168.1.10:32400"
+group = "Media"
+icon = "catalog:plex"
+notes = "Probed on `/identity`, which answers without a Plex token. Default port 32400."
+probe = { path = "/identity" }
+
+[[services]]
+id = "qbittorrent"
+name = "qBittorrent"
+url = "http://192.168.1.10:8080"
+group = "Media"
+icon = "catalog:qbittorrent"
+environments = ["local", "vpn"]
+notes = "Web UI port 8080. Kept off the internet with `environments`."
+
+# Transmission's RPC answers 409 without a session id, so probe the web page instead.
+[[services]]
+id = "transmission"
+name = "Transmission"
+url = "http://192.168.1.10:9091"
+group = "Media"
+icon = "catalog:transmission"
+environments = ["local", "vpn"]
+notes = "Probed on `/transmission/web/`: the RPC endpoint answers 409 on purpose."
+probe = { path = "/transmission/web/" }
+
+[[services]]
+id = "immich"
+name = "Immich"
+url = "http://192.168.1.10:2283"
+addresses = { local = "http://192.168.1.10:2283", internet = "https://photos.example.com" }
+group = "Media"
+icon = "catalog:immich"
+public = true
+notes = "Ping endpoint: `/api/server/ping`. Default port 2283."
+probe = { path = "/api/server/ping", environment = "local" }

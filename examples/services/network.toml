@@ -1,0 +1,63 @@
+# The network itself: the router, DNS filters and devices that do not speak HTTP.
+
+[[services]]
+id = "router"
+name = "Router"
+url = "http://192.168.1.1"
+group = "Network"
+icon = "router"
+notes = "The admin page. Kept silent in Telegram: when it is down, so is Telegram."
+notify = false
+
+[[services]]
+id = "pi-hole"
+name = "Pi-hole"
+url = "http://192.168.1.3"
+group = "Network"
+icon = "catalog:pi-hole"
+environments = ["local", "vpn"]
+notes = "Admin page at `/admin/`."
+probe = { path = "/admin/" }
+
+[[services]]
+id = "adguard"
+name = "AdGuard Home"
+url = "http://192.168.1.4"
+group = "Network"
+icon = "catalog:adguard-home"
+environments = ["local", "vpn"]
+notes = "Port 80 after setup; the first-run wizard listens on 3000."
+
+# A printer speaks raw print jobs on port 9100 (JetDirect), not HTTP.
+[[services]]
+id = "printer"
+name = "Printer"
+url = "tcp://printer.home.lan"
+group = "Network"
+icon = "printer"
+environments = ["local"]
+notes = "Probed by connecting to port 9100. Use 631 for an IPP-only printer."
+probe = { kind = "tcp", port = 9100, every_seconds = 120 }
+
+# An SSH host: the port comes from the ssh:// scheme (22).
+[[services]]
+id = "nas-ssh"
+name = "NAS (SSH)"
+url = "ssh://nas.home.lan"
+group = "Network"
+icon = "terminal"
+environments = ["local", "vpn"]
+notes = "Probed by connecting to port 22; nothing is sent."
+probe = { kind = "tcp" }
+
+# A device that only answers ping. On Linux the portal's group must be allowed in
+# net.ipv4.ping_group_range; see ../deploy/home-portal.service.
+[[services]]
+id = "switch"
+name = "Switch"
+url = "icmp://switch.home.lan"
+group = "Network"
+icon = "network"
+environments = ["local"]
+notes = "Probed with ICMP echo, without root."
+probe = { kind = "icmp", every_seconds = 60 }

@@ -1,0 +1,13 @@
+/target
+/home-portal.toml
+/sessions.json*
+/caddy/
+*.previous
+*.tmp
+/web/out/
+/web/node_modules/
+/web/.next/
+
+.idea
+*.md
+*.yaml
