@@ -3,7 +3,7 @@ pub fn sample_of(field: &str) -> &'static str {
         "schedule.cron" => "0 3 * * *",
         "schedule.at" => "2026-01-01T03:00:00Z",
         "portal.address" => "0.0.0.0:8080",
-        "portal.version" => env!("CARGO_PKG_VERSION"),
+        "portal.version" => "1.0.0",
         "service.id" => "nas",
         "service.name" => "NAS",
         "service.previous_id" => "storage",
