@@ -55,9 +55,9 @@ build: web
 samples:
     HOME_PORTAL_SAMPLES=write {{ CARGO }} test -p home-portal --test samples
 
-# Run the portal against home-portal.toml
+# Run the portal against config/home-portal.toml (HOME_PORTAL_CONFIG changes the path)
 run:
-    {{ CARGO }} run -p home-portal
+    HOME_PORTAL_CONFIG="${HOME_PORTAL_CONFIG:-config/home-portal.toml}" {{ CARGO }} run -p home-portal
 
 # How to work on the interface with live reload
 dev:

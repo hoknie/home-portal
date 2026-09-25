@@ -1,5 +1,6 @@
 /target
 /home-portal.toml
+/config/home-portal.toml
 /sessions.json*
 /caddy/
 *.previous
@@ -10,4 +11,6 @@
 
 .idea
 *.md
+!/README.md
 *.yaml
+env/sessions.json

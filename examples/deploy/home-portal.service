@@ -19,8 +19,16 @@
 #
 # When the portal runs Caddy itself (proxy.managed = true), Caddy inherits the portal's
 # capabilities: uncomment AmbientCapabilities so it may bind ports 80 and 443. The portal
-# writes caddy/ and sessions.json beside the configuration, hence ReadWritePaths.
+# edits its configuration and writes sessions.json, icons/, history/, automations/ and caddy/
+# beside it, hence ReadWritePaths. To keep that data in /var/lib/home-portal instead, set
+# [storage] directory = "/var/lib/home-portal" in the configuration and add that path too.
 # Stopping this unit stops a managed Caddy too unless KillMode=process is set.
+#
+# Automations run scripts from the scripts directory ([storage], scripts/ beside the
+# configuration by default) as this unit's user,
+# with its capabilities and its ProtectSystem view of the disk: a script that writes
+# somewhere needs that path in ReadWritePaths. On stop the portal waits up to 10 seconds
+# for a portal.stopping script, well inside the default TimeoutStopSec of 90 seconds.
 
 [Unit]
 Description=home-portal

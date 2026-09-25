@@ -1,0 +1,82 @@
+# Automations: scripts the portal runs on this host, on a schedule or on its own events.
+#
+# A script is named by its path inside scripts/ beside the main configuration file. The
+# portal runs it directly, without a shell, as the portal's own user, and refuses a script
+# that leaves scripts/, is not executable, or that group or others can write (the file and
+# every directory down to it: 0755 or stricter).
+#
+# Each item of args is one argument. {{field}} is replaced by a field of the event; the
+# fields are listed under Management → Automations and in the builder. Put -- before
+# placeholders, so that a value starting with "-" is never taken for an option. The same
+# fields arrive as PORTAL_* variables and as JSON on standard input.
+#
+# At most 4 scripts run at once; one automation runs at most once at a time and at most
+# 60 times an hour. The journal of the last 200 runs is under Management → Automations.
+
+[automation_settings]
+# Cron uses the portal host's time zone when this is left out.
+timezone = "Europe/Berlin"
+
+# Every night at 03:30, back up the configuration directory.
+[[automations]]
+id = "nightly-backup"
+title = "Nightly backup"
+when = { event = "schedule", cron = "30 3 * * *" }
+run = { script = "echo-event.sh", args = ["backup", "--", "{{schedule.at}}"], timeout_seconds = 900 }
+
+# Restart Jellyfin's container when it goes down; at most once every ten minutes.
+[[automations]]
+id = "restart-jellyfin"
+title = "Restart Jellyfin when it goes down"
+cooldown_seconds = 600
+when = { event = "service.status-changed", services = ["jellyfin"], to = ["down", "unreadable"] }
+run = { script = "echo-event.sh", args = ["restart", "--", "{{service.id}}", "{{status.error}}"], timeout_seconds = 120 }
+
+# Write an audit line when someone signs in from outside.
+[[automations]]
+id = "audit-outside-sign-in"
+title = "Audit a sign-in from the internet"
+when = { event = "user.signed-in", environments = ["internet"] }
+run = { script = "echo-event.sh", args = ["audit", "--", "{{user.name}}", "{{client.address}}"] }
+
+# Say hello once the portal is up.
+[[automations]]
+id = "portal-started"
+title = "Portal started"
+when = { event = "portal.started" }
+run = { script = "echo-event.sh", args = ["started", "--", "{{portal.address}}"] }
+
+# Only by hand: runs when someone presses "Run now" under Management → Automations.
+[[automations]]
+id = "clean-downloads"
+title = "Clean the downloads folder"
+when = { event = "manual" }
+run = { script = "echo-event.sh", args = ["clean", "--", "{{run.by}}"] }
+
+# Webhooks: POST /webhook/<id>. Create them under Management → Webhooks so the portal
+# generates the id and the token; it shows the token once and keeps only its SHA-256.
+# A caller sends the token as "Authorization: Bearer <token>" or "X-Webhook-Token: <token>",
+# and every declared variable in a JSON body or the query string:
+#   curl -X POST -H 'Authorization: Bearer <token>' -d '{"branch":"main"}' \
+#        https://portal.example.com/webhook/7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d
+[[webhooks]]
+id = "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d"
+title = "Deploy from CI"
+variables = ["branch"]
+action = "script"
+run = { script = "echo-event.sh", args = ["deploy", "--", "{{webhook.branch}}"], timeout_seconds = 300 }
+# SHA-256 of the token; replace it from the interface ("Replace the token").
+token_sha256 = "b5d4045c3f466fa91fe2cc6abe79232a1a57cdf104f7a26e716e0a1e2789df78"
+
+# An event webhook: automations filter it on "webhook.received".
+[[webhooks]]
+id = "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d"
+title = "Motion at the door"
+variables = ["camera"]
+action = "event"
+
+[[automations]]
+id = "motion-alert"
+title = "Motion at the door"
+when = { event = "webhook.received", webhooks = ["0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d"] }
+run = { script = "echo-event.sh", args = ["motion", "--", "{{webhook.camera}}"] }

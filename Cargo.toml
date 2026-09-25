@@ -19,6 +19,7 @@ members = [
     "crates/features/portal-network",
     "crates/features/portal-dashboard",
     "crates/features/portal-proxy",
+    "crates/features/portal-automations",
     "bin/home-portal",
 ]
 
@@ -57,6 +58,8 @@ if-addrs = "0.15"
 rust-embed = { version = "8", features = ["mime-guess", "compression"] }
 rpassword = "7"
 tempfile = "3"
+jiff = { version = "0.2", default-features = false, features = ["std", "tz-system", "tzdb-zoneinfo"] }
+libc = "0.2"
 portal-model = { path = "crates/core/portal-model" }
 portal-feature = { path = "crates/core/portal-feature" }
 portal-config = { path = "crates/core/portal-config" }
@@ -75,6 +78,7 @@ portal-metrics = { path = "crates/features/portal-metrics" }
 portal-network = { path = "crates/features/portal-network" }
 portal-dashboard = { path = "crates/features/portal-dashboard" }
 portal-proxy = { path = "crates/features/portal-proxy" }
+portal-automations = { path = "crates/features/portal-automations" }
 
 [profile.dev.package.argon2]
 opt-level = 3

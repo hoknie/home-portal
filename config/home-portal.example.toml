@@ -1,10 +1,16 @@
 # home-portal configuration.
-# Copy to home-portal.toml (or point HOME_PORTAL_CONFIG at your copy).
-# The web interface edits this file in place and keeps your comments.
+# Copy to home-portal.toml beside this file (`just run` reads config/home-portal.toml), or
+# point HOME_PORTAL_CONFIG at your copy. The web interface edits the file in place and keeps
+# your comments. How to build, run and configure the portal: ../README.md.
 #
-# More examples in examples/: a complete setup split over several files, ready-made
+# More examples in ../examples/: a complete setup split over several files, ready-made
 # entries for Jellyfin, Plex, Home Assistant, Pi-hole, Proxmox and more, a sectioned
-# home page, and launchd and systemd files. Start with examples/README.md.
+# home page, automations with a sample script, and launchd and systemd files. Start with
+# ../examples/README.md.
+#
+# Automations ([[automations]], see ../examples/split/automations.toml) run scripts from
+# the scripts directory ([storage] below; scripts/ beside this file by default). The directory and every script must be 0755 or
+# stricter: under a umask of 0002 a checkout gives 0775, which the portal refuses.
 
 # Further files read after this one, in order. Paths are relative to this file's
 # directory, must stay inside it, and may not include further files.
@@ -12,10 +18,23 @@
 # a plain key defined twice is an error naming both files.
 # include = ["services.toml", "secrets.toml"]
 
+# Where the portal keeps what it writes (sessions.json, icons/, history/, automations/,
+# caddy/) and the scripts/ that automations run. Relative paths are relative to this
+# file's directory. Unset, everything lies beside this file; `directory` moves all of it,
+# and a named place moves only that one. Read at start: restart after a change.
+# [storage]
+# directory = "../env"
+# sessions = "../env/sessions.json"
+# icons = "/var/cache/home-portal/icons"
+# history = "/var/lib/home-portal/history"
+# automations = "/var/lib/home-portal/automations"
+# scripts = "/usr/local/libexec/home-portal"
+# caddy = "/var/lib/home-portal/caddy"
+
 # The interface's language when the visitor has not chosen one with the switcher and their
 # browser asks for none of en, ru, es. English when not set.
 # [interface]
-# default_language = "ru"
+# default_language = "en"
 
 # Where the portal listens. HOME_PORTAL_ADDRESS=ip:port overrides address and port.
 # Changes here take effect when the portal restarts.
@@ -36,7 +55,7 @@ trusted_proxies = []
 # portal_host = "portal.home.example.com"
 # cookie_domain = "home.example.com"
 # tls = { mode = "acme", email = "owner@example.com" }
-# Where "Скачать Caddy" on Управление → Прокси takes Caddy from: a GitHub-compatible
+# Where "Download the latest version" on Management → Proxy takes Caddy from: a GitHub-compatible
 # releases API (GitHub, Gitea, Forgejo) and "latest" or an exact version. The archive
 # is checked against the release's SHA-512 checksum file. Both keys are optional.
 # caddy = { source = "https://api.github.com/repos/caddyserver/caddy/releases", version = "2.10.2" }
@@ -99,7 +118,7 @@ description = "Home router admin page"
 # Sections are drawn top to bottom. Each widget names its section (the first one when
 # left out) and a size, its share of a 12-column row: quarter, third, half, two-thirds
 # or full (the default). Widgets fill a section's rows left to right in file order; on a
-# phone each takes the full width. The interface edits this under Управление → Раскладка.
+# phone each takes the full width. The interface edits this under Management → Layout.
 # [[dashboard.sections]]
 # id = "now"
 # title = "Right now"

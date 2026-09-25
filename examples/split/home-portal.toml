@@ -1,14 +1,16 @@
-# A complete home-portal setup, split over four files:
+# A complete home-portal setup, split over five files and a scripts directory:
 #
 #   home-portal.toml   this file: network, environments, notifications, where edits go
 #   services.toml      the services and how they are probed
 #   widgets.toml       the home page: its sections and widgets
+#   automations.toml   scripts run on a schedule or on the portal's events
 #   secrets.toml       tokens and passwords, mode 0600 (copy secrets.example.toml)
+#   scripts/           the scripts automations may run, 0755 or stricter
 #
 # Copy the directory, add a user (see below) and start the portal with
 #   HOME_PORTAL_CONFIG=/path/to/split/home-portal.toml home-portal
 
-include = ["services.toml", "widgets.toml", "secrets.toml"]
+include = ["services.toml", "widgets.toml", "automations.toml", "secrets.toml"]
 
 # Russian for visitors whose browser asks for none of en, ru, es; each visitor can still
 # switch in the header.
@@ -34,7 +36,7 @@ networks = ["10.8.0.0/24"]
 # services.toml). The portal writes Caddy's whole configuration through its admin API,
 # so start Caddy from deploy/caddy.plist or deploy/caddy.service and add nothing by hand.
 # Ports 80 and 443 must reach Caddy for Let's Encrypt; the state is under
-# Управление → Прокси, and `home-portal proxy render` prints what Caddy is given.
+# Management → Proxy, and `home-portal proxy render` prints what Caddy is given.
 [proxy]
 enabled = true
 admin = "http://127.0.0.1:2019"
@@ -45,7 +47,7 @@ cookie_domain = "home.example.com"
 
 # How hosts get certificates unless a service says otherwise:
 #   mode = "acme"       Let's Encrypt over HTTP-01; needs ports 80 and 443 forwarded
-#   mode = "internal"   Caddy's own authority; install its root from Управление → Прокси
+#   mode = "internal"   Caddy's own authority; install its root from Management → Proxy
 #   mode = "files"      certificate and key files on Caddy's host
 [proxy.tls]
 mode = "acme"
