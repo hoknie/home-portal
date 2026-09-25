@@ -1,5 +1,5 @@
 use std::fs;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use portal_model::{ProbeOutcome, ServiceState};
 use time::OffsetDateTime;
@@ -20,7 +20,8 @@ fn appended(history: &ServiceHistory) -> HistoryWrite {
 }
 
 fn history() -> ServiceHistory {
-    let now = OffsetDateTime::now_utc().unix_timestamp() - 60;
+    static BASE: OnceLock<i64> = OnceLock::new();
+    let now = *BASE.get_or_init(|| OffsetDateTime::now_utc().unix_timestamp() - 60);
     let mut history = ServiceHistory::default();
     history.record(now, &ProbeOutcome::answered(ServiceState::Up, 12));
     history.record(

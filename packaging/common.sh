@@ -44,7 +44,8 @@ archive() {
     mkdir -p "$RELEASE"
     local target="$RELEASE/$name.tar.gz"
     rm -f "$target"
-    if tar --version 2>/dev/null | grep -q GNU; then
+    local flavour; flavour="$(tar --version 2>/dev/null || true)"
+    if grep -q GNU <<<"$flavour"; then
         tar --owner=0 --group=0 --numeric-owner --sort=name --mtime=@0 \
             -C "$work" -cf - "$name" | gzip -9 -n > "$target"
     else
@@ -53,6 +54,7 @@ archive() {
     fi
     rm -rf "$work"
 
-    tar -tzf "$target" | grep -qx "$name/$PROGRAM" || die "$target does not hold $name/$PROGRAM"
+    local listing; listing="$(tar -tzf "$target")"
+    grep -qxF "$name/$PROGRAM" <<<"$listing" || die "$target does not hold $name/$PROGRAM"
     ls -l "$target"
 }

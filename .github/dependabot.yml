@@ -20,6 +20,15 @@ updates:
       npm-minor-and-patch:
         update-types: [minor, patch]
 
+  - package-ecosystem: pip
+    directory: /packaging
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      zig:
+        patterns: ['*']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

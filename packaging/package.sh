@@ -19,8 +19,9 @@ BINARY="$OUT/bin/$TARGET/$PROGRAM"
 binaries() {
     require_interface
     command -v cargo-zigbuild >/dev/null \
-        || die "cargo-zigbuild is missing: pip install ziglang cargo-zigbuild"
-    rustup target list --installed 2>/dev/null | grep -qx "$TARGET" \
+        || die "cargo-zigbuild is missing: pip install --requirement packaging/requirements.txt"
+    local installed; installed="$(rustup target list --installed 2>/dev/null || true)"
+    grep -qxF "$TARGET" <<<"$installed" \
         || die "the $TARGET standard library is not installed: rustup target add $TARGET"
 
     say "building $PROGRAM for $TARGET"
@@ -29,8 +30,9 @@ binaries() {
     mkdir -p "$(dirname "$BINARY")"
     install -m 0755 "${CARGO_TARGET_DIR:-$ROOT/target}/$TARGET/release/$PROGRAM" "$BINARY"
     if command -v file >/dev/null 2>&1; then
-        file "$BINARY"
-        file "$BINARY" | grep -q 'statically linked\|static-pie' \
+        local kind; kind="$(file "$BINARY")"
+        printf '%s\n' "$kind"
+        grep -q 'statically linked\|static-pie' <<<"$kind" \
             || die "$BINARY is not statically linked"
     fi
 }

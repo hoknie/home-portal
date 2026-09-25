@@ -47,6 +47,13 @@ jobs:
       - name: Tests
         run: pnpm --dir web test
 
+      - uses: actions/cache@v4
+        with:
+          path: web/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('web/pnpm-lock.yaml') }}-${{ hashFiles('web/src/**', 'web/next.config.*') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('web/pnpm-lock.yaml') }}-
+
       - name: The interface, in every language
         run: pnpm --dir web build
 
@@ -113,8 +120,18 @@ jobs:
           key: ${{ matrix.target }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
+      - uses: actions/cache@v4
+        id: zig
+        with:
+          path: ~/.local
+          key: zig-${{ runner.os }}-${{ hashFiles('packaging/requirements.txt') }}
+
       - name: zig and cargo-zigbuild, for the C in aws-lc and zstd
-        run: pip install --user --break-system-packages ziglang cargo-zigbuild
+        if: steps.zig.outputs.cache-hit != 'true'
+        run: pip install --user --break-system-packages --requirement packaging/requirements.txt
+
+      - name: zig and cargo-zigbuild on the PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: The tag and Cargo.toml agree
         if: github.ref_type == 'tag'

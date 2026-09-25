@@ -148,8 +148,8 @@ CI (`.github/workflows/release.yml`) runs the web gate, then fmt, clippy and the
 Linux and again on macOS, and builds the three archives on every push and pull request. A tag
 `vX.Y.Z` that matches the version in `Cargo.toml` publishes them as a release with
 `SHA256SUMS`. The Linux build cross-compiles with
-[cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild) (`pip install ziglang
-cargo-zigbuild`), because rustls and the embedded interface carry C code.
+[cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild) (`pip install --requirement
+packaging/requirements.txt`), because rustls and the embedded interface carry C code.
 
 ## License
 
