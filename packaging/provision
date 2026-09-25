@@ -1,0 +1,63 @@
+#!/bin/sh
+# Writes the first configuration, with an administrator, when none exists yet; an existing
+# configuration is left as it is, so an upgrade never touches it.
+#   provision <configuration> <data directory> <owner> <example> <binary>
+# The data directory becomes [storage] directory unless it is the configuration's own.
+# The administrator is "admin" with a random password, kept in initial-password beside the
+# configuration, mode 0600, readable by the owner only.
+
+set -eu
+
+configuration="$1"
+data="$2"
+owner="$3"
+example="$4"
+binary="$5"
+directory="$(dirname "$configuration")"
+secret="$directory/initial-password"
+
+if [ -e "$configuration" ]; then
+    echo "home-portal: $configuration exists and is left as it is"
+    exit 0
+fi
+
+umask 077
+mkdir -p "$directory"
+
+password="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)"
+[ "${#password}" -eq 24 ] || { echo "home-portal: cannot make a password" >&2; exit 1; }
+hash="$(printf '%s\n' "$password" | "$binary" password-hash)"
+case "$hash" in
+'$argon2id$'*) ;;
+*) echo "home-portal: $binary password-hash printed no hash" >&2; exit 1 ;;
+esac
+
+draft="$configuration.provision"
+if [ "$data" = "$directory" ]; then
+    cp "$example" "$draft"
+else
+    awk -v data="$data" '
+        !done && $0 == "# [storage]" { print "[storage]"; inside = 1; next }
+        inside && /^# directory = / { print "directory = \"" data "\""; inside = 0; done = 1; next }
+        { print }
+    ' "$example" > "$draft"
+    grep -qx "directory = \"$data\"" "$draft" \
+        || { rm -f "$draft"; echo "home-portal: $example has no [storage] to fill in" >&2; exit 1; }
+fi
+
+cat >> "$draft" <<USERS
+
+# The first administrator, made at installation. Its password is in $secret.
+# To change it: home-portal password-hash, paste the hash below, then delete that file.
+[[users]]
+name = "admin"
+password_hash = "$hash"
+USERS
+
+printf '%s\n' "$password" > "$secret"
+chmod 600 "$draft" "$secret"
+if [ "$(id -u)" -eq 0 ]; then
+    chown "$owner" "$draft" "$secret"
+fi
+mv "$draft" "$configuration"
+echo "home-portal: wrote $configuration with the user admin; the password is in $secret"

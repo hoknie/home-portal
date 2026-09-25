@@ -1,0 +1,23 @@
+#!/bin/sh
+# Removes home-portal installed from the .pkg. The LaunchAgent of the user running this
+# stops; the configuration and data in ~/Library/Application Support/home-portal stay
+# unless --purge is given.
+#   sudo /usr/local/libexec/home-portal/uninstall [--purge]
+
+set -eu
+
+LABEL="lan.home.portal"
+[ "$(id -u)" -eq 0 ] || { echo "uninstall: run it with sudo" >&2; exit 2; }
+user="${SUDO_USER:-$(stat -f %Su /dev/console)}"
+home="$(dscl . -read "/Users/$user" NFSHomeDirectory | awk '{ print $2 }')"
+uid="$(id -u "$user")"
+
+launchctl bootout "gui/$uid/$LABEL" 2>/dev/null || true
+rm -f "$home/Library/LaunchAgents/$LABEL.plist"
+if [ "${1:-}" = "--purge" ]; then
+    rm -rf "$home/Library/Application Support/home-portal" "$home/Library/Logs/home-portal.log"
+fi
+rm -f /usr/local/bin/home-portal
+rm -rf /usr/local/share/home-portal /usr/local/share/doc/home-portal /usr/local/libexec/home-portal
+pkgutil --forget lan.home.portal >/dev/null 2>&1 || true
+echo "home-portal is removed"

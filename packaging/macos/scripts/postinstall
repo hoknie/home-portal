@@ -1,0 +1,14 @@
+#!/bin/sh
+# The installer runs this as root after the files are in place: set the portal up for the
+# user signed in at the console. With nobody signed in, each user runs setup themselves.
+
+set -eu
+
+user="$(stat -f %Su /dev/console 2>/dev/null || true)"
+case "$user" in
+""|root|loginwindow|_mbsetupuser)
+    echo "home-portal: nobody is signed in; run /usr/local/libexec/home-portal/setup as the user"
+    exit 0
+    ;;
+esac
+/usr/local/libexec/home-portal/setup "$user"

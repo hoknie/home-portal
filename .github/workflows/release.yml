@@ -147,6 +147,30 @@ jobs:
           echo "$answer"
           grep -q 'does not exist' <<<"$answer"
 
+      - name: deb, built on debian:12
+        run: |
+          docker run --rm --volume "$PWD":/work --workdir /work --env TARGET \
+            debian:12 ./packaging/package.sh deb
+          sudo chown -R "$(id -u):$(id -g)" dist
+
+      - name: rpm, built on almalinux:9
+        run: |
+          docker run --rm --volume "$PWD":/work --workdir /work --env TARGET \
+            almalinux:9 bash -c 'dnf -y -q install rpm-build >/dev/null && ./packaging/package.sh rpm'
+          sudo chown -R "$(id -u):$(id -g)" dist
+
+      - name: The deb installs, runs, signs admin in and is removed on a clean debian:12
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          docker run --rm --volume "$PWD":/work --workdir /work --env TARGET \
+            debian:12 timeout -s KILL 300 ./packaging/package-check.sh deb
+
+      - name: The rpm installs, runs, signs admin in and is removed on a clean almalinux:9
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          docker run --rm --volume "$PWD":/work --workdir /work --env TARGET \
+            almalinux:9 timeout -s KILL 300 ./packaging/package-check.sh rpm
+
       - uses: actions/upload-artifact@v7
         with:
           name: home-portal-${{ matrix.target }}
@@ -187,7 +211,7 @@ jobs:
       - name: Tests, as macOS runs them
         run: cargo test --workspace
 
-      - name: A universal binary and its archive
+      - name: A universal binary, its archive and the .pkg, checked
         run: ./packaging/package-macos.sh all
 
       - name: The binary runs

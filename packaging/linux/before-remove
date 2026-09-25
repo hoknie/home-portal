@@ -1,0 +1,8 @@
+#!/bin/sh
+# Run by the deb and the rpm before the package is removed (not on an upgrade).
+
+set -eu
+
+if [ -d /run/systemd/system ]; then
+    systemctl disable --now home-portal.service || true
+fi

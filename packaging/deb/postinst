@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+case "$1" in
+configure)
+    if [ -z "${2:-}" ]; then
+        /usr/lib/home-portal/after-install first
+    else
+        /usr/lib/home-portal/after-install upgrade
+    fi
+    ;;
+esac

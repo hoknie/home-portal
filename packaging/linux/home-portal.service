@@ -1,0 +1,31 @@
+# Installed by the home-portal package. Local changes: systemctl edit home-portal
+#
+# ICMP probes use unprivileged echo sockets: the group home-portal must be inside
+# net.ipv4.ping_group_range (see /usr/share/doc/home-portal/examples/deploy/home-portal.service).
+# A portal that runs Caddy itself and publishes on ports 80 and 443 needs
+#   [Service]
+#   AmbientCapabilities=CAP_NET_BIND_SERVICE
+# through systemctl edit.
+
+[Unit]
+Description=home-portal, the status of home services
+Documentation=file:///usr/share/doc/home-portal/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=home-portal
+Group=home-portal
+Environment=HOME_PORTAL_CONFIG=/etc/home-portal/home-portal.toml
+WorkingDirectory=/var/lib/home-portal
+ExecStart=/usr/bin/home-portal
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/etc/home-portal /var/lib/home-portal
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

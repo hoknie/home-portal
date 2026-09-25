@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+case "$1" in
+purge)
+    rm -rf /etc/home-portal /var/lib/home-portal
+    ;;
+esac
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload || true
+fi

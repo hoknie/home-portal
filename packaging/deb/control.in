@@ -1,0 +1,13 @@
+Package: home-portal
+Version: @VERSION@
+Architecture: @ARCH@
+Maintainer: hoknie <120724599+hoknie@users.noreply.github.com>
+Installed-Size: @INSTALLED_SIZE@
+Section: net
+Priority: optional
+Depends: ca-certificates
+Homepage: https://github.com/hoknie/home-portal
+Description: A start page for a home network that knows which services are up
+ home-portal probes home services over HTTP, TCP and ICMP, keeps their history, shows a
+ home page arranged in the browser, publishes services through Caddy and runs automations.
+ One static binary with the interface embedded, run by systemd as the user home-portal.

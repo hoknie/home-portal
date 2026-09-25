@@ -24,17 +24,55 @@ embedded in the binary.
 
 ## Install a release
 
-Every tagged version on the releases page carries one archive per platform and a
-`SHA256SUMS` over them:
-
-| Archive | For |
-|---|---|
-| `home-portal_<version>.linux.x86_64.tar.gz` | Linux on x86_64, a static binary (musl) |
-| `home-portal_<version>.linux.aarch64.tar.gz` | Linux on arm64 (Raspberry Pi 4/5 on a 64-bit system, ARM servers), static |
-| `home-portal_<version>.macos.universal.tar.gz` | macOS 11 or later, Apple silicon and Intel |
+Every tagged version on the releases page carries a package and an archive per platform,
+and a `SHA256SUMS` over all of them. Check what you downloaded first:
 
 ```sh
 sha256sum --check --ignore-missing SHA256SUMS      # shasum -a 256 -c on macOS
+```
+
+| File | For |
+|---|---|
+| `home-portal_<version>.macos.universal.pkg` | macOS 11 or later, Apple silicon and Intel: installs and starts everything |
+| `home-portal_<version>.debian.amd64.deb` / `.debian.arm64.deb` | Debian, Ubuntu, Raspberry Pi OS (64-bit) and relatives |
+| `home-portal_<version>.el.x86_64.rpm` / `.el.aarch64.rpm` | RHEL, AlmaLinux, Rocky, Fedora and relatives |
+| `home-portal_<version>.linux.x86_64.tar.gz` / `.linux.aarch64.tar.gz` | Any Linux, a static binary to place by hand |
+| `home-portal_<version>.macos.universal.tar.gz` | macOS, the binary to place by hand |
+
+### macOS
+
+Open the `.pkg`. It installs `/usr/local/bin/home-portal` and sets the portal up for the user
+signed in: a configuration in `~/Library/Application Support/home-portal`, the user **admin**
+with a random password in `initial-password` beside it, and a LaunchAgent that starts the
+portal at every login. The last page of the installer says the same; then open
+http://127.0.0.1:8080.
+
+When every service on the local network shows as down, allow **home-portal** in System
+Settings → Privacy & Security → Local Network. Another user of the Mac sets the portal up with
+`/usr/local/libexec/home-portal/setup`; `sudo /usr/local/libexec/home-portal/uninstall
+[--purge]` removes it.
+
+### Debian, Ubuntu, RHEL and relatives
+
+```sh
+sudo apt install ./home-portal_<version>.debian.amd64.deb     # or
+sudo dnf install ./home-portal_<version>.el.x86_64.rpm
+sudo cat /etc/home-portal/initial-password                   # the password of admin
+```
+
+The package makes the system user `home-portal`, writes `/etc/home-portal/home-portal.toml`
+with the user **admin** and a random password, keeps the data in `/var/lib/home-portal` and
+starts the systemd service `home-portal` on http://127.0.0.1:8080. Scripts for automations go
+into `/var/lib/home-portal/scripts` (owned by root, 0755). An upgrade keeps the configuration;
+removing the package keeps it too (`apt purge` deletes it).
+
+To reach the portal from other machines, set `[network] address` to `0.0.0.0` or the host's
+address and restart it: `sudo systemctl restart home-portal`, or on a Mac
+`launchctl kickstart -k gui/$(id -u)/lan.home.portal`.
+
+### By hand
+
+```sh
 tar -xzf home-portal_<version>.linux.x86_64.tar.gz
 cd home-portal_<version>.linux.x86_64
 cp config/home-portal.example.toml config/home-portal.toml
@@ -135,19 +173,40 @@ permission; `home-portal probe` run from the same context as the portal shows it
 
 ## Development
 
-```sh
-just check              # the whole gate: fmt, clippy -D warnings, tests, web lint, typecheck, tests, build
-just run                # the portal on :8080
-pnpm --dir web dev      # the interface with live reload, proxying /api to the running portal
-just samples            # rewrite the API samples after changing a response shape
-just package-macos      # a universal macOS archive in dist/release
-just package            # a static Linux archive; TARGET=aarch64-unknown-linux-musl for arm64
-```
+Every task is a `just` recipe; `just` alone lists them by section. The recipes live in
+`env/justice/`, one file per section, and the root `justfile` imports them.
+
+| Section | Recipe | What it does |
+|---|---|---|
+| quality | `just check` | The whole gate, in CI's order: fmt, clippy, Rust tests, web lint, typecheck, web tests, web build |
+| | `just fmt` / `just fmt-check` | Format the Rust code, or only check it |
+| | `just clippy` | Lint the Rust code, warnings are errors |
+| | `just test` | Every Rust test in the workspace |
+| | `just samples` | Rewrite the API samples after changing a response shape |
+| web | `just web` | Build the interface into `web/out`, which the binary embeds |
+| | `just web-lint` / `just web-typecheck` / `just web-test` | Lint and layers, typecheck, tests of the interface |
+| | `just web-install` | Install the interface's dependencies exactly as locked |
+| build | `just build` | The interface, then the release binary that embeds it |
+| run | `just run` | The portal on :8080 with `config/home-portal.toml` (`HOME_PORTAL_CONFIG` changes it) |
+| | `just dev` | How to run the interface with live reload next to the portal |
+| package | `just package-macos` | A universal macOS binary, its archive and the `.pkg`, checked, in `dist/release` |
+| | `just package-linux` | Both static Linux archives, x86_64 and aarch64 |
+| | `just package` | One static Linux archive; `TARGET=aarch64-unknown-linux-musl` for arm64 |
+| | `just package-deb` / `just package-rpm` | The deb (in `debian:12`) or the rpm (in `almalinux:9`) of a built binary, through Docker |
+| | `just package-check deb` / `rpm` | Install it on a clean system, run it, sign admin in, remove it |
+| release | `just version` | The version in `Cargo.toml`, the one a release tag must name |
+| | `just check-tag vX.Y.Z` | Check a tag against that version |
+| | `just checksums` | `SHA256SUMS` over the archives in `dist/release` |
+
+For the interface with live reload, run `just run` in one terminal and `pnpm --dir web dev` in
+another; it proxies `/api` to the running portal.
 
 CI (`.github/workflows/release.yml`) runs the web gate, then fmt, clippy and the Rust tests on
-Linux and again on macOS, and builds the three archives on every push and pull request. A tag
+Linux and again on macOS, and on every push and pull request builds the archives, the deb and
+the rpm for both architectures and the macOS `.pkg`, and installs the x86_64 deb and rpm and the
+`.pkg` setup to check that admin signs in. A tag
 `vX.Y.Z` that matches the version in `Cargo.toml` publishes them as a release with
-`SHA256SUMS`. The Linux build cross-compiles with
+`SHA256SUMS`; check the tag first with `just check-tag vX.Y.Z`. The Linux build cross-compiles with
 [cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild) (`pip install --requirement
 packaging/requirements.txt`), because rustls and the embedded interface carry C code.
 

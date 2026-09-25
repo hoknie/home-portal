@@ -1,0 +1,85 @@
+#!/bin/sh
+# Sets home-portal up for one macOS user: the first configuration with admin, the scripts
+# directory and a LaunchAgent that starts the portal at login and keeps it running.
+# The installer runs it for the user signed in; any user may run it for themselves:
+#   /usr/local/libexec/home-portal/setup
+# As root:  /usr/local/libexec/home-portal/setup <user>
+
+set -eu
+
+LABEL="lan.home.portal"
+PREFIX="${HOME_PORTAL_PREFIX:-/usr/local}"
+LIBEXEC="$PREFIX/libexec/home-portal"
+SHARE="$PREFIX/share/home-portal"
+BINARY="$PREFIX/bin/home-portal"
+
+if [ "$(id -u)" -eq 0 ]; then
+    user="${1:-}"
+    [ -n "$user" ] || { echo "setup: as root, name the user: setup <user>" >&2; exit 2; }
+    sudo -u "$user" -H env HOME_PORTAL_SETUP_NO_START=1 "$0"
+    home="$(dscl . -read "/Users/$user" NFSHomeDirectory | awk '{ print $2 }')"
+    uid="$(id -u "$user")"
+    launchctl bootout "gui/$uid/$LABEL" 2>/dev/null || true
+    launchctl bootstrap "gui/$uid" "$home/Library/LaunchAgents/$LABEL.plist"
+    exit 0
+fi
+
+user="$(id -un)"
+uid="$(id -u)"
+folder="$HOME/Library/Application Support/home-portal"
+agents="$HOME/Library/LaunchAgents"
+logs="$HOME/Library/Logs"
+plist="$agents/$LABEL.plist"
+
+mkdir -p "$folder" "$agents" "$logs"
+chmod 700 "$folder"
+"$LIBEXEC/provision" "$folder/home-portal.toml" "$folder" "$user" "$SHARE/home-portal.example.toml" "$BINARY"
+if [ ! -d "$folder/scripts" ]; then
+    mkdir -m 0755 "$folder/scripts"
+fi
+
+cat > "$plist.new" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$BINARY</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME_PORTAL_CONFIG</key>
+    <string>$folder/home-portal.toml</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>$folder</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>$logs/home-portal.log</string>
+  <key>StandardErrorPath</key>
+  <string>$logs/home-portal.log</string>
+</dict>
+</plist>
+PLIST
+plutil -lint "$plist.new" >/dev/null
+mv "$plist.new" "$plist"
+
+if [ -z "${HOME_PORTAL_SETUP_NO_START:-}" ]; then
+    launchctl bootout "gui/$uid/$LABEL" 2>/dev/null || true
+    launchctl bootstrap "gui/$uid" "$plist"
+fi
+
+cat <<MESSAGE
+home-portal runs for $user at login.
+  Open        http://127.0.0.1:8080
+  Sign in     admin, password in $folder/initial-password
+  Configure   $folder/home-portal.toml
+  Scripts     $folder/scripts
+  Log         $logs/home-portal.log
+MESSAGE

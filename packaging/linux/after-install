@@ -1,0 +1,40 @@
+#!/bin/sh
+# Run by the deb and the rpm after their files are in place.
+#   after-install first|upgrade
+
+set -eu
+
+if command -v systemd-sysusers >/dev/null 2>&1; then
+    systemd-sysusers /usr/lib/sysusers.d/home-portal.conf
+elif ! getent passwd home-portal >/dev/null; then
+    useradd --system --user-group --home-dir /var/lib/home-portal --no-create-home \
+        --shell /usr/sbin/nologin home-portal
+fi
+
+if command -v systemd-tmpfiles >/dev/null 2>&1; then
+    systemd-tmpfiles --create /usr/lib/tmpfiles.d/home-portal.conf
+else
+    install -d -m 0750 -o home-portal -g home-portal /etc/home-portal /var/lib/home-portal
+    install -d -m 0755 -o root -g root /var/lib/home-portal/scripts
+fi
+
+/usr/lib/home-portal/provision /etc/home-portal/home-portal.toml /var/lib/home-portal \
+    home-portal:home-portal /usr/share/home-portal/home-portal.example.toml /usr/bin/home-portal
+
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+    if [ "${1:-first}" = first ]; then
+        systemctl enable --now home-portal.service
+    else
+        systemctl try-restart home-portal.service
+    fi
+fi
+
+cat <<'MESSAGE'
+
+home-portal is installed and runs as the service home-portal.
+  Open        http://127.0.0.1:8080 (the address and port are in [network])
+  Sign in     admin, password in /etc/home-portal/initial-password
+  Configure   /etc/home-portal/home-portal.toml; data in /var/lib/home-portal
+  Scripts     /var/lib/home-portal/scripts, owned by root, 0755
+MESSAGE
