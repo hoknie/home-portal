@@ -4,19 +4,16 @@ use proc_macro2::Span;
 use syn::spanned::Spanned;
 use syn::visit::Visit;
 
-use crate::exceptions::{Exception, excepted, listed};
 use crate::sources::{SourceFile, rust_files};
 
-pub const RULE: &str = "size";
 pub const FILE_LINES: usize = 400;
 pub const FUNCTION_LINES: usize = 300;
 pub const FOLDER_FILES: usize = 12;
 pub const UNCOUNTED_FILES: [&str; 4] = ["mod.rs", "tests.rs", "lib.rs", "main.rs"];
 
-pub fn file_violations(files: &[SourceFile], exceptions: &[Exception]) -> Vec<String> {
+pub fn file_violations(files: &[SourceFile]) -> Vec<String> {
     files
         .iter()
-        .filter(|file| !excepted(exceptions, RULE, &file.path))
         .filter_map(|file| {
             let lines = file.text.lines().count();
             (lines > FILE_LINES)
@@ -106,7 +103,7 @@ fn function_of(lines: usize) -> String {
 #[test]
 fn every_file_function_and_folder_is_within_budget() {
     let files = rust_files();
-    let mut found = file_violations(&files, &listed());
+    let mut found = file_violations(&files);
     found.extend(function_violations(&files));
     found.extend(folder_violations(&files));
     assert!(found.is_empty(), "{}", found.join("\n"));
@@ -117,19 +114,9 @@ fn a_file_of_four_hundred_lines_passes_and_one_more_fails_by_name() {
     let fitting = SourceFile::sample("crates/x/src/a.rs", &lines_of_code(FILE_LINES));
     let oversized = SourceFile::sample("crates/x/src/b.rs", &lines_of_code(FILE_LINES + 1));
     assert_eq!(
-        file_violations(&[fitting, oversized], &[]),
+        file_violations(&[fitting, oversized]),
         vec!["crates/x/src/b.rs has 401 lines, above 400"]
     );
-}
-
-#[test]
-fn a_listed_file_may_exceed_the_budget() {
-    let oversized = SourceFile::sample("crates/x/src/b.rs", &lines_of_code(FILE_LINES + 1));
-    let exception = Exception {
-        rule: RULE.to_string(),
-        path: "crates/x/src/b.rs".to_string(),
-    };
-    assert!(file_violations(&[oversized], &[exception]).is_empty());
 }
 
 #[test]

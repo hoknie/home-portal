@@ -1,7 +1,5 @@
 mod allows;
 mod comments;
-mod documents;
-mod exceptions;
 mod folders;
 mod registry;
 mod roots;
