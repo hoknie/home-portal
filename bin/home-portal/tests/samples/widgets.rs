@@ -90,21 +90,21 @@ fn the_weather_sample_matches_its_serializer() {
 fn the_calendar_sample_matches_its_serializer() {
     let events = vec![
         CalendarEvent {
-            summary: "Забрать посылку".into(),
+            summary: "Pick up a parcel".into(),
             start: datetime!(2026-09-22 09:00 UTC),
             end: Some(datetime!(2026-09-22 09:30 UTC)),
             all_day: false,
-            location: Some("Почта".into()),
-            calendar: Some("Дом".into()),
+            location: Some("Post office".into()),
+            calendar: Some("Home".into()),
             repeats: Repeats::Never,
         },
         CalendarEvent {
-            summary: "День рождения".into(),
+            summary: "Birthday".into(),
             start: datetime!(2026-09-23 00:00 UTC),
             end: None,
             all_day: true,
             location: None,
-            calendar: Some("Дом".into()),
+            calendar: Some("Home".into()),
             repeats: Repeats::Unsupported,
         },
     ];

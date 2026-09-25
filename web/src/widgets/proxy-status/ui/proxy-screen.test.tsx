@@ -26,13 +26,13 @@ afterEach(() => {
 
 it("lists every published host with its service, certificate and sign-in", () => {
   renderWith(sample());
-  expect(screen.getByRole("status")).toHaveTextContent("получил текущую конфигурацию");
+  expect(screen.getByRole("status")).toHaveTextContent("holding the current configuration");
   const nas = screen.getByRole("link", { name: "nas.example.com" }).closest("tr") as HTMLElement;
   expect(nas).toHaveTextContent("Let's Encrypt");
   expect(nas).toHaveTextContent("internet");
   expect(within(nas).getByRole("link", { name: "nas" })).toHaveAttribute("href", "/service/?id=nas");
   expect(screen.getByRole("link", { name: "portal.example.com" })).toHaveAttribute("href", "https://portal.example.com");
-  expect(screen.getByRole("link", { name: "Скачать сертификат" })).toHaveAttribute("href", "/api/proxy/root-certificate");
+  expect(screen.getByRole("link", { name: "Download the certificate" })).toHaveAttribute("href", "/api/proxy/root-certificate");
 });
 
 it("shows caddy as unreachable with the last error while still listing the hosts", () => {
@@ -43,7 +43,7 @@ it("shows caddy as unreachable with the last error while still listing the hosts
       proxy.last_error = "Caddy's admin API cannot be reached";
     }),
   );
-  expect(screen.getByRole("status")).toHaveTextContent("Недоступен");
+  expect(screen.getByRole("status")).toHaveTextContent("Unreachable");
   expect(screen.getByText("Caddy's admin API cannot be reached")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "nas.example.com" })).toBeInTheDocument();
 });
@@ -60,9 +60,9 @@ it("applying shows the configuration in sync", async () => {
       proxy.last_applied_at = null;
     }),
   );
-  expect(screen.getByText("ещё не применялась")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Применить сейчас" }));
-  expect(await screen.findByText("Работает и получил текущую конфигурацию")).toBeInTheDocument();
+  expect(screen.getByText("not applied yet")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Apply now" }));
+  expect(await screen.findByText("Running and holding the current configuration")).toBeInTheDocument();
   expect(vi.mocked(fetch)).toHaveBeenCalledWith("/api/proxy/apply", expect.objectContaining({ method: "POST" }));
 });
 
@@ -71,14 +71,14 @@ it("explains how to enable a disabled proxy and hides the certificate without a 
     proxy.enabled = false;
     proxy.routes = [];
   }));
-  expect(screen.getByRole("note")).toHaveTextContent("Включите его в настройках ниже");
-  expect(screen.getByRole("switch", { name: "Прокси включён" })).not.toBeChecked();
-  expect(screen.queryByRole("link", { name: "Скачать сертификат" })).not.toBeInTheDocument();
+  expect(screen.getByRole("note")).toHaveTextContent("Switch it on in the settings below");
+  expect(screen.getByRole("switch", { name: "Proxy on" })).not.toBeChecked();
+  expect(screen.queryByRole("link", { name: "Download the certificate" })).not.toBeInTheDocument();
 });
 
 it("the hosts card has an inset title and long upstreams wrap inside their cells", () => {
   renderWith(sample());
-  const title = screen.getByText("Опубликованные адреса");
+  const title = screen.getByText("Published addresses");
   expect(title.closest("[data-slot=card-header]")).not.toBeNull();
   const nas = screen.getByRole("link", { name: "nas.example.com" }).closest("tr") as HTMLElement;
   const upstream = within(nas).getAllByRole("cell")[2].firstElementChild;

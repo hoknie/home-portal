@@ -25,7 +25,7 @@ afterEach(() => {
 it("asks the portal for the widget data and renders it under the widget title", async () => {
   const fetch = renderWith(() => jsonResponse(apiSamples.widgetWeather));
   expect(await screen.findByText("12°C")).toBeInTheDocument();
-  expect(screen.getByRole("heading", { level: 2, name: "Погода" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 2, name: "Weather" })).toBeInTheDocument();
   expect(fetch.mock.calls[0][0]).toBe("/api/widgets/riga/data");
 });
 
@@ -37,7 +37,7 @@ it("asks the public half for a widget of the public portal", async () => {
 
 it("marks data the portal could not refresh and names the problem", async () => {
   renderWith(() => jsonResponse({ ...apiSamples.widgetWeather, stale: true, problem: "open-meteo answered 503" }));
-  const stale = await screen.findByText(/устарели/);
+  const stale = await screen.findByText(/out of date/);
   expect(stale).toHaveAttribute("title", "open-meteo answered 503");
   expect(screen.getByText("12°C")).toBeInTheDocument();
 });
@@ -45,19 +45,19 @@ it("marks data the portal could not refresh and names the problem", async () => 
 it("explains a widget whose data never arrived, keeping its title", async () => {
   renderWith(() => jsonResponse({ error: "the widget has no data yet" }, { status: 502 }));
   await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
-  expect(screen.getByRole("heading", { level: 2, name: "Погода" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 2, name: "Weather" })).toBeInTheDocument();
 });
 
 it("shows a placeholder for a type it does not know and for settings it cannot read", () => {
   renderWithProviders(<BoardWidget widget={{ type: "traffic", id: null, title: null, settings: {} }} services={[]} />);
-  expect(screen.getByText("Виджет «traffic» не поддерживается этой версией интерфейса")).toBeInTheDocument();
+  expect(screen.getByText("This version of the interface does not support the “traffic” widget")).toBeInTheDocument();
   renderWithProviders(
     <BoardWidget widget={{ type: "services", id: null, title: null, settings: { groups: "Media" } }} services={[]} />,
   );
-  expect(screen.getByText("Настройки виджета «services» заданы неверно")).toBeInTheDocument();
+  expect(screen.getByText("The settings of the “services” widget are invalid")).toBeInTheDocument();
 });
 
 it("refuses a data-backed widget the configuration left without an id", () => {
   renderWithProviders(<BoardWidget widget={{ type: "weather", id: null, title: null, settings: {} }} services={[]} />);
-  expect(screen.getByText("Настройки виджета «weather» заданы неверно")).toBeInTheDocument();
+  expect(screen.getByText("The settings of the “weather” widget are invalid")).toBeInTheDocument();
 });

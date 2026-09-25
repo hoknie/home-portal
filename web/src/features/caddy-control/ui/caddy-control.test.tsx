@@ -42,11 +42,11 @@ it("downloads caddy when none is installed", async () => {
       <Toaster />
     </>,
   );
-  expect(screen.getByText("не скачан")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Запустить" })).toBeDisabled();
-  await userEvent.click(screen.getByRole("button", { name: "Скачать последнюю версию" }));
+  expect(screen.getByText("not downloaded")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
+  await userEvent.click(screen.getByRole("button", { name: "Download the latest version" }));
   expect(fetch).toHaveBeenCalledWith("/api/proxy/caddy/download", expect.objectContaining({ method: "POST" }));
-  expect(await screen.findByText("Загрузка Caddy началась")).toBeInTheDocument();
+  expect(await screen.findByText("The Caddy download has started")).toBeInTheDocument();
 });
 
 it("starts an installed caddy with the revision it loaded", async () => {
@@ -61,7 +61,7 @@ it("starts an installed caddy with the revision it loaded", async () => {
   });
   renderWithProviders(<CaddyControl proxy={installed} revision='"r2"' />);
   expect(screen.getByText("2.11.4")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Запустить" }));
+  await userEvent.click(screen.getByRole("button", { name: "Start" }));
   const started = fetch.mock.calls[0] as unknown as [string, RequestInit];
   expect(started[0]).toBe("/api/proxy/caddy/start");
   expect((started[1].headers as Record<string, string>)["If-Match"]).toBe('"r2"');
@@ -76,8 +76,8 @@ it("shows the progress of a download", () => {
       revision={null}
     />,
   );
-  expect(screen.getByRole("status")).toHaveTextContent("Скачиваем");
-  expect(screen.getByRole("button", { name: "Скачать последнюю версию" })).toBeDisabled();
+  expect(screen.getByRole("status")).toHaveTextContent("Downloading");
+  expect(screen.getByRole("button", { name: "Download the latest version" })).toBeDisabled();
 });
 
 it("shows the reason a download failed", () => {
@@ -102,8 +102,8 @@ it("shows the log of a managed caddy that does not answer", () => {
       revision={null}
     />,
   );
-  expect(screen.getByLabelText("Журнал Caddy")).toHaveTextContent("permission denied");
-  expect(screen.getByRole("button", { name: "Остановить" })).toBeEnabled();
+  expect(screen.getByLabelText("Caddy log")).toHaveTextContent("permission denied");
+  expect(screen.getByRole("button", { name: "Stop" })).toBeEnabled();
 });
 
 it("shows where caddy comes from and that the archive is verified", () => {
@@ -120,7 +120,7 @@ it("names a pinned version on the download button and in the archive", () => {
     proxy.caddy.release_url = "https://api.github.com/repos/caddyserver/caddy/releases/tags/v2.10.2";
   });
   renderWithProviders(<CaddyControl proxy={pinned} revision='"r1"' />);
-  expect(screen.getByRole("button", { name: "Скачать Caddy 2.10.2" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Download Caddy 2.10.2" })).toBeEnabled();
   expect(screen.getByText("caddy_2.10.2_mac_arm64.tar.gz")).toBeInTheDocument();
 });
 
@@ -130,6 +130,6 @@ it("disables the download on a machine caddy cannot be downloaded for", () => {
     proxy.caddy.platform_error = "Caddy cannot be downloaded for the operating system windows; install it by hand";
   });
   renderWithProviders(<CaddyControl proxy={foreign} revision='"r1"' />);
-  expect(screen.getByRole("button", { name: "Скачать последнюю версию" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Download the latest version" })).toBeDisabled();
   expect(screen.getByText(/operating system windows/)).toBeInTheDocument();
 });

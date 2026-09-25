@@ -48,10 +48,10 @@ it("changes size and section, adds and removes widgets", () => {
 });
 
 it("adds, renames, moves and deletes only empty sections", () => {
-  let edited = addSection(draft(), "Позже");
+  let edited = addSection(draft(), "Later");
   expect(edited.sections.map((section) => section.id)).toEqual(["now", "media", "section-3"]);
-  edited = renameSection(edited, "section-3", "  Вечером ");
-  expect(edited.sections[2].title).toBe("Вечером");
+  edited = renameSection(edited, "section-3", "  Evening ");
+  expect(edited.sections[2].title).toBe("Evening");
   edited = moveSection(edited, "section-3", -2);
   expect(edited.sections.map((section) => section.id)).toEqual(["section-3", "now", "media"]);
   expect(toRequest(edited).widgets.map((widget) => widget.section)).toEqual(["now", "now", "media", "media"]);
@@ -61,5 +61,5 @@ it("adds, renames, moves and deletes only empty sections", () => {
 
 it("knows when nothing changed", () => {
   expect(sameDraft(draft(), draft())).toBe(true);
-  expect(sameDraft(draft(), updateWidget(draft(), "#0", { title: "Сводка" }))).toBe(false);
+  expect(sameDraft(draft(), updateWidget(draft(), "#0", { title: "Summary" }))).toBe(false);
 });

@@ -21,7 +21,7 @@ it("offers light, dark and system and applies the choice", async () => {
     </DropdownMenu>,
   );
   await userEvent.click(screen.getByText("menu"));
-  expect(screen.getByRole("menuitemradio", { name: "Как в системе" })).toHaveAttribute("aria-checked", "true");
-  await userEvent.click(screen.getByRole("menuitemradio", { name: "Тёмная" }));
+  expect(screen.getByRole("menuitemradio", { name: "System" })).toHaveAttribute("aria-checked", "true");
+  await userEvent.click(screen.getByRole("menuitemradio", { name: "Dark" }));
   expect(setTheme).toHaveBeenCalledWith("dark");
 });

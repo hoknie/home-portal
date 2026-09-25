@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use portal_config::ConfigStore;
+use portal_config::{ConfigStore, Storage};
 use time::OffsetDateTime;
 use url::Url;
 
@@ -20,7 +20,7 @@ pub const CATALOG: &str = "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-ico
 
 impl Icons {
     pub fn new(configuration: Arc<ConfigStore>, catalog: &str) -> Result<Icons, String> {
-        let cache = IconCache::open(configuration.path());
+        let cache = IconCache::open(configuration.storage(Storage::Icons));
         Ok(Icons {
             configuration,
             cache,

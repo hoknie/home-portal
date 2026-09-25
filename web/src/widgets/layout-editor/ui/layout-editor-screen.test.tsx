@@ -11,8 +11,8 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/admin/layout/", useRout
 
 const LAYOUT = {
   sections: [
-    { id: "now", title: "Сейчас" },
-    { id: "media", title: "Медиа" },
+    { id: "now", title: "Now" },
+    { id: "media", title: "Media" },
   ],
   widgets: [
     { key: "status-summary", type: "status-summary", id: "status-summary", title: null, settings: {}, section: "now", size: "two-thirds", environments: null, public: false },
@@ -84,7 +84,7 @@ const tileOf = (key: string) => document.querySelector(`[data-widget="${key}"]`)
 
 it("reorders a widget with the keyboard and saves the new order with the loaded revision", async () => {
   const puts = serve();
-  const handle = await screen.findByRole("button", { name: "Переместить «Сводка»" });
+  const handle = await screen.findByRole("button", { name: "Move “Summary”" });
   handle.focus();
   await act(async () => {
     fireEvent.keyDown(handle, { key: " ", code: "Space" });
@@ -99,9 +99,9 @@ it("reorders a widget with the keyboard and saves the new order with the loaded 
     await tick();
   });
   await waitFor(() => expect(order("now")).toEqual(["riga", "status-summary"]));
-  expect(await screen.findByText("Виджет «Сводка» поставлен на позицию 2 в секции «Сейчас».")).toBeInTheDocument();
-  expect(screen.getByText("Есть несохранённые изменения")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить раскладку" }));
+  expect(await screen.findByText("The widget “Summary” was dropped at position 2 in the section “Now”.")).toBeInTheDocument();
+  expect(screen.getByText("There are unsaved changes")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
   await waitFor(() => expect(puts).toHaveLength(1));
   expect(puts[0].revision).toBe('"r1"');
   const sent = puts[0].body as { widgets: Array<{ key: string; settings: unknown }> };
@@ -111,13 +111,13 @@ it("reorders a widget with the keyboard and saves the new order with the loaded 
 
 it("moves a widget into another section by dragging it with the keyboard", async () => {
   const puts = serve();
-  const handle = await screen.findByRole("button", { name: "Переместить «Погода»" });
+  const handle = await screen.findByRole("button", { name: "Move “Weather”" });
   handle.focus();
   await press(handle, " ", "Space");
   await press(document, "ArrowDown");
   await press(document, " ", "Space");
   await waitFor(() => expect(order("media")).toEqual(["riga", "roads"]));
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить раскладку" }));
+  await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
   await waitFor(() => expect(puts).toHaveLength(1));
   const sent = puts[0].body as { widgets: Array<{ key: string; section: string }> };
   expect(sent.widgets.find((widget) => widget.key === "riga")).toMatchObject({ section: "media" });
@@ -125,23 +125,23 @@ it("moves a widget into another section by dragging it with the keyboard", async
 
 it("offers no list for a widget's size or section", async () => {
   serve();
-  await screen.findByRole("button", { name: "Переместить «Сводка»" });
+  await screen.findByRole("button", { name: "Move “Summary”" });
   const tile = tileOf("status-summary");
   expect(within(tile).queryByRole("combobox")).not.toBeInTheDocument();
   expect(tile.querySelector("select")).toBeNull();
-  expect(screen.queryByRole("button", { name: /Поднять секцию|Опустить секцию/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Move the section up|Move the section down/ })).not.toBeInTheDocument();
 });
 
 it("resizes a widget with the arrows on its edge and announces the new width", async () => {
   const puts = serve();
-  const edge = await screen.findByRole("slider", { name: "Ширина виджета «Погода»" });
-  expect(edge).toHaveAttribute("aria-valuetext", "треть");
+  const edge = await screen.findByRole("slider", { name: "Width of the widget “Weather”" });
+  expect(edge).toHaveAttribute("aria-valuetext", "third");
   fireEvent.keyDown(edge, { key: "ArrowRight" });
   expect(tileOf("riga")).toHaveAttribute("data-size", "half");
   fireEvent.keyDown(edge, { key: "ArrowRight" });
   expect(tileOf("riga")).toHaveAttribute("data-size", "two-thirds");
-  expect(document.querySelector("[data-resize-notice]")).toHaveTextContent("Ширина виджета «Погода»: две трети.");
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить раскладку" }));
+  expect(document.querySelector("[data-resize-notice]")).toHaveTextContent("Width of the widget “Weather”: two thirds.");
+  await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
   await waitFor(() => expect(puts).toHaveLength(1));
   const sent = puts[0].body as { widgets: Array<{ key: string; size: string }> };
   expect(sent.widgets.find((widget) => widget.key === "riga")).toMatchObject({ size: "two-thirds" });
@@ -149,28 +149,28 @@ it("resizes a widget with the arrows on its edge and announces the new width", a
 
 it("resizes a widget by dragging its edge, snapping to the nearest width", async () => {
   serve();
-  const edge = await screen.findByRole("slider", { name: "Ширина виджета «Сводка»" });
+  const edge = await screen.findByRole("slider", { name: "Width of the widget “Summary”" });
   fireEvent.pointerDown(edge, { pointerId: 1, clientX: 800 });
   fireEvent.pointerMove(edge, { pointerId: 1, clientX: 750 });
-  expect(within(tileOf("status-summary")).getByText("половина")).toBeInTheDocument();
+  expect(within(tileOf("status-summary")).getByText("half")).toBeInTheDocument();
   fireEvent.pointerUp(edge, { pointerId: 1, clientX: 750 });
   expect(tileOf("status-summary")).toHaveAttribute("data-size", "half");
 });
 
 it("keeps the width when a drag of the edge is cancelled with Escape", async () => {
   serve();
-  const edge = await screen.findByRole("slider", { name: "Ширина виджета «Сводка»" });
+  const edge = await screen.findByRole("slider", { name: "Width of the widget “Summary”" });
   fireEvent.pointerDown(edge, { pointerId: 1, clientX: 800 });
   fireEvent.pointerMove(edge, { pointerId: 1, clientX: 750 });
   fireEvent.keyDown(window, { key: "Escape" });
   fireEvent.pointerUp(edge, { pointerId: 1, clientX: 750 });
   expect(tileOf("status-summary")).toHaveAttribute("data-size", "two-thirds");
-  expect(screen.queryByText("Есть несохранённые изменения")).not.toBeInTheDocument();
+  expect(screen.queryByText("There are unsaved changes")).not.toBeInTheDocument();
 });
 
 it("reorders sections by dragging their handle with the keyboard and saves them in the new order", async () => {
   const puts = serve();
-  const handle = await screen.findByRole("button", { name: "Переместить секцию «Сейчас»" });
+  const handle = await screen.findByRole("button", { name: "Move the section “Now”" });
   handle.focus();
   await press(handle, " ", "Space");
   await press(document, "ArrowDown");
@@ -178,8 +178,8 @@ it("reorders sections by dragging their handle with the keyboard and saves them 
   await waitFor(() =>
     expect([...document.querySelectorAll("section[data-section-block]")].map((section) => section.getAttribute("data-section"))).toEqual(["media", "now"]),
   );
-  expect(await screen.findByText("Секция «Сейчас» поставлена на позицию 2.")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить раскладку" }));
+  expect(await screen.findByText("The section “Now” was dropped at position 2.")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
   await waitFor(() => expect(puts).toHaveLength(1));
   const sent = puts[0].body as { sections: Array<{ id: string }>; widgets: Array<{ key: string }> };
   expect(sent.sections.map((section) => section.id)).toEqual(["media", "now"]);
@@ -188,7 +188,7 @@ it("reorders sections by dragging their handle with the keyboard and saves them 
 
 it("asks before leaving with unsaved changes", async () => {
   serve();
-  await screen.findByRole("button", { name: "Переместить «Сводка»" });
+  await screen.findByRole("button", { name: "Move “Summary”" });
   const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
   const link = document.createElement("a");
   link.href = "/";
@@ -198,55 +198,55 @@ it("asks before leaving with unsaved changes", async () => {
   expect(confirm).not.toHaveBeenCalled();
   fireEvent.keyDown(within(tileOf("riga")).getByRole("slider"), { key: "ArrowRight" });
   await userEvent.click(link);
-  expect(confirm).toHaveBeenCalledWith("Уйти со страницы? Несохранённые изменения раскладки пропадут.");
+  expect(confirm).toHaveBeenCalledWith("Leave the page? Unsaved layout changes will be lost.");
   link.remove();
 });
 
 it("previews the page as a visitor from the internet without a session sees it", async () => {
   serve();
-  await screen.findByRole("button", { name: "Переместить «Сводка»" });
-  await userEvent.click(screen.getByText("Предпросмотр"));
-  await userEvent.selectOptions(screen.getByLabelText("Окружение посетителя"), "internet");
-  await userEvent.click(screen.getByLabelText("Посетитель вошёл"));
-  const preview = screen.getByText("Предпросмотр").closest("details") as HTMLElement;
-  expect(within(preview).getByRole("heading", { level: 2, name: "Сейчас" })).toBeInTheDocument();
-  expect(within(preview).queryByRole("heading", { level: 2, name: "Медиа" })).not.toBeInTheDocument();
-  expect(within(preview).queryByText("Сводка")).not.toBeInTheDocument();
+  await screen.findByRole("button", { name: "Move “Summary”" });
+  await userEvent.click(screen.getByText("Preview"));
+  await userEvent.selectOptions(screen.getByLabelText("Visitor's environment"), "internet");
+  await userEvent.click(screen.getByLabelText("Visitor is signed in"));
+  const preview = screen.getByText("Preview").closest("details") as HTMLElement;
+  expect(within(preview).getByRole("heading", { level: 2, name: "Now" })).toBeInTheDocument();
+  expect(within(preview).queryByRole("heading", { level: 2, name: "Media" })).not.toBeInTheDocument();
+  expect(within(preview).queryByText("Summary")).not.toBeInTheDocument();
 });
 
 it("on a conflict it keeps the arrangement and offers to reload or save over", async () => {
   serve(() => new Response("stale", { status: 409 }));
-  await screen.findByRole("button", { name: "Переместить «Сводка»" });
+  await screen.findByRole("button", { name: "Move “Summary”" });
   fireEvent.keyDown(within(tileOf("riga")).getByRole("slider"), { key: "ArrowRight" });
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить раскладку" }));
-  expect(await screen.findByText(/Файл конфигурации изменился/)).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Загрузить раскладку из файла" })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Сохранить поверх" })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
+  expect(await screen.findByText(/The configuration file changed/)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Load the layout from the file" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Save over it" })).toBeInTheDocument();
   expect(document.querySelector('[data-widget="riga"]')).toHaveAttribute("data-size", "half");
 });
 
 it("shows a server error on the widget it names", async () => {
   serve(() => jsonResponse({ errors: [{ field: "widgets[1].settings.latitude", message: "must be between -90 and 90" }] }, { status: 422 }));
-  await screen.findByRole("button", { name: "Переместить «Сводка»" });
+  await screen.findByRole("button", { name: "Move “Summary”" });
   fireEvent.keyDown(within(tileOf("riga")).getByRole("slider"), { key: "ArrowRight" });
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить раскладку" }));
+  await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
   const tile = document.querySelector('[data-widget="riga"]') as HTMLElement;
   expect(await within(tile).findByText("widgets[1].settings.latitude: must be between -90 and 90")).toBeInTheDocument();
 });
 
 it("adds a widget, edits its settings in the sheet and removes another after confirming", async () => {
   const puts = serve();
-  await screen.findByRole("button", { name: "Переместить «Сводка»" });
+  await screen.findByRole("button", { name: "Move “Summary”" });
   const media = document.querySelector('[data-section="media"]') as HTMLElement;
-  await userEvent.selectOptions(within(media).getByLabelText("Тип виджета"), "calendar");
-  await userEvent.click(within(media).getByRole("button", { name: "Добавить виджет" }));
+  await userEvent.selectOptions(within(media).getByLabelText("Widget type"), "calendar");
+  await userEvent.click(within(media).getByRole("button", { name: "Add widget" }));
   const added = order("media").at(-1) as string;
-  await userEvent.click(within(document.querySelector(`[data-widget="${added}"]`) as HTMLElement).getByRole("button", { name: "Настроить" }));
-  await userEvent.type(screen.getByLabelText("Адрес календаря (.ics)"), "https://calendar.example.com/home.ics");
-  await userEvent.click(screen.getByRole("button", { name: "Готово" }));
-  await userEvent.click(within(document.querySelector('[data-widget="riga"]') as HTMLElement).getByRole("button", { name: "Убрать" }));
-  await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Убрать" }));
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить раскладку" }));
+  await userEvent.click(within(document.querySelector(`[data-widget="${added}"]`) as HTMLElement).getByRole("button", { name: "Configure" }));
+  await userEvent.type(screen.getByLabelText("Calendar address (.ics)"), "https://calendar.example.com/home.ics");
+  await userEvent.click(screen.getByRole("button", { name: "Done" }));
+  await userEvent.click(within(document.querySelector('[data-widget="riga"]') as HTMLElement).getByRole("button", { name: "Remove" }));
+  await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Remove" }));
+  await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
   await waitFor(() => expect(puts).toHaveLength(1));
   const sent = puts[0].body as { widgets: Array<{ key: string | null; type: string; settings: Record<string, unknown> }> };
   expect(sent.widgets.map((widget) => widget.type)).toEqual(["status-summary", "traffic", "calendar"]);
@@ -255,20 +255,20 @@ it("adds a widget, edits its settings in the sheet and removes another after con
 
 it("chooses the groups of a services widget from the groups the services use", async () => {
   const puts = serve();
-  await screen.findByRole("button", { name: "Переместить «Сводка»" });
+  await screen.findByRole("button", { name: "Move “Summary”" });
   const now = document.querySelector('[data-section-block][data-section="now"]') as HTMLElement;
-  await userEvent.selectOptions(within(now).getByLabelText("Тип виджета"), "services");
-  await userEvent.click(within(now).getByRole("button", { name: "Добавить виджет" }));
+  await userEvent.selectOptions(within(now).getByLabelText("Widget type"), "services");
+  await userEvent.click(within(now).getByRole("button", { name: "Add widget" }));
   const added = order("now").at(-1) as string;
-  await userEvent.click(within(tileOf(added)).getByRole("button", { name: "Настроить" }));
-  const groups = await screen.findByLabelText(/^Группы/);
+  await userEvent.click(within(tileOf(added)).getByRole("button", { name: "Configure" }));
+  const groups = await screen.findByLabelText(/^Groups/);
   await userEvent.click(groups);
   expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Media", "Network"]);
   await userEvent.click(screen.getByRole("option", { name: "Network" }));
   await userEvent.click(groups);
   await userEvent.click(screen.getByRole("option", { name: "Media" }));
-  await userEvent.click(screen.getByRole("button", { name: "Готово" }));
-  await userEvent.click(screen.getByRole("button", { name: "Сохранить раскладку" }));
+  await userEvent.click(screen.getByRole("button", { name: "Done" }));
+  await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
   await waitFor(() => expect(puts).toHaveLength(1));
   const sent = puts[0].body as { widgets: Array<{ type: string; settings: Record<string, unknown> }> };
   expect(sent.widgets.find((widget) => widget.type === "services")?.settings).toEqual({ groups: ["Network", "Media"] });

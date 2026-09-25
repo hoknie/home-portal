@@ -11,7 +11,7 @@ use crate::types::{AdminAddress, CaddyHome, CaddySource, CaddyVersion, DownloadS
 
 fn home() -> (tempfile::TempDir, CaddyHome) {
     let directory = tempfile::tempdir().unwrap();
-    let home = CaddyHome::beside(&directory.path().join("home-portal.toml"));
+    let home = CaddyHome::at(directory.path().join("caddy"));
     (directory, home)
 }
 
@@ -174,8 +174,8 @@ fn the_log_tail_keeps_the_last_lines() {
 }
 
 #[test]
-fn the_caddy_directory_is_absolute_even_for_a_relative_configuration_path() {
-    let home = crate::types::CaddyHome::beside(std::path::Path::new("home-portal.toml"));
+fn the_caddy_directory_is_absolute_even_when_configured_relative() {
+    let home = crate::types::CaddyHome::at(std::path::PathBuf::from("caddy"));
     assert!(home.directory.is_absolute(), "{}", home.directory.display());
     assert_eq!(
         home.directory,

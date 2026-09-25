@@ -29,6 +29,8 @@ fn change(was: &str, now: &str) -> StatusChange {
         was: was.into(),
         now: now.into(),
         error: (now == "down").then(|| "connection refused".to_string()),
+        diagnosis: None,
+        notify: true,
     }
 }
 
@@ -116,4 +118,16 @@ fn enabling_telegram_without_a_token_or_a_chat_names_the_key() {
     let errors = check_telegram(&configuration.read().document, &configuration);
     assert!(errors[0].message.contains("nope"), "{}", errors[0].message);
     assert!(!errors[0].message.contains("abc"));
+}
+
+#[test]
+fn a_change_of_a_service_that_does_not_notify_is_not_announced() {
+    let (_directory, configuration) = store(ENABLED);
+    let outbox = Arc::new(Outbox::default());
+    let notifier = TelegramNotifier::new(configuration, outbox.clone());
+    notifier.changed(&StatusChange {
+        notify: false,
+        ..change("up", "down")
+    });
+    assert_eq!(outbox.waiting(), 0);
 }

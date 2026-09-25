@@ -106,11 +106,11 @@ describe("the status carries a diagnosis", () => {
   });
 });
 
-it("the known groups are the distinct non-empty groups of the services, in Russian order", () => {
-  expect(groupsOf([{ group: "Сеть" }, { group: "Media" }, { group: null }, { group: " " }, { group: "Сеть" }, { group: "Архив" }], "ru")).toEqual([
-    "Архив",
-    "Сеть",
+it("the known groups are the distinct non-empty groups of the services, in the order of the language", () => {
+  expect(groupsOf([{ group: "Network" }, { group: "Media" }, { group: null }, { group: " " }, { group: "Network" }, { group: "Archive" }], "en")).toEqual([
+    "Archive",
     "Media",
+    "Network",
   ]);
 });
 

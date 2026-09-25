@@ -15,5 +15,5 @@ it("sends the browser to the new address and keeps the query string", () => {
   Object.defineProperty(window, "location", { value: { ...window.location, search: "?edit=media" }, writable: true });
   renderWithProviders(<Redirect to="/admin/services/" />);
   expect(replace).toHaveBeenCalledWith("/admin/services/?edit=media");
-  expect(screen.getByText("Переходим на новый адрес…")).toBeInTheDocument();
+  expect(screen.getByText("Moving to the new address…")).toBeInTheDocument();
 });

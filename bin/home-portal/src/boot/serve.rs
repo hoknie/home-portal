@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use axum::Router;
 use tokio::net::TcpListener;
 
-use super::shutdown;
+use super::{lifecycle, shutdown};
 use crate::types::{BootError, Registry};
 
 pub async fn serve(
@@ -23,6 +23,7 @@ pub async fn serve(
     .with_graceful_shutdown(shutdown::requested())
     .await
     .map_err(|source| BootError::Serve { address, source });
+    lifecycle::stopping(registry, address).await;
     for feature in &registry.features {
         feature.stop();
     }

@@ -6,6 +6,7 @@ mod merge;
 mod permissions;
 mod secrets;
 mod section;
+mod storage;
 
 #[cfg(test)]
 mod tests;
@@ -18,3 +19,4 @@ pub use merge::merge;
 pub use permissions::refuse_if_readable;
 pub use secrets::{holds_secrets, take_secrets};
 pub use section::deserialize_section;
+pub use storage::{storage_errors, storage_places};

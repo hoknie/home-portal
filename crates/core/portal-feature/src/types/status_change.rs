@@ -5,6 +5,8 @@ pub struct StatusChange {
     pub was: String,
     pub now: String,
     pub error: Option<String>,
+    pub diagnosis: Option<String>,
+    pub notify: bool,
 }
 
 impl StatusChange {

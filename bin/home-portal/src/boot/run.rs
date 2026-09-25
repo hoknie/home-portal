@@ -1,4 +1,4 @@
-use super::{address, configuration, listener, logging, loops, router, serve};
+use super::{address, configuration, lifecycle, listener, logging, loops, router, serve};
 use crate::features::registered;
 use crate::types::{BootError, Wiring};
 
@@ -14,5 +14,6 @@ pub async fn run() -> Result<(), BootError> {
     let router = router::assemble(&registry);
     let listener = listener::bind(effective.address).await?;
     loops::spawn(&registry);
+    lifecycle::started(&registry, effective.address);
     serve::serve(listener, router, &registry).await
 }

@@ -14,7 +14,7 @@ it("announces the error and retries on request", async () => {
     </TestIntl>,
   );
   expect(screen.getByRole("alert")).toHaveTextContent("Failed");
-  await userEvent.click(screen.getByRole("button", { name: "Повторить" }));
+  await userEvent.click(screen.getByRole("button", { name: "Retry" }));
   expect(retry).toHaveBeenCalledOnce();
 });
 

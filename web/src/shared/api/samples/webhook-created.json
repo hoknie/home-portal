@@ -1,0 +1,19 @@
+{
+  "token": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "webhook": {
+    "action": "event",
+    "address": "/webhook/0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d",
+    "enabled": true,
+    "id": "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d",
+    "last_received": null,
+    "protected": false,
+    "run": null,
+    "tags": [
+      "camera"
+    ],
+    "title": "Motion at the door",
+    "variables": [
+      "camera"
+    ]
+  }
+}

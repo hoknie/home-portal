@@ -1,5 +1,6 @@
 mod address;
 mod configuration;
+mod lifecycle;
 mod listener;
 mod logging;
 mod loops;

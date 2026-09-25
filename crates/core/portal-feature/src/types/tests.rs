@@ -5,7 +5,9 @@ use http_body_util::BodyExt;
 
 use axum::http::header::RETRY_AFTER;
 
-use super::{ApiError, FieldError};
+use time::OffsetDateTime;
+
+use super::{ApiError, EventName, FieldError, PortalEvent, StatusChange, Visitor};
 
 async fn answer(error: ApiError) -> (StatusCode, String, String) {
     let response = error.into_response();
@@ -108,4 +110,79 @@ async fn too_many_requests_says_when_to_retry() {
     }
     .into_response();
     assert_eq!(response.headers()[RETRY_AFTER], "42");
+}
+
+fn built_by_its_constructor(name: EventName) -> PortalEvent {
+    let at = OffsetDateTime::UNIX_EPOCH;
+    let change = StatusChange {
+        service: "nas".into(),
+        name: "NAS".into(),
+        was: "up".into(),
+        now: "down".into(),
+        error: Some("refused".into()),
+        diagnosis: Some("refused".into()),
+        notify: true,
+    };
+    match name {
+        EventName::PortalStarted | EventName::PortalStopping => {
+            PortalEvent::portal(name, "127.0.0.1:8080", at)
+        }
+        EventName::ServiceStatusChanged => PortalEvent::status_changed(&change, at),
+        EventName::UserSignedIn | EventName::UserSignedOut | EventName::UserSignInFailed => {
+            PortalEvent::visited(name, &Visitor::default(), at)
+        }
+        other => PortalEvent::of(other, at, &[]),
+    }
+}
+
+#[test]
+fn every_event_carries_exactly_its_own_fields_after_the_event_fields() {
+    for name in EventName::ALL {
+        let event = built_by_its_constructor(name);
+        let keys: Vec<&str> = event.fields.iter().map(|(key, _)| *key).collect();
+        let mut expected = vec![PortalEvent::NAME_FIELD, PortalEvent::AT_FIELD];
+        expected.extend_from_slice(name.fields());
+        assert_eq!(keys, expected, "{}", name.name());
+        assert_eq!(event.value(PortalEvent::NAME_FIELD), Some(name.name()));
+    }
+}
+
+#[test]
+fn a_value_is_cut_to_its_limit_on_a_character_boundary_without_nul() {
+    let huge = format!("\0{}", "é".repeat(600_000));
+    let event = PortalEvent::visited(
+        EventName::UserSignInFailed,
+        &Visitor {
+            user: huge,
+            reason: Some(PortalEvent::CREDENTIALS),
+            ..Visitor::default()
+        },
+        OffsetDateTime::UNIX_EPOCH,
+    );
+    let user = event.value("user.name").unwrap();
+    assert!(user.len() <= PortalEvent::VALUE_LIMIT);
+    assert!(user.len() > PortalEvent::VALUE_LIMIT - 2);
+    assert!(!user.contains('\0'));
+    assert_eq!(event.value("sign_in.reason"), Some("credentials"));
+}
+
+#[test]
+fn a_missing_value_is_the_empty_string_and_an_unknown_name_is_unknown() {
+    let event = PortalEvent::of(EventName::ServiceUpdated, OffsetDateTime::UNIX_EPOCH, &[]);
+    assert_eq!(event.value("service.previous_id"), Some(""));
+    assert_eq!(event.value("event.at"), Some("1970-01-01T00:00:00Z"));
+    assert_eq!(EventName::from("nope"), EventName::Unknown);
+    assert_eq!(EventName::from("user.signed-in"), EventName::UserSignedIn);
+}
+
+#[test]
+fn webhook_variables_are_named_under_webhook_and_cleaned() {
+    let event = PortalEvent::of(EventName::WebhookReceived, OffsetDateTime::UNIX_EPOCH, &[])
+        .with_variables(&[("branch".into(), "ma\0in".into())]);
+    assert_eq!(
+        event.variables,
+        vec![("webhook.branch".to_string(), "main".to_string())]
+    );
+    assert_eq!(EventName::from("manual"), EventName::Manual);
+    assert!(EventName::Manual.fields().is_empty());
 }

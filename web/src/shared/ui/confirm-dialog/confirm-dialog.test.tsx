@@ -23,7 +23,7 @@ it("confirms only when the destructive button is pressed", async () => {
 
 it("cancels without confirming", async () => {
   const { onConfirm, onOpenChange } = renderDialog();
-  await userEvent.click(screen.getByRole("button", { name: "Отмена" }));
+  await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
   expect(onOpenChange).toHaveBeenCalledWith(false);
   expect(onConfirm).not.toHaveBeenCalled();
 });

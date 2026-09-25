@@ -1,0 +1,617 @@
+{
+  "choices": {
+    "environments": [
+      "home",
+      "vpn",
+      "internet"
+    ],
+    "services": [
+      {
+        "id": "jellyfin",
+        "name": "Jellyfin"
+      },
+      {
+        "id": "nas",
+        "name": "NAS"
+      }
+    ],
+    "tags": [
+      "backup",
+      "camera",
+      "ci",
+      "media",
+      "night"
+    ],
+    "users": [
+      "admin"
+    ],
+    "webhooks": [
+      {
+        "id": "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d",
+        "name": "Deploy from CI",
+        "variables": [
+          "branch",
+          "commit"
+        ]
+      },
+      {
+        "id": "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d",
+        "name": "Motion at the door",
+        "variables": [
+          "camera"
+        ]
+      }
+    ]
+  },
+  "events": [
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "schedule"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "schedule.cron",
+          "sample": "0 3 * * *"
+        },
+        {
+          "name": "schedule.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "cron"
+      ],
+      "name": "schedule"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "portal.started"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "portal.address",
+          "sample": "0.0.0.0:8080"
+        },
+        {
+          "name": "portal.version",
+          "sample": "0.1.0"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [],
+      "name": "portal.started"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "portal.stopping"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "portal.address",
+          "sample": "0.0.0.0:8080"
+        },
+        {
+          "name": "portal.version",
+          "sample": "0.1.0"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [],
+      "name": "portal.stopping"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "service.status-changed"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "service.id",
+          "sample": "nas"
+        },
+        {
+          "name": "service.name",
+          "sample": "NAS"
+        },
+        {
+          "name": "status.from",
+          "sample": "up"
+        },
+        {
+          "name": "status.to",
+          "sample": "down"
+        },
+        {
+          "name": "status.error",
+          "sample": "connection refused"
+        },
+        {
+          "name": "status.diagnosis",
+          "sample": "refused"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "services",
+        "from",
+        "to",
+        "from_unknown"
+      ],
+      "name": "service.status-changed"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "service.created"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "service.id",
+          "sample": "nas"
+        },
+        {
+          "name": "service.name",
+          "sample": "NAS"
+        },
+        {
+          "name": "user.name",
+          "sample": "admin"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "services"
+      ],
+      "name": "service.created"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "service.updated"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "service.id",
+          "sample": "nas"
+        },
+        {
+          "name": "service.name",
+          "sample": "NAS"
+        },
+        {
+          "name": "service.previous_id",
+          "sample": "storage"
+        },
+        {
+          "name": "user.name",
+          "sample": "admin"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "services"
+      ],
+      "name": "service.updated"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "service.deleted"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "service.id",
+          "sample": "nas"
+        },
+        {
+          "name": "service.name",
+          "sample": "NAS"
+        },
+        {
+          "name": "user.name",
+          "sample": "admin"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "services"
+      ],
+      "name": "service.deleted"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "user.signed-in"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "user.name",
+          "sample": "admin"
+        },
+        {
+          "name": "client.address",
+          "sample": "192.168.1.20"
+        },
+        {
+          "name": "client.environment",
+          "sample": "home"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "users",
+        "environments"
+      ],
+      "name": "user.signed-in"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "user.signed-out"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "user.name",
+          "sample": "admin"
+        },
+        {
+          "name": "client.address",
+          "sample": "192.168.1.20"
+        },
+        {
+          "name": "client.environment",
+          "sample": "home"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "users",
+        "environments"
+      ],
+      "name": "user.signed-out"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "user.sign-in-failed"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "user.name",
+          "sample": "admin"
+        },
+        {
+          "name": "client.address",
+          "sample": "192.168.1.20"
+        },
+        {
+          "name": "client.environment",
+          "sample": "home"
+        },
+        {
+          "name": "sign_in.reason",
+          "sample": "credentials"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "users",
+        "environments"
+      ],
+      "name": "user.sign-in-failed"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "configuration.changed"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "configuration.revision",
+          "sample": "6f1ed002ab5595859014ebf0951522d9"
+        },
+        {
+          "name": "configuration.previous_revision",
+          "sample": "0cc175b9c0f1b6a831c399e269772661"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [],
+      "name": "configuration.changed"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "webhook.received"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "webhook.id",
+          "sample": "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d"
+        },
+        {
+          "name": "webhook.title",
+          "sample": "Deploy from CI"
+        },
+        {
+          "name": "client.address",
+          "sample": "192.168.1.20"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [
+        "webhooks"
+      ],
+      "name": "webhook.received"
+    },
+    {
+      "fields": [
+        {
+          "name": "event.name",
+          "sample": "manual"
+        },
+        {
+          "name": "event.at",
+          "sample": "2026-01-01T03:00:00Z"
+        },
+        {
+          "name": "automation.id",
+          "sample": "restart-media"
+        },
+        {
+          "name": "run.id",
+          "sample": "42"
+        },
+        {
+          "name": "run.manual",
+          "sample": "true"
+        },
+        {
+          "name": "run.by",
+          "sample": "admin"
+        }
+      ],
+      "filters": [],
+      "name": "manual"
+    }
+  ],
+  "states": [
+    "unknown",
+    "up",
+    "degraded",
+    "down",
+    "unreadable"
+  ]
+}

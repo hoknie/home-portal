@@ -1,7 +1,8 @@
 mod ports;
 mod types;
 
-pub use ports::{Feature, Gate, StatusObserver, WidgetProvider};
+pub use ports::{EventSink, Feature, Gate, StatusObserver, WidgetProvider};
 pub use types::{
-    ApiError, Check, FieldError, Loop, Principal, StatusChange, Validator, WidgetProblem,
+    ApiError, Check, ClientAddress, EventName, FieldError, Loop, PortalEvent, Principal,
+    StatusChange, Validator, Visitor, WidgetProblem,
 };

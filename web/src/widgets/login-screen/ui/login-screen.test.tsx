@@ -27,9 +27,9 @@ function signedOutUntilSignIn() {
 }
 
 async function signIn() {
-  await userEvent.type(await screen.findByLabelText("Имя пользователя"), "admin");
-  await userEvent.type(screen.getByLabelText("Пароль"), "secret");
-  await userEvent.click(screen.getByRole("button", { name: "Войти" }));
+  await userEvent.type(await screen.findByLabelText("User name"), "admin");
+  await userEvent.type(screen.getByLabelText("Password"), "secret");
+  await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
 }
 
 beforeEach(() => {
@@ -45,7 +45,7 @@ it("returns to the page that was asked for after signing in", async () => {
   search = "next=%2Fservices%2F";
   vi.stubGlobal("fetch", signedOutUntilSignIn());
   renderWithProviders(<LoginScreen />);
-  expect(screen.getByText("Вход")).toBeInTheDocument();
+  expect(screen.getByText("Sign in")).toBeInTheDocument();
   await signIn();
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/services/"));
   expect(replace).toHaveBeenCalledTimes(1);
@@ -66,15 +66,15 @@ it("continues at once without the form when a session already exists", async () 
   vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ name: "admin" })));
   renderWithProviders(<LoginScreen />);
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin/services/"));
-  expect(screen.queryByLabelText("Пароль")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
 });
 
 it("offers the language switcher to a visitor without a session", async () => {
   search = "";
   vi.stubGlobal("fetch", signedOutUntilSignIn());
   renderWithProviders(<LoginScreen />);
-  expect(await screen.findByLabelText("Имя пользователя")).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Язык: Русский" })).toBeInTheDocument();
+  expect(await screen.findByLabelText("User name")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Language: English" })).toBeInTheDocument();
 });
 
 it("is shown in the chosen language", async () => {

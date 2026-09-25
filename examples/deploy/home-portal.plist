@@ -18,6 +18,12 @@
 
   Check from the same context the portal runs in:  home-portal probe <service id>
 
+  Automations. Scripts from the scripts directory ([storage] in the configuration, scripts/
+  beside it by default) run as the portal's user and
+  inherit its permissions, Local Network included. launchd gives them a minimal PATH
+  (/usr/bin:/bin:/usr/sbin:/sbin): call programs by their absolute path, or add a PATH
+  entry to EnvironmentVariables below.
+
   Adjust the paths below to where the binary and the configuration live.
 -->
 <plist version="1.0">

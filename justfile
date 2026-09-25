@@ -55,11 +55,23 @@ build: web
 samples:
     HOME_PORTAL_SAMPLES=write {{ CARGO }} test -p home-portal --test samples
 
-# Run the portal against home-portal.toml
+# Run the portal against config/home-portal.toml (HOME_PORTAL_CONFIG changes the path)
 run:
-    {{ CARGO }} run -p home-portal
+    HOME_PORTAL_CONFIG="${HOME_PORTAL_CONFIG:-config/home-portal.toml}" {{ CARGO }} run -p home-portal
 
 # How to work on the interface with live reload
 dev:
     @echo "terminal 1: just run"
     @echo "terminal 2: pnpm --dir web dev   (proxies /api to HOME_PORTAL_ORIGIN, default http://127.0.0.1:8080)"
+
+# A static Linux binary and its archive in dist/release; TARGET=aarch64-unknown-linux-musl for arm64
+package: web
+    TARGET="${TARGET:-x86_64-unknown-linux-musl}" packaging/package.sh all
+
+# A universal macOS binary and its archive in dist/release
+package-macos: web
+    packaging/package-macos.sh all
+
+# SHA256SUMS over the archives in dist/release
+checksums:
+    packaging/release.sh checksums

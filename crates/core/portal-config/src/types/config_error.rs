@@ -47,7 +47,7 @@ impl fmt::Display for ConfigError {
         match self {
             ConfigError::Missing { path } => write!(
                 formatter,
-                "configuration file {} does not exist; create it (see home-portal.example.toml) or set HOME_PORTAL_CONFIG",
+                "configuration file {} does not exist; create it (see config/home-portal.example.toml) or set HOME_PORTAL_CONFIG",
                 path.display()
             ),
             ConfigError::Unreadable { path, source } => {

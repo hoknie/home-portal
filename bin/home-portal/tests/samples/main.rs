@@ -1,6 +1,7 @@
 #[path = "../support/mod.rs"]
 mod support;
 
+mod automations;
 mod catalogue;
 mod history;
 mod proxy;

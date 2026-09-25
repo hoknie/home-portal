@@ -1,0 +1,48 @@
+{
+  "webhooks": [
+    {
+      "action": "script",
+      "address": "/webhook/7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d",
+      "enabled": true,
+      "id": "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d",
+      "last_received": {
+        "at": "2026-09-25T10:00:00Z",
+        "status": 202
+      },
+      "protected": true,
+      "run": {
+        "args": [
+          "--",
+          "{{webhook.branch}}"
+        ],
+        "script": "deploy.sh",
+        "timeout_seconds": 300
+      },
+      "tags": [
+        "ci",
+        "media"
+      ],
+      "title": "Deploy from CI",
+      "variables": [
+        "branch",
+        "commit"
+      ]
+    },
+    {
+      "action": "event",
+      "address": "/webhook/0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d",
+      "enabled": true,
+      "id": "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d",
+      "last_received": null,
+      "protected": false,
+      "run": null,
+      "tags": [
+        "camera"
+      ],
+      "title": "Motion at the door",
+      "variables": [
+        "camera"
+      ]
+    }
+  ]
+}

@@ -18,7 +18,7 @@ import { SectionCard } from "@/shared/ui/section-card";
 import { TagInput } from "@/shared/ui/tag-input";
 
 import { byField } from "../model/server-errors";
-import { slugOf, uniqueId } from "../model/slug";
+import { slugOf, uniqueId } from "@/shared/lib/slug";
 import { DetailsFields } from "./details-fields";
 import { IconField } from "./icon-field";
 import { ProbeFields } from "./probe-fields";

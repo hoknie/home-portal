@@ -4,7 +4,7 @@ use home_portal::registered;
 use portal_config::ConfigStore;
 use std::os::unix::fs::PermissionsExt;
 
-const EXAMPLE: &str = "home-portal.example.toml";
+const EXAMPLE: &str = "config/home-portal.example.toml";
 
 #[test]
 fn the_example_configuration_with_one_user_passes_every_validator() {
@@ -134,7 +134,7 @@ fn the_secrets_example_is_read_from_an_include_and_never_reaches_the_document() 
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let directory = tempfile::tempdir().unwrap();
     let secrets = directory.path().join("secrets.toml");
-    let text = std::fs::read_to_string(root.join("secrets.example.toml")).unwrap();
+    let text = std::fs::read_to_string(root.join("config/secrets.example.toml")).unwrap();
     std::fs::write(
         &secrets,
         format!("{text}\ntelegram_token = \"123456789:AA\"\n"),

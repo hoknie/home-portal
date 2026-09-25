@@ -6,8 +6,10 @@ use portal_feature::{ApiError, Check, FieldError, Validator};
 use toml_edit::DocumentMut;
 
 use super::loading::{load, revision_of, writes_to};
-use crate::helpers::{merge, stamp_of, take_secrets, write_atomically};
-use crate::types::{ConfigError, Current, Revision, SecretString, Snapshot};
+use crate::helpers::{
+    merge, stamp_of, storage_errors, storage_places, take_secrets, write_atomically,
+};
+use crate::types::{ConfigError, Current, Revision, SecretString, Snapshot, Storage};
 
 pub struct ConfigStore {
     main: PathBuf,
@@ -16,6 +18,7 @@ pub struct ConfigStore {
     current: Mutex<Current>,
     secrets: RwLock<BTreeMap<String, SecretString>>,
     writing: tokio::sync::Mutex<()>,
+    storage: BTreeMap<Storage, PathBuf>,
 }
 
 impl ConfigStore {
@@ -25,6 +28,11 @@ impl ConfigStore {
     pub fn open(path: impl Into<PathBuf>) -> Result<ConfigStore, ConfigError> {
         let main = path.into();
         let loaded = load(&main)?;
+        let errors = storage_errors(&main, &loaded.snapshot.document);
+        if !errors.is_empty() {
+            return Err(ConfigError::Invalid { path: main, errors });
+        }
+        let storage = storage_places(&main, &loaded.snapshot.document);
         let stamps = loaded
             .sources
             .iter()
@@ -42,6 +50,7 @@ impl ConfigStore {
             }),
             secrets: RwLock::new(loaded.secrets),
             writing: tokio::sync::Mutex::new(()),
+            storage,
         })
     }
 
@@ -72,6 +81,13 @@ impl ConfigStore {
 
     pub fn path(&self) -> &Path {
         &self.main
+    }
+
+    pub fn storage(&self, kind: Storage) -> PathBuf {
+        self.storage
+            .get(&kind)
+            .cloned()
+            .unwrap_or_else(|| PathBuf::from(kind.default_name()))
     }
 
     pub fn paths(&self) -> Vec<PathBuf> {
@@ -248,13 +264,14 @@ impl ConfigStore {
     }
 
     fn validate(&self, document: &DocumentMut) -> Vec<FieldError> {
-        let mut errors: Vec<FieldError> = self
-            .validators
-            .read()
-            .unwrap_or_else(PoisonError::into_inner)
-            .iter()
-            .flat_map(|validator| validator(document))
-            .collect();
+        let mut errors = storage_errors(&self.main, document);
+        errors.extend(
+            self.validators
+                .read()
+                .unwrap_or_else(PoisonError::into_inner)
+                .iter()
+                .flat_map(|validator| validator(document)),
+        );
         errors.extend(
             self.checks
                 .read()

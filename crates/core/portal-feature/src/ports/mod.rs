@@ -1,8 +1,10 @@
+mod event_sink;
 mod feature;
 mod gate;
 mod status_observer;
 mod widget_provider;
 
+pub use event_sink::EventSink;
 pub use feature::Feature;
 pub use gate::Gate;
 pub use status_observer::StatusObserver;

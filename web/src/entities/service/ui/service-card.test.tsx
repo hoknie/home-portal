@@ -16,7 +16,7 @@ it("a signed-in card opens the service page and offers the service itself separa
     </TestIntl>,
   );
   expect(screen.getByRole("link", { name: /^Media/ }).getAttribute("href")).toMatch(/^\/service\/?\?id=media$/);
-  const open = screen.getByRole("link", { name: "Открыть Media" });
+  const open = screen.getByRole("link", { name: "Open Media" });
   expect(open).toHaveAttribute("href", "http://192.168.1.10:8096");
   expect(open).toHaveAttribute("target", "_blank");
 });
@@ -47,5 +47,5 @@ it("explains a failure in the status tooltip", () => {
       <ServiceCard service={denied} />
     </TestIntl>,
   );
-  expect(screen.getByTitle("Нет доступа к локальной сети: No route to host")).toBeInTheDocument();
+  expect(screen.getByTitle("No access to the local network: No route to host")).toBeInTheDocument();
 });

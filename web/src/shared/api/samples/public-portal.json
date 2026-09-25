@@ -9,13 +9,13 @@
   "sections": [
     {
       "id": "now",
-      "title": "Сейчас"
+      "title": "Now"
     }
   ],
   "services": [
     {
       "address": "http://192.168.1.10:8096",
-      "description": "Фильмы и сериалы",
+      "description": "Films and series",
       "group": "Media",
       "icon": "/api/public/icons/media",
       "id": "media",

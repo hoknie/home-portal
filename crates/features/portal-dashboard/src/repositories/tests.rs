@@ -140,10 +140,10 @@ fn a_removed_widget_is_gone_and_its_neighbours_keep_their_comments() {
 fn a_changed_size_and_title_touch_only_those_keys() {
     let text = written(|edited| {
         edited.widgets[1].instance.size = WidgetSize::Third;
-        edited.widgets[1].instance.title = Some("Погода".into());
+        edited.widgets[1].instance.title = Some("Weather".into());
     });
     assert!(text.contains(
-        "type = \"weather\"\nid = \"riga\"\npublic = true\nsettings = { latitude = 56.95, longitude = 24.11 }\ntitle = \"Погода\"\nsize = \"third\"\n"
+        "type = \"weather\"\nid = \"riga\"\npublic = true\nsettings = { latitude = 56.95, longitude = 24.11 }\ntitle = \"Weather\"\nsize = \"third\"\n"
     ), "{text}");
 }
 
@@ -153,7 +153,7 @@ fn sections_are_written_only_when_there_is_more_than_the_implicit_one() {
         edited.sections = vec![
             SectionEntry {
                 id: "now".into(),
-                title: Some("Сейчас".into()),
+                title: Some("Now".into()),
             },
             SectionEntry {
                 id: "later".into(),
@@ -165,7 +165,7 @@ fn sections_are_written_only_when_there_is_more_than_the_implicit_one() {
         edited.widgets[1].instance.section = Some("now".into());
     });
     assert!(
-        text.contains("[[dashboard.sections]]\nid = \"now\"\ntitle = \"Сейчас\"\n"),
+        text.contains("[[dashboard.sections]]\nid = \"now\"\ntitle = \"Now\"\n"),
         "{text}"
     );
     assert!(text.contains("id = \"roads\"\nsettings = { city = \"Riga\", zoom = 12, layers = [\"jams\", \"works\"] }\nsection = \"later\"\n"), "{text}");

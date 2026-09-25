@@ -25,7 +25,7 @@ it("ends the session and returns to the home page", async () => {
     </DropdownMenu>,
   );
   await userEvent.click(screen.getByText("menu"));
-  await userEvent.click(screen.getByRole("menuitem", { name: "Выйти" }));
+  await userEvent.click(screen.getByRole("menuitem", { name: "Sign out" }));
   await waitFor(() => expect(assign).toHaveBeenCalledWith("/"));
   expect(fetch).toHaveBeenCalledWith("/api/session", expect.objectContaining({ method: "DELETE" }));
 });

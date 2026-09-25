@@ -54,9 +54,9 @@ afterEach(() => {
 it("shows the service, a control that opens it at the visitor's address and one that edits it", async () => {
   serve();
   expect(await screen.findByRole("heading", { level: 1, name: "Media" })).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Открыть сервис" })).toHaveAttribute("href", "http://192.168.1.10:8096");
-  expect(screen.getByRole("link", { name: "Изменить" }).getAttribute("href")).toMatch(/^\/admin\/services\/edit\/?\?id=media$/);
-  expect(screen.getByRole("button", { name: "Проверить сейчас" })).toBeEnabled();
+  expect(screen.getByRole("link", { name: "Open the service" })).toHaveAttribute("href", "http://192.168.1.10:8096");
+  expect(screen.getByRole("link", { name: "Edit" }).getAttribute("href")).toMatch(/^\/admin\/services\/edit\/?\?id=media$/);
+  expect(screen.getByRole("button", { name: "Check now" })).toBeEnabled();
 });
 
 it("lists every address, marking the visitor's and the probed one", async () => {
@@ -65,34 +65,34 @@ it("lists every address, marking the visitor's and the probed one", async () => 
   const local = screen.getAllByText("http://192.168.1.10:8096").find((element) => element.closest("[data-environment]"));
   const row = local?.closest("li");
   expect(row).toBeTruthy();
-  expect(within(row as HTMLElement).getByText("проверяется")).toBeInTheDocument();
-  expect(internet.closest("li")?.textContent).not.toContain("проверяется");
+  expect(within(row as HTMLElement).getByText("checked")).toBeInTheDocument();
+  expect(internet.closest("li")?.textContent).not.toContain("checked");
 });
 
 it("shows the probe settings and history: uptime for three ranges, the latency chart and the state changes", async () => {
   serve();
-  expect(await screen.findByText("HTTP-запрос")).toBeInTheDocument();
-  expect(screen.getByText("каждые 30 с")).toBeInTheDocument();
-  expect(await screen.findByText("Доступность за 24 часа")).toBeInTheDocument();
-  expect(screen.getByText("Доступность за 30 дней")).toBeInTheDocument();
-  expect(screen.getAllByText(/^80\s%$/)).toHaveLength(3);
-  expect(screen.getByRole("img", { name: "Задержка за 24 часа" })).toBeInTheDocument();
+  expect(await screen.findByText("HTTP request")).toBeInTheDocument();
+  expect(screen.getByText("every 30 s")).toBeInTheDocument();
+  expect(await screen.findByText("Availability over 24 hours")).toBeInTheDocument();
+  expect(screen.getByText("Availability over 30 days")).toBeInTheDocument();
+  expect(screen.getAllByText(/^80%$/)).toHaveLength(3);
+  expect(screen.getByRole("img", { name: "Latency over 24 hours" })).toBeInTheDocument();
   expect(screen.getByText("connection refused", { selector: "p" })).toBeInTheDocument();
 });
 
 it("draws time and millisecond axes: hours for a day, dates for a month", async () => {
   serve();
-  const chart = await screen.findByRole("img", { name: "Задержка за 24 часа" });
+  const chart = await screen.findByRole("img", { name: "Latency over 24 hours" });
   const card = chart.closest("section") ?? document.body;
   const hours = [...card.querySelectorAll("[data-tick]")].map((tick) => tick.textContent ?? "");
   expect(hours.length).toBeGreaterThanOrEqual(2);
-  expect(hours.every((label) => /^\d{1,2}:\d{2}$/.test(label))).toBe(true);
-  expect(card.querySelector('[data-value-tick="0"]')?.textContent).toBe("0 мс");
-  fireEvent.click(screen.getByRole("button", { name: "30 дней" }));
-  await screen.findByRole("img", { name: "Задержка за 30 дней" });
+  expect(hours.every((label) => /^\d{1,2}:\d{2}\s[AP]M$/.test(label))).toBe(true);
+  expect(card.querySelector('[data-value-tick="0"]')?.textContent).toBe("0 ms");
+  fireEvent.click(screen.getByRole("button", { name: "30 days" }));
+  await screen.findByRole("img", { name: "Latency over 30 days" });
   const days = [...card.querySelectorAll("[data-tick]")].map((tick) => tick.textContent ?? "");
   expect(days.length).toBeGreaterThanOrEqual(2);
-  expect(days.every((label) => /^\d{1,2} \S+$/.test(label))).toBe(true);
+  expect(days.every((label) => /^\S+ \d{1,2}$/.test(label))).toBe(true);
 });
 
 it("renders links and notes, and a script in the notes is shown as text", async () => {
@@ -106,14 +106,14 @@ it("renders links and notes, and a script in the notes is shown as text", async 
 
 it("draws the widgets tied to the service", async () => {
   serve();
-  expect(await screen.findByRole("heading", { level: 2, name: "Виджеты сервиса" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { level: 2, name: "The service's widgets" })).toBeInTheDocument();
 });
 
 it("explains a failure and what to do about it", async () => {
   id = "nas";
   serve();
   const alert = await screen.findByRole("alert");
-  expect(within(alert).getByText("Соединение отклонено")).toBeInTheDocument();
+  expect(within(alert).getByText("Connection refused")).toBeInTheDocument();
 });
 
 it("names the macOS setting when the operating system refused the local network", async () => {
@@ -122,12 +122,12 @@ it("names the macOS setting when the operating system refused the local network"
   services.services[1].status = { ...services.services[1].status, state: "unreadable", diagnosis: "local-network-denied" };
   serve(services);
   const alert = await screen.findByRole("alert");
-  expect(within(alert).getByText(/Конфиденциальность и безопасность → Локальная сеть/)).toBeInTheDocument();
+  expect(within(alert).getByText(/Privacy & Security → Local Network/)).toBeInTheDocument();
 });
 
 it("says a service that is unknown here was not found", async () => {
   id = "secret";
   serve();
-  expect(await screen.findByText("Сервис не найден")).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "На главную" }).getAttribute("href")).toBe("/");
+  expect(await screen.findByText("Service not found")).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Back to home" }).getAttribute("href")).toBe("/");
 });

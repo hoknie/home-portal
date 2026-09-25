@@ -1,0 +1,235 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type == 'branch' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  CARGO_NET_RETRY: 10
+
+jobs:
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Dependencies, exactly as locked
+        run: pnpm --dir web install --frozen-lockfile
+
+      - name: Lint and the layers
+        run: pnpm --dir web lint
+
+      - name: Typecheck
+        run: pnpm --dir web typecheck
+
+      - name: Tests
+        run: pnpm --dir web test
+
+      - name: The interface, in every language
+        run: pnpm --dir web build
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: web-out
+          path: web/out
+          if-no-files-found: error
+          retention-days: 1
+
+  gate:
+    needs: web
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: web-out
+          path: web/out
+
+      - uses: dtolnay/rust-toolchain@1.98.1
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: gate
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Lint
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test --workspace
+
+  linux:
+    needs: gate
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64-unknown-linux-musl, aarch64-unknown-linux-musl]
+    env:
+      TARGET: ${{ matrix.target }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: web-out
+          path: web/out
+
+      - uses: dtolnay/rust-toolchain@1.98.1
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: zig and cargo-zigbuild, for the C in aws-lc and zstd
+        run: pip install --user --break-system-packages ziglang cargo-zigbuild
+
+      - name: The tag and Cargo.toml agree
+        if: github.ref_type == 'tag'
+        run: ./packaging/release.sh check-tag "$TAG"
+
+      - name: A static binary and its archive
+        run: ./packaging/package.sh all
+
+      - name: The binary runs
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: |
+          answer="$(HOME_PORTAL_CONFIG=/nonexistent/home-portal.toml "dist/bin/$TARGET/home-portal" 2>&1 || true)"
+          echo "$answer"
+          grep -q 'does not exist' <<<"$answer"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: home-portal-${{ matrix.target }}
+          path: dist/release/*
+          if-no-files-found: error
+          retention-days: 7
+
+  macos:
+    needs: web
+    runs-on: macos-14
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: web-out
+          path: web/out
+
+      - uses: dtolnay/rust-toolchain@1.98.1
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: macos
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: The tag and Cargo.toml agree
+        if: github.ref_type == 'tag'
+        run: ./packaging/release.sh check-tag "$TAG"
+
+      - name: Lint, as macOS compiles it
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Tests, as macOS runs them
+        run: cargo test --workspace
+
+      - name: A universal binary and its archive
+        run: ./packaging/package-macos.sh all
+
+      - name: The binary runs
+        run: |
+          answer="$(HOME_PORTAL_CONFIG=/nonexistent/home-portal.toml dist/bin/universal-apple-darwin/home-portal 2>&1 || true)"
+          echo "$answer"
+          grep -q 'does not exist' <<<"$answer"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: home-portal-universal-apple-darwin
+          path: dist/release/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: [linux, macos]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist/release
+          pattern: home-portal-*
+          merge-multiple: true
+
+      - name: The tag and Cargo.toml agree
+        run: ./packaging/release.sh check-tag "$TAG"
+
+      - name: SHA256SUMS
+        run: ./packaging/release.sh checksums
+
+      - name: Publish
+        run: |
+          ./packaging/release.sh notes > "$RUNNER_TEMP/release-notes.md"
+          if [ -s "$RUNNER_TEMP/release-notes.md" ]; then
+            notes=(--notes-file "$RUNNER_TEMP/release-notes.md")
+          else
+            notes=(--generate-notes)
+          fi
+          case "$TAG" in
+          *-*) marking=(--prerelease) ;;
+          *) marking=(--latest) ;;
+          esac
+          assets=(dist/release/home-portal_* dist/release/SHA256SUMS)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" --clobber "${assets[@]}"
+          else
+            gh release create "$TAG" \
+              --title "home-portal $TAG" \
+              --verify-tag \
+              "${notes[@]}" \
+              "${marking[@]}" \
+              "${assets[@]}"
+          fi

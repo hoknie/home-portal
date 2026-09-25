@@ -56,7 +56,7 @@ fn a_widget_without_a_type_is_refused() {
 
 #[test]
 fn a_widget_without_a_section_belongs_to_the_first_one_and_is_full_width() {
-    let text = "[[dashboard.sections]]\nid = \"now\"\ntitle = \"Сейчас\"\n\n[[dashboard.sections]]\nid = \"media\"\n\n[[dashboard.widgets]]\ntype = \"status-summary\"\n\n[[dashboard.widgets]]\ntype = \"services\"\nsection = \"media\"\nsize = \"half\"\n";
+    let text = "[[dashboard.sections]]\nid = \"now\"\ntitle = \"Now\"\n\n[[dashboard.sections]]\nid = \"media\"\n\n[[dashboard.widgets]]\ntype = \"status-summary\"\n\n[[dashboard.widgets]]\ntype = \"services\"\nsection = \"media\"\nsize = \"half\"\n";
     let layout = layout(&document(text)).unwrap();
     assert_eq!(layout.widgets[0].section.as_deref(), Some("now"));
     assert_eq!(layout.widgets[0].size.name(), "full");

@@ -69,6 +69,7 @@ fn probe_portal() -> Router {
             configuration,
             Vec::new(),
         )),
+        events: Arc::new(Silent),
     })
 }
 
@@ -168,6 +169,7 @@ fn two_features_claiming_one_path_fail_assembly() {
             configuration,
             Vec::new(),
         )),
+        events: Arc::new(Silent),
     });
 }
 
@@ -244,4 +246,13 @@ async fn the_real_portal_protects_the_api_and_signs_in_through_the_session_route
     let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
     assert_eq!(json["services"][0]["id"], "router");
     assert_eq!(json["services"][0]["status"]["state"], "unknown");
+}
+
+struct Silent;
+
+#[async_trait::async_trait]
+impl portal_feature::EventSink for Silent {
+    fn emit(&self, _event: portal_feature::PortalEvent) {}
+
+    async fn settle(&self, _within: std::time::Duration) {}
 }

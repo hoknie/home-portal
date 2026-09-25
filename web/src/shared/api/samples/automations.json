@@ -1,0 +1,87 @@
+{
+  "automations": [
+    {
+      "cooldown_seconds": 300,
+      "enabled": true,
+      "id": "restart-media",
+      "last_run": {
+        "arguments": [
+          "--",
+          "jellyfin"
+        ],
+        "automation": "restart-media",
+        "event": "service.status-changed",
+        "fields": {
+          "automation.id": "restart-media",
+          "event.at": "2026-09-25T03:00:00Z",
+          "event.name": "service.status-changed",
+          "run.by": "",
+          "run.id": "2",
+          "run.manual": "false"
+        },
+        "id": "2",
+        "outcome": {
+          "count": 9,
+          "duration_milliseconds": 0,
+          "exit_code": null,
+          "last_at": "2026-09-25T03:04:00Z",
+          "reason": "cooldown",
+          "result": "skipped",
+          "stderr": {
+            "bytes": 0,
+            "tail": "",
+            "truncated": false
+          },
+          "stdout": {
+            "bytes": 0,
+            "tail": "",
+            "truncated": false
+          }
+        },
+        "started_at": "2026-09-25T03:00:00Z"
+      },
+      "run": {
+        "args": [
+          "--",
+          "{{service.id}}"
+        ],
+        "script": "restart.sh",
+        "timeout_seconds": 120
+      },
+      "tags": [
+        "media",
+        "night"
+      ],
+      "title": "Restart Jellyfin when it goes down",
+      "when": {
+        "event": "service.status-changed",
+        "services": [
+          "jellyfin"
+        ],
+        "to": [
+          "down",
+          "unreadable"
+        ]
+      }
+    },
+    {
+      "cooldown_seconds": 0,
+      "enabled": false,
+      "id": "backup",
+      "last_run": null,
+      "run": {
+        "args": [],
+        "script": "backup/nightly.sh",
+        "timeout_seconds": 60
+      },
+      "tags": [
+        "backup"
+      ],
+      "title": "Nightly backup",
+      "when": {
+        "cron": "0 3 * * *",
+        "event": "schedule"
+      }
+    }
+  ]
+}

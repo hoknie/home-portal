@@ -5,8 +5,9 @@ use axum::http::header::ETAG;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use portal_config::{Revision, Snapshot};
-use portal_feature::ApiError;
+use portal_feature::{ApiError, EventName, PortalEvent, Principal};
 use portal_model::Environment;
+use time::OffsetDateTime;
 
 use crate::repositories::{
     append, origin, position, published_elsewhere, remove as remove_entry, replace,
@@ -32,6 +33,7 @@ pub async fn list(
 pub async fn create(
     State(state): State<ServicesState>,
     Extension(environment): Extension<Environment>,
+    principal: Option<Extension<Principal>>,
     headers: HeaderMap,
     Json(request): Json<ServiceRequest>,
 ) -> Result<Response, ApiError> {
@@ -52,6 +54,15 @@ pub async fn create(
         })
         .await?;
     state.supervisor.reconcile();
+    announce(
+        &state,
+        EventName::ServiceCreated,
+        &[
+            ("service.id", &entry.id),
+            ("service.name", &entry.name),
+            ("user.name", &user_of(principal)),
+        ],
+    );
     let body = ServiceResponse::of(
         entry.clone(),
         viewpoint(&state, &environment),
@@ -63,6 +74,7 @@ pub async fn create(
 pub async fn update(
     State(state): State<ServicesState>,
     Extension(environment): Extension<Environment>,
+    principal: Option<Extension<Principal>>,
     Path(id): Path<String>,
     headers: HeaderMap,
     Json(request): Json<ServiceRequest>,
@@ -89,6 +101,16 @@ pub async fn update(
         state.board.rename(&id, &entry.id);
     }
     state.supervisor.reconcile();
+    announce(
+        &state,
+        EventName::ServiceUpdated,
+        &[
+            ("service.id", &entry.id),
+            ("service.name", &entry.name),
+            ("service.previous_id", &id),
+            ("user.name", &user_of(principal)),
+        ],
+    );
     let body = ServiceResponse::of(
         entry.clone(),
         viewpoint(&state, &environment),
@@ -100,10 +122,16 @@ pub async fn update(
 pub async fn remove(
     State(state): State<ServicesState>,
     Extension(environment): Extension<Environment>,
+    principal: Option<Extension<Principal>>,
     Path(id): Path<String>,
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
+    let name = ServicesSection::read(&state.configuration.read().document)
+        .ok()
+        .and_then(|section| section.services.into_iter().find(|entry| entry.id == id))
+        .map(|entry| entry.name)
+        .unwrap_or_default();
     let target =
         origin(&state.configuration.read(), &id).ok_or(ApiError::NotFound(UNKNOWN_SERVICE))?;
     let (_, snapshot) = state
@@ -115,8 +143,29 @@ pub async fn remove(
         })
         .await?;
     state.supervisor.reconcile();
+    announce(
+        &state,
+        EventName::ServiceDeleted,
+        &[
+            ("service.id", &id),
+            ("service.name", &name),
+            ("user.name", &user_of(principal)),
+        ],
+    );
     let body = services_of(&state, &snapshot, &environment)?;
     Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
+}
+
+fn announce(state: &ServicesState, name: EventName, values: &[(&str, &str)]) {
+    state
+        .events
+        .emit(PortalEvent::of(name, OffsetDateTime::now_utc(), values));
+}
+
+fn user_of(principal: Option<Extension<Principal>>) -> String {
+    principal
+        .map(|Extension(principal)| principal.name)
+        .unwrap_or_default()
 }
 
 fn checked(request: ServiceRequest, state: &ServicesState) -> Result<ServiceEntry, ApiError> {

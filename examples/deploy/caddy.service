@@ -1,0 +1,42 @@
+# A systemd unit for Caddy, the reverse proxy the portal manages (the [proxy] section).
+# Caddy 2.8 or later, from your distribution or https://caddyserver.com/docs/install
+#
+#   sudo cp caddy.service /etc/systemd/system/home-portal-caddy.service
+#   sudo systemctl enable --now home-portal-caddy
+#
+# Caddy starts without a Caddyfile: "run --resume" loads the last configuration the portal
+# gave it, so published services keep working while the portal restarts or is down.
+# Hosts that ask for the portal's sign-in answer 502 until the portal is back.
+# The portal owns Caddy's whole configuration: a site added to Caddy by hand is removed
+# within a minute. Publish anything else as a service with a proxy table.
+#
+# The admin API listens on 127.0.0.1:2019, as proxy.admin expects by default. Keep it on
+# loopback: it has no password.
+#
+# Ports. Caddy listens on 443, and on 80 to redirect to https; CAP_NET_BIND_SERVICE below
+# lets it bind them without root. For Let's Encrypt (proxy.tls.mode = "acme") forward
+# ports 80 and 443 of the router to this machine; hosts with mode "internal" or "files"
+# need no forwarding. Certificates for mode "files" must be readable by the caddy user.
+
+[Unit]
+Description=Caddy for home-portal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=caddy
+Group=caddy
+ExecStart=/usr/bin/caddy run --resume
+Restart=on-failure
+RestartSec=5
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+Environment=XDG_DATA_HOME=/var/lib/caddy
+Environment=XDG_CONFIG_HOME=/var/lib/caddy
+StateDirectory=caddy
+
+[Install]
+WantedBy=multi-user.target

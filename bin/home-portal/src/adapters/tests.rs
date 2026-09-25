@@ -1,12 +1,23 @@
 use std::fs;
 use std::sync::Arc;
 
+use portal_automations::Directory;
 use portal_config::ConfigStore;
+use portal_feature::{EventSink, PortalEvent};
 use portal_model::Environment;
 use portal_proxy::PublishedServices;
-use portal_services::{Publishing, ServicesFeature};
+use portal_services::{Publishing, ServicesFeature, ServicesPorts};
 
-use super::{ProxyPublishing, ServicePublications};
+use super::{AutomationDirectory, ProxyPublishing, ServicePublications};
+
+struct Silent;
+
+#[async_trait::async_trait]
+impl EventSink for Silent {
+    fn emit(&self, _event: PortalEvent) {}
+
+    async fn settle(&self, _within: std::time::Duration) {}
+}
 
 const FILE: &str = "[environments.local]\nnetworks = [\"192.168.0.0/16\"]\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://media.lan:8096\"\naddresses = { local = \"http://192.168.1.10:8096\" }\nproxy = { host = \"media.example.com\" }\nprobe = { enabled = false }\n\n[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"http://192.168.1.5\"\nproxy = { host = \"nas.example.com\", upstream = \"https://192.168.1.5:5001\" }\nprobe = { enabled = false }\n\n[[services]]\nid = \"printer\"\nname = \"Printer\"\nurl = \"http://192.168.1.30\"\nprobe = { enabled = false }\n";
 
@@ -18,10 +29,13 @@ fn services(text: &str) -> (tempfile::TempDir, Arc<ConfigStore>, Arc<ServicesFea
     let services = ServicesFeature::new(
         store.clone(),
         Environment::parse("local").unwrap(),
-        Vec::new(),
-        Arc::new(ProxyPublishing {
-            configuration: store.clone(),
-        }),
+        ServicesPorts {
+            observers: Vec::new(),
+            publishing: Arc::new(ProxyPublishing {
+                configuration: store.clone(),
+            }),
+            events: Arc::new(Silent),
+        },
     )
     .unwrap();
     (directory, store, Arc::new(services))
@@ -119,4 +133,23 @@ fn only_a_trusted_proxy_is_trusted_as_a_peer() {
     let (_directory, connection) = connection(PROXIED);
     assert!(connection.trusts("127.0.0.1".parse().unwrap()));
     assert!(!connection.trusts("192.168.1.40".parse().unwrap()));
+}
+
+#[test]
+fn the_automation_directory_lists_services_users_and_environments_with_internet() {
+    let text = format!(
+        "{FILE}\n[[users]]\nname = \"admin\"\npassword_hash = \"x\"\n\n[[users]]\nname = \"guest\"\npassword_hash = \"y\"\n"
+    );
+    let (_directory, store, _) = services(&text);
+    let directory = AutomationDirectory {
+        configuration: store,
+    };
+    let services: Vec<String> = directory
+        .services()
+        .into_iter()
+        .map(|choice| format!("{}={}", choice.id, choice.name))
+        .collect();
+    assert_eq!(services, vec!["media=Media", "nas=NAS", "printer=Printer"]);
+    assert_eq!(directory.users(), vec!["admin", "guest"]);
+    assert_eq!(directory.environments(), vec!["local", "internet"]);
 }

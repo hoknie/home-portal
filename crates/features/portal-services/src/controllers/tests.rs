@@ -28,8 +28,7 @@ fn portal_with(text: &str) -> Portal {
     let feature = ServicesFeature::new(
         store.clone(),
         Environment::internet(),
-        Vec::new(),
-        Arc::new(crate::fakes::Switch::on()),
+        crate::fakes::quiet_ports(Arc::new(crate::fakes::Switch::on())),
     )
     .unwrap();
     store.adopt(vec![feature.validator().unwrap()]).unwrap();
@@ -202,8 +201,12 @@ fn published_portal(switch: Arc<crate::fakes::Switch>) -> (Router, std::path::Pa
     let path = directory.path().join("home-portal.toml");
     fs::write(&path, PUBLISHED).unwrap();
     let store = Arc::new(ConfigStore::open(&path).unwrap());
-    let feature =
-        ServicesFeature::new(store.clone(), Environment::internet(), Vec::new(), switch).unwrap();
+    let feature = ServicesFeature::new(
+        store.clone(),
+        Environment::internet(),
+        crate::fakes::quiet_ports(switch),
+    )
+    .unwrap();
     store.adopt(vec![feature.validator().unwrap()]).unwrap();
     (feature.router(), path, directory)
 }
@@ -307,8 +310,7 @@ async fn a_host_another_service_publishes_is_refused_on_the_host_field() {
     let feature = ServicesFeature::new(
         store.clone(),
         Environment::internet(),
-        Vec::new(),
-        Arc::new(crate::fakes::Switch::on()),
+        crate::fakes::quiet_ports(Arc::new(crate::fakes::Switch::on())),
     )
     .unwrap();
     let revision = store.read().revision.as_str().to_string();

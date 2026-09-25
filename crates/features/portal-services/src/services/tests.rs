@@ -1,10 +1,10 @@
 use std::fs;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use portal_config::ConfigStore;
-use portal_feature::FieldError;
-use portal_model::{Environment, ServiceState};
+use portal_feature::{FieldError, StatusChange, StatusObserver};
+use portal_model::{Environment, ProbeOutcome, ServiceState};
 use time::OffsetDateTime;
 use toml_edit::DocumentMut;
 
@@ -319,4 +319,35 @@ fn a_related_widget_is_resolved_against_the_layout_in_the_file() {
         fields(validate_services(&document)),
         vec!["services[0].widgets[1]"]
     );
+}
+
+#[derive(Default)]
+struct Recorder {
+    changes: Mutex<Vec<StatusChange>>,
+}
+
+impl StatusObserver for Recorder {
+    fn changed(&self, change: &StatusChange) {
+        self.changes.lock().unwrap().push(change.clone());
+    }
+}
+
+#[test]
+fn a_service_that_does_not_notify_still_reports_its_changes_marked_as_silent() {
+    let recorder = Arc::new(Recorder::default());
+    let board = StatusBoard::watched(OffsetDateTime::now_utc(), vec![recorder.clone()]);
+    let mut silent = entry();
+    silent.notify = Some(false);
+    let now = OffsetDateTime::now_utc();
+    board.record(&silent, ProbeOutcome::answered(ServiceState::Up, 5), now);
+    board.record(
+        &silent,
+        ProbeOutcome::failed(ServiceState::Down, None, "refused".into()),
+        now,
+    );
+    let changes = recorder.changes.lock().unwrap();
+    assert_eq!(changes.len(), 2);
+    assert!(changes.iter().all(|change| !change.notify));
+    assert_eq!(changes[1].now, "down");
+    assert_eq!(changes[1].diagnosis.as_deref(), Some("other"));
 }

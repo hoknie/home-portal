@@ -14,8 +14,8 @@ afterEach(() => clearChoice());
 it("from inside, it lists every environment and looks from the chosen one", async () => {
   const { client } = renderWithProviders(<EnvironmentSwitch environment="local" detected="local" switchable environments={ENVIRONMENTS} />);
   const invalidate = vi.spyOn(client, "invalidateQueries");
-  await userEvent.click(screen.getByRole("button", { name: "Окружение: local. Выбрать другое" }));
-  expect(screen.getByRole("menuitemradio", { name: "local — ваше" })).toHaveAttribute("aria-checked", "true");
+  await userEvent.click(screen.getByRole("button", { name: "Environment: local. Choose another" }));
+  expect(screen.getByRole("menuitemradio", { name: "local (yours)" })).toHaveAttribute("aria-checked", "true");
   await userEvent.click(screen.getByRole("menuitemradio", { name: "internet" }));
   expect(readChoice()).toBe("internet");
   expect(invalidate).toHaveBeenCalled();
@@ -25,8 +25,8 @@ it("says when the view differs from the detected environment and goes back", asy
   document.cookie = "portal_environment=internet; Path=/";
   const { client } = renderWithProviders(<EnvironmentSwitch environment="internet" detected="local" switchable environments={ENVIRONMENTS} />);
   const invalidate = vi.spyOn(client, "invalidateQueries");
-  expect(screen.getByText("Вид как из «internet», вы в «local»")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Вернуть «local»" }));
+  expect(screen.getByText("Viewing as from “internet”; you are in “local”")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Back to “local”" }));
   expect(readChoice()).toBeNull();
   expect(invalidate).toHaveBeenCalled();
 });

@@ -8,20 +8,20 @@ import { WidgetFrame, WidgetProblem } from "./widget-frame";
 it("names the widget and marks data that is no longer current", () => {
   render(
     <TestIntl>
-      <WidgetFrame title="Погода" stale problem="upstream is away">
+      <WidgetFrame title="Weather" stale problem="upstream is away">
         <p>12°</p>
       </WidgetFrame>
     </TestIntl>,
   );
-  expect(screen.getByRole("heading", { level: 2, name: "Погода" })).toBeInTheDocument();
-  expect(screen.getByText(/устарели/)).toHaveAttribute("data-stale", "true");
+  expect(screen.getByRole("heading", { level: 2, name: "Weather" })).toBeInTheDocument();
+  expect(screen.getByText(/out of date/)).toHaveAttribute("data-stale", "true");
   expect(screen.getByText("12°")).toBeInTheDocument();
 });
 
 it("shows a skeleton instead of its content while loading", () => {
   const { container } = render(
     <TestIntl>
-      <WidgetFrame title="Погода" loading>
+      <WidgetFrame title="Weather" loading>
         <p>12°</p>
       </WidgetFrame>
     </TestIntl>,
