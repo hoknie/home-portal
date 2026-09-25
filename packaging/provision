@@ -24,7 +24,7 @@ fi
 umask 077
 mkdir -p "$directory"
 
-password="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)"
+password="$(head -c 4096 /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c 24)"
 [ "${#password}" -eq 24 ] || { echo "home-portal: cannot make a password" >&2; exit 1; }
 hash="$(printf '%s\n' "$password" | "$binary" password-hash)"
 case "$hash" in
