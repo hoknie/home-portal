@@ -47,7 +47,7 @@ jobs:
       - name: Tests
         run: pnpm --dir web test
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: web/.next/cache
           key: nextjs-${{ runner.os }}-${{ hashFiles('web/pnpm-lock.yaml') }}-${{ hashFiles('web/src/**', 'web/next.config.*') }}
@@ -120,7 +120,7 @@ jobs:
           key: ${{ matrix.target }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: zig
         with:
           path: ~/.local
