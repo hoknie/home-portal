@@ -1,0 +1,3 @@
+# zig as the C compiler and linker for the static Linux builds (packaging/package.sh).
+ziglang==0.16.0
+cargo-zigbuild==0.23.4
