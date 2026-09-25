@@ -22,7 +22,30 @@ have behaved over the last 30 days, and lets you manage them — all from one sm
 It is one process: a Rust server (axum + tokio) with the web interface (Next.js, static export)
 embedded in the binary.
 
-## Quick start
+## Install a release
+
+Every tagged version on the releases page carries one archive per platform and a
+`SHA256SUMS` over them:
+
+| Archive | For |
+|---|---|
+| `home-portal_<version>.linux.x86_64.tar.gz` | Linux on x86_64, a static binary (musl) |
+| `home-portal_<version>.linux.aarch64.tar.gz` | Linux on arm64 (Raspberry Pi 4/5 on a 64-bit system, ARM servers), static |
+| `home-portal_<version>.macos.universal.tar.gz` | macOS 11 or later, Apple silicon and Intel |
+
+```sh
+sha256sum --check --ignore-missing SHA256SUMS      # shasum -a 256 -c on macOS
+tar -xzf home-portal_<version>.linux.x86_64.tar.gz
+cd home-portal_<version>.linux.x86_64
+cp config/home-portal.example.toml config/home-portal.toml
+./home-portal password-hash                        # add the hash as a [[users]] entry
+HOME_PORTAL_CONFIG=config/home-portal.toml ./home-portal
+```
+
+Each archive holds the binary, the example configuration, `examples/`, and the systemd or
+launchd files for the portal and Caddy.
+
+## Build from source
 
 Requirements: Rust 1.98.1 (pinned by `rust-toolchain.toml`), Node.js 24 and pnpm 11 for the
 interface, and [`just`](https://github.com/casey/just).
@@ -117,7 +140,16 @@ just check              # the whole gate: fmt, clippy -D warnings, tests, web li
 just run                # the portal on :8080
 pnpm --dir web dev      # the interface with live reload, proxying /api to the running portal
 just samples            # rewrite the API samples after changing a response shape
+just package-macos      # a universal macOS archive in dist/release
+just package            # a static Linux archive; TARGET=aarch64-unknown-linux-musl for arm64
 ```
+
+CI (`.github/workflows/release.yml`) runs the web gate, then fmt, clippy and the Rust tests on
+Linux and again on macOS, and builds the three archives on every push and pull request. A tag
+`vX.Y.Z` that matches the version in `Cargo.toml` publishes them as a release with
+`SHA256SUMS`. The Linux build cross-compiles with
+[cargo-zigbuild](https://github.com/rust-cross/cargo-zigbuild) (`pip install ziglang
+cargo-zigbuild`), because rustls and the embedded interface carry C code.
 
 ## License
 

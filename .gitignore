@@ -1,4 +1,5 @@
 /target
+/dist/
 /home-portal.toml
 /config/home-portal.toml
 /sessions.json*
