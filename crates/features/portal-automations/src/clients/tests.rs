@@ -140,9 +140,8 @@ async fn an_exit_code_other_than_zero_fails_with_that_code_and_its_error_output(
 #[tokio::test]
 async fn arguments_beyond_the_system_limit_fail_to_start_with_the_reason() {
     let folder = TempDir::new().unwrap();
-    let long = "x".repeat(100 * 1024);
-    let arguments: Vec<&str> = (0..30).map(|_| long.as_str()).collect();
-    let (finished, _) = run(&invocation(&folder, "exit 0", &arguments, 10)).await;
+    let long = "x".repeat(4 * 1024 * 1024);
+    let (finished, _) = run(&invocation(&folder, "exit 0", &[long.as_str()], 10)).await;
     assert_eq!(finished.outcome, Outcome::Failed);
     assert!(
         finished
