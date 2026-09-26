@@ -26,6 +26,6 @@ pub use proxy_view::ProxyView;
 pub use published_service::PublishedService;
 #[cfg(test)]
 pub use raw::RawPublishedService;
-pub use raw::{RawNetworkView, RawProxy, RawProxySection, RawServicesView};
+pub use raw::{RawDnsView, RawNetworkView, RawProxy, RawProxySection, RawServicesView};
 pub use sync_setup::SyncSetup;
 pub use sync_state::SyncState;

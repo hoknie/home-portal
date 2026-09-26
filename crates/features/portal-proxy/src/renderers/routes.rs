@@ -7,6 +7,7 @@ use crate::types::PublishedService;
 
 pub const USER_HEADER: &str = "X-Portal-User";
 pub const AUTHORIZE_PATH: &str = "/api/proxy/authorize";
+pub const DOH_PATH: &str = "/dns-query";
 pub const USER_PLACEHOLDER: &str = "{http.reverse_proxy.header.X-Portal-User}";
 
 pub fn portal_dial(portal: SocketAddr) -> String {
@@ -26,6 +27,14 @@ pub fn portal_route(host: &str, portal: &str) -> Value {
             json!({ "handler": "reverse_proxy", "upstreams": [{ "dial": portal }] }),
         ],
     )
+}
+
+pub fn doh_route(host: &str, portal: &str) -> Value {
+    json!({
+        "match": [{ "host": [host], "path": [DOH_PATH] }],
+        "handle": [{ "handler": "reverse_proxy", "upstreams": [{ "dial": portal }] }],
+        "terminal": true
+    })
 }
 
 pub fn service_route(service: &PublishedService, portal: &str) -> Value {

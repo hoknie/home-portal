@@ -1,3 +1,4 @@
+mod dns;
 mod home;
 #[cfg(unix)]
 mod interface;

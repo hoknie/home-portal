@@ -6,7 +6,9 @@ use ipnet::IpNet;
 pub const FORWARDED_FOR: &str = "x-forwarded-for";
 
 pub fn client_address(peer: Option<SocketAddr>, headers: &HeaderMap, trusted: &[IpNet]) -> IpAddr {
-    let peer = peer.map_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED), |peer| peer.ip());
+    let peer = peer.map_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED), |peer| {
+        peer.ip().to_canonical()
+    });
     let is_trusted = |address: &IpAddr| trusted.iter().any(|network| network.contains(address));
     if !is_trusted(&peer) {
         return peer;
@@ -16,7 +18,8 @@ pub fn client_address(peer: Option<SocketAddr>, headers: &HeaderMap, trusted: &[
         .iter()
         .filter_map(|value| value.to_str().ok())
         .flat_map(|value| value.split(','))
-        .filter_map(|hop| hop.trim().parse().ok())
+        .filter_map(|hop| hop.trim().parse::<IpAddr>().ok())
+        .map(|hop| hop.to_canonical())
         .collect();
     hops.into_iter()
         .rev()

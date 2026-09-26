@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::{RawNetworkView, RawProxy};
+use super::{RawDnsView, RawNetworkView, RawProxy};
 
 #[derive(Debug, Default, Deserialize)]
 pub struct RawProxySection {
@@ -8,4 +8,6 @@ pub struct RawProxySection {
     pub proxy: RawProxy,
     #[serde(default)]
     pub network: RawNetworkView,
+    #[serde(default)]
+    pub dns: RawDnsView,
 }

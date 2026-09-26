@@ -89,6 +89,27 @@ Keep the `web/` folder beside the binary: it is the interface. Without it the po
 runs, but its pages answer 503. The archive also holds `examples/` and systemd or launchd files
 for the portal and Caddy.
 
+## Local DNS
+
+The portal can answer DNS for the names it publishes, so `portal.home` and `jellyfin.home` resolve
+without editing your router's records by hand. Each network gets the proxy's address in that network
+(at home the LAN address, over the VPN the VPN address). Only your own environments get answers:
+everyone else, and every name outside your zones, is refused, and nothing is forwarded to other
+servers.
+
+1. On **Management → Proxy**, open the DNS card, add your zone (for example `home`) and check the
+   answers for each environment.
+2. Turn the server on. It listens on port 53; on Linux that needs
+   `AmbientCapabilities=CAP_NET_BIND_SERVICE` through `systemctl edit home-portal`, or pick another
+   port.
+3. Tell your router to forward the zone to the portal: in dnsmasq or Pi-hole
+   `server=/home/192.168.1.60`, in a FRITZ!Box, pfSense or OPNsense a domain override. For a VPN, set
+   the portal as its DNS server.
+
+Phones can use DNS over TLS (the host shown on the card, for Android's Private DNS) or DNS over HTTPS
+(`https://<portal host>/dns-query`). Android's Private DNS only accepts a certificate the phone
+trusts, so use a host with ACME there.
+
 ## Configuration
 
 Everything is set in one TOML file. Start from

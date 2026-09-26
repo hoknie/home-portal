@@ -37,6 +37,7 @@ export const api = {
   publicWidget: (id: string) => `/api/public/widgets/${encodeURIComponent(id)}/data`,
   publicIcon: (id: string) => `/api/public/icons/${encodeURIComponent(id)}`,
   proxy: "/api/proxy",
+  dns: "/api/dns",
   proxyApply: "/api/proxy/apply",
   proxyContinue: (to: string) => `/api/proxy/continue?to=${encodeURIComponent(to)}`,
   proxyRootCertificate: "/api/proxy/root-certificate",

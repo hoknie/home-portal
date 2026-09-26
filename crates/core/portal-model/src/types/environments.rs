@@ -21,6 +21,10 @@ impl Environments {
             .unwrap_or_else(Environment::internet)
     }
 
+    pub fn named(&self) -> &[(Environment, Vec<IpNet>)] {
+        &self.named
+    }
+
     pub fn names(&self) -> Vec<Environment> {
         let mut names: Vec<Environment> = self
             .named

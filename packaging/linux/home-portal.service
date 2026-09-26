@@ -2,7 +2,7 @@
 #
 # ICMP probes use unprivileged echo sockets: the group home-portal must be inside
 # net.ipv4.ping_group_range (see /usr/share/doc/home-portal/examples/deploy/home-portal.service).
-# A portal that runs Caddy itself and publishes on ports 80 and 443 needs
+# A portal that runs Caddy itself and publishes on ports 80 and 443, or answers DNS on port 53, needs
 #   [Service]
 #   AmbientCapabilities=CAP_NET_BIND_SERVICE
 # through systemctl edit.

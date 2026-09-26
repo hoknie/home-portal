@@ -4,6 +4,7 @@ use portal_auth::AuthFeature;
 use portal_automations::AutomationsFeature;
 use portal_calendar::CalendarFeature;
 use portal_dashboard::DashboardFeature;
+use portal_dns::DnsFeature;
 use portal_feature::Feature;
 use portal_health::HealthFeature;
 use portal_icons::IconsFeature;
@@ -18,8 +19,8 @@ use portal_weather::WeatherFeature;
 use portal_widget::WidgetRegistry;
 
 use crate::adapters::{
-    AutomationDirectory, NetworkConnection, ProxyPublishing, ServiceCatalogue, ServicePublications,
-    WidgetLayout,
+    AutomationDirectory, DnsDirectory, NetworkConnection, ProxyPublishing, ServiceCatalogue,
+    ServicePublications, WidgetLayout,
 };
 use crate::types::{BootError, Registry, Restart, Wiring};
 
@@ -99,6 +100,13 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         Arc::new(SecretsFeature::new(configuration.clone())),
         Arc::new(DashboardFeature::new(configuration.clone())),
         automations,
+        Arc::new(DnsFeature::new(
+            configuration.clone(),
+            Arc::new(DnsDirectory {
+                configuration: configuration.clone(),
+                services: services.clone(),
+            }),
+        )),
         Arc::new(ProxyFeature::new(
             configuration,
             ProxyPorts {

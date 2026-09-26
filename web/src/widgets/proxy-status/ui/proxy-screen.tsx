@@ -17,6 +17,8 @@ import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
 import { StatusDot } from "@/shared/ui/status-badge";
 
+import { DnsCard } from "./dns-card";
+
 function stateOf(proxy: Proxy) {
   if (!proxy.reachable) {
     return { dot: "down", label: "unreachable" } as const;
@@ -135,6 +137,7 @@ export function ProxyScreen() {
           <ProxySettingsForm proxy={data} revision={proxy.data?.revision ?? null} />
         </SectionCard>
       ) : null}
+      {data ? <DnsCard /> : null}
       {!data && !proxy.error ? <Skeleton className="h-96 w-full" aria-busy="true" /> : null}
     </div>
   );

@@ -62,6 +62,30 @@ trusted_proxies = []
 # is checked against the release's SHA-512 checksum file. Both keys are optional.
 # caddy = { source = "https://api.github.com/repos/caddyserver/caddy/releases", version = "2.10.2" }
 
+# A small DNS server for the names the proxy publishes: portal_host, each service's proxy.host
+# and the zones below. Each network gets the proxy's address in that network (from
+# [dns.addresses], else from this host's interface in that network), only your environments get
+# answers, other names are refused, and nothing is forwarded: point your router's conditional
+# forwarding (dnsmasq: server=/home/192.168.1.60) at the portal. Port 53 needs
+# CAP_NET_BIND_SERVICE on Linux; macOS allows it.
+# [dns]
+# enabled = true
+# port = 53
+# zones = ["home"]
+# ttl = 60
+# [dns.addresses]
+# local = "192.168.1.60"
+# vpn = ["10.8.0.1", "fd00::1"]
+# [dns.tls]                        # DNS over TLS on 853, with the portal host's certificate
+# enabled = true
+# [dns.https]                      # DNS over HTTPS at https://<portal_host>/dns-query
+# enabled = true
+# [[dns.records]]
+# name = "printer.home"
+# type = "A"                       # A, AAAA, CNAME or TXT
+# value = "192.168.1.9"
+# environments = ["local"]
+
 # Where a visitor is, decided by their address. The name "internet" is reserved for
 # everyone outside every range below, and needs no section of its own.
 # A service may then carry one address per environment, and widgets may be limited

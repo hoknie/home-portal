@@ -321,3 +321,19 @@ fn fixture_interface() -> Arc<dyn portal_web::AssetSource> {
     )
     .join("tests/fixtures/web")]))
 }
+
+#[tokio::test]
+async fn dns_settings_need_a_session_and_dns_over_https_does_not() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = support::with_extra(&directory, "secret", "");
+    let registry = registered(&support::wiring_for(&path)).unwrap();
+    let portal = assemble(&registry);
+    assert_eq!(
+        status_of(portal.clone(), get_request("/api/dns")).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        status_of(portal, get_request("/dns-query?dns=AAAB")).await,
+        StatusCode::NOT_FOUND
+    );
+}

@@ -13,6 +13,7 @@ pub struct ProxySettings {
     pub cookie_domain: Option<String>,
     pub tls: TlsPolicy,
     pub caddy: CaddySource,
+    pub doh_host: Option<String>,
 }
 
 impl Default for ProxySettings {
@@ -24,6 +25,7 @@ impl Default for ProxySettings {
             https_port: Publication::HTTPS_PORT,
             admin: AdminAddress::default(),
             portal_host: None,
+            doh_host: None,
             cookie_domain: None,
             tls: TlsPolicy::default(),
             caddy: CaddySource::default(),
