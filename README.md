@@ -143,6 +143,38 @@ run gets the event's fields as arguments (`args = ["--", "{{service.id}}"]`), as
 variables and as JSON on standard input. The automations page shows runs as they happen,
 with their output, and can stop them.
 
+# Screenshots
+
+<details>
+<summary>Main</summary>
+![main page](docs/assets/page-main.png)
+</details>
+
+<details>
+<summary>Proxy</summary>
+![proxy page](docs/assets/page-proxy.png)
+</details>
+
+<details>
+<summary>Automations</summary>
+![main page](docs/assets/page-automations.png)
+</details>
+
+<details>
+<summary>Automations run</summary>
+![main page](docs/assets/page-automations-run.png)
+</details>
+
+<details>
+<summary>Webhooks</summary>
+![main page](docs/assets/page-webhooks.png)
+</details>
+
+<details>
+<summary>Webhook details</summary>
+![main page](docs/assets/page-webhooks-detail.png)
+</details>
+
 ## License
 
 [Apache License 2.0](LICENSE).

@@ -18,6 +18,23 @@ clippy:
 test:
     {{ CARGO }} test --workspace
 
+# Every Rust test inside Linux, in Docker, as CI's Ubuntu job runs them; caches live in named volumes
+[group('quality')]
+test-linux:
+    @command -v docker >/dev/null || { echo "test-linux needs Docker" >&2; exit 1; }
+    docker run --rm \
+        -v "{{ justfile_directory() }}":/src:ro \
+        -v home-portal-cargo:/usr/local/cargo/registry \
+        -v home-portal-rustup:/usr/local/rustup \
+        -v home-portal-target:/target \
+        -e CARGO_TARGET_DIR=/target \
+        -w /src \
+        rust:1 cargo test --workspace --locked
+
+# Every Rust test here, then again inside Linux
+[group('quality')]
+test-all: test test-linux
+
 # Write the API samples the frontend schemas are checked against
 [group('quality')]
 samples:

@@ -103,6 +103,10 @@ Every task is a `just` recipe; `just` alone lists them by section. The recipes l
 Work is done when `just check` passes. Anything that needs a browser, such as a theme flash, the
 phone layout or a live walk-through, is named as unchecked, never assumed.
 
+Some failures only show on Linux (for example "Text file busy" when a test copies and runs a
+binary). `just test-linux` runs the Rust tests inside Linux in Docker, as CI's Ubuntu job does, and
+`just test-all` runs them here and there.
+
 ## Packages
 
 Every package ships the binary with the interface beside it:

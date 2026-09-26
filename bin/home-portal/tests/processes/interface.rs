@@ -29,15 +29,30 @@ fn fetch(port: u16, route: &str) -> (String, String) {
     (status.to_string(), body.to_string())
 }
 
+fn spawned(program: &Path, configuration: &Path, port: u16) -> Child {
+    let began = Instant::now();
+    loop {
+        let attempt = Command::new(program)
+            .env("HOME_PORTAL_CONFIG", configuration)
+            .env("HOME_PORTAL_ADDRESS", format!("127.0.0.1:{port}"))
+            .env_remove("HOME_PORTAL_WEB")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn();
+        match attempt {
+            Err(error)
+                if error.kind() == std::io::ErrorKind::ExecutableFileBusy
+                    && began.elapsed() < Duration::from_secs(5) =>
+            {
+                thread::sleep(Duration::from_millis(50));
+            }
+            result => return result.unwrap(),
+        }
+    }
+}
+
 fn started(program: &Path, configuration: &Path, port: u16) -> Child {
-    let child = Command::new(program)
-        .env("HOME_PORTAL_CONFIG", configuration)
-        .env("HOME_PORTAL_ADDRESS", format!("127.0.0.1:{port}"))
-        .env_remove("HOME_PORTAL_WEB")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .unwrap();
+    let child = spawned(program, configuration, port);
     let began = Instant::now();
     while fetch(port, "/health").0 != "200" {
         assert!(
