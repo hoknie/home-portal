@@ -13,5 +13,6 @@
 .idea
 *.md
 !/README.md
+!/DEVELOPMENT.md
 *.yaml
 env/sessions.json

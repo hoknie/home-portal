@@ -14,12 +14,24 @@ die() { printf 'packaging: %s\n' "$*" >&2; exit 1; }
 
 require_interface() {
     [ -f "$ROOT/web/out/en/index.html" ] \
-        || die "web/out is missing; the binary embeds the interface, so run 'just web' first"
+        || die "web/out is missing; the packages ship the interface beside the binary, so run 'just web' first"
+}
+
+# install_interface <folder>
+# Copies the built interface (web/out) into <folder>: directories 0755, files 0644.
+install_interface() {
+    local folder="$1"
+    require_interface
+    install -d -m 0755 "$folder"
+    cp -R "$ROOT/web/out/." "$folder/"
+    find "$folder" -type d -exec chmod 0755 {} +
+    find "$folder" -type f -exec chmod 0644 {} +
 }
 
 # archive <binary> <platform> <arch> <deploy files...>
 # Writes $RELEASE/home-portal_<version>.<platform>.<arch>.tar.gz holding the binary, the
-# configuration examples, the examples folder and the deploy files beside the binary.
+# interface in web/, the configuration examples, the examples folder and the deploy files beside
+# the binary.
 archive() {
     local binary="$1" platform="$2" arch="$3"
     shift 3
@@ -29,6 +41,7 @@ archive() {
 
     install -d -m 0755 "$tree" "$tree/config"
     install -m 0755 "$binary" "$tree/$PROGRAM"
+    install_interface "$tree/web"
     install -m 0644 "$ROOT/config/home-portal.example.toml" "$tree/config/home-portal.example.toml"
     install -m 0644 "$ROOT/config/secrets.example.toml" "$tree/config/secrets.example.toml"
     cp -R "$ROOT/examples" "$tree/examples"

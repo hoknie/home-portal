@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Static Linux binaries (musl), their archive, a deb and an rpm, for TARGET:
 #   x86_64-unknown-linux-musl (default) or aarch64-unknown-linux-musl.
-# rustls brings aws-lc and the embedded interface brings zstd, both C, so the build goes
+# rustls brings aws-lc, which is C, so the build goes
 # through cargo-zigbuild: zig is the C compiler and the linker for either architecture.
 # The deb needs dpkg-deb (debian:12) and the rpm needs rpmbuild (almalinux:9); both only
 # package the binary built before, so they run in those images without Rust.
@@ -67,6 +67,7 @@ stage() {
     install -m 0644 "$ROOT/packaging/linux/sysusers.conf" "$tree/usr/lib/sysusers.d/home-portal.conf"
     install -m 0644 "$ROOT/packaging/linux/tmpfiles.conf" "$tree/usr/lib/tmpfiles.d/home-portal.conf"
     install -m 0644 "$ROOT/config/home-portal.example.toml" "$tree/usr/share/home-portal/home-portal.example.toml"
+    install_interface "$tree/usr/share/home-portal/web"
     install -m 0644 "$ROOT/config/secrets.example.toml" "$tree/usr/share/home-portal/secrets.example.toml"
     install -m 0644 "$ROOT/README.md" "$tree/usr/share/doc/home-portal/README.md"
     install -m 0644 "$ROOT/LICENSE" "$tree/usr/share/doc/home-portal/copyright"

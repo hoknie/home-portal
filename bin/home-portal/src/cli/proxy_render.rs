@@ -35,8 +35,11 @@ pub fn proxy(arguments: &[String]) -> ExitCode {
 }
 
 fn rendered() -> Result<String, String> {
-    let store =
-        Arc::new(ConfigStore::open(configuration_path()).map_err(|error| error.to_string())?);
+    let store = Arc::new(
+        configuration_path()
+            .and_then(|location| ConfigStore::open_located(&location))
+            .map_err(|error| error.to_string())?,
+    );
     let effective = resolve_address(&store, env::var(ADDRESS_VARIABLE).ok())
         .map_err(|error| error.to_string())?;
     let registry = registered(&Wiring {

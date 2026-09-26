@@ -980,5 +980,17 @@
     "none": "No tags",
     "noMatches": "Nothing matches",
     "noMatchesHint": "No record has every chosen tag. Unselect some tags in the filter."
+  },
+  "restart": {
+    "action": "Restart portal",
+    "title": "Restart the portal?",
+    "description": "The page is unavailable for a few seconds. Scripts on the portal.stopping event run first, and scripts still running are stopped after 10 seconds.",
+    "now": "Restart now",
+    "restarting": "The portal is restarting…",
+    "restartingHint": "The page reloads by itself as soon as the portal answers.",
+    "timeout": "The portal did not come back",
+    "timeoutHint": "It has not answered for a minute. Check its log, or try again.",
+    "retry": "Try again",
+    "failed": "The portal could not be restarted"
   }
 }

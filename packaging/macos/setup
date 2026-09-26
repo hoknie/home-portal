@@ -1,6 +1,8 @@
 #!/bin/sh
-# Sets home-portal up for one macOS user: the first configuration with admin, the scripts
-# directory and a LaunchAgent that starts the portal at login and keeps it running.
+# Sets home-portal up for one macOS user: the first configuration with admin in
+# ~/.config/home-portal (or $XDG_CONFIG_HOME/home-portal), the scripts directory and a
+# LaunchAgent that starts the portal at login and keeps it running. An older folder in
+# ~/Library/Application Support/home-portal is moved there, with a link left behind.
 # The installer runs it for the user signed in; any user may run it for themselves:
 #   /usr/local/libexec/home-portal/setup
 # As root:  /usr/local/libexec/home-portal/setup <user>
@@ -16,20 +18,39 @@ BINARY="$PREFIX/bin/home-portal"
 if [ "$(id -u)" -eq 0 ]; then
     user="${1:-}"
     [ -n "$user" ] || { echo "setup: as root, name the user: setup <user>" >&2; exit 2; }
-    sudo -u "$user" -H env HOME_PORTAL_SETUP_NO_START=1 "$0"
     home="$(dscl . -read "/Users/$user" NFSHomeDirectory | awk '{ print $2 }')"
     uid="$(id -u "$user")"
     launchctl bootout "gui/$uid/$LABEL" 2>/dev/null || true
+    sudo -u "$user" -H env HOME_PORTAL_SETUP_NO_START=1 "$0"
     launchctl bootstrap "gui/$uid" "$home/Library/LaunchAgents/$LABEL.plist"
     exit 0
 fi
 
 user="$(id -un)"
 uid="$(id -u)"
-folder="$HOME/Library/Application Support/home-portal"
+case "${XDG_CONFIG_HOME:-}" in
+/*) configuration_home="$XDG_CONFIG_HOME" ;;
+*) configuration_home="$HOME/.config" ;;
+esac
+folder="$configuration_home/home-portal"
+old="$HOME/Library/Application Support/home-portal"
 agents="$HOME/Library/LaunchAgents"
 logs="$HOME/Library/Logs"
 plist="$agents/$LABEL.plist"
+
+if [ -d "$old" ] && [ ! -L "$old" ]; then
+    if [ -e "$folder" ]; then
+        echo "home-portal: both $old and $folder exist; $folder is used and $old is left as it is"
+    else
+        if [ -z "${HOME_PORTAL_SETUP_NO_START:-}" ]; then
+            launchctl bootout "gui/$uid/$LABEL" 2>/dev/null || true
+        fi
+        mkdir -p "$configuration_home"
+        mv "$old" "$folder"
+        ln -s "$folder" "$old"
+        echo "home-portal: moved $old to $folder and left a link at the old place"
+    fi
+fi
 
 mkdir -p "$folder" "$agents" "$logs"
 chmod 700 "$folder"

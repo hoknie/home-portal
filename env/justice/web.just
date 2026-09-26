@@ -18,7 +18,7 @@ web-typecheck: web-install
 web-test: web-install
     {{ PNPM }} --dir {{ WEB }} test
 
-# Build the interface into web/out, which the portal embeds
+# Build the interface into web/out, which the packages ship beside the binary
 [group('web')]
 web: web-install
     {{ PNPM }} --dir {{ WEB }} build

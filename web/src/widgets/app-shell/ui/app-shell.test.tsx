@@ -1,4 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { environmentKey } from "@/entities/environment";
@@ -59,4 +60,15 @@ it("sends a signed-out visitor to the sign-in page, remembering the page", async
   renderWithProviders(<AppShell>content</AppShell>);
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/login/?next=%2Fadmin%2Fservices%2F"));
   expect(screen.queryByText("content")).not.toBeInTheDocument();
+});
+
+it("the user menu offers restarting the portal", async () => {
+  const client = testQueryClient();
+  client.setQueryData(sessionKey, { name: "admin" });
+  client.setQueryData(environmentKey, { environment: "local", environments: ["local"] });
+  renderWithProviders(<AppShell>content</AppShell>, client);
+  const menus = screen.getAllByRole("button", { name: /admin/ });
+  menus[0].focus();
+  await userEvent.keyboard("{Enter}");
+  expect(await screen.findByRole("menuitem", { name: "Restart portal" })).toBeInTheDocument();
 });

@@ -7,7 +7,7 @@ use axum::body::Body;
 use axum::http::header::{CONTENT_TYPE, COOKIE, SET_COOKIE};
 use axum::http::{HeaderMap, Request, StatusCode};
 use axum::routing::{get, post};
-use home_portal::{Registry, assemble, registered};
+use home_portal::{Registry, Restart, assemble, registered};
 use portal_feature::{ApiError, Feature, Gate, Principal};
 use tower::ServiceExt;
 
@@ -70,6 +70,8 @@ fn probe_portal() -> Router {
             Vec::new(),
         )),
         events: Arc::new(Silent),
+        restart: Restart::default(),
+        interface: fixture_interface(),
     })
 }
 
@@ -143,11 +145,7 @@ async fn a_path_outside_the_api_is_answered_by_the_interface() {
         .oneshot(get_request("/services/"))
         .await
         .unwrap();
-    let status = response.status();
-    assert!(
-        status == StatusCode::OK || status == StatusCode::SERVICE_UNAVAILABLE,
-        "the interface fallback answers 200 when built and 503 when not, got {status}"
-    );
+    assert_eq!(response.status(), StatusCode::OK);
     assert_ne!(
         response
             .headers()
@@ -170,6 +168,8 @@ fn two_features_claiming_one_path_fail_assembly() {
             Vec::new(),
         )),
         events: Arc::new(Silent),
+        restart: Restart::default(),
+        interface: fixture_interface(),
     });
 }
 
@@ -277,4 +277,47 @@ async fn following_and_stopping_a_run_need_a_session() {
         .await,
         StatusCode::UNAUTHORIZED
     );
+}
+
+#[tokio::test]
+async fn a_restart_needs_a_session_and_is_accepted_with_one() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = support::with_extra(&directory, "secret", "");
+    let registry = registered(&support::wiring_for(&path)).unwrap();
+    let portal = assemble(&registry);
+    let restart = || {
+        Request::post("/api/portal/restart")
+            .body(Body::empty())
+            .unwrap()
+    };
+    assert_eq!(
+        status_of(portal.clone(), restart()).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert!(!registry.restart.requested());
+    let sign_in = Request::post("/api/session")
+        .header(CONTENT_TYPE, "application/json")
+        .body(Body::from(r#"{"name":"admin","password":"secret"}"#))
+        .unwrap();
+    let response = portal.clone().oneshot(sign_in).await.unwrap();
+    let cookie = response.headers()[SET_COOKIE]
+        .to_str()
+        .unwrap()
+        .split(';')
+        .next()
+        .unwrap()
+        .to_string();
+    let mut accepted = restart();
+    accepted
+        .headers_mut()
+        .insert(COOKIE, cookie.parse().unwrap());
+    assert_eq!(status_of(portal, accepted).await, StatusCode::ACCEPTED);
+    assert!(registry.restart.requested());
+}
+
+fn fixture_interface() -> Arc<dyn portal_web::AssetSource> {
+    Arc::new(portal_web::Directory::first_of(&[std::path::Path::new(
+        env!("CARGO_MANIFEST_DIR"),
+    )
+    .join("tests/fixtures/web")]))
 }

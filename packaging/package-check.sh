@@ -49,6 +49,7 @@ esac
 
 say "what the installation made"
 verdict '[ -x /usr/bin/home-portal ]' "/usr/bin/home-portal is there"
+verdict '[ -f /usr/share/home-portal/web/en/index.html ]' "the interface is in /usr/share/home-portal/web"
 verdict 'getent passwd home-portal >/dev/null' "the user home-portal exists"
 verdict '[ "$(stat -c %U:%a /etc/home-portal)" = home-portal:750 ]' "/etc/home-portal is home-portal's, 0750"
 verdict '[ "$(stat -c %U:%a /etc/home-portal/home-portal.toml)" = home-portal:600 ]' "the configuration is home-portal's, 0600"
@@ -68,6 +69,7 @@ for _ in $(seq 1 50); do
     sleep 0.2
 done
 verdict 'http GET /health | head -1 | grep -q " 200 "' "GET /health answers 200"
+verdict 'http GET / | grep -qi "^content-type: text/html"' "GET / answers the interface from /usr/share/home-portal/web"
 verdict 'http POST /api/session "{\"name\":\"admin\",\"password\":\"$password\"}" | head -1 | grep -q " 20[04] "' \
     "admin signs in with the password from initial-password"
 verdict 'http POST /api/session "{\"name\":\"admin\",\"password\":\"wrong\"}" | head -1 | grep -q " 401 "' \

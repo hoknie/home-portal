@@ -1,4 +1,5 @@
 mod config_error;
+mod configuration_location;
 mod current;
 mod loaded;
 mod origins;
@@ -10,6 +11,7 @@ mod stamp;
 mod storage;
 
 pub use config_error::ConfigError;
+pub use configuration_location::ConfigurationLocation;
 pub use current::Current;
 pub use loaded::Loaded;
 pub use origins::Origins;

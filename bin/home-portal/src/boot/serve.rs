@@ -4,13 +4,13 @@ use axum::Router;
 use tokio::net::TcpListener;
 
 use super::{lifecycle, shutdown};
-use crate::types::{BootError, Registry};
+use crate::types::{BootError, Ended, Registry};
 
 pub async fn serve(
     listener: TcpListener,
     router: Router,
     registry: &Registry,
-) -> Result<(), BootError> {
+) -> Result<Ended, BootError> {
     let address = listener.local_addr().map_err(|source| BootError::Serve {
         address: SocketAddr::from(([0, 0, 0, 0], 0)),
         source,
@@ -20,7 +20,12 @@ pub async fn serve(
         listener,
         router.into_make_service_with_connect_info::<SocketAddr>(),
     )
-    .with_graceful_shutdown(shutdown::requested())
+    .with_graceful_shutdown({
+        let restart = registry.restart.clone();
+        async move {
+            shutdown::requested(restart).await;
+        }
+    })
     .await
     .map_err(|source| BootError::Serve { address, source });
     lifecycle::stopping(registry, address).await;
@@ -28,5 +33,11 @@ pub async fn serve(
         feature.stop();
     }
     tracing::info!("stopped");
-    served
+    served.map(|()| {
+        if registry.restart.requested() {
+            Ended::Restart
+        } else {
+            Ended::Stopped
+        }
+    })
 }

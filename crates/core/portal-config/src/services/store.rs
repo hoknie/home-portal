@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError, RwLock};
 
@@ -7,9 +8,12 @@ use toml_edit::DocumentMut;
 
 use super::loading::{load, revision_of, writes_to};
 use crate::helpers::{
-    merge, stamp_of, storage_errors, storage_places, take_secrets, write_atomically,
+    merge, stamp_of, storage_errors, storage_places, stray_configuration, take_secrets,
+    write_atomically,
 };
-use crate::types::{ConfigError, Current, Revision, SecretString, Snapshot, Storage};
+use crate::types::{
+    ConfigError, ConfigurationLocation, Current, Revision, SecretString, Snapshot, Storage,
+};
 
 pub struct ConfigStore {
     main: PathBuf,
@@ -24,6 +28,20 @@ pub struct ConfigStore {
 impl ConfigStore {
     pub const STALE_MESSAGE: &'static str =
         "the configuration changed since it was read; reload and try again";
+
+    pub fn open_located(location: &ConfigurationLocation) -> Result<ConfigStore, ConfigError> {
+        ConfigStore::open(&location.path).map_err(|error| match error {
+            ConfigError::Missing { path, stray: None } if location.by_default => {
+                ConfigError::Missing {
+                    stray: env::current_dir()
+                        .ok()
+                        .and_then(|working| stray_configuration(&working)),
+                    path,
+                }
+            }
+            other => other,
+        })
+    }
 
     pub fn open(path: impl Into<PathBuf>) -> Result<ConfigStore, ConfigError> {
         let main = path.into();

@@ -68,6 +68,7 @@ stage() {
     install -m 0755 "$MACOS/setup" "$tree/usr/local/libexec/home-portal/setup"
     install -m 0755 "$MACOS/uninstall" "$tree/usr/local/libexec/home-portal/uninstall"
     install -m 0644 "$ROOT/config/home-portal.example.toml" "$tree/usr/local/share/home-portal/home-portal.example.toml"
+    install_interface "$tree/usr/local/share/home-portal/web"
     install -m 0644 "$ROOT/config/secrets.example.toml" "$tree/usr/local/share/home-portal/secrets.example.toml"
     install -m 0644 "$ROOT/README.md" "$tree/usr/local/share/doc/home-portal/README.md"
     install -m 0644 "$ROOT/LICENSE" "$tree/usr/local/share/doc/home-portal/LICENSE"
@@ -130,22 +131,41 @@ check() {
     done
     verdict '[ "$(lipo -archs "$root/bin/home-portal")" = "x86_64 arm64" ]' "the binary is universal"
     verdict '[ -f "$root/share/home-portal/home-portal.example.toml" ]' "the example configuration is shipped"
+    verdict '[ -f "$root/share/home-portal/web/en/index.html" ]' "the interface is shipped in share/home-portal/web"
     verdict '[ -x "$component/Scripts/postinstall" ] && sh -n "$component/Scripts/postinstall"' "postinstall is there and parses"
     verdict 'grep -q "conclusion.html" "$work/expanded/Distribution"' "the installer ends on the page that names the password"
 
     say "setup for a user, run from the payload against a scratch home"
     local home="$work/home"
     mkdir -p "$home"
-    HOME="$home" HOME_PORTAL_PREFIX="$root" HOME_PORTAL_SETUP_NO_START=1 sh "$root/libexec/home-portal/setup"
-    local folder="$home/Library/Application Support/home-portal"
+    env -u XDG_CONFIG_HOME HOME="$home" HOME_PORTAL_PREFIX="$root" HOME_PORTAL_SETUP_NO_START=1 \
+        sh "$root/libexec/home-portal/setup"
+    local folder="$home/.config/home-portal"
     verdict '[ "$(stat -f %Lp "$folder/home-portal.toml")" = 600 ]' "the configuration is 0600"
     verdict '[ "$(stat -f %Lp "$folder/initial-password")" = 600 ]' "initial-password is 0600"
     verdict '[ "$(stat -f %Lp "$folder/scripts")" = 755 ]' "the scripts directory is 0755"
     verdict 'plutil -lint "$home/Library/LaunchAgents/lan.home.portal.plist" >/dev/null' "the LaunchAgent is a valid property list"
     verdict '! grep -q "^\[storage\]" "$folder/home-portal.toml"' "the data lies beside the configuration"
     local before; before="$(shasum -a 256 "$folder/home-portal.toml")"
-    HOME="$home" HOME_PORTAL_PREFIX="$root" HOME_PORTAL_SETUP_NO_START=1 sh "$root/libexec/home-portal/setup" >/dev/null
+    env -u XDG_CONFIG_HOME HOME="$home" HOME_PORTAL_PREFIX="$root" HOME_PORTAL_SETUP_NO_START=1 \
+        sh "$root/libexec/home-portal/setup" >/dev/null
     verdict '[ "$(shasum -a 256 "$folder/home-portal.toml")" = "$before" ]' "running setup again keeps the configuration"
+    verdict 'grep -q "<string>$folder/home-portal.toml</string>" "$home/Library/LaunchAgents/lan.home.portal.plist"' \
+        "the LaunchAgent names the configuration in ~/.config/home-portal"
+
+    say "setup moves an older folder from Application Support"
+    local older="$work/older" moved
+    local old_folder="$older/Library/Application Support/home-portal"
+    mkdir -p "$old_folder/history"
+    cp "$folder/home-portal.toml" "$old_folder/home-portal.toml"
+    echo '{"state":"up"}' > "$old_folder/history/x.ndjson"
+    local old_sum; old_sum="$(shasum -a 256 < "$old_folder/home-portal.toml")"
+    env -u XDG_CONFIG_HOME HOME="$older" HOME_PORTAL_PREFIX="$root" HOME_PORTAL_SETUP_NO_START=1 \
+        sh "$root/libexec/home-portal/setup" >/dev/null
+    moved="$older/.config/home-portal"
+    verdict '[ -f "$moved/history/x.ndjson" ]' "the data is now under .config/home-portal"
+    verdict '[ -L "$old_folder" ] && [ "$(readlink "$old_folder")" = "$moved" ]' "the old place is a link to the new folder"
+    verdict '[ "$(shasum -a 256 < "$moved/home-portal.toml")" = "$old_sum" ]' "the moved configuration is unchanged"
 
     say "the portal starts and admin signs in"
     local port=18081 password; password="$(cat "$folder/initial-password")"
@@ -157,6 +177,8 @@ check() {
         sleep 0.2
     done
     verdict 'curl -fsS "http://127.0.0.1:$port/health" >/dev/null' "GET /health answers"
+    verdict '[ "$(curl -s -o /dev/null -w "%{content_type}" "http://127.0.0.1:$port/")" = "text/html; charset=utf-8" ]' \
+        "GET / answers the interface from share/home-portal/web"
     local body status
     body="$(printf '{"name":"admin","password":"%s"}' "$password")"
     status="$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$body" \

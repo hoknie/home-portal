@@ -55,7 +55,6 @@ socket2 = "0.6"
 rustls = { version = "0.23", default-features = false }
 ipnet = { version = "2", features = ["serde"] }
 if-addrs = "0.15"
-rust-embed = { version = "8", features = ["mime-guess", "compression"] }
 rpassword = "7"
 tempfile = "3"
 jiff = { version = "0.2", default-features = false, features = ["std", "tz-system", "tzdb-zoneinfo"] }
@@ -85,3 +84,9 @@ opt-level = 3
 
 [profile.dev.package.blake2]
 opt-level = 3
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

@@ -1,8 +1,8 @@
 use axum::Router;
 use axum::middleware;
-use axum::routing::any;
+use axum::routing::{any, post};
 
-use crate::controllers::not_found;
+use crate::controllers::{RESTART_PATH, not_found, restart};
 use crate::middlewares::{decide_environment, decide_language, json_only, require_session};
 use crate::types::Registry;
 
@@ -18,6 +18,11 @@ pub fn assemble(registry: &Registry) -> Router {
             router.merge(feature.router())
         })
         .merge(portal_widget::widgets_router(registry.widgets.clone()))
+        .merge(
+            Router::new()
+                .route(RESTART_PATH, post(restart))
+                .with_state(registry.restart.clone()),
+        )
         .route_layer(middleware::from_fn_with_state(
             registry.gate.clone(),
             require_session,
@@ -32,7 +37,7 @@ pub fn assemble(registry: &Registry) -> Router {
         .merge(public)
         .route(API_ROOT, any(not_found))
         .route(API_ANY_PATH, any(not_found))
-        .fallback(portal_web::serve)
+        .fallback_service(portal_web::interface(registry.interface.clone()))
         .layer(middleware::from_fn(json_only))
         .layer(middleware::from_fn_with_state(
             configuration.clone(),

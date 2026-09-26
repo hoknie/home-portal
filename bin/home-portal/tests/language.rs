@@ -8,7 +8,7 @@ use axum::http::{HeaderMap, Request, StatusCode};
 use axum::response::Response;
 use axum::routing::get;
 use axum::{Extension, Router};
-use home_portal::{Registry, assemble};
+use home_portal::{Registry, Restart, assemble};
 use http_body_util::BodyExt;
 use portal_feature::{ApiError, Feature, Gate, Principal};
 use portal_model::Language;
@@ -56,6 +56,8 @@ fn portal(extra: &str) -> Router {
             Vec::new(),
         )),
         events: Arc::new(Silent),
+        restart: Restart::default(),
+        interface: fixture_interface(),
     })
 }
 
@@ -123,7 +125,7 @@ async fn the_configured_default_takes_over_when_the_browser_matches_nothing() {
 }
 
 #[tokio::test]
-async fn a_deep_link_keeps_its_address_and_carries_its_language_when_the_interface_is_built() {
+async fn a_deep_link_keeps_its_address_and_carries_its_language() {
     let response = send(
         portal(""),
         "/admin/services/edit/?id=nas",
@@ -131,12 +133,9 @@ async fn a_deep_link_keeps_its_address_and_carries_its_language_when_the_interfa
     )
     .await;
     assert!(response.headers().get(LOCATION).is_none());
-    if response.status() == StatusCode::OK {
-        assert_eq!(response.headers()[CONTENT_LANGUAGE], "en");
-        assert_eq!(response.headers()[VARY], "Cookie, Accept-Language");
-    } else {
-        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
-    }
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[CONTENT_LANGUAGE], "en");
+    assert_eq!(response.headers()[VARY], "Cookie, Accept-Language");
 }
 
 #[tokio::test]
@@ -173,4 +172,11 @@ impl portal_feature::EventSink for Silent {
     fn emit(&self, _event: portal_feature::PortalEvent) {}
 
     async fn settle(&self, _within: std::time::Duration) {}
+}
+
+fn fixture_interface() -> Arc<dyn portal_web::AssetSource> {
+    Arc::new(portal_web::Directory::first_of(&[std::path::Path::new(
+        env!("CARGO_MANIFEST_DIR"),
+    )
+    .join("tests/fixtures/web")]))
 }

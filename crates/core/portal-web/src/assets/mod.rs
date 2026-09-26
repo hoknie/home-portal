@@ -1,3 +1,6 @@
-mod embedded;
+mod directory;
 
-pub use embedded::Embedded;
+#[cfg(test)]
+mod tests;
+
+pub use directory::{Directory, WEB_VARIABLE};

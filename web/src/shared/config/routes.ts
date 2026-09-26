@@ -25,6 +25,8 @@ export const api = {
   serviceHistory: (id: string, range: string) =>
     `/api/services/${encodeURIComponent(id)}/history?range=${encodeURIComponent(range)}`,
   network: "/api/network",
+  restartPortal: "/api/portal/restart",
+  health: "/health",
   dashboard: "/api/dashboard",
   layout: "/api/dashboard?all=true",
   environment: "/api/environment",
