@@ -147,31 +147,37 @@ with their output, and can stop them.
 
 <details>
 <summary>Main</summary>
+
 ![main page](docs/assets/page-main.png)
 </details>
 
 <details>
 <summary>Proxy</summary>
+
 ![proxy page](docs/assets/page-proxy.png)
 </details>
 
 <details>
 <summary>Automations</summary>
+
 ![main page](docs/assets/page-automations.png)
 </details>
 
 <details>
 <summary>Automations run</summary>
+
 ![main page](docs/assets/page-automations-run.png)
 </details>
 
 <details>
 <summary>Webhooks</summary>
+
 ![main page](docs/assets/page-webhooks.png)
 </details>
 
 <details>
 <summary>Webhook details</summary>
+
 ![main page](docs/assets/page-webhooks-detail.png)
 </details>
 
