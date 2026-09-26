@@ -21,7 +21,7 @@ use crate::adapters::{
     AutomationDirectory, NetworkConnection, ProxyPublishing, ServiceCatalogue, ServicePublications,
     WidgetLayout,
 };
-use crate::types::{BootError, Registry, Wiring};
+use crate::types::{BootError, Registry, Restart, Wiring};
 
 pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
     let configuration = wiring.configuration.clone();
@@ -128,5 +128,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         gate: auth.gate(),
         configuration: wiring.configuration.clone(),
         events,
+        restart: Restart::default(),
+        interface: crate::boot::located(),
     })
 }

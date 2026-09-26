@@ -980,5 +980,17 @@
     "none": "Sin etiquetas",
     "noMatches": "No hay coincidencias",
     "noMatchesHint": "Ningún registro tiene todas las etiquetas elegidas. Quita alguna del filtro."
+  },
+  "restart": {
+    "action": "Reiniciar el portal",
+    "title": "¿Reiniciar el portal?",
+    "description": "La página no estará disponible unos segundos. Primero se ejecutan los scripts del evento portal.stopping, y los que sigan en curso se detienen a los 10 segundos.",
+    "now": "Reiniciar ahora",
+    "restarting": "El portal se está reiniciando…",
+    "restartingHint": "La página se recargará sola en cuanto el portal responda.",
+    "timeout": "El portal no ha vuelto",
+    "timeoutHint": "Lleva un minuto sin responder. Revisa su registro o inténtalo de nuevo.",
+    "retry": "Intentar de nuevo",
+    "failed": "No se pudo reiniciar el portal"
   }
 }

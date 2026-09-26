@@ -21,6 +21,7 @@ it("shows the address in effect, the restart notice and the interfaces", () => {
   expect(screen.getByRole("status")).toHaveTextContent("take effect after the portal restarts");
   expect(screen.getByText("en0")).toBeInTheDocument();
   expect(screen.getByLabelText("Port")).toHaveValue(9090);
+  expect(screen.getByRole("button", { name: "Restart now" })).toBeInTheDocument();
 });
 
 it("explains an environment override and hides the restart notice when nothing changed", () => {
@@ -30,4 +31,5 @@ it("explains an environment override and hides the restart notice when nothing c
   });
   expect(screen.getByText(/HOME_PORTAL_ADDRESS/)).toBeInTheDocument();
   expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Restart now" })).not.toBeInTheDocument();
 });

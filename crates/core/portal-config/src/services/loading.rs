@@ -84,6 +84,7 @@ fn read_source(path: &Path) -> Result<Source, ConfigError> {
     let bytes = fs::read(path).map_err(|source| match source.kind() {
         ErrorKind::NotFound => ConfigError::Missing {
             path: path.to_path_buf(),
+            stray: None,
         },
         _ => ConfigError::Unreadable {
             path: path.to_path_buf(),

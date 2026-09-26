@@ -5,7 +5,7 @@ use portal_config::{ConfigStore, configuration_path};
 use crate::types::{BootError, Registry};
 
 pub fn open() -> Result<Arc<ConfigStore>, BootError> {
-    let store = ConfigStore::open(configuration_path())?;
+    let store = ConfigStore::open_located(&configuration_path()?)?;
     tracing::info!(path = %store.path().display(), "configuration loaded");
     Ok(Arc::new(store))
 }

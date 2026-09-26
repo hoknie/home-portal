@@ -1,8 +1,8 @@
 use super::{address, configuration, lifecycle, listener, logging, loops, router, serve};
 use crate::features::registered;
-use crate::types::{BootError, Wiring};
+use crate::types::{BootError, Ended, Wiring};
 
-pub async fn run() -> Result<(), BootError> {
+pub async fn run() -> Result<Ended, BootError> {
     logging::install();
     let store = configuration::open()?;
     let effective = address::from_environment(&store)?;

@@ -25,6 +25,10 @@ impl AssetSource for Files {
     fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+
+    fn unavailable(&self) -> String {
+        "no interface".to_string()
+    }
 }
 
 fn built() -> Files {
@@ -102,10 +106,10 @@ async fn a_missing_asset_is_not_found() {
 }
 
 #[tokio::test]
-async fn a_binary_built_without_the_interface_says_so() {
+async fn without_the_interface_pages_answer_503_with_what_the_source_says() {
     let response = answer(&Files(HashMap::new()), Language::En, "/");
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
-    assert!(body(response).await.contains("just web"));
+    assert_eq!(body(response).await, "no interface");
 }
 
 #[tokio::test]

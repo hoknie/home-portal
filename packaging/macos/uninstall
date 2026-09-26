@@ -1,7 +1,7 @@
 #!/bin/sh
-# Removes home-portal installed from the .pkg. The LaunchAgent of the user running this
-# stops; the configuration and data in ~/Library/Application Support/home-portal stay
-# unless --purge is given.
+# Removes home-portal installed from the .pkg: the binary, its interface in
+# /usr/local/share/home-portal/web and the helpers. The LaunchAgent of the user running this
+# stops; the configuration and data in ~/.config/home-portal stay unless --purge is given.
 #   sudo /usr/local/libexec/home-portal/uninstall [--purge]
 
 set -eu
@@ -15,7 +15,13 @@ uid="$(id -u "$user")"
 launchctl bootout "gui/$uid/$LABEL" 2>/dev/null || true
 rm -f "$home/Library/LaunchAgents/$LABEL.plist"
 if [ "${1:-}" = "--purge" ]; then
-    rm -rf "$home/Library/Application Support/home-portal" "$home/Library/Logs/home-portal.log"
+    rm -rf "$home/.config/home-portal" "$home/Library/Logs/home-portal.log"
+    old="$home/Library/Application Support/home-portal"
+    if [ -L "$old" ]; then
+        rm -f "$old"
+    else
+        rm -rf "$old"
+    fi
 fi
 rm -f /usr/local/bin/home-portal
 rm -rf /usr/local/share/home-portal /usr/local/share/doc/home-portal /usr/local/libexec/home-portal

@@ -13,7 +13,7 @@ Requires:       ca-certificates
 %description
 home-portal probes home services over HTTP, TCP and ICMP, keeps their history, shows a
 home page arranged in the browser, publishes services through Caddy and runs automations.
-One static binary with the interface embedded, run by systemd as the user home-portal.
+One static binary and its interface in /usr/share/home-portal/web, run by systemd as the user home-portal.
 
 %install
 cp -a %{_sourcedir}/. %{buildroot}/

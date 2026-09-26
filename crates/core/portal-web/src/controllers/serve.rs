@@ -1,10 +1,12 @@
-use axum::Extension;
+use std::sync::Arc;
+
+use axum::extract::State;
 use axum::http::header::{CACHE_CONTROL, CONTENT_LANGUAGE, CONTENT_TYPE, VARY};
 use axum::http::{HeaderValue, StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
+use axum::{Extension, Router};
 use portal_model::Language;
 
-use crate::assets::Embedded;
 use crate::helpers::looks_like_asset;
 use crate::ports::AssetSource;
 use crate::types::Asset;
@@ -13,22 +15,28 @@ pub const ENTRY_PAGE: &str = "index.html";
 pub const IMMUTABLE_PREFIX: &str = "_next/static/";
 pub const IMMUTABLE: &str = "public, max-age=31536000, immutable";
 pub const NO_CACHE: &str = "no-cache";
-pub const NOT_BUILT: &str =
-    "the interface is not built into this binary; run `just web` and rebuild";
 pub const NOT_FOUND: &str = "not found";
 pub const SHARED_PREFIX: &str = "_next/";
 pub const VARIES_BY: &str = "Cookie, Accept-Language";
 
-pub async fn serve(language: Option<Extension<Language>>, uri: Uri) -> Response {
+pub fn interface(source: Arc<dyn AssetSource>) -> Router {
+    Router::new().fallback(serve).with_state(source)
+}
+
+pub async fn serve(
+    State(source): State<Arc<dyn AssetSource>>,
+    language: Option<Extension<Language>>,
+    uri: Uri,
+) -> Response {
     let language = language
         .map(|Extension(language)| language)
         .unwrap_or_default();
-    answer(&Embedded, language, uri.path())
+    answer(source.as_ref(), language, uri.path())
 }
 
 pub fn answer(source: &dyn AssetSource, language: Language, path: &str) -> Response {
     if source.is_empty() {
-        return (StatusCode::SERVICE_UNAVAILABLE, NOT_BUILT).into_response();
+        return (StatusCode::SERVICE_UNAVAILABLE, source.unavailable()).into_response();
     }
     let path = path.trim_start_matches('/');
     if path.starts_with(SHARED_PREFIX) {
@@ -52,7 +60,7 @@ pub fn answer(source: &dyn AssetSource, language: Language, path: &str) -> Respo
     }
     match source.get(&format!("{tree}/{ENTRY_PAGE}")) {
         Some(asset) => in_language(file(ENTRY_PAGE, asset), language),
-        None => (StatusCode::SERVICE_UNAVAILABLE, NOT_BUILT).into_response(),
+        None => (StatusCode::SERVICE_UNAVAILABLE, source.unavailable()).into_response(),
     }
 }
 

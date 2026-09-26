@@ -5,7 +5,6 @@ version.workspace = true
 
 [dependencies]
 axum.workspace = true
-rust-embed.workspace = true
 portal-config.workspace = true
 portal-feature.workspace = true
 portal-model.workspace = true
@@ -13,5 +12,6 @@ serde.workspace = true
 toml_edit.workspace = true
 
 [dev-dependencies]
+tempfile.workspace = true
 http-body-util.workspace = true
 tokio.workspace = true

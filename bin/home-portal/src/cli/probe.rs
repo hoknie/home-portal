@@ -45,7 +45,9 @@ fn target_of(arguments: &[String]) -> Result<(ServiceEntry, Environment), String
         entry.probe.kind = kind.unwrap_or_default();
         return Ok((entry, Environment::internet()));
     }
-    let store = ConfigStore::open(configuration_path()).map_err(|error| error.to_string())?;
+    let store = configuration_path()
+        .and_then(|location| ConfigStore::open_located(&location))
+        .map_err(|error| error.to_string())?;
     let document = store.read().document;
     let mut entry = ServicesSection::read(&document)?
         .services

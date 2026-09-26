@@ -2,12 +2,19 @@ use std::future;
 
 use tokio::signal;
 
-pub async fn requested() {
-    tokio::select! {
-        _ = interrupted() => {},
-        _ = terminated() => {},
+use crate::types::{Ended, Restart};
+
+pub async fn requested(restart: Restart) -> Ended {
+    let ended = tokio::select! {
+        _ = interrupted() => Ended::Stopped,
+        _ = terminated() => Ended::Stopped,
+        _ = restart.wanted() => Ended::Restart,
+    };
+    match ended {
+        Ended::Stopped => tracing::info!("shutdown requested"),
+        Ended::Restart => tracing::info!("restart requested"),
     }
-    tracing::info!("shutdown requested");
+    ended
 }
 
 async fn interrupted() {

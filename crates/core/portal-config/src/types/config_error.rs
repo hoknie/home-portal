@@ -8,7 +8,9 @@ use portal_feature::FieldError;
 pub enum ConfigError {
     Missing {
         path: PathBuf,
+        stray: Option<PathBuf>,
     },
+    NoConfigurationPath,
     Unreadable {
         path: PathBuf,
         source: io::Error,
@@ -45,10 +47,24 @@ impl ConfigError {
 impl fmt::Display for ConfigError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ConfigError::Missing { path } => write!(
+            ConfigError::Missing { path, stray: None } => write!(
                 formatter,
                 "configuration file {} does not exist; create it (see config/home-portal.example.toml) or set HOME_PORTAL_CONFIG",
                 path.display()
+            ),
+            ConfigError::Missing {
+                path,
+                stray: Some(stray),
+            } => write!(
+                formatter,
+                "configuration file {} does not exist, but {} was found in the working directory; move it to {} or set HOME_PORTAL_CONFIG to its path",
+                path.display(),
+                stray.display(),
+                path.display()
+            ),
+            ConfigError::NoConfigurationPath => write!(
+                formatter,
+                "cannot tell where the configuration is: set HOME_PORTAL_CONFIG to its path, or HOME so that ~/.config/home-portal/home-portal.toml is used"
             ),
             ConfigError::Unreadable { path, source } => {
                 write!(

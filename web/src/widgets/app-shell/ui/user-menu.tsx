@@ -3,6 +3,7 @@
 import { ChevronsUpDown, UserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { RestartPortalItem } from "@/features/restart-portal";
 import { SignOutItem } from "@/features/sign-out";
 import { ThemeSwitch } from "@/features/theme-switch";
 import {
@@ -33,6 +34,7 @@ export function UserMenu({ name }: UserMenuProps) {
         <DropdownMenuLabel className="font-normal text-muted-foreground">{t("signedInAs", { name })}</DropdownMenuLabel>
         <ThemeSwitch />
         <DropdownMenuSeparator />
+        <RestartPortalItem />
         <SignOutItem />
       </DropdownMenuContent>
     </DropdownMenu>
