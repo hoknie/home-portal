@@ -99,6 +99,28 @@ async fn a_long_output_keeps_its_end_and_counts_every_byte() {
 }
 
 #[tokio::test]
+async fn a_script_still_open_for_writing_starts_once_the_writer_closes_it() {
+    let folder = TempDir::new().unwrap();
+    let invocation = invocation(&folder, "echo started", &[], 10);
+    let writer = fs::OpenOptions::new()
+        .append(true)
+        .open(&invocation.program)
+        .unwrap();
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        drop(writer);
+    });
+    let (finished, _) = run(&invocation).await;
+    assert_eq!(
+        finished.outcome,
+        Outcome::Succeeded,
+        "{:?}",
+        finished.reason
+    );
+    assert_eq!(finished.stdout.text(), "started\n");
+}
+
+#[tokio::test]
 async fn a_script_past_its_timeout_is_killed_with_its_children() {
     let folder = TempDir::new().unwrap();
     let began = Instant::now();

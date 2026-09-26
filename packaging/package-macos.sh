@@ -157,8 +157,12 @@ check() {
         sleep 0.2
     done
     verdict 'curl -fsS "http://127.0.0.1:$port/health" >/dev/null' "GET /health answers"
-    verdict '[ "$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" -d "{\"name\":\"admin\",\"password\":\"$password\"}" "http://127.0.0.1:$port/api/session")" -lt 300 ]' \
-        "admin signs in with the password from initial-password"
+    local body status
+    body="$(printf '{"name":"admin","password":"%s"}' "$password")"
+    status="$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$body" \
+        "http://127.0.0.1:$port/api/session")"
+    verdict '[ "$status" -ge 200 ] && [ "$status" -lt 300 ]' \
+        "admin signs in with the password from initial-password (HTTP $status)"
     kill "$portal"; wait "$portal" 2>/dev/null || true
     [ "$failed" -eq 0 ] || { cat "$work/portal.log"; die "the package is not what it should be"; }
     say "the .pkg is what it should be"
