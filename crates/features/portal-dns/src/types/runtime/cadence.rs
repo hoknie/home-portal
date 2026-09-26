@@ -10,7 +10,7 @@ pub struct Cadence {
 
 impl Cadence {
     pub const STANDARD: Cadence = Cadence {
-        tick: Duration::from_secs(2),
+        tick: Duration::from_secs(1),
         retry: Duration::from_secs(30),
         interfaces: Duration::from_secs(30),
         idle: Duration::from_secs(10),
