@@ -54,6 +54,7 @@ A release binary: `just build`, then `target/release/home-portal` with `HOME_POR
 crates/core/        portal-model · portal-feature (ports, ApiError) · portal-config (the files and
                     their secrets) · portal-widget · portal-web (serves the interface folder)
 crates/features/    portal-<name>, one crate per subject; features never depend on each other
+                    (portal-dns: the authoritative DNS server, its transports and zones)
 bin/home-portal/    the composition root: boot/, features/registry.rs (the only list of features)
 web/src/            Feature-Sliced: app → widgets → features → entities → shared
 config/             the example configuration and secrets

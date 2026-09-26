@@ -48,6 +48,7 @@ jobs:
         run: pnpm --dir web test
 
       - uses: actions/cache@v6
+        if: github.ref_type == 'tag'
         with:
           path: web/.next/cache
           key: nextjs-${{ runner.os }}-${{ hashFiles('web/pnpm-lock.yaml') }}-${{ hashFiles('web/src/**', 'web/next.config.*') }}
@@ -55,9 +56,11 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('web/pnpm-lock.yaml') }}-
 
       - name: The interface, in every language
+        if: github.ref_type == 'tag'
         run: pnpm --dir web build
 
       - uses: actions/upload-artifact@v7
+        if: github.ref_type == 'tag'
         with:
           name: web-out
           path: web/out
@@ -69,11 +72,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: web-out
-          path: web/out
 
       - uses: dtolnay/rust-toolchain@1.98.1
         with:
@@ -95,6 +93,7 @@ jobs:
 
   linux:
     needs: gate
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -180,6 +179,7 @@ jobs:
 
   macos:
     needs: web
+    if: github.ref_type == 'tag'
     runs-on: macos-14
     env:
       TAG: ${{ github.ref_name }}

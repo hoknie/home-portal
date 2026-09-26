@@ -197,3 +197,29 @@ fn a_pre_release_caddy_version_is_accepted() {
     .unwrap();
     assert_eq!(settings.caddy.version.to_string(), "2.11.0-beta.1");
 }
+
+#[test]
+fn dns_over_https_gets_its_own_route_only_on_another_host_while_it_is_on() {
+    let host = |dns: &str| {
+        read_settings(&document(&format!("{ENABLED}\n{dns}")))
+            .unwrap()
+            .doh_host
+    };
+    assert_eq!(host(""), None);
+    assert_eq!(
+        host("[dns]\nenabled = true\n[dns.https]\nenabled = true\n"),
+        None
+    );
+    assert_eq!(
+        host("[dns]\nenabled = true\n[dns.https]\nenabled = true\nhost = \"portal.example.com\"\n"),
+        None
+    );
+    assert_eq!(
+        host("[dns]\nenabled = false\n[dns.https]\nenabled = true\nhost = \"dns.example.com\"\n"),
+        None
+    );
+    assert_eq!(
+        host("[dns]\nenabled = true\n[dns.https]\nenabled = true\nhost = \"DNS.example.com.\"\n"),
+        Some("dns.example.com".to_string())
+    );
+}

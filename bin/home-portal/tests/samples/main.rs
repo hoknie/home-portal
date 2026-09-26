@@ -3,6 +3,7 @@ mod support;
 
 mod automations;
 mod catalogue;
+mod dns;
 mod history;
 mod proxy;
 mod public;

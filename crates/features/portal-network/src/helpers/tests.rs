@@ -16,6 +16,24 @@ fn peer(text: &str) -> Option<SocketAddr> {
 }
 
 #[test]
+fn an_ipv4_address_written_as_ipv6_counts_as_ipv4() {
+    let trusted = vec!["127.0.0.1/32".parse().unwrap()];
+    assert_eq!(
+        client_address(peer("[::ffff:192.168.1.40]:5000"), &HeaderMap::new(), &[]).to_string(),
+        "192.168.1.40"
+    );
+    assert_eq!(
+        client_address(
+            peer("[::ffff:127.0.0.1]:5000"),
+            &forwarded("::ffff:10.8.0.5"),
+            &trusted
+        )
+        .to_string(),
+        "10.8.0.5"
+    );
+}
+
+#[test]
 fn a_forwarded_address_from_an_untrusted_peer_is_ignored() {
     let address = client_address(peer("192.168.1.50:5000"), &forwarded("10.0.0.9"), &[]);
     assert_eq!(address, "192.168.1.50".parse::<IpAddr>().unwrap());

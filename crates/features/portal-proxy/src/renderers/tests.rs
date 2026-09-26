@@ -19,6 +19,7 @@ fn settings() -> ProxySettings {
         cookie_domain: Some("example.com".into()),
         tls: TlsPolicy::default(),
         caddy: Default::default(),
+        doh_host: None,
     }
 }
 
@@ -264,4 +265,27 @@ fn caddy_listens_on_the_configured_ports() {
         rendered["apps"]["http"]["servers"]["home-portal"]["listen"],
         json!([":8443"])
     );
+}
+
+#[test]
+fn dns_over_https_on_its_own_host_is_routed_to_the_portal_before_anything_else_for_that_host() {
+    assert!(
+        routes(&render(&settings(), &[], portal()))
+            .iter()
+            .all(|route| route["match"][0]["path"].is_null())
+    );
+    let with_doh = ProxySettings {
+        doh_host: Some("dns.example.com".into()),
+        ..settings()
+    };
+    let rendered = render(&with_doh, &[], portal());
+    let route = routes(&rendered)
+        .iter()
+        .find(|route| route["match"][0]["host"][0] == "dns.example.com")
+        .unwrap();
+    assert_eq!(route["match"][0]["path"], json!(["/dns-query"]));
+    assert_eq!(route["handle"][0]["handler"], "reverse_proxy");
+    assert_eq!(route["handle"][0]["upstreams"][0]["dial"], "127.0.0.1:8080");
+    let policies = rendered["apps"]["tls"]["automation"]["policies"].to_string();
+    assert!(policies.contains("dns.example.com"), "{policies}");
 }

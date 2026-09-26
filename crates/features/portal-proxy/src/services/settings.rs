@@ -5,7 +5,7 @@ use toml_edit::DocumentMut;
 
 use crate::helpers::covers_loopback;
 use crate::types::{
-    AdminAddress, CaddySource, CaddyVersion, ProxySettings, RawNetworkView, RawProxy,
+    AdminAddress, CaddySource, CaddyVersion, ProxySettings, RawDnsView, RawNetworkView, RawProxy,
     RawProxySection,
 };
 
@@ -23,7 +23,8 @@ pub fn read_settings(document: &DocumentMut) -> Result<ProxySettings, Vec<FieldE
     let section: RawProxySection =
         deserialize_section(document).map_err(|message| vec![FieldError::new(SECTION, message)])?;
     let mut errors = Vec::new();
-    let settings = check_proxy(&section.proxy, &mut errors);
+    let mut settings = check_proxy(&section.proxy, &mut errors);
+    settings.doh_host = doh_host(&section.dns, settings.portal_host.as_deref());
     if settings.enabled {
         errors.extend(check_network(&section.network, &settings));
     }
@@ -143,4 +144,16 @@ fn check_network(network: &RawNetworkView, settings: &ProxySettings) -> Vec<Fiel
         errors.push(FieldError::new("network.public_url", PUBLIC_URL_DIFFERS));
     }
     errors
+}
+
+fn doh_host(dns: &RawDnsView, portal_host: Option<&str>) -> Option<String> {
+    let serving = dns.enabled.unwrap_or(false) && dns.https.enabled.unwrap_or(false);
+    let host = dns
+        .https
+        .host
+        .as_deref()
+        .map(|host| host.trim().trim_end_matches('.').to_ascii_lowercase())
+        .filter(|host| !host.is_empty())?;
+    (serving && portal_host.is_none_or(|portal| !portal.eq_ignore_ascii_case(&host)))
+        .then_some(host)
 }

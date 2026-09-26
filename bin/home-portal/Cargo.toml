@@ -33,6 +33,7 @@ portal-metrics.workspace = true
 portal-model.workspace = true
 portal-network.workspace = true
 portal-proxy.workspace = true
+portal-dns.workspace = true
 portal-public.workspace = true
 portal-secrets.workspace = true
 portal-services.workspace = true

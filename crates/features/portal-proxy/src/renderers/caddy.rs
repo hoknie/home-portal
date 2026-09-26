@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use portal_model::{TlsMode, TlsPolicy};
 use serde_json::{Value, json};
 
-use super::routes::{portal_dial, portal_route, service_route};
+use super::routes::{doh_route, portal_dial, portal_route, service_route};
 use crate::types::{ProxySettings, PublishedService};
 
 pub const SERVER: &str = "home-portal";
@@ -20,6 +20,13 @@ pub fn render(
     let mut policies: BTreeMap<TlsPolicy, Vec<String>> = BTreeMap::new();
     if let Some(host) = &settings.portal_host {
         routes.push(portal_route(host, &portal));
+        policies
+            .entry(settings.tls.clone())
+            .or_default()
+            .push(host.clone());
+    }
+    if let Some(host) = &settings.doh_host {
+        routes.push(doh_route(host, &portal));
         policies
             .entry(settings.tls.clone())
             .or_default()

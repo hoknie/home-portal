@@ -1,0 +1,129 @@
+{
+  "doh_url": "https://portal.home/dns-query",
+  "enabled": true,
+  "environments": [
+    "local",
+    "office",
+    "vpn"
+  ],
+  "https": {
+    "address": null,
+    "listening": true,
+    "reason": null
+  },
+  "last_error": "Address already in use (os error 48) (0.0.0.0:53)",
+  "names": [
+    {
+      "answers": [
+        {
+          "environment": "local",
+          "records": [
+            {
+              "type": "A",
+              "value": "192.168.1.60"
+            }
+          ]
+        },
+        {
+          "environment": "vpn",
+          "records": [
+            {
+              "type": "A",
+              "value": "10.8.0.1"
+            }
+          ]
+        }
+      ],
+      "name": "jellyfin.home"
+    },
+    {
+      "answers": [
+        {
+          "environment": "local",
+          "records": [
+            {
+              "type": "A",
+              "value": "192.168.1.60"
+            }
+          ]
+        }
+      ],
+      "name": "nas.home"
+    },
+    {
+      "answers": [
+        {
+          "environment": "local",
+          "records": [
+            {
+              "type": "A",
+              "value": "192.168.1.60"
+            },
+            {
+              "type": "AAAA",
+              "value": "fd00::60"
+            }
+          ]
+        },
+        {
+          "environment": "vpn",
+          "records": [
+            {
+              "type": "A",
+              "value": "10.8.0.1"
+            }
+          ]
+        },
+        {
+          "environment": "office",
+          "records": []
+        }
+      ],
+      "name": "portal.home"
+    }
+  ],
+  "plain": {
+    "address": "0.0.0.0:53",
+    "listening": false,
+    "reason": "Address already in use (os error 48) (0.0.0.0:53)"
+  },
+  "settings": {
+    "address": "0.0.0.0",
+    "addresses": {
+      "vpn": [
+        "10.8.0.1"
+      ]
+    },
+    "https": {
+      "enabled": true,
+      "host": null
+    },
+    "port": 53,
+    "tls": {
+      "certificate": null,
+      "enabled": true,
+      "key": null,
+      "port": 853
+    },
+    "ttl": 60,
+    "zones": [
+      "home"
+    ]
+  },
+  "tls": {
+    "address": "0.0.0.0:853",
+    "listening": true,
+    "reason": null
+  },
+  "tls_host": "portal.home",
+  "unaddressed": [
+    "office"
+  ],
+  "zones": [
+    {
+      "apex": "home",
+      "serial": 2718281828,
+      "single": false
+    }
+  ]
+}

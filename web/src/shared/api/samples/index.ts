@@ -5,6 +5,7 @@ import automationSchedule from "./automation-schedule.json";
 import automationScripts from "./automation-scripts.json";
 import automations from "./automations.json";
 import dashboard from "./dashboard.json";
+import dns from "./dns.json";
 import environment from "./environment.json";
 import fieldErrors from "./field-errors.json";
 import history from "./history.json";
@@ -32,6 +33,7 @@ export const apiSamples = {
   automationScripts,
   automations,
   dashboard,
+  dns,
   environment,
   fieldErrors,
   history,
