@@ -1,3 +1,4 @@
+use std::io;
 use std::os::unix::process::ExitStatusExt;
 use std::process::{ExitStatus, Stdio};
 use std::sync::{Arc, Mutex, PoisonError};
@@ -20,6 +21,8 @@ pub struct Runner;
 impl Runner {
     pub const DRAIN_GRACE: Duration = Duration::from_secs(1);
     const CHUNK: usize = 8192;
+    const BUSY_ATTEMPTS: u32 = 20;
+    const BUSY_PAUSE: Duration = Duration::from_millis(50);
 
     pub async fn run(invocation: &Invocation, groups: Arc<dyn GroupRegistry>) -> Finished {
         let began = Instant::now();
@@ -34,7 +37,7 @@ impl Runner {
             .stderr(Stdio::piped())
             .process_group(0)
             .kill_on_drop(true);
-        let mut child = match command.spawn() {
+        let mut child = match Self::spawn(&mut command).await {
             Ok(child) => child,
             Err(error) => {
                 return Self::finished(
@@ -85,6 +88,22 @@ impl Runner {
             ),
         };
         Self::finished(outcome, detail, began, tails)
+    }
+
+    async fn spawn(command: &mut Command) -> io::Result<Child> {
+        let mut attempt = 0;
+        loop {
+            match command.spawn() {
+                Err(error)
+                    if error.kind() == io::ErrorKind::ExecutableFileBusy
+                        && attempt < Self::BUSY_ATTEMPTS =>
+                {
+                    attempt += 1;
+                    tokio::time::sleep(Self::BUSY_PAUSE).await;
+                }
+                result => return result,
+            }
+        }
     }
 
     fn judged(status: ExitStatus) -> (Outcome, (Option<i32>, Option<String>)) {
