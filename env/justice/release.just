@@ -12,3 +12,18 @@ check-tag tag:
 [group('release')]
 checksums:
     packaging/release.sh checksums
+
+# CHANGELOG.md anew from the commits between v* tags
+[group('release')]
+changelog:
+    packaging/changelog.sh rebuild
+
+# The version the next release takes (auto from the commits, or patch/minor/major)
+[group('release')]
+next-version level='auto':
+    @packaging/changelog.sh next {{ level }}
+
+# Bump Cargo.toml unless it is already past the last tag, then write its CHANGELOG.md section
+[group('release')]
+release level='auto':
+    packaging/changelog.sh release {{ level }}

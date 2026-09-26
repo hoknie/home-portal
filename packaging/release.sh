@@ -3,7 +3,7 @@
 #   packaging/release.sh version          the version in Cargo.toml
 #   packaging/release.sh check-tag vX.Y.Z  the tag names that version
 #   packaging/release.sh checksums        SHA256SUMS over dist/release
-#   packaging/release.sh notes            the CHANGELOG.md section of this version, if any
+#   packaging/release.sh notes            the CHANGELOG.md section of this version, else one written from git
 
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
@@ -38,11 +38,17 @@ checksums() {
 }
 
 notes() {
-    [ -f "$ROOT/CHANGELOG.md" ] || return 0
-    awk -v want="## [$VERSION]" '
-        /^## / { if (inside) exit; if (index($0, want) == 1) { inside = 1; next } }
-        inside { print }
-    ' "$ROOT/CHANGELOG.md"
+    local section=""
+    if [ -f "$ROOT/CHANGELOG.md" ]; then
+        section="$(awk -v want="## [$VERSION]" '
+            /^## / { if (inside) exit; if (index($0, want) == 1) { inside = 1; next } }
+            inside { print }
+        ' "$ROOT/CHANGELOG.md")"
+    fi
+    if [ -z "${section//[[:space:]]/}" ]; then
+        section="$("$ROOT/packaging/changelog.sh" section "$VERSION" | tail -n +2)"
+    fi
+    printf '%s\n' "$section" | sed '/./,$!d'
 }
 
 case "${1:-}" in

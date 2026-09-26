@@ -121,3 +121,21 @@ Every package ships the binary with the interface beside it:
 into a scratch home or a clean container, start the portal, and check that the interface is served
 and that admin signs in.
 
+
+## Releases
+
+Commits follow Conventional Commits (`feat(HP-20): …`, `fix: …`, `feat!: …` or a
+`BREAKING CHANGE:` footer); `packaging/changelog.sh` groups them into `CHANGELOG.md`.
+
+1. `just release` (or `just release patch|minor|major|X.Y.Z`). If `[workspace.package]` already
+   names a version past the last tag, it is kept; otherwise it is bumped (`auto`: while the major
+   is 0 a breaking change bumps the minor and anything else the patch) and `Cargo.lock` follows.
+   Then the version's section is written into `CHANGELOG.md` from the commits since the last tag.
+   `just next-version` shows the version without changing anything.
+2. Commit `Cargo.toml`, `Cargo.lock` and `CHANGELOG.md`, tag that commit `vX.Y.Z`, push the tag.
+3. The Release workflow checks that the tag names the version and publishes the release with the
+   tag's `CHANGELOG.md` section as its notes (`packaging/release.sh notes`); a tag without a
+   section gets one written from its commits.
+
+`just changelog` writes `CHANGELOG.md` anew from all the tags; edit a section by hand afterwards if
+a commit subject says too little.

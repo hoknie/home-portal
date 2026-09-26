@@ -238,6 +238,8 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: actions/download-artifact@v8
         with:
@@ -266,6 +268,9 @@ jobs:
           assets=(dist/release/home-portal_* dist/release/SHA256SUMS)
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" --clobber "${assets[@]}"
+            if [ -s "$RUNNER_TEMP/release-notes.md" ]; then
+              gh release edit "$TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
+            fi
           else
             gh release create "$TAG" \
               --title "home-portal $TAG" \

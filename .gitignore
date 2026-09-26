@@ -14,5 +14,6 @@
 *.md
 !/README.md
 !/DEVELOPMENT.md
+!/CHANGELOG.md
 *.yaml
 env/sessions.json
