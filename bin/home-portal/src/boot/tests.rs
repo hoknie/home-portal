@@ -7,7 +7,7 @@ use super::interface::interface_folder;
 use super::shutdown::requested;
 use super::start::replaced_executable;
 use super::{parse_address, resolve_address};
-use crate::types::{BootError, Ended, Restart};
+use crate::types::{BootError, Ended, Restart, Signals};
 
 fn store(text: &str) -> (tempfile::TempDir, ConfigStore) {
     let directory = tempfile::tempdir().unwrap();
@@ -74,7 +74,7 @@ fn a_replaced_executable_is_found_at_its_path() {
 async fn a_restart_request_ends_the_serving_with_a_restart_and_a_second_is_harmless() {
     let restart = Restart::default();
     assert!(!restart.requested());
-    let waiting = tokio::spawn(requested(restart.clone()));
+    let waiting = tokio::spawn(requested(Signals::install(), restart.clone()));
     restart.request();
     restart.request();
     let ended = tokio::time::timeout(std::time::Duration::from_secs(2), waiting)
@@ -83,7 +83,7 @@ async fn a_restart_request_ends_the_serving_with_a_restart_and_a_second_is_harml
         .unwrap();
     assert_eq!(ended, Ended::Restart);
     assert!(restart.requested());
-    assert_eq!(requested(restart).await, Ended::Restart);
+    assert_eq!(requested(Signals::install(), restart).await, Ended::Restart);
 }
 
 #[test]

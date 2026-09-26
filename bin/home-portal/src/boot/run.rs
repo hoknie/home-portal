@@ -1,8 +1,9 @@
 use super::{address, configuration, lifecycle, listener, logging, loops, router, serve};
 use crate::features::registered;
-use crate::types::{BootError, Ended, Wiring};
+use crate::types::{BootError, Ended, Signals, Wiring};
 
 pub async fn run() -> Result<Ended, BootError> {
+    let signals = Signals::install();
     logging::install();
     let store = configuration::open()?;
     let effective = address::from_environment(&store)?;
@@ -15,5 +16,5 @@ pub async fn run() -> Result<Ended, BootError> {
     let listener = listener::bind(effective.address).await?;
     loops::spawn(&registry);
     lifecycle::started(&registry, effective.address);
-    serve::serve(listener, router, &registry).await
+    serve::serve(listener, router, &registry, signals).await
 }

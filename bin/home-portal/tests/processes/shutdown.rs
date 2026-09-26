@@ -89,14 +89,22 @@ fn portal_with_a_stop_script(body: &str) -> (tempfile::TempDir, std::process::Ch
     let script = scripts.join("stop.sh");
     fs::write(&script, format!("#!/bin/sh\n{body}\n")).unwrap();
     fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
-    let child = Command::new(BINARY)
+    let mut child = Command::new(BINARY)
         .env("HOME_PORTAL_CONFIG", &path)
         .env("HOME_PORTAL_ADDRESS", "127.0.0.1:0")
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
         .unwrap();
-    thread::sleep(Duration::from_secs(2));
+    let began = Instant::now();
+    while !directory.path().join("icons").is_dir() {
+        assert!(child.try_wait().unwrap().is_none(), "the portal exited");
+        assert!(
+            began.elapsed() < Duration::from_secs(20),
+            "the portal did not start"
+        );
+        thread::sleep(Duration::from_millis(50));
+    }
     (directory, child)
 }
 

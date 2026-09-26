@@ -57,8 +57,12 @@ fn without_the_variable_the_portal_reads_and_writes_in_the_home_configuration_fo
         .spawn()
         .unwrap();
     let began = Instant::now();
-    while !folder.join("icons").is_dir() && began.elapsed() < Duration::from_secs(10) {
+    while !folder.join("icons").is_dir() {
         assert!(child.try_wait().unwrap().is_none(), "the portal exited");
+        assert!(
+            began.elapsed() < Duration::from_secs(20),
+            "the portal did not start"
+        );
         thread::sleep(Duration::from_millis(50));
     }
     let killed = Command::new("kill")
