@@ -31,6 +31,20 @@ it("warns that the script really runs and queues it only after confirmation", as
   expect(toast.success).toHaveBeenCalledWith("“Restart Jellyfin when it goes down” is queued to run");
 });
 
+it("the toast opens the queued run", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(apiSamples.automationQueued, { status: 202 })));
+  const onQueued = vi.fn();
+  renderWithProviders(<RunAutomationButton automation={restart} labelled onQueued={onQueued} />);
+  await userEvent.click(screen.getByRole("button", { name: "Run now" }));
+  await userEvent.click(screen.getAllByRole("button", { name: "Run now" }).at(-1)!);
+  await waitFor(() => expect(toast.success).toHaveBeenCalled());
+  const [message, options] = toast.success.mock.calls[0] as [string, { action: { label: string; onClick: () => void } }];
+  expect(message).toBe("“Restart Jellyfin when it goes down” is queued to run");
+  expect(options.action.label).toBe("Open");
+  options.action.onClick();
+  expect(onQueued).toHaveBeenCalledWith("42");
+});
+
 it("a second run too soon says how long to wait", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response("too soon", { status: 429, headers: { "Retry-After": "4" } })));
   renderWithProviders(<RunAutomationButton automation={restart} labelled />);

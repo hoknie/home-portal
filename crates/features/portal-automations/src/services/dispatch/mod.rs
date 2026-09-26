@@ -1,3 +1,4 @@
+mod active_runs;
 mod execution;
 mod finish_guard;
 mod gatekeeper;
@@ -6,6 +7,7 @@ mod running_groups;
 mod sink;
 mod status_relay;
 
+pub use active_runs::ActiveRuns;
 pub use execution::execute;
 pub use finish_guard::FinishGuard;
 pub use gatekeeper::Gatekeeper;

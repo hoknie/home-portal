@@ -9,7 +9,7 @@ use portal_feature::{EventSink, Feature, Loop, StatusObserver, Validator};
 
 use crate::controllers::{
     catalogue, create, create_webhook, delete_webhook, issue_token, list, list_webhooks, receive,
-    remove, remove_token, run_now, runs, schedule, scripts, update, update_webhook,
+    remove, remove_token, run, run_now, runs, schedule, scripts, stop, update, update_webhook,
 };
 use crate::loops::{JournalWriter, dispatch_forever, schedule_forever, watch_forever};
 use crate::ports::{Clock, Directory};
@@ -32,6 +32,8 @@ impl AutomationsFeature {
     pub const ITEM: &'static str = "/api/automations/{id}";
     pub const RUN: &'static str = "/api/automations/{id}/run";
     pub const RUNS: &'static str = "/api/automations/runs";
+    pub const RUN_ITEM: &'static str = "/api/automations/runs/{id}";
+    pub const RUN_STOP: &'static str = "/api/automations/runs/{id}/stop";
     pub const CATALOGUE: &'static str = "/api/automations/catalogue";
     pub const SCRIPTS: &'static str = "/api/automations/scripts";
     pub const SCHEDULE: &'static str = "/api/automations/schedule";
@@ -86,6 +88,8 @@ impl Feature for AutomationsFeature {
             .route(Self::ITEM, put(update).delete(remove))
             .route(Self::RUN, post(run_now))
             .route(Self::RUNS, get(runs))
+            .route(Self::RUN_ITEM, get(run))
+            .route(Self::RUN_STOP, post(stop))
             .route(Self::CATALOGUE, get(catalogue))
             .route(Self::SCRIPTS, get(scripts))
             .route(Self::SCHEDULE, get(schedule))

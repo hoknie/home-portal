@@ -664,7 +664,7 @@
     "runFields": "Event fields",
     "runOutput": "Output",
     "runErrors": "Errors",
-    "truncated": "The last 4 KiB of {bytes} bytes",
+    "truncated": "The last 64 KiB of {bytes} bytes",
     "noOutput": "empty",
     "manual": "by hand",
     "runNow": "Run now",
@@ -686,7 +686,10 @@
       "timed_out": "Timed out",
       "skipped": "Skipped",
       "refused": "Refused",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "queued": "Queued",
+      "running": "Running",
+      "stopped": "Stopped"
     },
     "reasons": {
       "running": "the previous run is still going",
@@ -694,14 +697,25 @@
       "cooldown": "the pause between runs",
       "rate_limit": "more than 60 runs in an hour",
       "dropped": "the queue was full",
-      "removed": "the automation was deleted or disabled"
+      "removed": "the automation was deleted or disabled",
+      "stopping": "Stopping…",
+      "stoppedBy": "Stopped by {name}",
+      "stopped": "Stopped"
     },
     "allRuns": "All runs",
     "textFilter": "Search in values",
     "textFilterPlaceholder": "for example, main",
     "live": "Auto-refresh",
     "refresh": "Refresh now",
-    "updatedAt": "Updated at {time}"
+    "updatedAt": "Updated at {time}",
+    "stop": "Stop",
+    "stopTitle": "Stop run {id} of “{automation}”?",
+    "stopDescription": "The script and everything it started get SIGTERM, and SIGKILL 5 seconds later if they are still there. A queued run is taken out of the queue.",
+    "stopRequested": "Stopping run {id}",
+    "stopFinished": "The run has already finished",
+    "stopFailed": "The run could not be stopped",
+    "openQueuedRun": "Open",
+    "runningFor": "for {seconds, number} s"
   },
   "automationBuilder": {
     "addTitle": "New automation",

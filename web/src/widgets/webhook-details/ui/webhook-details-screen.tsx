@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { TokenActions } from "@/features/automation-builder";
+import { StopRunButton } from "@/features/stop-run";
 import { RunTable, useAutomations, useRuns } from "@/entities/automation";
 import { absoluteAddress, useWebhooks } from "@/entities/webhook";
 import { routes } from "@/shared/config";
@@ -128,7 +129,7 @@ export function WebhookDetailsScreen() {
         </SectionCard>
       </div>
       <SectionCard title={t("webhooks.lastRuns", { count: LAST_RUNS })} flush>
-        {runs.data ? <RunTable runs={runs.data.runs.slice(0, LAST_RUNS)} titleOf={titleOf} /> : <Skeleton className="m-4 h-32" aria-busy="true" />}
+        {runs.data ? <RunTable runs={runs.data.runs.slice(0, LAST_RUNS)} titleOf={titleOf} actionsOf={(run) => <StopRunButton run={run} title={titleOf(run.automation)} />} /> : <Skeleton className="m-4 h-32" aria-busy="true" />}
       </SectionCard>
     </div>
   );

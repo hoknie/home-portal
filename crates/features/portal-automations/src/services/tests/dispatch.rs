@@ -4,8 +4,8 @@ use portal_feature::{EventName, EventSink, PortalEvent, Visitor};
 use time::OffsetDateTime;
 
 use super::support::{automation, entry, pending, sink, status_change};
-use crate::services::dispatch::{Gatekeeper, RunQueue};
-use crate::types::SkipReason;
+use crate::services::dispatch::{ActiveRuns, Gatekeeper, RunQueue};
+use crate::types::{RunFilter, SkipReason};
 
 #[test]
 fn a_full_queue_drops_the_oldest_and_counts_it() {
@@ -233,4 +233,52 @@ async fn settling_waits_for_a_killed_run_to_be_recorded_before_returning() {
     sink.settle(Duration::ZERO).await;
     assert!(began.elapsed() >= Duration::from_millis(200));
     assert!(!sink.gatekeeper.busy());
+}
+
+#[test]
+fn active_runs_are_listed_newest_first_and_leave_when_removed() {
+    let active = ActiveRuns::default();
+    active.queued(&pending("a", 1, None), OffsetDateTime::UNIX_EPOCH);
+    active.queued(&pending("b", 2, Some("admin")), OffsetDateTime::UNIX_EPOCH);
+    active.started(1, vec!["--now".into()], OffsetDateTime::UNIX_EPOCH);
+    let listed = active.matching(&RunFilter::default());
+    assert_eq!(
+        listed.iter().map(|run| run.run_id).collect::<Vec<_>>(),
+        vec![2, 1]
+    );
+    assert!(listed[1].running());
+    assert!(!listed[0].running());
+    let by_text = RunFilter {
+        text: Some("--NOW".into()),
+        ..RunFilter::default()
+    };
+    assert_eq!(active.matching(&by_text).len(), 1);
+    assert_eq!(active.of_automation("b").map(|run| run.run_id), Some(2));
+    active.remove(1);
+    assert_eq!(active.count(), 1);
+}
+
+#[test]
+fn a_stop_is_requested_once() {
+    let active = ActiveRuns::default();
+    active.queued(&pending("a", 7, None), OffsetDateTime::UNIX_EPOCH);
+    let control = active.control(7).unwrap();
+    assert_eq!(active.request_stop(7, "alice"), Some(true));
+    assert_eq!(active.request_stop(7, "bob"), Some(false));
+    assert_eq!(active.request_stop(8, "bob"), None);
+    assert!(control.stop_requested());
+    assert_eq!(active.stopped_by(7).as_deref(), Some("alice"));
+}
+
+#[test]
+fn an_admitted_run_is_active_and_a_dropped_one_is_not() {
+    let sink = sink(&entry("a", "{ event = \"portal.started\" }", ""));
+    let id = sink.run_now(
+        &automation("a", "{ event = \"portal.started\" }", ""),
+        "admin",
+    );
+    assert_eq!(sink.active.find(id).map(|run| run.running()), Some(false));
+    let pending = sink.queue.take().unwrap();
+    sink.forget(&pending);
+    assert!(sink.active.find(id).is_none());
 }

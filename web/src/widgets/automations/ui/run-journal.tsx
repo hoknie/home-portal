@@ -4,6 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
+import { StopRunButton } from "@/features/stop-run";
 import { type Automation, RunTable, useRuns } from "@/entities/automation";
 import { useWebhooks } from "@/entities/webhook";
 import { Button, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Skeleton, Switch } from "@/shared/ui/primitives";
@@ -23,7 +24,7 @@ function useSettled(value: string) {
   return settled;
 }
 
-export function RunJournal({ automations }: { automations: Automation[] }) {
+export function RunJournal({ automations, onOpen }: { automations: Automation[]; onOpen?: (id: string) => void }) {
   const t = useTranslations();
   const [source, setSource] = useState(EVERYTHING);
   const [text, setText] = useState("");
@@ -103,7 +104,9 @@ export function RunJournal({ automations }: { automations: Automation[] }) {
   );
   return (
     <SectionCard title={t("automations.journal")} description={t("automations.journalDescription")} actions={filters} flush>
-      {runs.data ? <RunTable runs={runs.data.runs} titleOf={titleOf} /> : <Skeleton className="m-4 h-32" aria-busy="true" />}
+      {runs.data ? (
+        <RunTable runs={runs.data.runs} titleOf={titleOf} onOpen={onOpen} actionsOf={(run) => <StopRunButton run={run} title={titleOf(run.automation)} />} />
+      ) : <Skeleton className="m-4 h-32" aria-busy="true" />}
     </SectionCard>
   );
 }

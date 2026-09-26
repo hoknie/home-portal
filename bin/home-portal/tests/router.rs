@@ -256,3 +256,25 @@ impl portal_feature::EventSink for Silent {
 
     async fn settle(&self, _within: std::time::Duration) {}
 }
+
+#[tokio::test]
+async fn following_and_stopping_a_run_need_a_session() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = support::with_extra(&directory, "secret", "");
+    let registry = registered(&support::wiring_for(&path)).unwrap();
+    let portal = assemble(&registry);
+    assert_eq!(
+        status_of(portal.clone(), get_request("/api/automations/runs/1")).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        status_of(
+            portal,
+            Request::post("/api/automations/runs/1/stop")
+                .body(Body::empty())
+                .unwrap()
+        )
+        .await,
+        StatusCode::UNAUTHORIZED
+    );
+}

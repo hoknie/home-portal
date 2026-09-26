@@ -1,6 +1,7 @@
 {
   "automations": [
     {
+      "active_run": null,
       "cooldown_seconds": 300,
       "enabled": true,
       "id": "restart-media",
@@ -65,10 +66,81 @@
       }
     },
     {
+      "active_run": {
+        "arguments": [
+          "--",
+          "jellyfin"
+        ],
+        "automation": "backup",
+        "event": "manual",
+        "fields": {
+          "automation.id": "backup",
+          "event.at": "2026-09-25T03:00:00Z",
+          "event.name": "manual",
+          "run.by": "",
+          "run.id": "5",
+          "run.manual": "false"
+        },
+        "id": "5",
+        "outcome": {
+          "count": 1,
+          "duration_milliseconds": 12000,
+          "exit_code": null,
+          "last_at": "2026-09-25T03:00:00Z",
+          "reason": null,
+          "result": "running",
+          "stderr": {
+            "bytes": 28,
+            "tail": "  % Total\r 10  1.2M\r 55  6.6M",
+            "truncated": false
+          },
+          "stdout": {
+            "bytes": 8,
+            "tail": "copying\n",
+            "truncated": false
+          }
+        },
+        "started_at": "2026-09-25T03:00:00Z"
+      },
       "cooldown_seconds": 0,
       "enabled": false,
       "id": "backup",
-      "last_run": null,
+      "last_run": {
+        "arguments": [
+          "--",
+          "jellyfin"
+        ],
+        "automation": "backup",
+        "event": "manual",
+        "fields": {
+          "automation.id": "backup",
+          "event.at": "2026-09-25T03:00:00Z",
+          "event.name": "manual",
+          "run.by": "",
+          "run.id": "4",
+          "run.manual": "false"
+        },
+        "id": "4",
+        "outcome": {
+          "count": 1,
+          "duration_milliseconds": 1840,
+          "exit_code": null,
+          "last_at": "2026-09-25T03:00:00Z",
+          "reason": "stopped by admin",
+          "result": "stopped",
+          "stderr": {
+            "bytes": 0,
+            "tail": "",
+            "truncated": false
+          },
+          "stdout": {
+            "bytes": 8,
+            "tail": "syncing\n",
+            "truncated": false
+          }
+        },
+        "started_at": "2026-09-25T03:00:00Z"
+      },
       "run": {
         "args": [],
         "script": "backup/nightly.sh",

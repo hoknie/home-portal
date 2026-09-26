@@ -664,7 +664,7 @@
     "runFields": "Campos del evento",
     "runOutput": "Salida",
     "runErrors": "Errores",
-    "truncated": "Los últimos 4 KiB de {bytes} bytes",
+    "truncated": "Los últimos 64 KiB de {bytes} bytes",
     "noOutput": "vacío",
     "manual": "a mano",
     "runNow": "Ejecutar ahora",
@@ -686,7 +686,10 @@
       "timed_out": "Tiempo agotado",
       "skipped": "Omitida",
       "refused": "Rechazada",
-      "unknown": "Desconocido"
+      "unknown": "Desconocido",
+      "queued": "En cola",
+      "running": "En curso",
+      "stopped": "Detenida"
     },
     "reasons": {
       "running": "la ejecución anterior sigue en marcha",
@@ -694,14 +697,25 @@
       "cooldown": "la pausa entre ejecuciones",
       "rate_limit": "más de 60 ejecuciones en una hora",
       "dropped": "la cola estaba llena",
-      "removed": "la automatización se eliminó o se desactivó"
+      "removed": "la automatización se eliminó o se desactivó",
+      "stopping": "Deteniendo…",
+      "stoppedBy": "Detenida por {name}",
+      "stopped": "Detenida"
     },
     "allRuns": "Todas las ejecuciones",
     "textFilter": "Buscar en los valores",
     "textFilterPlaceholder": "por ejemplo, main",
     "live": "Actualización automática",
     "refresh": "Actualizar ahora",
-    "updatedAt": "Actualizado a las {time}"
+    "updatedAt": "Actualizado a las {time}",
+    "stop": "Detener",
+    "stopTitle": "¿Detener la ejecución {id} de «{automation}»?",
+    "stopDescription": "El script y todo lo que inició reciben SIGTERM, y SIGKILL 5 segundos después si siguen ahí. Una ejecución en cola se quita de la cola.",
+    "stopRequested": "Deteniendo la ejecución {id}",
+    "stopFinished": "La ejecución ya terminó",
+    "stopFailed": "No se pudo detener la ejecución",
+    "openQueuedRun": "Abrir",
+    "runningFor": "desde hace {seconds, number} s"
   },
   "automationBuilder": {
     "addTitle": "Nueva automatización",

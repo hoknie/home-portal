@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { useAutomations, useCatalogue } from "@/entities/automation";
+import { StopRunButton } from "@/features/stop-run";
+import { RunDetails, useAutomations, useCatalogue } from "@/entities/automation";
 import { routes } from "@/shared/config";
 import { DataTable } from "@/shared/ui/data-table";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -22,7 +23,8 @@ export function AutomationsScreen() {
   const t = useTranslations();
   const automations = useAutomations();
   const catalogue = useCatalogue();
-  const columns = useAutomationColumns(automations.data?.revision ?? null, catalogue.data);
+  const [opened, setOpened] = useState<string | null>(null);
+  const columns = useAutomationColumns(automations.data?.revision ?? null, catalogue.data, setOpened);
   const add = (
     <Button asChild>
       <Link href={routes.newAutomation}>
@@ -60,7 +62,12 @@ export function AutomationsScreen() {
       ) : automations.error ? null : (
         <Skeleton className="h-64 w-full" aria-busy="true" />
       )}
-      {automations.data ? <RunJournal automations={list} /> : null}
+      {automations.data ? <RunJournal automations={list} onOpen={setOpened} /> : null}
+      <RunDetails
+        runId={opened}
+        onClose={() => setOpened(null)}
+        actions={(run) => <StopRunButton run={run} title={list.find((automation) => automation.id === run.automation)?.title} labelled />}
+      />
     </div>
   );
 }

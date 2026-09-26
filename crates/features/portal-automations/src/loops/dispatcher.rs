@@ -18,11 +18,11 @@ pub async fn dispatch_forever(sink: Arc<AutomationSink>, scripts: ScriptsDirecto
         let pending = sink.queue.next().await;
         let id = pending.automation.id.clone();
         if sink.closed() {
-            sink.gatekeeper.dequeued(&id);
+            sink.forget(&pending);
             continue;
         }
         if !sink.cache.runnable(&id) {
-            sink.gatekeeper.dequeued(&id);
+            sink.forget(&pending);
             sink.journal.record(RunRecord::skipped(
                 &pending,
                 SkipReason::Removed,

@@ -71,6 +71,15 @@ impl Gatekeeper {
             .any(|state| state.running || state.pending)
     }
 
+    #[cfg(test)]
+    pub fn busy_with(&self, automation: &str) -> bool {
+        self.states
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(automation)
+            .is_some_and(|state| state.running || state.pending)
+    }
+
     fn update(&self, automation: &str, change: impl FnOnce(&mut Admission)) {
         let mut states = self.states.lock().unwrap_or_else(PoisonError::into_inner);
         change(states.entry(automation.to_string()).or_default());

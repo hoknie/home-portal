@@ -6,6 +6,7 @@ import {
   automationsSchema,
   catalogueSchema,
   eventNameSchema,
+  isActive,
   messageKeyOf,
   outcomeSchema,
   queuedSchema,
@@ -21,13 +22,17 @@ describe("automation", () => {
     expect(parsed.automations[0].when).toMatchObject({ event: "service.status-changed", services: ["jellyfin"], to: ["down", "unreadable"] });
     expect(parsed.automations[0].last_run?.outcome).toMatchObject({ result: "skipped", reason: "cooldown", count: 9 });
     expect(parsed.automations[1].when.cron).toBe("0 3 * * *");
+    expect(parsed.automations[0].active_run).toBeNull();
+    expect(parsed.automations[1].active_run?.outcome.result).toBe("running");
   });
 
   it("the runs sample parses with its outputs", () => {
     const parsed = runsSchema.parse(apiSamples.automationRuns);
-    expect(parsed.runs.map((run) => run.outcome.result)).toEqual(["failed", "skipped", "succeeded"]);
-    expect(parsed.runs[0].outcome.stderr.tail).toBe("disk full\n");
-    expect(parsed.runs[2].outcome.stdout.truncated).toBe(true);
+    expect(parsed.runs.map((run) => run.outcome.result)).toEqual(["running", "stopped", "failed", "skipped", "succeeded"]);
+    expect(parsed.runs.map(isActive)).toEqual([true, false, false, false, false]);
+    expect(parsed.runs[1].outcome.reason).toBe("stopped by admin");
+    expect(parsed.runs[2].outcome.stderr.tail).toBe("disk full\n");
+    expect(parsed.runs[4].outcome.stdout.truncated).toBe(true);
   });
 
   it("the catalogue, scripts, schedule and queued samples parse", () => {

@@ -6,10 +6,10 @@ use async_trait::async_trait;
 use portal_feature::{EventName, EventSink, PortalEvent};
 use time::OffsetDateTime;
 
-use super::{Gatekeeper, RunQueue, RunningGroups};
+use super::{ActiveRuns, Gatekeeper, RunQueue, RunningGroups};
 use crate::helpers::manual_event;
 use crate::services::{AutomationCache, Journal, matching};
-use crate::types::{Automation, Pending, RunRecord, SkipReason, Webhook};
+use crate::types::{Automation, Pending, RunRecord, SkipReason, StopAnswer, Webhook};
 
 pub struct AutomationSink {
     pub cache: Arc<AutomationCache>,
@@ -17,6 +17,7 @@ pub struct AutomationSink {
     pub gatekeeper: Arc<Gatekeeper>,
     pub journal: Arc<Journal>,
     pub groups: Arc<RunningGroups>,
+    pub active: Arc<ActiveRuns>,
     phase: Phase,
     next_run: AtomicU64,
 }
@@ -49,6 +50,7 @@ impl AutomationSink {
             gatekeeper: Arc::new(Gatekeeper::default()),
             journal: Arc::new(journal),
             groups: Arc::new(RunningGroups::default()),
+            active: Arc::new(ActiveRuns::default()),
             phase: Phase::default(),
             next_run: AtomicU64::new(next),
         }
@@ -91,7 +93,9 @@ impl AutomationSink {
                 .journal
                 .record(RunRecord::skipped(&pending, reason, now)),
             Ok(()) => {
+                self.active.queued(&pending, now);
                 if let Some(dropped) = self.queue.push(pending) {
+                    self.active.remove(dropped.run_id);
                     self.gatekeeper.dequeued(&dropped.automation.id);
                     self.journal
                         .record(RunRecord::skipped(&dropped, SkipReason::Dropped, now));
@@ -99,6 +103,31 @@ impl AutomationSink {
             }
         }
         run_id
+    }
+
+    pub fn stop(&self, run_id: u64, by: &str) -> StopAnswer {
+        match self.active.request_stop(run_id, by) {
+            None if self.journal.find(run_id).is_some() => StopAnswer::Finished,
+            None => StopAnswer::Unknown,
+            Some(false) => StopAnswer::AlreadyStopping,
+            Some(true) => {
+                if let Some(pending) = self.queue.remove(run_id) {
+                    self.gatekeeper.dequeued(&pending.automation.id);
+                    self.journal.record(RunRecord::stopped(
+                        &pending,
+                        by,
+                        OffsetDateTime::now_utc(),
+                    ));
+                    self.active.remove(run_id);
+                }
+                StopAnswer::Stopping
+            }
+        }
+    }
+
+    pub fn forget(&self, pending: &Pending) {
+        self.gatekeeper.dequeued(&pending.automation.id);
+        self.active.remove(pending.run_id);
     }
 
     fn busy(&self) -> bool {
@@ -131,7 +160,7 @@ impl EventSink for AutomationSink {
         self.phase.closed.store(true, Ordering::SeqCst);
         let now = OffsetDateTime::now_utc();
         while let Some(dropped) = self.queue.take() {
-            self.gatekeeper.dequeued(&dropped.automation.id);
+            self.forget(&dropped);
             self.journal
                 .record(RunRecord::skipped(&dropped, SkipReason::Dropped, now));
         }
@@ -139,6 +168,7 @@ impl EventSink for AutomationSink {
         loop {
             self.groups.kill_all();
             if (self.groups.count() == 0 && !self.gatekeeper.busy()) || Instant::now() >= grace {
+                self.active.clear();
                 return;
             }
             tokio::time::sleep(Self::SETTLE_POLL).await;

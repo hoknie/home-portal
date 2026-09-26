@@ -1,4 +1,12 @@
 pub fn kill_group(group: u32) {
+    signal_group(group, libc::SIGKILL);
+}
+
+pub fn terminate_group(group: u32) {
+    signal_group(group, libc::SIGTERM);
+}
+
+fn signal_group(group: u32, signal: libc::c_int) {
     let Ok(group) = libc::pid_t::try_from(group) else {
         return;
     };
@@ -6,7 +14,7 @@ pub fn kill_group(group: u32) {
         return;
     }
     unsafe {
-        libc::killpg(group, libc::SIGKILL);
+        libc::killpg(group, signal);
     }
 }
 

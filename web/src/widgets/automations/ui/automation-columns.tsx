@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { DeleteAutomationButton } from "@/features/delete-automation";
 import { RunAutomationButton } from "@/features/run-automation";
+import { StopRunButton } from "@/features/stop-run";
 import { type Automation, type Catalogue, OutcomeBadge } from "@/entities/automation";
 import { routes } from "@/shared/config";
 import type { Column } from "@/shared/ui/data-table";
@@ -15,7 +16,11 @@ import { TagList } from "@/shared/ui/tag-list";
 
 import { TriggerText } from "./trigger-text";
 
-export function useAutomationColumns(revision: string | null, catalogue: Catalogue | undefined): Column<Automation>[] {
+export function useAutomationColumns(
+  revision: string | null,
+  catalogue: Catalogue | undefined,
+  onQueued?: (runId: string) => void,
+): Column<Automation>[] {
   const t = useTranslations();
   return [
     {
@@ -55,7 +60,16 @@ export function useAutomationColumns(revision: string | null, catalogue: Catalog
       header: t("automations.columns.lastRun"),
       hideBelow: "sm",
       cell: (automation) =>
-        automation.last_run ? (
+        automation.active_run ? (
+          <div className="grid justify-items-start gap-1">
+            <OutcomeBadge outcome={automation.active_run.outcome.result} />
+            {automation.active_run.outcome.result === "running" ? (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {t("automations.runningFor", { seconds: Math.floor(automation.active_run.outcome.duration_milliseconds / 1000) })}
+              </span>
+            ) : null}
+          </div>
+        ) : automation.last_run ? (
           <div className="grid justify-items-start gap-1">
             <OutcomeBadge outcome={automation.last_run.outcome.result} />
             <span className="flex gap-2 text-xs text-muted-foreground">
@@ -73,7 +87,8 @@ export function useAutomationColumns(revision: string | null, catalogue: Catalog
       align: "end",
       cell: (automation) => (
         <div className="flex justify-end gap-1">
-          <RunAutomationButton automation={automation} />
+          {automation.active_run ? <StopRunButton run={automation.active_run} title={automation.title} /> : null}
+          <RunAutomationButton automation={automation} onQueued={onQueued} />
           <Button asChild variant="ghost" size="icon">
             <Link href={routes.editAutomation(automation.id)} aria-label={t("common.edit")}>
               <Pencil aria-hidden />

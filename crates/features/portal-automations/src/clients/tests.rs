@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use tempfile::TempDir;
 
 use super::{GroupRegistry, Runner};
-use crate::types::{Invocation, Outcome};
+use crate::types::{Invocation, Outcome, RunControl};
 
 #[derive(Default)]
 struct Groups {
@@ -44,8 +44,16 @@ fn invocation(folder: &TempDir, body: &str, arguments: &[&str], timeout: u64) ->
 
 async fn run(invocation: &Invocation) -> (crate::types::Finished, Arc<Groups>) {
     let groups = Arc::new(Groups::default());
-    let finished = Runner::run(invocation, groups.clone()).await;
+    let finished = Runner::run(invocation, groups.clone(), RunControl::new().1).await;
     (finished, groups)
+}
+
+fn waiting_for(mut check: impl FnMut() -> bool) {
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while !check() {
+        assert!(Instant::now() < deadline, "the condition never came true");
+        std::thread::sleep(Duration::from_millis(20));
+    }
 }
 
 fn alive(pid: &str) -> bool {
@@ -173,4 +181,106 @@ async fn arguments_beyond_the_system_limit_fail_to_start_with_the_reason() {
         "{:?}",
         finished.reason
     );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn output_is_readable_while_the_script_runs() {
+    let folder = TempDir::new().unwrap();
+    let invocation = invocation(&folder, "echo 'step 1'; sleep 30", &[], 60);
+    let (stop, control) = RunControl::new();
+    let watched = control.clone();
+    let task = tokio::spawn(async move {
+        Runner::run(&invocation, Arc::new(Groups::default()), control).await
+    });
+    tokio::task::spawn_blocking(move || waiting_for(|| watched.output().0.text() == "step 1\n"))
+        .await
+        .unwrap();
+    stop.send_replace(true);
+    assert_eq!(task.await.unwrap().outcome, Outcome::Stopped);
+}
+
+#[tokio::test]
+async fn a_stopped_script_ends_with_its_children_within_a_second() {
+    let folder = TempDir::new().unwrap();
+    let invocation = invocation(&folder, "sleep 600 & echo $!; sleep 600", &[], 900);
+    let (stop, control) = RunControl::new();
+    let tails = control.clone();
+    let groups = Arc::new(Groups::default());
+    let task = tokio::spawn({
+        let groups = groups.clone();
+        async move { Runner::run(&invocation, groups, control).await }
+    });
+    while tails.output().0.text().is_empty() {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let began = Instant::now();
+    stop.send_replace(true);
+    let finished = task.await.unwrap();
+    assert!(began.elapsed() < Duration::from_secs(1));
+    assert_eq!(finished.outcome, Outcome::Stopped);
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert!(!alive(&finished.stdout.text()));
+    assert!(groups.alive.lock().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn a_script_that_ignores_sigterm_is_killed_after_the_grace() {
+    let folder = TempDir::new().unwrap();
+    let invocation = invocation(
+        &folder,
+        "trap '' TERM; echo ready; while :; do sleep 1; done",
+        &[],
+        900,
+    );
+    let (stop, mut control) = RunControl::new();
+    control.grace = Duration::from_millis(300);
+    let tails = control.clone();
+    let task = tokio::spawn(async move {
+        Runner::run(&invocation, Arc::new(Groups::default()), control).await
+    });
+    while tails.output().0.text().is_empty() {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let began = Instant::now();
+    stop.send_replace(true);
+    let finished = task.await.unwrap();
+    assert_eq!(finished.outcome, Outcome::Stopped);
+    assert!(began.elapsed() >= Duration::from_millis(300));
+    assert!(began.elapsed() < Duration::from_secs(3));
+}
+
+#[tokio::test]
+async fn a_stop_before_the_spawn_never_starts_the_script() {
+    let folder = TempDir::new().unwrap();
+    let marker = folder.path().join("started");
+    let body = format!("touch '{}'", marker.display());
+    let invocation = invocation(&folder, &body, &[], 10);
+    let (stop, control) = RunControl::new();
+    stop.send_replace(true);
+    let finished = Runner::run(&invocation, Arc::new(Groups::default()), control).await;
+    assert_eq!(finished.outcome, Outcome::Stopped);
+    assert!(!marker.exists());
+}
+
+#[tokio::test]
+async fn a_stopped_script_that_exits_zero_is_still_stopped() {
+    let folder = TempDir::new().unwrap();
+    let invocation = invocation(
+        &folder,
+        "trap 'exit 0' TERM; echo ready; while :; do sleep 0.1; done",
+        &[],
+        900,
+    );
+    let (stop, control) = RunControl::new();
+    let tails = control.clone();
+    let task = tokio::spawn(async move {
+        Runner::run(&invocation, Arc::new(Groups::default()), control).await
+    });
+    while tails.output().0.text().is_empty() {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    stop.send_replace(true);
+    let finished = task.await.unwrap();
+    assert_eq!(finished.outcome, Outcome::Stopped);
+    assert_eq!(finished.exit_code, Some(0));
 }
