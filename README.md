@@ -3,20 +3,32 @@
 A self-hosted start page for a home network. It shows whether your services are up, how they
 have behaved over the last 30 days, and lets you manage them — all from one small program.
 
-- **Status of every service** — HTTP, TCP and ICMP probes, uptime and latency history, a
-  diagnosis when something is down, and Telegram notifications.
+- **Status of every service** — HTTP, TCP and ICMP probes, uptime and latency history over
+  30 days, a diagnosis when something is down (also from the command line:
+  `home-portal probe <id|url>`), and Telegram notifications.
+- **Service icons** — from Lucide, the [dashboard-icons](https://github.com/homarr-labs/dashboard-icons)
+  catalogue, a URL, a file, or found on the service's own page; the portal fetches and caches
+  them, so a visitor's browser never contacts a private address.
 - **A home page you arrange** — sections and widgets (service tiles, status summary, host
   metrics, weather, calendar) in quarter-to-full widths, edited in the browser.
 - **Environments** — the same service reachable at one address at home and another over VPN;
-  visitors from the internet see only what is marked `public`.
+  visitors from the internet get a public page with only what is marked `public`. A visitor
+  at home can look at the portal as another environment sees it.
 - **Publishing through Caddy** — the portal downloads, runs and configures Caddy, with
   Let's Encrypt, Caddy's own authority or your certificates, optionally behind the portal's
   sign-in.
+- **Local DNS** — an authoritative server for the portal's own names (`portal.home`,
+  `jellyfin.home`), answering each network with the proxy's address in it, over UDP, TCP,
+  DNS over TLS and DNS over HTTPS; never a resolver for anything else. See [Local DNS](#local-dns).
+- **Sign-in** — users with argon2id passwords; sessions survive a restart, and one sign-in covers
+  every host published through Caddy. Repeated wrong passwords lock the address for a minute.
 - **Automations and webhooks** — run your own scripts on a cron schedule, on portal events
   (a service goes down, someone signs in, the configuration changes…), by hand, or when another
   system calls `POST /webhook/<id>`.
 - **One TOML file** — the interface edits it in place and keeps your comments; secrets live in
   a separate file of mode 0600.
+- **Network settings from the browser** — the address and port change on the settings page,
+  and the portal restarts itself to apply them.
 
 Building it yourself or working on the code: see [DEVELOPMENT.md](DEVELOPMENT.md).
 
