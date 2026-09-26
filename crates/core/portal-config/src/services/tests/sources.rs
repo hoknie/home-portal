@@ -175,3 +175,33 @@ fn an_edit_made_by_hand_is_seen_and_a_broken_one_is_kept_out() {
     assert_eq!(portal.store.read().document["port"].as_integer(), Some(2));
     assert!(portal.store.problem().is_some());
 }
+
+fn slow_to_check(document: &toml_edit::DocumentMut) -> Vec<portal_feature::FieldError> {
+    if document.get("slow").is_some() {
+        std::thread::sleep(std::time::Duration::from_millis(400));
+    }
+    Vec::new()
+}
+
+#[test]
+fn a_reader_arriving_while_another_reloads_a_hand_edit_gets_the_new_content() {
+    let portal = super::support::Portal::with(&[("home-portal.toml", "name = \"old\"\n")]);
+    portal.store.adopt(vec![slow_to_check]).unwrap();
+    super::support::rewrite(
+        &portal.path("home-portal.toml"),
+        "name = \"new\"\nslow = true\n",
+    );
+    let first = portal.store.clone();
+    let reloading = std::thread::spawn(move || first.read());
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    let arriving = portal.store.read();
+    let name = |snapshot: &crate::Snapshot| {
+        snapshot
+            .document
+            .get("name")
+            .and_then(|item| item.as_str())
+            .map(str::to_string)
+    };
+    assert_eq!(name(&arriving).as_deref(), Some("new"));
+    assert_eq!(name(&reloading.join().unwrap()).as_deref(), Some("new"));
+}

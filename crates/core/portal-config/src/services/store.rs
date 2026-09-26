@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, PoisonError, RwLock};
+use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};
+use std::thread::{self, ThreadId};
 
 use portal_feature::{ApiError, Check, FieldError, Validator};
 use toml_edit::DocumentMut;
@@ -12,7 +13,7 @@ use crate::helpers::{
     write_atomically,
 };
 use crate::types::{
-    ConfigError, ConfigurationLocation, Current, Revision, SecretString, Snapshot, Storage,
+    ConfigError, ConfigurationLocation, Current, Revision, SecretString, Snapshot, Stamp, Storage,
 };
 
 pub struct ConfigStore {
@@ -20,6 +21,8 @@ pub struct ConfigStore {
     validators: RwLock<Vec<Validator>>,
     checks: RwLock<Vec<Check>>,
     current: Mutex<Current>,
+    reloading: Mutex<Option<ThreadId>>,
+    reloaded: Condvar,
     secrets: RwLock<BTreeMap<String, SecretString>>,
     writing: tokio::sync::Mutex<()>,
     storage: BTreeMap<Storage, PathBuf>,
@@ -66,6 +69,8 @@ impl ConfigStore {
                 stamps,
                 problem: None,
             }),
+            reloading: Mutex::new(None),
+            reloaded: Condvar::new(),
             secrets: RwLock::new(loaded.secrets),
             writing: tokio::sync::Mutex::new(()),
             storage,
@@ -142,24 +147,67 @@ impl ConfigStore {
     }
 
     pub fn read(&self) -> Snapshot {
-        {
-            let mut current = self.current.lock().unwrap_or_else(PoisonError::into_inner);
-            let stamps: Vec<_> = current
-                .sources
-                .iter()
-                .map(|source| stamp_of(&source.path))
-                .collect();
-            if stamps == current.stamps {
-                return current.snapshot.clone();
-            }
-            current.stamps = stamps;
+        if let Some(snapshot) = self.unchanged() {
+            return snapshot;
         }
-        self.reload();
+        let me = thread::current().id();
+        {
+            let mut reloading = self
+                .reloading
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner);
+            if *reloading == Some(me) {
+                return self.snapshot_now();
+            }
+            while reloading.is_some() {
+                reloading = self
+                    .reloaded
+                    .wait(reloading)
+                    .unwrap_or_else(PoisonError::into_inner);
+            }
+            if let Some(snapshot) = self.unchanged() {
+                return snapshot;
+            }
+            *reloading = Some(me);
+        }
+        let seen = self.disk_stamps();
+        let adopted = self.reload();
+        if !adopted {
+            self.current
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .stamps = seen;
+        }
+        *self
+            .reloading
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner) = None;
+        self.reloaded.notify_all();
+        self.snapshot_now()
+    }
+
+    fn snapshot_now(&self) -> Snapshot {
         self.current
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .snapshot
             .clone()
+    }
+
+    fn disk_stamps(&self) -> Vec<Option<Stamp>> {
+        self.current
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .sources
+            .iter()
+            .map(|source| stamp_of(&source.path))
+            .collect()
+    }
+
+    fn unchanged(&self) -> Option<Snapshot> {
+        let stamps = self.disk_stamps();
+        let current = self.current.lock().unwrap_or_else(PoisonError::into_inner);
+        (stamps == current.stamps).then(|| current.snapshot.clone())
     }
 
     pub fn problem(&self) -> Option<String> {
@@ -229,7 +277,7 @@ impl ConfigStore {
         Ok((value, snapshot))
     }
 
-    fn reload(&self) {
+    fn reload(&self) -> bool {
         let known = self
             .current
             .lock()
@@ -241,7 +289,7 @@ impl ConfigStore {
             Ok(loaded) => loaded,
             Err(error) => {
                 self.ignore(error.message());
-                return;
+                return false;
             }
         };
         if loaded.snapshot.revision == known {
@@ -249,7 +297,7 @@ impl ConfigStore {
                 .lock()
                 .unwrap_or_else(PoisonError::into_inner)
                 .problem = None;
-            return;
+            return false;
         }
         let previous = std::mem::replace(
             &mut *self.secrets.write().unwrap_or_else(PoisonError::into_inner),
@@ -258,7 +306,7 @@ impl ConfigStore {
         if let Some(error) = self.validate(&loaded.snapshot.document).first() {
             *self.secrets.write().unwrap_or_else(PoisonError::into_inner) = previous;
             self.ignore(format!("{}: {}", error.field, error.message));
-            return;
+            return false;
         }
         tracing::info!(path = %self.main.display(), "configuration reloaded");
         let stamps = loaded
@@ -271,6 +319,7 @@ impl ConfigStore {
         current.snapshot = loaded.snapshot;
         current.stamps = stamps;
         current.problem = None;
+        true
     }
 
     fn ignore(&self, problem: String) {
