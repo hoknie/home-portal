@@ -13,6 +13,16 @@ export function formPathOf(field: string) {
   return LISTS_IN_THE_FORM.includes(list) ? dotted : field.replace(/\[\d+\]$/, "");
 }
 
-export function byField(errors: FieldError[]) {
-  return errors.map((error) => ({ path: formPathOf(error.field), message: error.message }));
+export function byField(errors: FieldError[], fields: string[]) {
+  const placed: { path: string; message: string }[] = [];
+  const unplaced: FieldError[] = [];
+  for (const error of errors) {
+    const path = formPathOf(error.field);
+    if (fields.includes(path.split(".")[0])) {
+      placed.push({ path, message: error.message });
+    } else {
+      unplaced.push(error);
+    }
+  }
+  return { placed, unplaced };
 }

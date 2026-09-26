@@ -3,14 +3,16 @@
 import { House } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { LanguageSwitch } from "@/features/language-switch";
 import { SignInForm } from "@/features/sign-in";
 import { useSession } from "@/entities/session";
 import { NEXT_PARAMETER } from "@/shared/api";
-import { RETURN_PARAMETER, destinationOf, leaveTo } from "@/shared/lib/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@/shared/ui/primitives";
+import { routes } from "@/shared/config";
+import { RETURN_PARAMETER, cameBackFrom, destinationOf, hostOf, leaveTo } from "@/shared/lib/navigation";
+import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@/shared/ui/primitives";
 
 export function LoginScreen() {
   const t = useTranslations();
@@ -20,6 +22,7 @@ export function LoginScreen() {
   const session = useSession();
   const signedIn = Boolean(session.data);
   const gone = useRef(false);
+  const [looping] = useState(() => destination.leavesTheInterface && cameBackFrom(destination.href));
   const go = useCallback(() => {
     if (gone.current) {
       return;
@@ -33,10 +36,15 @@ export function LoginScreen() {
   }, [destination.href, destination.leavesTheInterface, router]);
 
   useEffect(() => {
-    if (signedIn) {
+    if (signedIn && !looping) {
       go();
     }
-  }, [signedIn, go]);
+  }, [signedIn, looping, go]);
+
+  const retry = () => {
+    gone.current = true;
+    leaveTo(destination.href);
+  };
 
   return (
     <main className="relative flex min-h-svh items-center justify-center px-4">
@@ -52,7 +60,26 @@ export function LoginScreen() {
           <CardDescription>{t("login.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {session.isPending || signedIn ? <Skeleton className="h-48 w-full" aria-busy="true" /> : <SignInForm onSignedIn={go} />}
+          {looping && signedIn ? (
+            <ErrorNotice
+              title={t("login.loop.title", { host: hostOf(parameters.get(RETURN_PARAMETER)) })}
+              description={t("login.loop.description")}
+              action={
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={retry}>
+                    {t("login.loop.retry")}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => router.replace(routes.home)}>
+                    {t("login.loop.home")}
+                  </Button>
+                </div>
+              }
+            />
+          ) : session.isPending || signedIn ? (
+            <Skeleton className="h-48 w-full" aria-busy="true" />
+          ) : (
+            <SignInForm onSignedIn={go} />
+          )}
         </CardContent>
       </Card>
     </main>

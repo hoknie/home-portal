@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use portal_config::ConfigStore;
-use portal_proxy::read_settings;
+use portal_feature::FieldError;
+use portal_model::Publication;
+use portal_proxy::{publication_problems, read_settings};
 use portal_services::Publishing;
 
 pub struct ProxyPublishing {
@@ -14,5 +16,9 @@ impl Publishing for ProxyPublishing {
             .ok()
             .filter(|settings| settings.enabled)
             .map(|settings| settings.https_port)
+    }
+
+    fn problems(&self, publication: &Publication) -> Vec<FieldError> {
+        publication_problems(&self.configuration.read().document, publication)
     }
 }

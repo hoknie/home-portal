@@ -77,6 +77,25 @@ fn publishing_follows_the_proxy_section() {
     );
 }
 
+#[test]
+fn publishing_names_a_sign_in_the_cookie_domain_cannot_reach_by_the_service_field() {
+    let (_directory, store, _) = services(&format!("{PROXIED}\n{FILE}"));
+    let publication = portal_model::Publication {
+        host: "nas.example.org".into(),
+        upstream: None,
+        environments: vec!["internet".into()],
+        auth: vec!["internet".into()],
+        tls: None,
+        upstream_verify: true,
+    };
+    let errors = ProxyPublishing {
+        configuration: store,
+    }
+    .problems(&publication);
+    let fields: Vec<&str> = errors.iter().map(|error| error.field.as_str()).collect();
+    assert_eq!(fields, vec!["proxy.auth"]);
+}
+
 fn connection(text: &str) -> (tempfile::TempDir, super::NetworkConnection) {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");

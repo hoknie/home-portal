@@ -5,7 +5,9 @@ use crate::services::publications::{
     NO_COOKIE_DOMAIN, OUTSIDE_COOKIE_DOMAIN, PORTAL_HOST, TAKEN_HOST,
 };
 use crate::services::settings::{LOOPBACK_NOT_TRUSTED, NOT_A_PARENT, PUBLIC_URL_DIFFERS, REQUIRED};
-use crate::services::{read_settings, validate_publications, validate_settings};
+use crate::services::{
+    publication_problems, read_settings, validate_publications, validate_settings,
+};
 use crate::types::AdminAddress;
 
 const ENABLED: &str = "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\ncookie_domain = \"example.com\"\n";
@@ -222,4 +224,21 @@ fn dns_over_https_gets_its_own_route_only_on_another_host_while_it_is_on() {
         host("[dns]\nenabled = true\n[dns.https]\nenabled = true\nhost = \"DNS.example.com.\"\n"),
         Some("dns.example.com".to_string())
     );
+}
+
+#[test]
+fn a_publication_is_checked_against_the_settings_by_its_own_field_names() {
+    let outside = portal_model::Publication {
+        host: "nas.example.org".into(),
+        upstream: None,
+        environments: vec!["internet".into()],
+        auth: vec!["internet".into()],
+        tls: None,
+        upstream_verify: true,
+    };
+    let errors = publication_problems(&document(ENABLED), &outside);
+    assert_eq!(fields(&errors), vec!["proxy.auth"]);
+    assert_eq!(errors[0].message, OUTSIDE_COOKIE_DOMAIN);
+    let disabled = ENABLED.replace("enabled = true", "enabled = false");
+    assert!(publication_problems(&document(&disabled), &outside).is_empty());
 }

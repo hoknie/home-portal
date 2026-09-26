@@ -8,5 +8,5 @@ mod settings;
 mod tests;
 
 pub use caddy_manager::CaddyManager;
-pub use publications::validate_publications;
+pub use publications::{publication_problems, validate_publications};
 pub use settings::{read_settings, validate_settings};

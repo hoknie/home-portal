@@ -8,7 +8,7 @@ import { Controller, type Path, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { type Service, type ServiceForm as ServiceFormValues, emptyServiceForm, formOf, serviceFormSchema, useSaveService } from "@/entities/service";
-import { ConflictError, ValidationError } from "@/shared/api";
+import { ConflictError, type FieldError, ValidationError } from "@/shared/api";
 import { routes } from "@/shared/config";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ErrorNotice } from "@/shared/ui/error-notice";
@@ -37,6 +37,7 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
   const t = useTranslations();
   const save = useSaveService();
   const [conflict, setConflict] = useState(false);
+  const [unplaced, setUnplaced] = useState<FieldError[]>([]);
   const [saved, setSaved] = useState(false);
   const [idFollowsName, setIdFollowsName] = useState(service === null);
   const form = useForm<ServiceFormValues>({ resolver: zodResolver(serviceFormSchema), defaultValues: service ? formOf(service) : emptyServiceForm });
@@ -44,6 +45,7 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
 
   const submit = form.handleSubmit(async (values) => {
     setConflict(false);
+    setUnplaced([]);
     try {
       await save.mutateAsync({ id: service?.id ?? null, form: values, revision });
       setSaved(true);
@@ -51,9 +53,11 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
       onSaved();
     } catch (error) {
       if (error instanceof ValidationError) {
-        for (const { path, message } of byField(error.fields)) {
+        const { placed, unplaced } = byField(error.fields, Object.keys(emptyServiceForm));
+        for (const { path, message } of placed) {
           form.setError(path as Path<ServiceFormValues>, { message });
         }
+        setUnplaced(unplaced);
       } else if (error instanceof ConflictError) {
         setConflict(true);
         onConflict();
@@ -67,6 +71,9 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
   return (
     <form onSubmit={submit} className="grid gap-6" noValidate>
       {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+      {unplaced.length > 0 ? (
+        <ErrorNotice title={t("serviceForm.notSaved")} description={unplaced.map((error) => `${error.field}: ${error.message}`).join("\n")} />
+      ) : null}
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <SectionCard title={t("serviceForm.identity")}>
           <div className="grid gap-4">

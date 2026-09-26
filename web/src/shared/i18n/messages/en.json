@@ -58,7 +58,13 @@
     "submitting": "Signing in…",
     "invalid": "Wrong user name or password",
     "throttled": "Too many attempts. Try again in {seconds} s.",
-    "failed": "Could not sign in. Check that the portal is reachable."
+    "failed": "Could not sign in. Check that the portal is reachable.",
+    "loop": {
+      "title": "The sign-in does not reach {host}",
+      "description": "You are signed in to the portal, but the browser does not send the session to this service, so it asks to sign in again. Check in Proxy settings that the cookie domain is set and that the service's host lies under it (for example, portal.home and torrent.portal.home under portal.home).",
+      "retry": "Try again",
+      "home": "To the home page"
+    }
   },
   "status": {
     "unknown": "Unknown",
@@ -140,6 +146,7 @@
     "openService": "Open {name}"
   },
   "serviceForm": {
+    "notSaved": "The service was not saved: the configuration has other problems",
     "addTitle": "New service",
     "editTitle": "Edit service",
     "description": "Changes are written to the configuration file.",

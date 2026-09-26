@@ -35,6 +35,7 @@ async function signIn() {
 beforeEach(() => {
   replace.mockClear();
   leaveTo.mockClear();
+  window.sessionStorage.clear();
 });
 
 afterEach(() => {
@@ -67,6 +68,27 @@ it("continues at once without the form when a session already exists", async () 
   renderWithProviders(<LoginScreen />);
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin/services/"));
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+});
+
+it("stops instead of looping when a published service sends the visitor straight back", async () => {
+  search = "return=https%3A%2F%2Ftorrent.portal.home%2F";
+  const href = "/api/proxy/continue?to=https%3A%2F%2Ftorrent.portal.home%2F";
+  window.sessionStorage.setItem("portal_left_to", JSON.stringify({ href, at: Date.now() }));
+  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ name: "admin" })));
+  renderWithProviders(<LoginScreen />);
+  expect(await screen.findByText("The sign-in does not reach torrent.portal.home")).toBeInTheDocument();
+  expect(leaveTo).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+  expect(leaveTo).toHaveBeenCalledWith(href);
+});
+
+it("an old departure does not count as a loop", async () => {
+  search = "return=https%3A%2F%2Ftorrent.portal.home%2F";
+  const href = "/api/proxy/continue?to=https%3A%2F%2Ftorrent.portal.home%2F";
+  window.sessionStorage.setItem("portal_left_to", JSON.stringify({ href, at: Date.now() - 60_000 }));
+  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ name: "admin" })));
+  renderWithProviders(<LoginScreen />);
+  await waitFor(() => expect(leaveTo).toHaveBeenCalledWith(href));
 });
 
 it("offers the language switcher to a visitor without a session", async () => {

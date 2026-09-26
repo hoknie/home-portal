@@ -171,7 +171,10 @@ fn user_of(principal: Option<Extension<Principal>>) -> String {
 fn checked(request: ServiceRequest, state: &ServicesState) -> Result<ServiceEntry, ApiError> {
     let entry = request.into_entry();
     let known = known_of(&state.configuration.read().document);
-    let errors = check_entry(&entry, &known);
+    let mut errors = check_entry(&entry, &known);
+    if let Some(publication) = &entry.proxy {
+        errors.extend(state.publishing.problems(publication));
+    }
     if errors.is_empty() {
         Ok(entry)
     } else {
