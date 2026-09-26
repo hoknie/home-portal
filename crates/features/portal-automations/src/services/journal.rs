@@ -99,6 +99,15 @@ impl Journal {
             .collect()
     }
 
+    pub fn find(&self, id: u64) -> Option<RunRecord> {
+        self.records
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .iter()
+            .find(|record| record.id == id)
+            .cloned()
+    }
+
     pub fn last_of(&self, automation: &str) -> Option<RunRecord> {
         self.records
             .lock()

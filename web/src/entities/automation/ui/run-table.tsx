@@ -2,22 +2,28 @@
 
 import { History } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { DataTable } from "@/shared/ui/data-table";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { Button } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
 
-import { type Run, messageKeyOf } from "../model/schema";
+import { type Run, isActive, messageKeyOf } from "../model/schema";
 import { OutcomeBadge } from "./outcome-badge";
 import { RunDetails } from "./run-details";
 
-export type RunTableProps = { runs: Run[]; titleOf: (id: string) => string };
+export type RunTableProps = {
+  runs: Run[];
+  titleOf: (id: string) => string;
+  actionsOf?: (run: Run) => ReactNode;
+  onOpen?: (id: string) => void;
+};
 
-export function RunTable({ runs, titleOf }: RunTableProps) {
+export function RunTable({ runs, titleOf, actionsOf, onOpen }: RunTableProps) {
   const t = useTranslations();
-  const [opened, setOpened] = useState<Run | null>(null);
+  const [opened, setOpened] = useState<string | null>(null);
+  const open = onOpen ?? setOpened;
   return (
     <>
       <DataTable
@@ -44,6 +50,11 @@ export function RunTable({ runs, titleOf }: RunTableProps) {
             cell: (run) => (
               <span className="flex flex-wrap items-center gap-2">
                 <OutcomeBadge outcome={run.outcome.result} />
+                {run.outcome.result === "running" ? (
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {t("automations.runningFor", { seconds: Math.floor(run.outcome.duration_milliseconds / 1000) })}
+                  </span>
+                ) : null}
                 {run.outcome.count > 1 ? <span className="text-xs text-muted-foreground">{t("automations.repeated", { count: run.outcome.count })}</span> : null}
               </span>
             ),
@@ -53,14 +64,17 @@ export function RunTable({ runs, titleOf }: RunTableProps) {
             header: t("automations.columns.details"),
             align: "end",
             cell: (run) => (
-              <Button variant="ghost" size="sm" onClick={() => setOpened(run)}>
-                {t("automations.openRun")}
-              </Button>
+              <span className="flex justify-end gap-1">
+                {actionsOf && isActive(run) ? actionsOf(run) : null}
+                <Button variant="ghost" size="sm" onClick={() => open(run.id)}>
+                  {t("automations.openRun")}
+                </Button>
+              </span>
             ),
           },
         ]}
       />
-      <RunDetails run={opened} onClose={() => setOpened(null)} />
+      {onOpen ? null : <RunDetails runId={opened} onClose={() => setOpened(null)} actions={actionsOf} />}
     </>
   );
 }

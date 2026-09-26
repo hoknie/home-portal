@@ -1,6 +1,6 @@
 use portal_feature::{EventName, FieldError};
 
-use super::{Automation, AutomationsSection, RawAutomation};
+use super::{Automation, AutomationsSection, Outcome, RawAutomation, Tail};
 
 fn raw(text: &str) -> RawAutomation {
     let document = format!("[[automations]]\n{text}").parse().unwrap();
@@ -140,4 +140,42 @@ run = { script = "restart.sh", args = ["--", "{{service.id}}", "{{run.manual}}"]
     assert_eq!(input["service.id"], "nas");
     assert_eq!(input["status.error"], "");
     assert_eq!(invocation.timeout.as_secs(), 60);
+}
+
+#[test]
+fn a_cut_inside_a_cyrillic_character_starts_at_the_next_character() {
+    let mut tail = Tail::default();
+    let body = "я".repeat(100 * 1024);
+    tail.push(format!("x{body}").as_bytes());
+    tail.push("готово\n".as_bytes());
+    let text = tail.text();
+    assert!(!text.starts_with('\u{FFFD}'));
+    assert!(text.ends_with("готово\n"));
+    assert_eq!(tail.total, 1 + 200 * 1024 + "готово\n".len() as u64);
+    assert!(tail.truncated());
+    assert!(Tail::KEPT - text.len() <= 3);
+}
+
+#[test]
+fn a_restored_tail_starts_on_a_character_boundary() {
+    let stored = format!("x{}", "я".repeat(40 * 1024));
+    let tail = Tail::restored(stored.as_bytes(), 1_000_000);
+    assert!(!tail.text().starts_with('\u{FFFD}'));
+    assert_eq!(tail.total, 1_000_000);
+}
+
+#[test]
+fn a_short_output_is_kept_whole() {
+    let mut tail = Tail::default();
+    tail.push("привет\n".as_bytes());
+    assert_eq!(tail.text(), "привет\n");
+    assert!(!tail.truncated());
+}
+
+#[test]
+fn every_outcome_reads_back_by_its_name_and_stopped_is_one_of_them() {
+    for outcome in Outcome::ALL {
+        assert_eq!(Outcome::of(outcome.name()), Some(outcome));
+    }
+    assert_eq!(Outcome::of("stopped"), Some(Outcome::Stopped));
 }

@@ -22,7 +22,9 @@ export const eventNameSchema = z.enum([...EVENT_NAMES, UNKNOWN]).catch(UNKNOWN);
 
 export type EventName = z.infer<typeof eventNameSchema>;
 
-export const OUTCOMES = ["succeeded", "failed", "timed-out", "skipped", "refused"] as const;
+export const OUTCOMES = ["queued", "running", "succeeded", "failed", "timed-out", "stopped", "skipped", "refused"] as const;
+
+export const ACTIVE_OUTCOMES: readonly Outcome[] = ["queued", "running"];
 
 export const outcomeSchema = z.enum([...OUTCOMES, UNKNOWN]).catch(UNKNOWN);
 
@@ -55,6 +57,10 @@ export const runSchema = z.object({
 
 export type Run = z.infer<typeof runSchema>;
 
+export function isActive(run: Run | null | undefined) {
+  return run ? ACTIVE_OUTCOMES.includes(run.outcome.result) : false;
+}
+
 export const runsSchema = z.object({ runs: z.array(runSchema) });
 
 export const whenSchema = z.object({
@@ -80,6 +86,7 @@ export const automationSchema = z.object({
   when: whenSchema,
   run: z.object({ script: z.string(), args: z.array(z.string()), timeout_seconds: z.number() }),
   last_run: runSchema.nullable().default(null),
+  active_run: runSchema.nullable().default(null),
 });
 
 export type Automation = z.infer<typeof automationSchema>;

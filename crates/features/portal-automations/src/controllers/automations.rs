@@ -40,7 +40,7 @@ pub async fn create(
         })
         .await?;
     state.sink.cache.refresh(&snapshot.document);
-    let body = AutomationResponse::of(&automation, None);
+    let body = AutomationResponse::of(&automation, None, None);
     Ok(with_revision(StatusCode::CREATED, &snapshot, Json(body)))
 }
 
@@ -67,7 +67,8 @@ pub async fn update(
         .await?;
     state.sink.cache.refresh(&snapshot.document);
     let last = state.sink.journal.last_of(&automation.id);
-    let body = AutomationResponse::of(&automation, last.as_ref());
+    let active = state.sink.active.of_automation(&automation.id);
+    let body = AutomationResponse::of(&automation, last.as_ref(), active.as_ref());
     Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
 }
 
@@ -102,7 +103,8 @@ fn listed(state: &AutomationsState, snapshot: &Snapshot) -> AutomationsResponse 
             .iter()
             .map(|automation| {
                 let last = state.sink.journal.last_of(&automation.id);
-                AutomationResponse::of(automation, last.as_ref())
+                let active = state.sink.active.of_automation(&automation.id);
+                AutomationResponse::of(automation, last.as_ref(), active.as_ref())
             })
             .collect(),
     }

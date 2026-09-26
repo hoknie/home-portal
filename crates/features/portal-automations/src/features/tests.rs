@@ -11,7 +11,7 @@ use time::OffsetDateTime;
 
 use super::AutomationsFeature;
 use crate::ports::Directory;
-use crate::types::{Choice, Outcome, RunRecord};
+use crate::types::{Choice, Outcome, RunRecord, StopAnswer};
 
 pub struct FakeDirectory;
 
@@ -218,4 +218,91 @@ async fn the_run_journal_is_kept_across_a_restart_and_numbering_goes_on() {
             .run_now(&again.state.sink.cache.find("hello").unwrap(), "admin"),
         first + 1
     );
+}
+
+fn stoppable(id: &str, script: &str) -> String {
+    format!(
+        "[[automations]]\nid = \"{id}\"\ntitle = \"{id}\"\nwhen = {{ event = \"manual\" }}\nrun = {{ script = \"{script}\", timeout_seconds = 900 }}\n\n"
+    )
+}
+
+fn run_now(feature: &AutomationsFeature, id: &str) -> u64 {
+    let sink = &feature.state.sink;
+    sink.run_now(&sink.cache.find(id).unwrap(), "admin")
+}
+
+#[tokio::test]
+async fn a_queued_run_is_active_until_it_finishes() {
+    let text = stoppable("slow", "slow.sh");
+    let (_folder, feature) = portal(&text, &[("slow.sh", "echo copying; sleep 1")]);
+    let id = run_now(&feature, "slow");
+    let sink = feature.state.sink.clone();
+    assert_eq!(sink.active.find(id).map(|run| run.running()), Some(false));
+    start(&feature);
+    assert!(eventually(|| sink.active.find(id).is_some_and(|run| run.running())).await);
+    assert!(
+        eventually(|| sink
+            .active
+            .find(id)
+            .is_some_and(|run| run.control.output().0.text() == "copying\n"))
+        .await
+    );
+    assert!(sink.journal.find(id).is_none());
+    assert!(eventually(|| sink.journal.find(id).is_some()).await);
+    assert!(sink.active.find(id).is_none());
+    assert_eq!(
+        sink.journal.find(id).unwrap().result.outcome,
+        Outcome::Succeeded
+    );
+}
+
+#[tokio::test]
+async fn stopping_a_script_that_hangs_records_who_stopped_it() {
+    let text = stoppable("sync", "sync.sh");
+    let (_folder, feature) = portal(&text, &[("sync.sh", "sleep 600 & sleep 600")]);
+    start(&feature);
+    let id = run_now(&feature, "sync");
+    let sink = feature.state.sink.clone();
+    assert!(eventually(|| sink.groups.count() == 1).await);
+    let began = Instant::now();
+    assert_eq!(sink.stop(id, "alice"), StopAnswer::Stopping);
+    assert_eq!(sink.stop(id, "alice"), StopAnswer::AlreadyStopping);
+    assert!(eventually(|| sink.journal.find(id).is_some()).await);
+    assert!(began.elapsed() < Duration::from_secs(1));
+    let run = sink.journal.find(id).unwrap();
+    assert_eq!(run.result.outcome, Outcome::Stopped);
+    assert_eq!(run.result.reason.as_deref(), Some("stopped by alice"));
+    assert_eq!(sink.stop(id, "alice"), StopAnswer::Finished);
+    assert_eq!(sink.stop(id + 100, "alice"), StopAnswer::Unknown);
+    assert!(eventually(|| !sink.gatekeeper.busy()).await);
+    let again = run_now(&feature, "sync");
+    assert!(sink.active.find(again).is_some());
+}
+
+#[tokio::test]
+async fn a_stopped_queued_run_never_starts() {
+    let mut text: String = (0..4)
+        .map(|index| stoppable(&format!("slow{index}"), "slow.sh"))
+        .collect();
+    text.push_str(&stoppable("backup", "backup.sh"));
+    let (folder, feature) = portal(
+        &text,
+        &[("slow.sh", "sleep 600"), ("backup.sh", "touch started")],
+    );
+    start(&feature);
+    let sink = feature.state.sink.clone();
+    for index in 0..4 {
+        run_now(&feature, &format!("slow{index}"));
+    }
+    assert!(eventually(|| sink.groups.count() == 4).await);
+    let id = run_now(&feature, "backup");
+    assert_eq!(sink.stop(id, "alice"), StopAnswer::Stopping);
+    let run = sink.journal.find(id).unwrap();
+    assert_eq!(run.result.outcome, Outcome::Stopped);
+    assert!(sink.active.find(id).is_none());
+    assert!(!sink.gatekeeper.busy_with("backup"));
+    sink.groups.kill_all();
+    assert!(eventually(|| sink.groups.count() == 0).await);
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert!(!folder.path().join("scripts/started").exists());
 }

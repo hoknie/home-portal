@@ -88,7 +88,15 @@ fn runs() -> Vec<RunResponse> {
     skipped.duration_milliseconds = 0;
     skipped.count = 9;
     skipped.last_at = "2026-09-25T03:04:00Z".into();
+    let mut running = outcome("running", None, None);
+    running.duration_milliseconds = 12_000;
+    running.stdout = output("copying\n", 8);
+    running.stderr = output("  % Total\r 10  1.2M\r 55  6.6M", 28);
+    let mut stopped = outcome("stopped", None, Some("stopped by admin"));
+    stopped.stdout = output("syncing\n", 8);
     vec![
+        run("5", "backup", "manual", running),
+        run("4", "backup", "manual", stopped),
         run("3", "backup", "schedule", failed),
         run("2", "restart-media", "service.status-changed", skipped),
         run("1", "restart-media", "service.status-changed", succeeded),
@@ -126,7 +134,8 @@ fn the_automation_samples_match_their_serializers() {
                     args: vec!["--".into(), "{{service.id}}".into()],
                     timeout_seconds: 120,
                 },
-                last_run: Some(history[1].clone()),
+                last_run: Some(history[3].clone()),
+                active_run: None,
             },
             AutomationResponse {
                 id: "backup".into(),
@@ -154,7 +163,8 @@ fn the_automation_samples_match_their_serializers() {
                     args: Vec::new(),
                     timeout_seconds: 60,
                 },
-                last_run: None,
+                last_run: Some(history[1].clone()),
+                active_run: Some(history[0].clone()),
             },
         ],
     };

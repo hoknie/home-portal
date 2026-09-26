@@ -8,8 +8,8 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::process::{Child, Command};
 use tokio::task::JoinHandle;
 
-use super::kill_group;
-use crate::types::{Finished, Invocation, Outcome, Tail};
+use super::{kill_group, terminate_group};
+use crate::types::{Finished, Invocation, Outcome, RunControl, Tail};
 
 pub trait GroupRegistry: Send + Sync {
     fn started(&self, group: u32);
@@ -18,14 +18,27 @@ pub trait GroupRegistry: Send + Sync {
 
 pub struct Runner;
 
+enum Ended {
+    Exited(Option<ExitStatus>),
+    TimedOut,
+    Stopped(Option<ExitStatus>),
+}
+
 impl Runner {
     pub const DRAIN_GRACE: Duration = Duration::from_secs(1);
     const CHUNK: usize = 8192;
     const BUSY_ATTEMPTS: u32 = 20;
     const BUSY_PAUSE: Duration = Duration::from_millis(50);
 
-    pub async fn run(invocation: &Invocation, groups: Arc<dyn GroupRegistry>) -> Finished {
+    pub async fn run(
+        invocation: &Invocation,
+        groups: Arc<dyn GroupRegistry>,
+        control: RunControl,
+    ) -> Finished {
         let began = Instant::now();
+        if control.stop_requested() {
+            return Self::finished(Outcome::Stopped, (None, None), began, control.output());
+        }
         let mut command = Command::new(&invocation.program);
         command
             .args(&invocation.arguments)
@@ -50,25 +63,34 @@ impl Runner {
         };
         let group = child.id().unwrap_or_default();
         groups.started(group);
-        let stdout = child.stdout.take().map(Self::drain);
-        let stderr = child.stderr.take().map(Self::drain);
+        let stdout = child
+            .stdout
+            .take()
+            .map(|stream| Self::drain(stream, control.stdout.clone()));
+        let stderr = child
+            .stderr
+            .take()
+            .map(|stream| Self::drain(stream, control.stderr.clone()));
         if let Some(mut input) = child.stdin.take() {
             let text = invocation.input.clone();
             tokio::spawn(async move {
                 let _ = input.write_all(text.as_bytes()).await;
             });
         }
-        let waited = tokio::time::timeout(invocation.timeout, child.wait()).await;
+        let ended = Self::wait(&mut child, group, invocation.timeout, control).await;
         kill_group(group);
-        let timed_out = waited.is_err();
-        let status = match waited {
-            Ok(status) => status.ok(),
-            Err(_) => Self::reap(&mut child).await,
+        let ended = match ended {
+            Ended::TimedOut => {
+                Self::reap(&mut child).await;
+                Ended::TimedOut
+            }
+            Ended::Stopped(None) => Ended::Stopped(Self::reap(&mut child).await),
+            other => other,
         };
         groups.reaped(group);
         let tails = (Self::collect(stdout).await, Self::collect(stderr).await);
-        let (outcome, detail) = match (timed_out, status) {
-            (true, _) => (
+        let (outcome, detail) = match ended {
+            Ended::TimedOut => (
                 Outcome::TimedOut,
                 (
                     None,
@@ -78,8 +100,12 @@ impl Runner {
                     )),
                 ),
             ),
-            (false, Some(status)) => Self::judged(status),
-            (false, None) => (
+            Ended::Stopped(status) => (
+                Outcome::Stopped,
+                (status.and_then(|status| status.code()), None),
+            ),
+            Ended::Exited(Some(status)) => Self::judged(status),
+            Ended::Exited(None) => (
                 Outcome::Failed,
                 (
                     None,
@@ -88,6 +114,21 @@ impl Runner {
             ),
         };
         Self::finished(outcome, detail, began, tails)
+    }
+
+    async fn wait(child: &mut Child, group: u32, timeout: Duration, control: RunControl) -> Ended {
+        let grace = control.grace;
+        tokio::select! {
+            status = child.wait() => Ended::Exited(status.ok()),
+            _ = tokio::time::sleep(timeout) => Ended::TimedOut,
+            _ = control.stopped() => {
+                terminate_group(group);
+                match tokio::time::timeout(grace, child.wait()).await {
+                    Ok(status) => Ended::Stopped(status.ok()),
+                    Err(_) => Ended::Stopped(None),
+                }
+            }
+        }
     }
 
     async fn spawn(command: &mut Command) -> io::Result<Child> {
@@ -125,8 +166,8 @@ impl Runner {
 
     fn drain(
         mut stream: impl AsyncRead + Unpin + Send + 'static,
+        tail: Arc<Mutex<Tail>>,
     ) -> (Arc<Mutex<Tail>>, JoinHandle<()>) {
-        let tail = Arc::new(Mutex::new(Tail::default()));
         let shared = tail.clone();
         let reader = tokio::spawn(async move {
             let mut buffer = vec![0u8; Self::CHUNK];

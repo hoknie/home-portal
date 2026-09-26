@@ -55,6 +55,8 @@ export const api = {
     const text = query.toString();
     return text === "" ? "/api/automations/runs" : `/api/automations/runs?${text}`;
   },
+  automationRunItem: (id: string) => `/api/automations/runs/${encodeURIComponent(id)}`,
+  automationRunStop: (id: string) => `/api/automations/runs/${encodeURIComponent(id)}/stop`,
   automationCatalogue: "/api/automations/catalogue",
   automationScripts: "/api/automations/scripts",
   automationSchedule: (cron: string) => `/api/automations/schedule?cron=${encodeURIComponent(cron)}`,

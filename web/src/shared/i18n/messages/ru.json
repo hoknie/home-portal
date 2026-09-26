@@ -664,7 +664,7 @@
     "runFields": "Поля события",
     "runOutput": "Вывод",
     "runErrors": "Ошибки",
-    "truncated": "Показаны последние 4 КиБ из {bytes} байт",
+    "truncated": "Последние 64 КиБ из {bytes} байт",
     "noOutput": "пусто",
     "manual": "вручную",
     "runNow": "Запустить сейчас",
@@ -686,7 +686,10 @@
       "timed_out": "Превышено время",
       "skipped": "Пропущен",
       "refused": "Отклонён",
-      "unknown": "Неизвестно"
+      "unknown": "Неизвестно",
+      "queued": "В очереди",
+      "running": "Выполняется",
+      "stopped": "Остановлен"
     },
     "reasons": {
       "running": "предыдущий запуск ещё идёт",
@@ -694,14 +697,25 @@
       "cooldown": "пауза между запусками",
       "rate_limit": "больше 60 запусков за час",
       "dropped": "очередь переполнена",
-      "removed": "автоматизацию удалили или выключили"
+      "removed": "автоматизацию удалили или выключили",
+      "stopping": "Останавливается…",
+      "stoppedBy": "Остановил {name}",
+      "stopped": "Остановлен"
     },
     "allRuns": "Все запуски",
     "textFilter": "Искать в значениях",
     "textFilterPlaceholder": "например, main",
     "live": "Автообновление",
     "refresh": "Обновить сейчас",
-    "updatedAt": "Обновлено в {time}"
+    "updatedAt": "Обновлено в {time}",
+    "stop": "Остановить",
+    "stopTitle": "Остановить запуск {id} «{automation}»?",
+    "stopDescription": "Скрипт и всё, что он запустил, получат SIGTERM, а через 5 секунд — SIGKILL, если ещё работают. Запуск из очереди просто убирается из неё.",
+    "stopRequested": "Запуск {id} останавливается",
+    "stopFinished": "Запуск уже завершился",
+    "stopFailed": "Не удалось остановить запуск",
+    "openQueuedRun": "Открыть",
+    "runningFor": "уже {seconds, number} с"
   },
   "automationBuilder": {
     "addTitle": "Новая автоматизация",

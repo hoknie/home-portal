@@ -30,6 +30,12 @@ impl RunFile {
         let Ok(file) = fs::File::open(&self.path) else {
             return (Vec::new(), 0);
         };
+        if let Ok(metadata) = file.metadata() {
+            *self
+                .compacted
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner) = metadata.len();
+        }
         let mut reader = BufReader::new(file);
         let mut order: Vec<u64> = Vec::new();
         let mut latest: HashMap<u64, StoredRun> = HashMap::new();

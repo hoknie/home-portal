@@ -40,6 +40,12 @@ impl RunQueue {
             .pop_front()
     }
 
+    pub fn remove(&self, run_id: u64) -> Option<Pending> {
+        let mut pending = self.pending.lock().unwrap_or_else(PoisonError::into_inner);
+        let position = pending.iter().position(|run| run.run_id == run_id)?;
+        pending.remove(position)
+    }
+
     pub async fn next(&self) -> Pending {
         loop {
             if let Some(run) = self.take() {

@@ -19,7 +19,8 @@ pub use configuration::{
 };
 pub use journal::{Outcome, RunFilter, RunRecord, Seen, SkipReason};
 pub use running::{
-    Admission, Finished, Invocation, Pending, Refusal, RefusalCode, ScriptEntry, Tail,
+    ActiveRun, Admission, Finished, Invocation, Pending, Refusal, RefusalCode, RunControl,
+    ScriptEntry, StopAnswer, Tail,
 };
 pub use schedule::Schedule;
 pub use stored::StoredRun;

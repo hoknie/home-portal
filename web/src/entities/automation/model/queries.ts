@@ -9,16 +9,20 @@ import {
   deleteAutomation,
   fetchAutomations,
   fetchCatalogue,
+  fetchRun,
   fetchRuns,
   fetchSchedule,
   fetchScripts,
   runAutomation,
+  stopRun,
   updateAutomation,
 } from "../api/automations";
+import { type Run, isActive } from "./schema";
 
 export const automationsKey = ["automations"] as const;
 export const runsKey = (filter: RunsFilter = {}) =>
   ["automation-runs", filter.automation ?? null, filter.webhook ?? null, filter.text ?? null] as const;
+export const runKey = (id: string | null) => ["automation-run", id] as const;
 export const catalogueKey = ["automation-catalogue"] as const;
 export const scriptsKey = ["automation-scripts"] as const;
 export const scheduleKey = (cron: string) => ["automation-schedule", cron] as const;
@@ -33,6 +37,18 @@ export function useAutomations() {
 }
 
 export const LIVE_RUNS_MILLISECONDS = 5_000;
+export const ACTIVE_RUNS_MILLISECONDS = 1_000;
+
+export function runsRefreshInterval(runs: Run[] | undefined, live: boolean) {
+  if (!live) {
+    return false;
+  }
+  return runs?.some(isActive) ? ACTIVE_RUNS_MILLISECONDS : LIVE_RUNS_MILLISECONDS;
+}
+
+export function runRefreshInterval(run: Run | undefined) {
+  return run === undefined || isActive(run) ? ACTIVE_RUNS_MILLISECONDS : false;
+}
 
 export function useRuns(filter: RunsFilter = {}, live = true, enabled = true) {
   return useQuery({
@@ -40,8 +56,17 @@ export function useRuns(filter: RunsFilter = {}, live = true, enabled = true) {
     queryFn: () => fetchRuns(filter),
     enabled,
     refetchOnWindowFocus: live,
-    refetchInterval: live ? LIVE_RUNS_MILLISECONDS : false,
+    refetchInterval: (query) => runsRefreshInterval(query.state.data?.runs, live),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useRun(id: string | null) {
+  return useQuery({
+    queryKey: runKey(id),
+    queryFn: () => fetchRun(id ?? ""),
+    enabled: id !== null,
+    refetchInterval: (query) => runRefreshInterval(query.state.data),
   });
 }
 
@@ -70,6 +95,7 @@ function useInvalidating<T, R>(run: (input: T) => Promise<R>) {
     onSettled: () => {
       void client.invalidateQueries({ queryKey: automationsKey });
       void client.invalidateQueries({ queryKey: ["automation-runs"] });
+      void client.invalidateQueries({ queryKey: ["automation-run"] });
     },
   });
 }
@@ -86,4 +112,8 @@ export function useDeleteAutomation() {
 
 export function useRunAutomation() {
   return useInvalidating((id: string) => runAutomation(id));
+}
+
+export function useStopRun() {
+  return useInvalidating((id: string) => stopRun(id));
 }

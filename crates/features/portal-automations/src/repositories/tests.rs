@@ -306,4 +306,37 @@ mod run_file {
         file.append(&records).unwrap();
         assert!(file.needs_compacting());
     }
+
+    fn large_records(count: u64) -> Vec<RunRecord> {
+        let output = vec![b'x'; 60 * 1024];
+        (1..=count)
+            .map(|id| {
+                let mut run =
+                    RunRecord::skipped(&pending("a", id, None), SkipReason::Running, at(id as i64));
+                run.result.stdout.push(&output);
+                run
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_large_journal_read_at_start_is_not_rewritten_on_the_next_append() {
+        let (folder, file) = file();
+        let records = large_records(50);
+        file.append(&records).unwrap();
+        let reopened = RunFile::at(&folder.path().join("automations"));
+        reopened.load(Journal::KEPT);
+        reopened.append(&large_records(1)).unwrap();
+        assert!(!reopened.needs_compacting());
+    }
+
+    #[test]
+    fn a_small_journal_still_compacts_past_one_mebibyte() {
+        let (_folder, file) = file();
+        file.load(Journal::KEPT);
+        file.append(&large_records(10)).unwrap();
+        assert!(!file.needs_compacting());
+        file.append(&large_records(10)).unwrap();
+        assert!(file.needs_compacting());
+    }
 }

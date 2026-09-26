@@ -1,7 +1,7 @@
 import { request } from "@/shared/api";
 import { api } from "@/shared/config";
 
-import { automationSchema, automationsSchema, catalogueSchema, queuedSchema, runsSchema, scheduleSchema, scriptsSchema } from "../model/schema";
+import { automationSchema, automationsSchema, catalogueSchema, queuedSchema, runSchema, runsSchema, scheduleSchema, scriptsSchema } from "../model/schema";
 
 export type AutomationRequest = {
   id: string;
@@ -37,6 +37,14 @@ export type RunsFilter = { automation?: string | null; webhook?: string | null; 
 
 export async function fetchRuns(filter: RunsFilter) {
   return (await request(api.automationRuns(filter), { schema: runsSchema })).data;
+}
+
+export async function fetchRun(id: string) {
+  return (await request(api.automationRunItem(id), { schema: runSchema })).data;
+}
+
+export async function stopRun(id: string) {
+  return (await request(api.automationRunStop(id), { method: "POST", body: {}, schema: runSchema })).data;
 }
 
 export async function fetchCatalogue() {

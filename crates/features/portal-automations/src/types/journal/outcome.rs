@@ -3,15 +3,17 @@ pub enum Outcome {
     Succeeded,
     Failed,
     TimedOut,
+    Stopped,
     Skipped,
     Refused,
 }
 
 impl Outcome {
-    pub const ALL: [Outcome; 5] = [
+    pub const ALL: [Outcome; 6] = [
         Outcome::Succeeded,
         Outcome::Failed,
         Outcome::TimedOut,
+        Outcome::Stopped,
         Outcome::Skipped,
         Outcome::Refused,
     ];
@@ -25,6 +27,7 @@ impl Outcome {
             Outcome::Succeeded => "succeeded",
             Outcome::Failed => "failed",
             Outcome::TimedOut => "timed-out",
+            Outcome::Stopped => "stopped",
             Outcome::Skipped => "skipped",
             Outcome::Refused => "refused",
         }

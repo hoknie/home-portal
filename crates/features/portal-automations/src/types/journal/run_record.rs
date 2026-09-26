@@ -14,6 +14,8 @@ pub struct RunRecord {
 }
 
 impl RunRecord {
+    pub const STOPPED: &'static str = "stopped";
+
     pub fn finished(
         pending: &Pending,
         arguments: Vec<String>,
@@ -44,6 +46,30 @@ impl RunRecord {
                 stderr: Tail::default(),
             },
         )
+    }
+
+    pub fn stopped(pending: &Pending, by: &str, at: OffsetDateTime) -> RunRecord {
+        Self::finished(
+            pending,
+            Vec::new(),
+            at,
+            Finished {
+                outcome: Outcome::Stopped,
+                exit_code: None,
+                reason: Some(Self::stopped_reason(by)),
+                duration: std::time::Duration::ZERO,
+                stdout: Tail::default(),
+                stderr: Tail::default(),
+            },
+        )
+    }
+
+    pub fn stopped_reason(by: &str) -> String {
+        if by.is_empty() {
+            Self::STOPPED.to_string()
+        } else {
+            format!("{} by {by}", Self::STOPPED)
+        }
     }
 
     pub fn event(&self) -> &str {
