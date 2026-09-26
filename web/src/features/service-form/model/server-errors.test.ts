@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { formPathOf } from "./server-errors";
+import { byField, formPathOf } from "./server-errors";
 
 it("a list the form edits keeps its index, a list it does not is named as a whole", () => {
   expect(formPathOf("links[1].url")).toBe("links.1.url");
@@ -16,3 +16,15 @@ it("puts the publication's errors on the publication fields", () => {
   expect(formPathOf("proxy.tls.email")).toBe("publication.email");
 });
 
+
+it("keeps an error the form has no field for, so that it can still be shown", () => {
+  const { placed, unplaced } = byField(
+    [
+      { field: "proxy.auth", message: "must be under proxy.cookie_domain" },
+      { field: "services[2].proxy.auth", message: "must be under proxy.cookie_domain" },
+    ],
+    ["name", "publication"],
+  );
+  expect(placed).toEqual([{ path: "publication.auth", message: "must be under proxy.cookie_domain" }]);
+  expect(unplaced).toEqual([{ field: "services[2].proxy.auth", message: "must be under proxy.cookie_domain" }]);
+});

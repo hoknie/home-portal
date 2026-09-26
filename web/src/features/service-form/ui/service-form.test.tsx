@@ -298,6 +298,19 @@ it("a host already taken is reported next to the host field", async () => {
   expect(await screen.findByText("is published by another service")).toBeInTheDocument();
 });
 
+it("an error about another part of the configuration is shown above the form", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      jsonResponse({ errors: [{ field: "services[2].proxy.auth", message: "must be under proxy.cookie_domain" }] }, { status: 422 }),
+    ),
+  );
+  open();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  const notice = await screen.findByText("The service was not saved: the configuration has other problems");
+  expect(notice.closest("[role=alert]")).toHaveTextContent("services[2].proxy.auth: must be under proxy.cookie_domain");
+});
+
 it("a disabled proxy is explained without hiding the publication", () => {
   open(vi.fn(), nas, vi.fn(), seeded(false));
   expect(screen.getByRole("note")).toHaveTextContent("The proxy is off");

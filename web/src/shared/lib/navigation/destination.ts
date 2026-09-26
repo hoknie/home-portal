@@ -28,6 +28,35 @@ export function destinationOf(next: string | null, returning: string | null): De
   return { href: safeNext(next), leavesTheInterface: false };
 }
 
+export const LEFT_KEY = "portal_left_to";
+export const RETURN_WINDOW_MILLISECONDS = 30_000;
+
+export function hostOf(value: string | null) {
+  try {
+    return value ? new URL(value).host : "";
+  } catch {
+    return "";
+  }
+}
+
+export function cameBackFrom(href: string, now = Date.now()) {
+  try {
+    const left = JSON.parse(window.sessionStorage.getItem(LEFT_KEY) ?? "null") as { href?: string; at?: number } | null;
+    return left?.href === href && typeof left.at === "number" && now - left.at < RETURN_WINDOW_MILLISECONDS;
+  } catch {
+    return false;
+  }
+}
+
+function rememberLeaving(href: string) {
+  try {
+    window.sessionStorage.setItem(LEFT_KEY, JSON.stringify({ href, at: Date.now() }));
+  } catch {
+    return;
+  }
+}
+
 export function leaveTo(href: string) {
+  rememberLeaving(href);
   window.location.assign(href);
 }

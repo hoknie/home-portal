@@ -13,7 +13,7 @@ use crate::helpers::{clear_cookie, session_cookie, session_token, verify_passwor
 use crate::requests::SignInRequest;
 use crate::responses::SessionResponse;
 use crate::services::SessionGate;
-use crate::types::{AuthState, UsersSection};
+use crate::types::{AuthState, CookieScope, UsersSection};
 
 pub async fn sign_in(
     State(state): State<AuthState>,
@@ -75,12 +75,24 @@ pub async fn sign_in(
 
 pub async fn who_am_i(
     State(state): State<AuthState>,
+    connect: Option<Extension<ConnectInfo<SocketAddr>>>,
     headers: HeaderMap,
-) -> Result<Json<SessionResponse>, ApiError> {
+) -> Result<Response, ApiError> {
     let principal = gate_of(&state).admit(&headers)?;
-    Ok(Json(SessionResponse {
+    let peer = connect.map(|Extension(ConnectInfo(address))| address);
+    let mut response = Json(SessionResponse {
         name: principal.name,
-    }))
+    })
+    .into_response();
+    let scope = state.connection.cookie_scope(peer, &headers);
+    if scope.domain.is_some()
+        && let Some(token) = session_token(&headers)
+    {
+        response
+            .headers_mut()
+            .insert(SET_COOKIE, session_cookie(&token, &scope));
+    }
+    Ok(response)
 }
 
 pub async fn sign_out(
@@ -108,10 +120,19 @@ pub async fn sign_out(
         );
     }
     let mut response = StatusCode::NO_CONTENT.into_response();
-    response.headers_mut().insert(
-        SET_COOKIE,
-        clear_cookie(&state.connection.cookie_scope(peer, &headers)),
-    );
+    let scope = state.connection.cookie_scope(peer, &headers);
+    response
+        .headers_mut()
+        .append(SET_COOKIE, clear_cookie(&scope));
+    if scope.domain.is_some() {
+        response.headers_mut().append(
+            SET_COOKIE,
+            clear_cookie(&CookieScope {
+                domain: None,
+                ..scope
+            }),
+        );
+    }
     response
 }
 

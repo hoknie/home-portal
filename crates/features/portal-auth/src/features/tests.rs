@@ -34,6 +34,21 @@ impl Connection for Direct {
     }
 }
 
+struct Proxied;
+
+impl Connection for Proxied {
+    fn client_address(&self, _peer: Option<SocketAddr>, _headers: &HeaderMap) -> IpAddr {
+        IpAddr::V4(Ipv4Addr::LOCALHOST)
+    }
+
+    fn cookie_scope(&self, _peer: Option<SocketAddr>, _headers: &HeaderMap) -> CookieScope {
+        CookieScope {
+            secure: true,
+            domain: Some("home.example".into()),
+        }
+    }
+}
+
 #[derive(Default)]
 struct Recorder {
     events: Mutex<Vec<PortalEvent>>,
@@ -74,6 +89,10 @@ async fn require(gate: Arc<dyn Gate>, request: Request<Body>, next: Next) -> Res
 }
 
 fn portal() -> Portal {
+    portal_behind(Arc::new(Direct))
+}
+
+fn portal_behind(connection: Arc<dyn Connection>) -> Portal {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     let hash = hash_password("secret").unwrap();
@@ -84,7 +103,7 @@ fn portal() -> Portal {
     .unwrap();
     let store = Arc::new(ConfigStore::open(&path).unwrap());
     let events = Arc::new(Recorder::default());
-    let feature = AuthFeature::new(store, Arc::new(Direct), events.clone());
+    let feature = AuthFeature::new(store, connection, events.clone());
     let gate = feature.gate();
     let protected = feature
         .router()
@@ -121,6 +140,23 @@ fn with_cookie(method: &str, cookie: &str) -> Request<Body> {
         .unwrap()
 }
 
+async fn signed_in_cookie(portal: &Portal) -> String {
+    let signed_in = portal
+        .router
+        .clone()
+        .oneshot(sign_in_request("admin", "secret"))
+        .await
+        .unwrap();
+    assert_eq!(signed_in.status(), StatusCode::OK);
+    signed_in.headers()[SET_COOKIE]
+        .to_str()
+        .unwrap()
+        .split(';')
+        .next()
+        .unwrap()
+        .to_string()
+}
+
 async fn body_of(response: Response) -> String {
     String::from_utf8(
         response
@@ -137,20 +173,7 @@ async fn body_of(response: Response) -> String {
 #[tokio::test]
 async fn sign_in_who_am_i_sign_out_and_then_the_session_is_gone() {
     let portal = portal();
-    let signed_in = portal
-        .router
-        .clone()
-        .oneshot(sign_in_request("admin", "secret"))
-        .await
-        .unwrap();
-    assert_eq!(signed_in.status(), StatusCode::OK);
-    let cookie = signed_in.headers()[SET_COOKIE]
-        .to_str()
-        .unwrap()
-        .split(';')
-        .next()
-        .unwrap()
-        .to_string();
+    let cookie = signed_in_cookie(&portal).await;
 
     let who = portal
         .router
@@ -182,6 +205,48 @@ async fn sign_in_who_am_i_sign_out_and_then_the_session_is_gone() {
         .await
         .unwrap();
     assert_eq!(after.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn a_session_seen_through_the_proxy_is_reissued_for_the_cookie_domain() {
+    let portal = portal_behind(Arc::new(Proxied));
+    let cookie = signed_in_cookie(&portal).await;
+    let who = portal
+        .router
+        .clone()
+        .oneshot(with_cookie("GET", &cookie))
+        .await
+        .unwrap();
+    let reissued = who.headers()[SET_COOKIE].to_str().unwrap();
+    assert!(reissued.starts_with(&format!("{cookie};")));
+    assert!(reissued.contains("Domain=home.example"));
+    let out = portal
+        .router
+        .oneshot(with_cookie("DELETE", &cookie))
+        .await
+        .unwrap();
+    let cleared: Vec<&str> = out
+        .headers()
+        .get_all(SET_COOKIE)
+        .iter()
+        .map(|value| value.to_str().unwrap())
+        .collect();
+    assert_eq!(cleared.len(), 2);
+    assert!(cleared.iter().all(|value| value.contains("Max-Age=0")));
+    assert!(cleared[0].contains("Domain=home.example"));
+    assert!(!cleared[1].contains("Domain="));
+}
+
+#[tokio::test]
+async fn a_session_seen_directly_is_not_reissued() {
+    let portal = portal();
+    let cookie = signed_in_cookie(&portal).await;
+    let who = portal
+        .router
+        .oneshot(with_cookie("GET", &cookie))
+        .await
+        .unwrap();
+    assert!(who.headers().get(SET_COOKIE).is_none());
 }
 
 #[tokio::test]
@@ -253,19 +318,7 @@ async fn signing_out_requires_a_session() {
 #[tokio::test]
 async fn a_sign_in_and_a_sign_out_are_announced_from_the_detected_environment() {
     let portal = portal();
-    let signed_in = portal
-        .router
-        .clone()
-        .oneshot(sign_in_request("admin", "secret"))
-        .await
-        .unwrap();
-    let cookie = signed_in.headers()[SET_COOKIE]
-        .to_str()
-        .unwrap()
-        .split(';')
-        .next()
-        .unwrap()
-        .to_string();
+    let cookie = signed_in_cookie(&portal).await;
     portal
         .router
         .clone()

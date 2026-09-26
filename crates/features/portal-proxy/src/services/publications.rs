@@ -44,6 +44,17 @@ pub fn validate_publications(document: &DocumentMut) -> Vec<FieldError> {
     errors
 }
 
+pub fn publication_problems(document: &DocumentMut, publication: &Publication) -> Vec<FieldError> {
+    let settings = read_settings(document).unwrap_or_default();
+    if !settings.enabled {
+        return Vec::new();
+    }
+    against_settings(publication, &settings)
+        .map(|(name, message)| FieldError::new(format!("proxy.{name}"), message))
+        .into_iter()
+        .collect()
+}
+
 fn against_settings(
     publication: &Publication,
     settings: &ProxySettings,

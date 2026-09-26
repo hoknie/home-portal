@@ -58,7 +58,13 @@
     "submitting": "Entrando…",
     "invalid": "Nombre de usuario o contraseña incorrectos",
     "throttled": "Demasiados intentos. Vuelve a intentarlo en {seconds} s.",
-    "failed": "No se pudo iniciar sesión. Comprueba que el portal esté accesible."
+    "failed": "No se pudo iniciar sesión. Comprueba que el portal esté accesible.",
+    "loop": {
+      "title": "El inicio de sesión no llega a {host}",
+      "description": "Ha iniciado sesión en el portal, pero el navegador no envía la sesión a este servicio, que vuelve a pedir el inicio de sesión. Compruebe en los ajustes del proxy que el dominio de la cookie está definido y que el host del servicio está bajo él (por ejemplo, portal.home y torrent.portal.home bajo portal.home).",
+      "retry": "Intentar de nuevo",
+      "home": "A la página de inicio"
+    }
   },
   "status": {
     "unknown": "Desconocido",
@@ -140,6 +146,7 @@
     "openService": "Abrir {name}"
   },
   "serviceForm": {
+    "notSaved": "El servicio no se guardó: la configuración tiene otros problemas",
     "addTitle": "Nuevo servicio",
     "editTitle": "Editar servicio",
     "description": "Los cambios se escriben en el archivo de configuración.",
