@@ -5,6 +5,7 @@ mod automations;
 mod catalogue;
 mod dns;
 mod history;
+mod modules;
 mod proxy;
 mod public;
 mod widgets;

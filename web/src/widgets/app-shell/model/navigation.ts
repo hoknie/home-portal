@@ -1,15 +1,25 @@
-import { LayoutDashboard, Network, Server, Waypoints, Webhook, Workflow } from "lucide-react";
+import { Blocks, Globe, LayoutDashboard, type LucideIcon, Network, Server, Waypoints, Webhook, Workflow } from "lucide-react";
 
+import type { ModuleName } from "@/entities/module";
 import { routes } from "@/shared/config";
 
-export const NAVIGATION = [
+export const MANAGEMENT = [
   { href: routes.adminServices, label: "services", icon: Server },
   { href: routes.adminLayout, label: "layout", icon: LayoutDashboard },
   { href: routes.adminNetwork, label: "network", icon: Network },
-  { href: routes.adminProxy, label: "proxy", icon: Waypoints },
-  { href: routes.adminAutomations, label: "automations", icon: Workflow },
-  { href: routes.adminWebhooks, label: "webhooks", icon: Webhook },
+  { href: routes.adminModules, label: "modules", icon: Blocks },
 ] as const;
+
+export const MODULE_LINKS = [
+  { module: "proxy", href: routes.adminProxy, label: "proxy", icon: Waypoints },
+  { module: "dns", href: routes.adminDns, label: "dns", icon: Globe },
+  { module: "automations", href: routes.adminAutomations, label: "automations", icon: Workflow },
+  { module: "webhooks", href: routes.adminWebhooks, label: "webhooks", icon: Webhook },
+] as const satisfies ReadonlyArray<{ module: ModuleName; href: string; label: string; icon: LucideIcon }>;
+
+export function moduleLinks(enabled: ReadonlySet<ModuleName>) {
+  return MODULE_LINKS.filter((link) => enabled.has(link.module));
+}
 
 export function isActive(pathname: string, href: string) {
   const normalized = pathname.endsWith("/") ? pathname : `${pathname}/`;

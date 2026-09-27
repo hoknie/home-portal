@@ -1,6 +1,7 @@
 "use client";
 
-import { Download, ExternalLink, Info } from "lucide-react";
+import { Blocks, Download, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { CaddyControl } from "@/features/caddy-control";
@@ -11,13 +12,13 @@ import { api, routes } from "@/shared/config";
 import { DataTable } from "@/shared/ui/data-table";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { KvList, KvRow } from "@/shared/ui/kv-list";
+import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Skeleton } from "@/shared/ui/primitives";
+import { Button, Skeleton } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
 import { StatusDot } from "@/shared/ui/status-badge";
 
-import { DnsCard } from "./dns-card";
 
 function stateOf(proxy: Proxy) {
   if (!proxy.reachable) {
@@ -113,16 +114,22 @@ export function ProxyScreen() {
   const data = proxy.data?.data;
   return (
     <div className="grid gap-8">
-      <PageHeader title={t("proxy.title")} description={t("proxy.subtitle")} />
+      <PageHeader
+        title={t("proxy.title")}
+        description={t("proxy.subtitle")}
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <Link href={routes.adminModules}>
+              <Blocks aria-hidden />
+              {t("nav.modules")}
+            </Link>
+          </Button>
+        }
+      />
       {proxy.error && !data ? (
         <ErrorNotice title={t("errors.loadFailed")} description={proxy.error.message} onRetry={() => void proxy.refetch()} />
       ) : null}
-      {data && !data.enabled ? (
-        <p role="note" className="flex items-start gap-3 rounded-xl border p-4 text-sm text-muted-foreground">
-          <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-          {t("proxy.disabled")}
-        </p>
-      ) : null}
+      {data && !data.enabled ? <ModuleOffNotice name={t("modules.names.proxy")} /> : null}
       {data?.enabled ? (
         <div className="grid gap-6">
           <ProxyState proxy={data} />
@@ -137,7 +144,6 @@ export function ProxyScreen() {
           <ProxySettingsForm proxy={data} revision={proxy.data?.revision ?? null} />
         </SectionCard>
       ) : null}
-      {data ? <DnsCard /> : null}
       {!data && !proxy.error ? <Skeleton className="h-96 w-full" aria-busy="true" /> : null}
     </div>
   );

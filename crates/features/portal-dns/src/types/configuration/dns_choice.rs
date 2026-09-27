@@ -4,7 +4,6 @@ use super::{DnsHttpsChoice, DnsTlsChoice};
 
 #[derive(Debug, Clone, Default)]
 pub struct DnsChoice {
-    pub enabled: bool,
     pub address: String,
     pub port: u16,
     pub zones: Vec<String>,

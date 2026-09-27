@@ -7,7 +7,7 @@ validator of the portal, so an example that stops working fails the build.
 
 | Path | What it shows |
 |---|---|
-| `split/` | A complete setup in five files: the main file with the network, environments, the `[proxy]` section, Telegram and `include`; `services.toml`, with services published in every TLS mode and one behind the portal's sign-in; `widgets.toml` with a sectioned layout using every widget type and every size; `automations.toml` with a nightly schedule, a restart when a service goes down, an audit of sign-ins from outside and a script on start-up; `secrets.example.toml` |
+| `split/` | A complete setup in five files: the main file with the network, environments, `[modules]`, the `[proxy]` section, Telegram and `include`; `services.toml`, with services published in every TLS mode and one behind the portal's sign-in; `widgets.toml` with a sectioned layout using every widget type and every size; `automations.toml` with a nightly schedule, a restart when a service goes down, an audit of sign-ins from outside and a script on start-up; `secrets.example.toml` |
 | `split/scripts/echo-event.sh` | A POSIX `sh` script that prints the arguments and the `PORTAL_*` variables it received and the event from standard input — a starting point for your own |
 | `services/media.toml` | Jellyfin, Plex, qBittorrent, Transmission, Immich |
 | `services/home.toml` | Home Assistant, Nextcloud, Grafana |
@@ -44,13 +44,14 @@ validator of the portal, so an example that stops working fails the build.
 The portal can publish services under their own names through [Caddy](https://caddyserver.com)
 (2.8 or later). Caddy carries the traffic; the portal writes its whole configuration.
 
-1. Under **Management → Proxy** press **Download the latest version**, then **Start**: the portal downloads
+1. Under **Management → Modules** press **Configure** on the proxy card, then **Download the latest version**, then **Start**: the portal downloads
    the latest release, checks its SHA-512, keeps it in `caddy/` beside the configuration (or where `[storage]` says) and keeps
    it running (`proxy.managed = true`), across restarts of the portal too. Or start Caddy yourself
    from `deploy/caddy.plist` or `deploy/caddy.service`; it needs no Caddyfile.
-2. Add the `[proxy]` section from `split/home-portal.toml`: `enabled = true`, `portal_host`,
-   and `cookie_domain` when services sit behind the portal's sign-in. Add `127.0.0.1` to
-   `network.trusted_proxies`, and let the portal listen on `127.0.0.1` only.
+2. Add the `[proxy]` section from `split/home-portal.toml`: `portal_host`, and `cookie_domain`
+   when services sit behind the portal's sign-in. Then switch the proxy on under
+   **Management → Modules**, which also adds `127.0.0.1` to `network.trusted_proxies`, or by
+   hand with `[modules] proxy = true` and that address. Let the portal listen on `127.0.0.1` only.
 3. Give a service a `proxy` table, by hand or under **Publication** in the service form:
    - `host`: the name it is published under;
    - `environments`: where that name is shown (default `["internet"]`);

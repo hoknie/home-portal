@@ -3,8 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { automationsSchema } from "@/entities/automation";
+import { modulesKey, modulesSchema } from "@/entities/module";
 import { apiSamples } from "@/shared/api";
-import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
+import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { RunAutomationButton } from "./run-automation-button";
 
@@ -12,6 +13,15 @@ const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast }));
 
 const [restart, backup] = automationsSchema.parse(apiSamples.automations).automations;
+
+function seeded(automationsOn = true) {
+  const client = testQueryClient();
+  const modules = modulesSchema.parse(structuredClone(apiSamples.modules));
+  modules.modules[2].enabled = automationsOn;
+  client.setQueryDefaults(modulesKey, { staleTime: Infinity });
+  client.setQueryData(modulesKey, { data: modules, revision: '"m"' });
+  return client;
+}
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -22,7 +32,7 @@ afterEach(() => {
 it("warns that the script really runs and queues it only after confirmation", async () => {
   const fetch = vi.fn(async () => jsonResponse(apiSamples.automationQueued, { status: 202 }));
   vi.stubGlobal("fetch", fetch);
-  renderWithProviders(<RunAutomationButton automation={restart} labelled />);
+  renderWithProviders(<RunAutomationButton automation={restart} labelled />, seeded());
   await userEvent.click(screen.getByRole("button", { name: "Run now" }));
   expect(screen.getByText(/really runs on the portal's host/)).toBeInTheDocument();
   expect(fetch).not.toHaveBeenCalled();
@@ -34,7 +44,7 @@ it("warns that the script really runs and queues it only after confirmation", as
 it("the toast opens the queued run", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(apiSamples.automationQueued, { status: 202 })));
   const onQueued = vi.fn();
-  renderWithProviders(<RunAutomationButton automation={restart} labelled onQueued={onQueued} />);
+  renderWithProviders(<RunAutomationButton automation={restart} labelled onQueued={onQueued} />, seeded());
   await userEvent.click(screen.getByRole("button", { name: "Run now" }));
   await userEvent.click(screen.getAllByRole("button", { name: "Run now" }).at(-1)!);
   await waitFor(() => expect(toast.success).toHaveBeenCalled());
@@ -47,13 +57,20 @@ it("the toast opens the queued run", async () => {
 
 it("a second run too soon says how long to wait", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response("too soon", { status: 429, headers: { "Retry-After": "4" } })));
-  renderWithProviders(<RunAutomationButton automation={restart} labelled />);
+  renderWithProviders(<RunAutomationButton automation={restart} labelled />, seeded());
   await userEvent.click(screen.getByRole("button", { name: "Run now" }));
   await userEvent.click(screen.getAllByRole("button", { name: "Run now" }).at(-1)!);
   await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Wait 4 s before the next run"));
 });
 
 it("a disabled automation cannot be started", () => {
-  renderWithProviders(<RunAutomationButton automation={backup} />);
+  renderWithProviders(<RunAutomationButton automation={backup} />, seeded());
   expect(screen.getByRole("button", { name: "Run now" })).toBeDisabled();
+});
+
+it("nothing can be run while the automations module is off", () => {
+  renderWithProviders(<RunAutomationButton automation={restart} labelled />, seeded(false));
+  const button = screen.getByRole("button", { name: "Run now" });
+  expect(button).toBeDisabled();
+  expect(button).toHaveAttribute("title", "The module is off");
 });

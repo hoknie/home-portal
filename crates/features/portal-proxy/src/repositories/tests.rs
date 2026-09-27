@@ -24,9 +24,8 @@ fn a_file_without_the_section_gains_it() {
     );
 }
 
-fn choice(enabled: bool) -> crate::types::ProxyChoice {
+fn choice() -> crate::types::ProxyChoice {
     crate::types::ProxyChoice {
-        enabled,
         http_port: None,
         https_port: None,
         portal_host: Some("portal.example.com".into()),
@@ -39,25 +38,46 @@ fn choice(enabled: bool) -> crate::types::ProxyChoice {
 }
 
 #[test]
-fn enabling_writes_the_section_and_keeps_every_comment() {
+fn writing_the_settings_leaves_a_legacy_switch_as_it_was_and_keeps_every_comment() {
     let mut document: DocumentMut =
         "# mine\n[proxy]\nenabled = false # off for now\ncookie_domain = \"old.example.com\"\n"
             .parse()
             .unwrap();
-    super::write_choice(&mut document, &choice(true));
+    super::write_choice(&mut document, &choice());
     assert_eq!(
         document.to_string(),
-        "# mine\n[proxy]\nenabled = true # off for now\nportal_host = \"portal.example.com\"\ntls = { mode = \"acme\", email = \"owner@example.com\" }\n"
+        "# mine\n[proxy]\nenabled = false # off for now\nportal_host = \"portal.example.com\"\ntls = { mode = \"acme\", email = \"owner@example.com\" }\n"
     );
 }
 
 #[test]
 fn a_tls_table_is_edited_in_place() {
     let mut document: DocumentMut = "[proxy]\nenabled = true\n\n# certificates\n[proxy.tls]\nmode = \"files\"\ncertificate = \"/a.pem\"\nkey = \"/a.key\"\n".parse().unwrap();
-    super::write_choice(&mut document, &choice(true));
+    super::write_choice(&mut document, &choice());
     assert_eq!(
         document.to_string(),
         "[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\n\n# certificates\n[proxy.tls]\nmode = \"acme\"\nemail = \"owner@example.com\"\n"
+    );
+}
+
+#[test]
+fn writing_the_settings_never_adds_a_switch() {
+    let mut document = DocumentMut::new();
+    super::write_choice(&mut document, &choice());
+    assert!(!document.to_string().contains("enabled"), "{document}");
+}
+
+#[test]
+fn preparing_the_proxy_trusts_loopback_and_touches_only_the_network_section() {
+    use portal_feature::{Module, ModulePreparer};
+    let preparer = crate::usecases::PrepareProxy;
+    assert_eq!(preparer.module(), Module::Proxy);
+    assert_eq!(preparer.touches(), &["network"]);
+    let mut document = DocumentMut::new();
+    preparer.prepare(&mut document);
+    assert_eq!(
+        document.to_string(),
+        "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n"
     );
 }
 
@@ -138,6 +158,6 @@ fn editing_the_settings_keeps_the_download_source() {
     let mut document: DocumentMut = format!("[proxy]\nenabled = false\n{mirror}")
         .parse()
         .unwrap();
-    super::write_choice(&mut document, &choice(true));
+    super::write_choice(&mut document, &choice());
     assert!(document.to_string().contains(mirror), "{document}");
 }

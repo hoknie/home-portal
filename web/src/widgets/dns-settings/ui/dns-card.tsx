@@ -75,7 +75,7 @@ export function DnsCard() {
     return dns.error ? <ErrorNotice title={common("errors.loadFailed")} description={dns.error.message} onRetry={() => void dns.refetch()} /> : null;
   }
   return (
-    <SectionCard title={t("title")} description={t("description")}>
+    <SectionCard>
       <div className="grid gap-6">
         <KvList>
           {TRANSPORTS.map((name) => (

@@ -17,7 +17,11 @@ pub async fn watch_forever(configuration: Arc<ConfigStore>, sink: Arc<Automation
         if snapshot.revision == seen {
             continue;
         }
+        let was_on = sink.cache.automations_on();
         sink.cache.refresh(&snapshot.document);
+        if was_on && !sink.cache.automations_on() {
+            sink.drain_as_removed();
+        }
         sink.emit(PortalEvent::of(
             EventName::ConfigurationChanged,
             OffsetDateTime::now_utc(),

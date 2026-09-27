@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { Controller, type Path, useForm, useWatch } from "react-hook-form";
+import { type Path, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import {
@@ -17,13 +17,12 @@ import {
 import { ConflictError, ValidationError } from "@/shared/api";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { FormField } from "@/shared/ui/form-field";
-import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
+import { Button, Input } from "@/shared/ui/primitives";
 
 const SELECT =
   "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 const FIELDS: Record<string, Path<ProxySettingsFormValues>> = {
-  "proxy.enabled": "enabled",
   "proxy.http_port": "http_port",
   "proxy.https_port": "https_port",
   "proxy.portal_host": "portal_host",
@@ -56,7 +55,7 @@ export function ProxySettingsForm({ proxy, revision }: ProxySettingsFormProps) {
     try {
       const saved = await save.mutateAsync({ form: values, revision });
       reset(proxySettingsFormOf(saved.data));
-      toast.success(t(values.enabled ? "proxy.settings.enabled" : "proxy.settings.disabled"));
+      toast.success(t("proxy.settings.saved"));
     } catch (error) {
       if (error instanceof ValidationError) {
         const elsewhere: string[] = [];
@@ -83,14 +82,6 @@ export function ProxySettingsForm({ proxy, revision }: ProxySettingsFormProps) {
     <form onSubmit={submit} className="grid gap-5" noValidate>
       {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
       {problems.length > 0 ? <ErrorNotice title={t("proxy.settings.refused")} description={problems.join("; ")} /> : null}
-      <div className="flex items-center justify-between gap-4">
-        <Label htmlFor="proxy-enabled">{t("proxy.settings.enabledLabel")}</Label>
-        <Controller
-          control={form.control}
-          name="enabled"
-          render={({ field }) => <Switch id="proxy-enabled" checked={field.value} onCheckedChange={field.onChange} />}
-        />
-      </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <FormField id="proxy-portal-host" label={t("proxy.settings.portalHost")} hint={t("proxy.settings.portalHostHint")} error={errors.portal_host?.message}>
           <Input id="proxy-portal-host" spellCheck={false} autoComplete="off" {...form.register("portal_host")} />

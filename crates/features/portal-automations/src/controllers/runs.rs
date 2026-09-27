@@ -11,6 +11,7 @@ use crate::responses::{QueuedResponse, RunResponse, RunsResponse};
 use crate::types::{Automation, AutomationsState, RunFilter, StopAnswer};
 
 pub const DISABLED: &str = "the automation is disabled";
+pub const MODULE_OFF: &str = "the automations module is off";
 pub const UNKNOWN_RUN: &str = "no such run";
 pub const ALREADY_FINISHED: &str = "the run has already finished";
 pub const MANUAL_EVERY: Duration = Duration::from_secs(5);
@@ -25,6 +26,9 @@ pub async fn run_now(
         .cache
         .find(&id)
         .ok_or(ApiError::NotFound(Automation::UNKNOWN))?;
+    if !state.sink.cache.automations_on() {
+        return Err(ApiError::Conflict(MODULE_OFF.to_string()));
+    }
     if !automation.enabled {
         return Err(ApiError::Conflict(DISABLED.to_string()));
     }

@@ -5,7 +5,6 @@ use super::RawCaddy;
 
 #[derive(Debug, Default, Clone, Deserialize)]
 pub struct RawProxy {
-    pub enabled: Option<bool>,
     pub managed: Option<bool>,
     pub http_port: Option<i64>,
     pub https_port: Option<i64>,

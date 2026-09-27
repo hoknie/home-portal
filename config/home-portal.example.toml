@@ -48,12 +48,21 @@ port = 8080
 # Reverse proxies whose X-Forwarded-For is believed. Addresses or CIDR ranges.
 trusted_proxies = []
 
+# The optional parts of the portal, switched on and off here or under Management → Modules.
+# DNS needs the proxy and webhooks need automations. Unset, automations and webhooks are
+# on, and the proxy and DNS are off. A part that is off keeps its settings below.
+# [modules]
+# proxy = true
+# dns = true
+# automations = true
+# webhooks = true
+
 # Publishing services under their own names through Caddy, which the portal manages.
 # examples/README.md ("Publishing through Caddy") and examples/split/ show a whole setup;
-# examples/deploy/ has launchd and systemd files for Caddy. With it enabled, add
+# examples/deploy/ has launchd and systemd files for Caddy. Switch it on with
+# [modules] proxy = true; switching it on from Management → Modules also adds
 # "127.0.0.1" to trusted_proxies above.
 # [proxy]
-# enabled = true
 # portal_host = "portal.home.example.com"
 # cookie_domain = "home.example.com"
 # tls = { mode = "acme", email = "owner@example.com" }
@@ -69,7 +78,6 @@ trusted_proxies = []
 # forwarding (dnsmasq: server=/home/192.168.1.60) at the portal. Port 53 needs
 # CAP_NET_BIND_SERVICE on Linux; macOS allows it.
 # [dns]
-# enabled = true
 # port = 53
 # zones = ["home"]
 # ttl = 60

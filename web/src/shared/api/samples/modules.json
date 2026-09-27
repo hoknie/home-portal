@@ -1,0 +1,34 @@
+{
+  "modules": [
+    {
+      "enabled": true,
+      "name": "proxy",
+      "required_by": [
+        "dns"
+      ],
+      "requires": []
+    },
+    {
+      "enabled": true,
+      "name": "dns",
+      "required_by": [],
+      "requires": [
+        "proxy"
+      ]
+    },
+    {
+      "enabled": true,
+      "name": "automations",
+      "required_by": [],
+      "requires": []
+    },
+    {
+      "enabled": false,
+      "name": "webhooks",
+      "required_by": [],
+      "requires": [
+        "automations"
+      ]
+    }
+  ]
+}

@@ -5,7 +5,6 @@ use crate::types::ProxyChoice;
 
 #[derive(Debug, Deserialize)]
 pub struct ProxySettingsRequest {
-    pub enabled: bool,
     #[serde(default)]
     pub http_port: Option<i64>,
     #[serde(default)]
@@ -25,7 +24,6 @@ impl ProxySettingsRequest {
                 .filter(|text| !text.is_empty())
         };
         ProxyChoice {
-            enabled: self.enabled,
             http_port: self.http_port,
             https_port: self.https_port,
             portal_host: blank_to_none(self.portal_host),

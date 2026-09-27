@@ -1,20 +1,32 @@
 use std::fs;
-use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
-use std::process::{Command, Stdio};
+use std::io::{BufRead, BufReader, Read, Write};
+use std::net::TcpStream;
+use std::process::{ChildStdout, Command, Stdio};
+use std::sync::mpsc;
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use portal_auth::hash_password;
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
 
-fn free_port() -> u16 {
-    TcpListener::bind("127.0.0.1:0")
-        .unwrap()
-        .local_addr()
-        .unwrap()
-        .port()
+fn listening_port(stdout: ChildStdout) -> mpsc::Receiver<u16> {
+    let (sender, receiver) = mpsc::channel();
+    thread::spawn(move || {
+        for line in BufReader::new(stdout).lines().map_while(Result::ok) {
+            if !line.contains("listening") {
+                continue;
+            }
+            let port = line
+                .rsplit_once("address=")
+                .and_then(|(_, address)| address.trim().rsplit_once(':'))
+                .and_then(|(_, port)| port.parse().ok());
+            if let Some(port) = port {
+                let _ = sender.send(port);
+            }
+        }
+    });
+    receiver
 }
 
 fn health(port: u16) -> Option<String> {
@@ -37,27 +49,19 @@ fn the_serve_command_starts_the_portal_and_stops_on_a_signal() {
         format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n"),
     )
     .unwrap();
-    let port = free_port();
     let mut child = Command::new(BINARY)
         .arg("serve")
         .env("HOME_PORTAL_CONFIG", &path)
-        .env("HOME_PORTAL_ADDRESS", format!("127.0.0.1:{port}"))
-        .stdout(Stdio::null())
+        .env("HOME_PORTAL_ADDRESS", "127.0.0.1:0")
+        .env("NO_COLOR", "1")
+        .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()
         .unwrap();
-    let began = Instant::now();
-    let answer = loop {
-        if let Some(answer) = health(port) {
-            break answer;
-        }
-        assert!(child.try_wait().unwrap().is_none(), "the portal exited");
-        assert!(
-            began.elapsed() < Duration::from_secs(20),
-            "the portal did not start"
-        );
-        thread::sleep(Duration::from_millis(50));
-    };
+    let port = listening_port(child.stdout.take().unwrap())
+        .recv_timeout(Duration::from_secs(20))
+        .expect("the portal did not report its address");
+    let answer = health(port).expect("the portal did not answer");
     assert!(answer.starts_with("HTTP/1.1 200"), "{answer}");
     assert!(answer.ends_with("ok"), "{answer}");
     let killed = Command::new("kill")

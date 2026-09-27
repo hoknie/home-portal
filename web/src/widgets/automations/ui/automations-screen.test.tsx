@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
 
 import { automationsKey, automationsSchema, catalogueKey, catalogueSchema, runsKey, runsSchema } from "@/entities/automation";
+import { modulesKey, modulesSchema } from "@/entities/module";
 import { webhooksKey, webhooksSchema } from "@/entities/webhook";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
@@ -15,8 +16,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 
-function renderWith(automations: unknown) {
+function renderWith(automations: unknown, automationsOn = true) {
   const client = testQueryClient();
+  const modules = modulesSchema.parse(structuredClone(apiSamples.modules));
+  modules.modules[2].enabled = automationsOn;
+  client.setQueryDefaults(modulesKey, { staleTime: Infinity });
+  client.setQueryData(modulesKey, { data: modules, revision: '"m"' });
   client.setQueryDefaults(catalogueKey, { staleTime: Infinity });
   client.setQueryDefaults(automationsKey, { staleTime: Infinity });
   client.setQueryDefaults(runsKey(), { staleTime: Infinity });
@@ -148,4 +153,22 @@ it("an open running run follows its output until it finishes", async () => {
   expect(await within(sheet).findByText(/done/, {}, { timeout: 3000 })).toBeInTheDocument();
   expect(await within(sheet).findByText("Succeeded", {}, { timeout: 3000 })).toBeInTheDocument();
   expect(within(sheet).queryByRole("button", { name: "Stop" })).toBeNull();
+});
+
+it("automations while off: the list and the journal stay, the notice says so, and nothing can be run", () => {
+  renderWith(apiSamples.automations, false);
+  expect(screen.getAllByRole("status").some((element) => element.textContent?.includes("The Automations module is off"))).toBe(true);
+  const table = screen.getAllByRole("table")[0];
+  expect(within(table).getByRole("link", { name: "Restart Jellyfin when it goes down" })).toBeInTheDocument();
+  const runButtons = within(table).getAllByRole("button", { name: "Run now" });
+  expect(runButtons.length).toBeGreaterThan(0);
+  for (const button of runButtons) {
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("title", "The module is off");
+  }
+});
+
+it("automations while on show no module notice", () => {
+  renderWith(apiSamples.automations);
+  expect(screen.queryByText(/The Automations module is off/)).not.toBeInTheDocument();
 });

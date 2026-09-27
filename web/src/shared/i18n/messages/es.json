@@ -32,7 +32,10 @@
     "management": "Administración",
     "proxy": "Proxy",
     "automations": "Automatizaciones",
-    "webhooks": "Webhooks"
+    "webhooks": "Webhooks",
+    "modules": "Módulos",
+    "modulesSection": "Módulos",
+    "dns": "DNS"
   },
   "theme": {
     "label": "Tema",
@@ -271,7 +274,6 @@
     "proxyEnvironments": "Solo se pueden elegir los entornos en los que se muestra el servicio",
     "proxyAddressGiven": "El servicio ya tiene su propia dirección para este entorno",
     "proxyFile": "Hace falta la ruta de un archivo",
-    "proxyPortalHostRequired": "Indica la dirección del portal: sin ella no se puede encender el proxy",
     "proxyCookieDomain": "Debe ser la dirección del portal o un dominio padre de ella",
     "proxyEmail": "Hace falta una dirección de correo",
     "caddySource": "Hace falta una dirección https, o http en esta máquina (127.0.0.1, localhost)",
@@ -539,7 +541,6 @@
   "proxy": {
     "title": "Proxy",
     "subtitle": "Publicar servicios a través de Caddy: direcciones, inicio de sesión en el portal y certificados",
-    "disabled": "El proxy está apagado. Enciéndelo en los ajustes de abajo: indica la dirección del portal y guarda.",
     "state": "Estado",
     "caddy": "Caddy",
     "inSync": "Funciona y tiene la configuración actual",
@@ -610,20 +611,18 @@
     "settings": {
       "title": "Ajustes",
       "description": "La sección [proxy] de la configuración. Los cambios surten efecto al momento, sin reiniciar el portal.",
-      "enabledLabel": "Proxy encendido",
       "portalHost": "Dirección del portal",
       "portalHostHint": "El nombre con el que Caddy publica el propio portal, por ejemplo portal.home.example.com",
       "cookieDomain": "Dominio de inicio de sesión",
       "cookieDomainHint": "Un inicio de sesión sirve para todas las direcciones bajo este dominio. Hace falta si los servicios exigen iniciar sesión a través del portal.",
       "tls": "Certificado por defecto",
       "loopbackHint": "Al encenderlo, el portal añade 127.0.0.1 a los proxies de confianza: Caddy llega al portal desde esa dirección.",
-      "enabled": "Proxy encendido",
-      "disabled": "Proxy apagado",
       "refused": "Los ajustes no se aceptaron",
       "httpsPort": "Puerto HTTPS",
       "httpsPortHint": "Donde Caddy acepta https; 443 por defecto. Otro puerto aparece en todas las direcciones: https://nombre:puerto",
       "httpPort": "Puerto HTTP",
-      "httpPortHint": "Para redirigir a https y para la comprobación de Let's Encrypt; 80 por defecto. Let's Encrypt llama al puerto 80 desde fuera, así que redirígelo a este puerto"
+      "httpPortHint": "Para redirigir a https y para la comprobación de Let's Encrypt; 80 por defecto. Let's Encrypt llama al puerto 80 desde fuera, así que redirígelo a este puerto",
+      "saved": "Ajustes del proxy guardados"
     }
   },
   "automations": {
@@ -1021,7 +1020,6 @@
     "dohUrl": "Dirección de DNS sobre HTTPS",
     "forwardingTitle": "Reenvía las zonas desde tu router",
     "forwarding": "Los dispositivos preguntan a tu router, así que dile que envíe estas zonas al portal: en dnsmasq o Pi-hole añade server=/home/192.168.1.60, en un FRITZ!Box, pfSense u OPNsense añade una anulación de dominio, o usa el portal como servidor DNS de la VPN. El DNS privado de Android necesita un certificado en el que confíe el teléfono, así que usa allí un host con ACME.",
-    "enabledLabel": "Servidor DNS activado",
     "address": "Dirección de escucha",
     "addressHint": "0.0.0.0 para todas las redes de este host",
     "port": "Puerto",
@@ -1042,5 +1040,38 @@
     "save": "Guardar",
     "saved": "Ajustes de DNS guardados",
     "refused": "Los ajustes no se aceptaron"
+  },
+  "modules": {
+    "title": "Módulos",
+    "subtitle": "Partes opcionales del portal. Un módulo apagado conserva sus ajustes y su página, así que puede prepararse antes de encenderlo.",
+    "names": {
+      "proxy": "Proxy",
+      "dns": "DNS",
+      "automations": "Automatizaciones",
+      "webhooks": "Webhooks"
+    },
+    "descriptions": {
+      "proxy": "Publica los servicios con sus propios nombres a través de Caddy, con certificados e inicio de sesión mediante el portal.",
+      "dns": "Responde DNS para los nombres que publica el proxy, con la dirección correcta en cada una de tus redes.",
+      "automations": "Ejecuta tus scripts según un horario o cuando ocurre algo en el portal.",
+      "webhooks": "Direcciones que otros sistemas llaman para iniciar tus scripts o automatizaciones."
+    },
+    "switchLabel": "{name}: encender o apagar",
+    "on": "Encendido",
+    "off": "Apagado",
+    "requires": "Necesita: {names}",
+    "requiredBy": "Lo necesita: {names}",
+    "lockedRequiredBy": "Apaga primero: {names}",
+    "lockedRequires": "Enciende primero: {names}",
+    "configure": "Configurar",
+    "switchedOn": "{name}: encendido",
+    "switchedOff": "{name}: apagado",
+    "incomplete": "{name} necesita sus ajustes antes de encenderse:",
+    "failed": "{name} no se cambió: {message}",
+    "failedUnknown": "error desconocido",
+    "loadFailed": "No se pudieron cargar los módulos",
+    "offNotice": "El módulo {name} está apagado. Sus ajustes pueden prepararse aquí; empezará a funcionar al encenderlo.",
+    "offNoticeLink": "Abrir módulos",
+    "offReason": "El módulo está apagado"
   }
 }

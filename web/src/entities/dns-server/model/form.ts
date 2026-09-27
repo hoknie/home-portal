@@ -10,7 +10,6 @@ export const DNS_TTL_MAX = 86_400;
 const port = z.number().int().min(DNS_PORT_MIN).max(DNS_PORT_MAX);
 
 export const dnsFormSchema = z.object({
-  enabled: z.boolean(),
   address: z.string().trim().min(1),
   port,
   zones: z.array(z.string()),
@@ -27,7 +26,6 @@ export type DnsForm = z.infer<typeof dnsFormSchema>;
 export function dnsFormOf(dns: Dns): DnsForm {
   const settings = dns.settings;
   return {
-    enabled: dns.enabled,
     address: settings.address,
     port: settings.port,
     zones: settings.zones,
@@ -47,7 +45,6 @@ export function dnsRequestOf(form: DnsForm, dns: Dns) {
       .filter(([, found]) => found.length > 0),
   );
   return {
-    enabled: form.enabled,
     address: form.address.trim(),
     port: form.port,
     zones: form.zones,

@@ -683,6 +683,7 @@ dependencies = [
  "portal-icons",
  "portal-metrics",
  "portal-model",
+ "portal-modules",
  "portal-network",
  "portal-proxy",
  "portal-public",
@@ -1466,6 +1467,22 @@ dependencies = [
  "serde",
  "serde_json",
  "time",
+]
+
+[[package]]
+name = "portal-modules"
+version = "0.1.7"
+dependencies = [
+ "axum",
+ "http-body-util",
+ "portal-config",
+ "portal-feature",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "toml_edit",
+ "tower",
 ]
 
 [[package]]

@@ -32,7 +32,10 @@
     "management": "Management",
     "proxy": "Proxy",
     "automations": "Automations",
-    "webhooks": "Webhooks"
+    "webhooks": "Webhooks",
+    "modules": "Modules",
+    "modulesSection": "Modules",
+    "dns": "DNS"
   },
   "theme": {
     "label": "Theme",
@@ -271,7 +274,6 @@
     "proxyEnvironments": "Only the environments the service is shown in can be chosen",
     "proxyAddressGiven": "The service already has its own address for this environment",
     "proxyFile": "A file path is needed",
-    "proxyPortalHostRequired": "Give the portal's address: the proxy cannot be switched on without it",
     "proxyCookieDomain": "Must be the portal's address or a parent domain of it",
     "proxyEmail": "An email address is needed",
     "caddySource": "An https address is needed, or http on this machine (127.0.0.1, localhost)",
@@ -539,7 +541,6 @@
   "proxy": {
     "title": "Proxy",
     "subtitle": "Publishing services through Caddy: addresses, signing in through the portal, and certificates",
-    "disabled": "The proxy is off. Switch it on in the settings below: give the portal's address and save.",
     "state": "State",
     "caddy": "Caddy",
     "inSync": "Running and holding the current configuration",
@@ -610,20 +611,18 @@
     "settings": {
       "title": "Settings",
       "description": "The [proxy] section of the configuration. Changes take effect at once, without restarting the portal.",
-      "enabledLabel": "Proxy on",
       "portalHost": "Portal address",
       "portalHostHint": "The name Caddy publishes the portal itself under, for example portal.home.example.com",
       "cookieDomain": "Sign-in domain",
       "cookieDomainHint": "One sign-in covers every address under this domain. Needed when services require signing in through the portal.",
       "tls": "Default certificate",
       "loopbackHint": "When switched on, the portal adds 127.0.0.1 to the trusted proxies itself: Caddy reaches the portal from that address.",
-      "enabled": "Proxy switched on",
-      "disabled": "Proxy switched off",
       "refused": "The settings were refused",
       "httpsPort": "HTTPS port",
       "httpsPortHint": "Where Caddy accepts https; 443 by default. Another port appears in every address: https://name:port",
       "httpPort": "HTTP port",
-      "httpPortHint": "For redirecting to https and for the Let's Encrypt check; 80 by default. Let's Encrypt knocks on port 80 from outside, so forward it to this port"
+      "httpPortHint": "For redirecting to https and for the Let's Encrypt check; 80 by default. Let's Encrypt knocks on port 80 from outside, so forward it to this port",
+      "saved": "Proxy settings saved"
     }
   },
   "automations": {
@@ -1021,7 +1020,6 @@
     "dohUrl": "DNS over HTTPS address",
     "forwardingTitle": "Forward the zones from your router",
     "forwarding": "Devices ask your router, so tell it to send these zones to the portal: in dnsmasq or Pi-hole add server=/home/192.168.1.60, in a FRITZ!Box, pfSense or OPNsense add a domain override, or set the portal as the VPN's DNS server. Android's Private DNS needs a certificate the phone trusts, so use a host with ACME there.",
-    "enabledLabel": "DNS server on",
     "address": "Listen address",
     "addressHint": "0.0.0.0 for every network of this host",
     "port": "Port",
@@ -1042,5 +1040,38 @@
     "save": "Save",
     "saved": "DNS settings saved",
     "refused": "The settings were refused"
+  },
+  "modules": {
+    "title": "Modules",
+    "subtitle": "Optional parts of the portal. A module that is off keeps its settings and its page, so it can be prepared before it is switched on.",
+    "names": {
+      "proxy": "Proxy",
+      "dns": "DNS",
+      "automations": "Automations",
+      "webhooks": "Webhooks"
+    },
+    "descriptions": {
+      "proxy": "Publishes services under their own names through Caddy, with certificates and signing in through the portal.",
+      "dns": "Answers DNS for the names the proxy publishes, with the right address in each of your networks.",
+      "automations": "Runs your scripts on a schedule or when something happens in the portal.",
+      "webhooks": "Addresses other systems call to start your scripts or automations."
+    },
+    "switchLabel": "{name}: on or off",
+    "on": "On",
+    "off": "Off",
+    "requires": "Needs: {names}",
+    "requiredBy": "Needed by: {names}",
+    "lockedRequiredBy": "Switch {names} off first",
+    "lockedRequires": "Switch {names} on first",
+    "configure": "Configure",
+    "switchedOn": "{name} is on",
+    "switchedOff": "{name} is off",
+    "incomplete": "{name} needs its settings before it can be switched on:",
+    "failed": "{name} was not switched: {message}",
+    "failedUnknown": "unknown error",
+    "loadFailed": "The modules could not be loaded",
+    "offNotice": "The {name} module is off. Its settings can be prepared here; it starts working once it is switched on.",
+    "offNoticeLink": "Open modules",
+    "offReason": "The module is off"
   }
 }

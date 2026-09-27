@@ -24,11 +24,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("switches the proxy on with the portal host and the revision it loaded", async () => {
+it("saves the portal host with the revision it loaded and sends no switch", async () => {
   const fetch = vi.fn(async () => jsonResponse(apiSamples.proxy));
   vi.stubGlobal("fetch", fetch);
   renderWithProviders(<ProxySettingsForm proxy={disabled} revision='"r1"' />);
-  await userEvent.click(screen.getByRole("switch", { name: "Proxy on" }));
   await userEvent.type(screen.getByLabelText("Portal address"), "Portal.Home.Example.com");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
   await waitFor(() => expect(fetch).toHaveBeenCalled());
@@ -37,7 +36,6 @@ it("switches the proxy on with the portal host and the revision it loaded", asyn
   expect(init.method).toBe("PUT");
   expect((init.headers as Record<string, string>)["If-Match"]).toBe('"r1"');
   expect(JSON.parse(String(init.body))).toEqual({
-    enabled: true,
     http_port: 80,
     https_port: 443,
     portal_host: "portal.home.example.com",
@@ -46,25 +44,20 @@ it("switches the proxy on with the portal host and the revision it loaded", asyn
   });
 });
 
-it("switches the proxy off keeping its settings", async () => {
-  const fetch = vi.fn(async () => jsonResponse(apiSamples.proxy));
-  vi.stubGlobal("fetch", fetch);
+it("the proxy form has no switch", () => {
   renderWithProviders(<ProxySettingsForm proxy={sample()} revision='"r1"' />);
-  await userEvent.click(screen.getByRole("switch", { name: "Proxy on" }));
-  await userEvent.click(screen.getByRole("button", { name: "Save" }));
-  await waitFor(() => expect(fetch).toHaveBeenCalled());
-  const body = JSON.parse(String((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body));
-  expect(body).toMatchObject({ enabled: false, portal_host: "portal.example.com", cookie_domain: "example.com" });
+  expect(screen.queryByRole("switch")).not.toBeInTheDocument();
 });
 
-it("refuses to switch on without the portal host before asking the server", async () => {
-  const fetch = vi.fn();
+it("an empty portal host can be saved while the proxy is off", async () => {
+  const fetch = vi.fn(async () => jsonResponse(apiSamples.proxy));
   vi.stubGlobal("fetch", fetch);
   renderWithProviders(<ProxySettingsForm proxy={disabled} revision='"r1"' />);
-  await userEvent.click(screen.getByRole("switch", { name: "Proxy on" }));
+  await userEvent.clear(screen.getByLabelText(/^HTTPS port/));
+  await userEvent.type(screen.getByLabelText(/^HTTPS port/), "8443");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
-  expect(await screen.findByText("Give the portal's address: the proxy cannot be switched on without it")).toBeInTheDocument();
-  expect(fetch).not.toHaveBeenCalled();
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  expect(JSON.parse(String((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body)).portal_host).toBeNull();
 });
 
 it("shows a refusal about another section as a notice", async () => {

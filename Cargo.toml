@@ -21,6 +21,7 @@ members = [
     "crates/features/portal-proxy",
     "crates/features/portal-automations",
     "crates/features/portal-dns",
+    "crates/features/portal-modules",
     "bin/home-portal",
 ]
 
@@ -85,6 +86,7 @@ portal-dashboard = { path = "crates/features/portal-dashboard" }
 portal-proxy = { path = "crates/features/portal-proxy" }
 portal-automations = { path = "crates/features/portal-automations" }
 portal-dns = { path = "crates/features/portal-dns" }
+portal-modules = { path = "crates/features/portal-modules" }
 
 [profile.dev.package.argon2]
 opt-level = 3

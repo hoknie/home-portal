@@ -66,14 +66,24 @@ it("applying shows the configuration in sync", async () => {
   expect(vi.mocked(fetch)).toHaveBeenCalledWith("/api/proxy/apply", expect.objectContaining({ method: "POST" }));
 });
 
-it("explains how to enable a disabled proxy and hides the certificate without a local authority", () => {
+it("preparing the proxy while it is off: the notice links to modules, the settings stay usable, and nothing can be applied", () => {
   renderWith(sample((proxy) => {
     proxy.enabled = false;
     proxy.routes = [];
   }));
-  expect(screen.getByRole("note")).toHaveTextContent("Switch it on in the settings below");
-  expect(screen.getByRole("switch", { name: "Proxy on" })).not.toBeChecked();
+  const notice = screen.getAllByRole("status").find((element) => element.textContent?.includes("The Proxy module is off"))!;
+  expect(within(notice).getByRole("link", { name: "Open modules" })).toHaveAttribute("href", "/admin/modules");
+  expect(screen.getByLabelText("Portal address")).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Apply now" })).not.toBeInTheDocument();
   expect(screen.queryByRole("link", { name: "Download the certificate" })).not.toBeInTheDocument();
+});
+
+it("the proxy page has no switch of its own, links to modules and shows no dns card", () => {
+  renderWith(sample());
+  expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Modules" })).toHaveAttribute("href", "/admin/modules");
+  expect(screen.queryByText("Local DNS")).not.toBeInTheDocument();
 });
 
 it("the hosts card has an inset title and long upstreams wrap inside their cells", () => {

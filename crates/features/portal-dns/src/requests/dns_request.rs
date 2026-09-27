@@ -6,7 +6,6 @@ use crate::types::{DnsChoice, DnsHttpsChoice, DnsTlsChoice};
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct DnsRequest {
-    pub enabled: bool,
     pub address: String,
     pub port: u16,
     #[serde(default)]
@@ -23,7 +22,6 @@ pub struct DnsRequest {
 impl DnsRequest {
     pub fn into_choice(self) -> DnsChoice {
         DnsChoice {
-            enabled: self.enabled,
             address: self.address,
             port: self.port,
             zones: self.zones,

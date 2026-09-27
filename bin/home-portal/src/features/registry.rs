@@ -9,8 +9,11 @@ use portal_feature::Feature;
 use portal_health::HealthFeature;
 use portal_icons::IconsFeature;
 use portal_metrics::MetricsFeature;
+use portal_modules::ModulesFeature;
 use portal_network::{CurrentEnvironments, CurrentNetwork, NetworkFeature, host_environment};
-use portal_proxy::{CheckPublication, CurrentProxySettings, ProxyFeature, ProxyPorts};
+use portal_proxy::{
+    CheckPublication, CurrentProxySettings, PrepareProxy, ProxyFeature, ProxyPorts,
+};
 use portal_public::PublicFeature;
 use portal_secrets::SecretsFeature;
 use portal_services::{ServiceEntries, ServicesFeature, ServicesPorts};
@@ -105,6 +108,10 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         Arc::new(telegram),
         Arc::new(SecretsFeature::new(configuration.clone())),
         Arc::new(DashboardFeature::new(configuration.clone())),
+        Arc::new(ModulesFeature::new(
+            configuration.clone(),
+            vec![Arc::new(PrepareProxy)],
+        )),
         automations,
         Arc::new(DnsFeature::new(
             configuration.clone(),

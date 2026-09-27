@@ -32,13 +32,17 @@ networks = ["192.168.1.0/24"]
 [environments.vpn]
 networks = ["10.8.0.0/24"]
 
+# The optional parts: the proxy is on; automations and webhooks are on by default. DNS
+# stays off. Management → Modules switches them.
+[modules]
+proxy = true
+
 # Caddy publishes the portal and the services that carry a proxy table (see
 # services.toml). The portal writes Caddy's whole configuration through its admin API,
 # so start Caddy from deploy/caddy.plist or deploy/caddy.service and add nothing by hand.
 # Ports 80 and 443 must reach Caddy for Let's Encrypt; the state is under
 # Management → Proxy, and `home-portal proxy render` prints what Caddy is given.
 [proxy]
-enabled = true
 admin = "http://127.0.0.1:2019"
 portal_host = "portal.home.example.com"
 # One sign-in covers every published host under this domain. Use a subdomain of your

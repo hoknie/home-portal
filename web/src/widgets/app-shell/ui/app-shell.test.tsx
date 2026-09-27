@@ -1,9 +1,11 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { environmentKey } from "@/entities/environment";
+import { type Modules, modulesKey, modulesSchema } from "@/entities/module";
 import { sessionKey } from "@/entities/session";
+import { apiSamples } from "@/shared/api";
 import { renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { AppShell } from "./app-shell";
@@ -20,11 +22,25 @@ afterEach(() => {
   replace.mockReset();
 });
 
-it("shows the navigation, marks the current section and names the signed-in user", () => {
+function modulesWith(on: string[]): Modules {
+  const modules = modulesSchema.parse(structuredClone(apiSamples.modules));
+  return { modules: modules.modules.map((module) => ({ ...module, enabled: on.includes(module.name), required_by: [] })) };
+}
+
+function shellWith(on: string[] | null) {
   const client = testQueryClient();
   client.setQueryData(sessionKey, { name: "admin" });
   client.setQueryData(environmentKey, { environment: "local", detected: "local", switchable: true, environments: ["local", "vpn", "internet"] });
+  if (on) {
+    client.setQueryDefaults(modulesKey, { staleTime: Infinity });
+    client.setQueryData(modulesKey, { data: modulesWith(on), revision: '"m"' });
+  }
   renderWithProviders(<AppShell>content</AppShell>, client);
+  return client;
+}
+
+it("shows the navigation, marks the current section and names the signed-in user", () => {
+  shellWith(["proxy", "automations"]);
   expect(screen.getAllByRole("link", { name: "Back to home" })[0]).toHaveAttribute("href", "/");
   expect(screen.getAllByRole("link", { name: "Services" })[0]).toHaveAttribute("aria-current", "page");
   expect(screen.getAllByRole("link", { name: "Layout" })[0]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/layout\/?$/));
@@ -71,4 +87,27 @@ it("the user menu offers restarting the portal", async () => {
   menus[0].focus();
   await userEvent.keyboard("{Enter}");
   expect(await screen.findByRole("menuitem", { name: "Restart portal" })).toBeInTheDocument();
+});
+
+it("only enabled modules are listed, in a section of their own", () => {
+  shellWith(["proxy", "automations"]);
+  const section = screen.getAllByRole("group", { name: "Modules" })[0];
+  expect(within(section).getAllByRole("link").map((link) => link.textContent)).toEqual(["Proxy", "Automations"]);
+  expect(screen.getAllByRole("link", { name: "Modules" })[0]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/modules\/?$/));
+  expect(screen.queryByRole("link", { name: "DNS" })).not.toBeInTheDocument();
+});
+
+it("the modules section is hidden when none is on, and while modules load", () => {
+  shellWith([]);
+  expect(screen.queryByRole("group", { name: "Modules" })).not.toBeInTheDocument();
+  expect(screen.getAllByRole("link", { name: "Services" }).length).toBeGreaterThan(0);
+});
+
+it("switching a module updates the menu without a reload", async () => {
+  const client = shellWith(["automations"]);
+  expect(screen.queryByRole("link", { name: "Webhooks" })).not.toBeInTheDocument();
+  act(() => {
+    client.setQueryData(modulesKey, { data: modulesWith(["automations", "webhooks"]), revision: '"m2"' });
+  });
+  expect((await screen.findAllByRole("link", { name: "Webhooks" }))[0]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/webhooks\/?$/));
 });

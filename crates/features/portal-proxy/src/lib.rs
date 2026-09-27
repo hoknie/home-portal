@@ -22,4 +22,4 @@ pub use types::{
     AdminAddress, Cadence, DownloadStage, DownloadState, ProxyPorts, ProxySettings,
     PublishedService, SyncState,
 };
-pub use usecases::{CheckPublication, CurrentProxySettings};
+pub use usecases::{CheckPublication, CurrentProxySettings, PrepareProxy};

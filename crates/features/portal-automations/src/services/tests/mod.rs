@@ -4,4 +4,5 @@ mod matching;
 mod scheduling;
 mod scripts;
 pub mod support;
+mod switching;
 mod validation;

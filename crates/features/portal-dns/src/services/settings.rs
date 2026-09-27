@@ -3,7 +3,7 @@ use std::net::IpAddr;
 use std::path::PathBuf;
 
 use portal_config::deserialize_section;
-use portal_feature::FieldError;
+use portal_feature::{FieldError, Module, ModuleSwitches};
 use portal_model::Environment;
 use toml_edit::DocumentMut;
 
@@ -31,6 +31,7 @@ pub const LONGEST_TEXT: usize = 255;
 pub fn read_settings(document: &DocumentMut) -> Result<DnsSettings, Vec<FieldError>> {
     let section: RawDnsSection =
         deserialize_section(document).map_err(|message| vec![FieldError::new(SECTION, message)])?;
+    let switches = ModuleSwitches::resolve(document).unwrap_or_default();
     let mut errors = Vec::new();
     let environments: Vec<Environment> = section
         .environments
@@ -39,7 +40,7 @@ pub fn read_settings(document: &DocumentMut) -> Result<DnsSettings, Vec<FieldErr
         .filter(|environment| !environment.is_internet())
         .collect();
     let proxy = ProxyView {
-        enabled: section.proxy.enabled.unwrap_or(false),
+        enabled: switches.is_on(Module::Proxy),
         managed: section.proxy.managed.unwrap_or(false),
         portal_host: section.proxy.portal_host.as_deref().and_then(normalized),
         https_port: section
@@ -48,7 +49,8 @@ pub fn read_settings(document: &DocumentMut) -> Result<DnsSettings, Vec<FieldErr
             .and_then(|port| u16::try_from(port).ok()),
         tls: section.proxy.tls.clone().unwrap_or_default(),
     };
-    let settings = check(&section.dns, &environments, proxy, &mut errors);
+    let mut settings = check(&section.dns, &environments, proxy, &mut errors);
+    settings.enabled = switches.is_on(Module::Dns);
     if errors.is_empty() {
         Ok(settings)
     } else {
@@ -163,7 +165,7 @@ fn check(
         errors.push(FieldError::new(field("https.enabled"), NEEDS_PROXY));
     }
     DnsSettings {
-        enabled: raw.enabled.unwrap_or(false),
+        enabled: false,
         address,
         port: dns_port,
         zones,

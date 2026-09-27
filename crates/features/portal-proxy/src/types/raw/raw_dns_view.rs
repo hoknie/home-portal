@@ -2,7 +2,6 @@ use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct RawDnsView {
-    pub enabled: Option<bool>,
     #[serde(default)]
     pub https: RawDnsHttpsView,
 }

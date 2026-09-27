@@ -13,7 +13,7 @@ use crate::boot::{ADDRESS_VARIABLE, adopt, resolve_address};
 use crate::features::registered;
 use crate::types::{ProxyAction, Wiring};
 
-pub const DISABLED: &str = "the proxy is not enabled; set enabled = true in the [proxy] section to render its configuration";
+pub const DISABLED: &str = "the proxy module is off; set proxy = true in the [modules] section, or switch it on under Management → Modules, to render its configuration";
 
 pub fn proxy(action: ProxyAction) -> ExitCode {
     match action {

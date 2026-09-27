@@ -1,5 +1,5 @@
 use portal_config::deserialize_section;
-use portal_feature::FieldError;
+use portal_feature::{FieldError, Module, ModuleSwitches};
 use portal_model::Publication;
 use toml_edit::DocumentMut;
 
@@ -22,9 +22,14 @@ pub const SAME_PORTS: &str = "must differ from proxy.http_port";
 pub fn read_settings(document: &DocumentMut) -> Result<ProxySettings, Vec<FieldError>> {
     let section: RawProxySection =
         deserialize_section(document).map_err(|message| vec![FieldError::new(SECTION, message)])?;
+    let switches = ModuleSwitches::resolve(document).unwrap_or_default();
     let mut errors = Vec::new();
-    let mut settings = check_proxy(&section.proxy, &mut errors);
-    settings.doh_host = doh_host(&section.dns, settings.portal_host.as_deref());
+    let mut settings = check_proxy(&section.proxy, switches.is_on(Module::Proxy), &mut errors);
+    settings.doh_host = doh_host(
+        &section.dns,
+        switches.is_on(Module::Dns),
+        settings.portal_host.as_deref(),
+    );
     if settings.enabled {
         errors.extend(check_network(&section.network, &settings));
     }
@@ -39,9 +44,9 @@ pub fn validate_settings(document: &DocumentMut) -> Vec<FieldError> {
     read_settings(document).err().unwrap_or_default()
 }
 
-fn check_proxy(raw: &RawProxy, errors: &mut Vec<FieldError>) -> ProxySettings {
+fn check_proxy(raw: &RawProxy, enabled: bool, errors: &mut Vec<FieldError>) -> ProxySettings {
     let mut settings = ProxySettings {
-        enabled: raw.enabled.unwrap_or(false),
+        enabled,
         managed: raw.managed.unwrap_or(false),
         tls: raw.tls.clone().unwrap_or_default(),
         ..ProxySettings::default()
@@ -146,8 +151,8 @@ fn check_network(network: &RawNetworkView, settings: &ProxySettings) -> Vec<Fiel
     errors
 }
 
-fn doh_host(dns: &RawDnsView, portal_host: Option<&str>) -> Option<String> {
-    let serving = dns.enabled.unwrap_or(false) && dns.https.enabled.unwrap_or(false);
+fn doh_host(dns: &RawDnsView, dns_on: bool, portal_host: Option<&str>) -> Option<String> {
+    let serving = dns_on && dns.https.enabled.unwrap_or(false);
     let host = dns
         .https
         .host

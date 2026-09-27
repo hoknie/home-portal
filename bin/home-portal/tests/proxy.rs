@@ -76,7 +76,16 @@ fn a_disabled_proxy_has_nothing_to_render() {
     assert_eq!(output.status.code(), Some(1));
     let error = String::from_utf8_lossy(&output.stderr);
     assert!(error.starts_with("error: "), "{error}");
-    assert!(error.contains("not enabled"), "{error}");
+    assert!(error.contains("module is off"), "{error}");
+    assert!(error.contains("[modules]"), "{error}");
+    assert!(error.contains("proxy = true"), "{error}");
+}
+
+#[test]
+fn the_modules_section_switches_off_a_legacy_enabled_proxy() {
+    let output = render_with(&format!("[modules]\nproxy = false\n\n{ENABLED}"));
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("module is off"));
 }
 
 #[test]

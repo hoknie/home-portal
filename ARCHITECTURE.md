@@ -28,8 +28,8 @@ rationale; a violation missing from §10 is a defect.
 ```
 crates/core/              LAYER 1 — vocabulary and ports; knows no feature
   portal-model/           service identity, status and environment vocabulary; pure
-  portal-feature/         Feature, Gate, StatusObserver, EventSink and WidgetProvider ports, PortalEvent,
-                          ApiError, FieldError
+  portal-feature/         Feature, Gate, StatusObserver, EventSink, WidgetProvider and ModulePreparer ports,
+                          PortalEvent, ApiError, FieldError, Module and ModuleSwitches
   portal-config/          the configuration files: sources, merge, secrets, revision, atomic 0600 write
   portal-widget/          the widget registry, its cache and the widget data endpoint
   portal-web/             serves the built interface from its folder beside the binary, as a fallback
@@ -48,6 +48,8 @@ crates/features/          LAYER 2 — one crate per subject the portal shows or 
   portal-public/          the portal page shown without a session
   portal-proxy/           publishing services through Caddy: its configuration, forward-auth, TLS
   portal-automations/     the owner's scripts, run on a schedule or on the portal's events
+  portal-dns/             an authoritative DNS server for the names the proxy publishes
+  portal-modules/         the modules page's API: which optional parts are on, and their requirements
 bin/home-portal/          COMPOSITION ROOT — boot/, features/registry.rs, adapters/, middlewares/, cli/
 web/                      the interface: Next.js static export, built into web/out (§12)
 ```
@@ -246,6 +248,15 @@ pub trait Feature: Send + Sync {
   hands its sink out and keeps it in `Registry::events`. `boot/lifecycle.rs` publishes
   `portal.started` once the loops run, and `portal.stopping` after a graceful shutdown, then settles
   for at most 10 seconds before any feature's `stop()`.
+- **Optional parts are modules.** The proxy, DNS, automations and webhooks can be switched on and
+  off; `Module` in `portal-feature` lists them and what each requires (DNS the proxy, webhooks
+  automations). Every crate learns whether its module is on only through
+  `ModuleSwitches::resolve`, which reads `[modules]`, then the legacy `proxy.enabled` and
+  `dns.enabled`, then the defaults, so no two crates can disagree. `portal-modules` owns the switch
+  (`/api/modules`) and the validator that refuses an enabled module whose requirement is off. A
+  feature that must adjust the file when its module is switched on implements `ModulePreparer`
+  (`portal-proxy`'s `PrepareProxy` trusts loopback); the root hands preparers to `ModulesFeature`.
+  Routes stay mounted while a module is off; each checks its switch and the settings stay editable.
 - Two features claiming one path make axum panic at assembly; assembly runs in a test, so the
   conflict fails `just check`.
 - **When roles arrive**, `Feature` gains a method returning its routes as data (method, path,

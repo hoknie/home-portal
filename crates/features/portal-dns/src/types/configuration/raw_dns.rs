@@ -15,7 +15,6 @@ pub struct RawDnsSection {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct RawDns {
-    pub enabled: Option<bool>,
     pub address: Option<String>,
     pub port: Option<i64>,
     #[serde(default)]
@@ -65,7 +64,6 @@ pub struct RawDnsHttps {
 
 #[derive(Debug, Default, Deserialize)]
 pub struct RawProxyView {
-    pub enabled: Option<bool>,
     pub managed: Option<bool>,
     pub portal_host: Option<String>,
     pub https_port: Option<i64>,

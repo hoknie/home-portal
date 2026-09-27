@@ -1,6 +1,7 @@
 use std::sync::{Arc, PoisonError, RwLock};
 
 use jiff::tz::TimeZone;
+use portal_feature::{Module, ModuleSwitches};
 use tokio::sync::Notify;
 use toml_edit::DocumentMut;
 
@@ -11,6 +12,7 @@ pub struct AutomationCache {
     automations: RwLock<Arc<Vec<Automation>>>,
     webhooks: RwLock<Arc<Vec<Webhook>>>,
     zone: RwLock<TimeZone>,
+    switches: RwLock<ModuleSwitches>,
     changed: Notify,
 }
 
@@ -20,6 +22,7 @@ impl AutomationCache {
             automations: RwLock::new(Arc::new(Vec::new())),
             webhooks: RwLock::new(Arc::new(Vec::new())),
             zone: RwLock::new(TimeZone::UTC),
+            switches: RwLock::new(ModuleSwitches::default()),
             changed: Notify::new(),
         };
         cache.refresh(document);
@@ -40,6 +43,11 @@ impl AutomationCache {
             .write()
             .unwrap_or_else(PoisonError::into_inner) = Arc::new(decoded_webhooks(document));
         *self.zone.write().unwrap_or_else(PoisonError::into_inner) = zone;
+        *self
+            .switches
+            .write()
+            .unwrap_or_else(PoisonError::into_inner) =
+            ModuleSwitches::resolve(document).unwrap_or_default();
         self.changed.notify_waiters();
     }
 
@@ -91,11 +99,27 @@ impl AutomationCache {
             .cloned()
     }
 
+    pub fn switches(&self) -> ModuleSwitches {
+        *self.switches.read().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    pub fn automations_on(&self) -> bool {
+        self.switches().is_on(Module::Automations)
+    }
+
+    pub fn webhooks_on(&self) -> bool {
+        self.switches().is_on(Module::Webhooks) && self.automations_on()
+    }
+
     pub fn runnable(&self, id: &str) -> bool {
+        if !self.automations_on() {
+            return false;
+        }
         self.find(id).is_some_and(|automation| automation.enabled)
-            || self
-                .webhook(id)
-                .is_some_and(|webhook| webhook.enabled && webhook.as_automation().is_some())
+            || (self.webhooks_on()
+                && self
+                    .webhook(id)
+                    .is_some_and(|webhook| webhook.enabled && webhook.as_automation().is_some()))
     }
 
     pub fn find(&self, id: &str) -> Option<Automation> {

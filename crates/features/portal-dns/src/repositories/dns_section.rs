@@ -9,7 +9,6 @@ pub const HTTPS: &str = "https";
 
 pub fn write_dns(document: &mut DocumentMut, choice: &DnsChoice) {
     let table = section(document, SECTION);
-    set(table, "enabled", choice.enabled.into());
     set(table, "address", choice.address.trim().into());
     set(table, "port", i64::from(choice.port).into());
     set(table, "zones", strings(&choice.zones).into());

@@ -14,7 +14,6 @@ export function within(host: string, domain: string) {
 
 export const proxySettingsFormSchema = z
   .object({
-    enabled: z.boolean(),
     http_port: z.number({ error: "validation.port" }).int("validation.port").min(1, "validation.port").max(65535, "validation.port"),
     https_port: z.number({ error: "validation.port" }).int("validation.port").min(1, "validation.port").max(65535, "validation.port"),
     portal_host: z.string().trim().toLowerCase(),
@@ -26,7 +25,6 @@ export const proxySettingsFormSchema = z
   })
   .refine((form) => form.http_port !== form.https_port, { path: ["https_port"], message: "validation.proxySamePorts" })
   .refine((form) => form.portal_host === "" || proxyHostAccepted(form.portal_host), { path: ["portal_host"], message: "validation.proxyHost" })
-  .refine((form) => !form.enabled || form.portal_host !== "", { path: ["portal_host"], message: "validation.proxyPortalHostRequired" })
   .refine((form) => form.cookie_domain === "" || proxyHostAccepted(form.cookie_domain), { path: ["cookie_domain"], message: "validation.proxyHost" })
   .refine((form) => form.cookie_domain === "" || form.portal_host === "" || within(form.portal_host, form.cookie_domain), {
     path: ["cookie_domain"],
@@ -41,7 +39,6 @@ export type ProxySettingsForm = z.infer<typeof proxySettingsFormSchema>;
 export function proxySettingsFormOf(proxy: Proxy): ProxySettingsForm {
   const { settings } = proxy;
   return {
-    enabled: proxy.enabled,
     http_port: settings.http_port,
     https_port: settings.https_port,
     portal_host: settings.portal_host ?? "",
@@ -56,7 +53,6 @@ export function proxySettingsFormOf(proxy: Proxy): ProxySettingsForm {
 export function proxySettingsRequestOf(form: ProxySettingsForm) {
   const blank = (value: string) => (value.trim() === "" ? null : value.trim());
   return {
-    enabled: form.enabled,
     http_port: form.http_port,
     https_port: form.https_port,
     portal_host: blank(form.portal_host),

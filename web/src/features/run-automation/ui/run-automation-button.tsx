@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { type Automation, useRunAutomation } from "@/entities/automation";
+import { enabledModules, useModules } from "@/entities/module";
 import { ConflictError, ThrottledError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Button } from "@/shared/ui/primitives";
@@ -14,6 +15,9 @@ export type RunAutomationButtonProps = { automation: Automation; labelled?: bool
 
 export function RunAutomationButton({ automation, labelled = false, onQueued }: RunAutomationButtonProps) {
   const t = useTranslations("automations");
+  const modules = useTranslations("modules");
+  const loaded = useModules().data?.data;
+  const moduleOff = loaded !== undefined && !enabledModules(loaded).has("automations");
   const run = useRunAutomation();
   const [open, setOpen] = useState(false);
   const confirm = async () => {
@@ -43,8 +47,8 @@ export function RunAutomationButton({ automation, labelled = false, onQueued }: 
         variant={labelled ? "outline" : "ghost"}
         size={labelled ? "sm" : "icon"}
         aria-label={labelled ? undefined : t("runNow")}
-        disabled={!automation.enabled}
-        title={automation.enabled ? undefined : t("runDisabled")}
+        disabled={moduleOff || !automation.enabled}
+        title={moduleOff ? modules("offReason") : automation.enabled ? undefined : t("runDisabled")}
         onClick={() => setOpen(true)}
       >
         <Play aria-hidden />

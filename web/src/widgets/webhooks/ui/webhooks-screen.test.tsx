@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 
+import { modulesKey, modulesSchema } from "@/entities/module";
 import { webhooksKey, webhooksSchema } from "@/entities/webhook";
 import { apiSamples } from "@/shared/api";
 import { renderWithProviders, testQueryClient } from "@/shared/lib/testing";
@@ -32,4 +33,16 @@ it("filters the webhooks by tag", async () => {
   await userEvent.click(within(screen.getByRole("group", { name: "Tags:" })).getByRole("button", { name: "camera" }));
   expect(screen.queryByText("Deploy from CI")).not.toBeInTheDocument();
   expect(screen.getByText("Motion at the door")).toBeInTheDocument();
+});
+
+it("webhooks while off: the list stays and the notice says the module is off", () => {
+  const client = testQueryClient();
+  const modules = modulesSchema.parse(structuredClone(apiSamples.modules));
+  client.setQueryDefaults(modulesKey, { staleTime: Infinity });
+  client.setQueryData(modulesKey, { data: modules, revision: '"m"' });
+  client.setQueryDefaults(webhooksKey, { staleTime: Infinity });
+  client.setQueryData(webhooksKey, { data: webhooksSchema.parse(apiSamples.webhooks), revision: '"r"' });
+  renderWithProviders(<WebhooksScreen />, client);
+  expect(screen.getByRole("status")).toHaveTextContent("The Webhooks module is off");
+  expect(screen.getByRole("link", { name: "Deploy from CI" })).toBeInTheDocument();
 });

@@ -32,6 +32,7 @@ portal-feature.workspace = true
 portal-health.workspace = true
 portal-icons.workspace = true
 portal-metrics.workspace = true
+portal-modules.workspace = true
 portal-model.workspace = true
 portal-network.workspace = true
 portal-proxy.workspace = true

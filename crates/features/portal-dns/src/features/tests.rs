@@ -166,3 +166,48 @@ async fn a_bad_port_through_the_api_names_the_field() {
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     assert!(String::from_utf8_lossy(&bytes).contains("dns.tls.port"));
 }
+
+#[tokio::test(flavor = "multi_thread")]
+async fn put_dns_ignores_enabled_and_settings_saved_while_off_open_no_socket() {
+    let port = free_port();
+    let (folder, _configuration, router) = portal("");
+    let (_, etag) = get(&router).await;
+    let body = format!(
+        "{{\"enabled\":true,\"address\":\"127.0.0.1\",\"port\":{port},\"zones\":[\"home\"],\"ttl\":60}}"
+    );
+    let request = Request::put(DnsFeature::PATH)
+        .header("content-type", "application/json")
+        .header("if-match", etag)
+        .body(Body::from(body))
+        .unwrap();
+    let response = router.clone().oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let text = fs::read_to_string(folder.path().join("home-portal.toml")).unwrap();
+    let section = text.split("\n[dns.").next().unwrap_or_default();
+    assert!(!section.contains("enabled"), "{text}");
+    assert!(text.contains("zones = [\"home\"]"), "{text}");
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    let (body, _) = get(&router).await;
+    assert_eq!(body["enabled"], false);
+    assert_eq!(body["plain"]["listening"], false);
+    assert!(UdpSocket::bind(("127.0.0.1", port)).is_ok());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn switching_the_module_off_closes_the_sockets_within_two_seconds() {
+    let port = free_port();
+    let (folder, _configuration, router) = portal(&enabled_on(port));
+    let listening = settled(&router, |body| body["plain"]["listening"] == true).await;
+    assert_eq!(listening["plain"]["listening"], true);
+    fs::write(
+        folder.path().join("home-portal.toml"),
+        format!("[modules]\ndns = false\n\n{}", enabled_on(port)),
+    )
+    .unwrap();
+    let began = Instant::now();
+    let closed = settled(&router, |body| body["plain"]["listening"] == false).await;
+    assert_eq!(closed["enabled"], false);
+    assert_eq!(closed["plain"]["listening"], false);
+    assert!(began.elapsed() < Duration::from_secs(2));
+    assert!(UdpSocket::bind(("127.0.0.1", port)).is_ok());
+}

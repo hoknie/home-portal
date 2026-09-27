@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { NAVIGATION, isActive } from "./navigation";
+import { MANAGEMENT, MODULE_LINKS, isActive, moduleLinks } from "./navigation";
 
 it("marks a management section on its own page and its subpages only", () => {
   expect(isActive("/", "/")).toBe(true);
@@ -9,13 +9,15 @@ it("marks a management section on its own page and its subpages only", () => {
   expect(isActive("/admin/network/", "/admin/layout/")).toBe(false);
 });
 
-it("offers the six management pages", () => {
-  expect(NAVIGATION.map((item) => item.href)).toEqual([
-    "/admin/services/",
-    "/admin/layout/",
-    "/admin/network/",
-    "/admin/proxy/",
-    "/admin/automations/",
-    "/admin/webhooks/",
-  ]);
+it("the management section always offers services, layout, network and modules", () => {
+  expect(MANAGEMENT.map((item) => item.href)).toEqual(["/admin/services/", "/admin/layout/", "/admin/network/", "/admin/modules/"]);
+});
+
+it("the modules section lists proxy, dns, automations and webhooks in that order", () => {
+  expect(MODULE_LINKS.map((item) => item.href)).toEqual(["/admin/proxy/", "/admin/dns/", "/admin/automations/", "/admin/webhooks/"]);
+});
+
+it("only enabled modules are listed", () => {
+  expect(moduleLinks(new Set(["automations", "proxy"])).map((item) => item.module)).toEqual(["proxy", "automations"]);
+  expect(moduleLinks(new Set())).toEqual([]);
 });

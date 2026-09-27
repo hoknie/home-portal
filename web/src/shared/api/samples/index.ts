@@ -10,6 +10,7 @@ import environment from "./environment.json";
 import fieldErrors from "./field-errors.json";
 import history from "./history.json";
 import icons from "./icons.json";
+import modules from "./modules.json";
 import network from "./network.json";
 import proxy from "./proxy.json";
 import publicPortal from "./public-portal.json";
@@ -38,6 +39,7 @@ export const apiSamples = {
   fieldErrors,
   history,
   icons,
+  modules,
   network,
   proxy,
   publicPortal,

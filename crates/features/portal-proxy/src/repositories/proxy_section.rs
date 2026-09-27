@@ -62,7 +62,6 @@ pub fn write_caddy_source(document: &mut DocumentMut, source: &CaddySource) {
 
 pub fn write_choice(document: &mut DocumentMut, choice: &ProxyChoice) {
     let table = proxy_table(document);
-    set_keeping(table, "enabled", choice.enabled.into());
     let ports = [
         ("http_port", choice.http_port, Publication::HTTP_PORT),
         ("https_port", choice.https_port, Publication::HTTPS_PORT),

@@ -125,6 +125,15 @@ impl AutomationSink {
         }
     }
 
+    pub fn drain_as_removed(&self) {
+        let now = OffsetDateTime::now_utc();
+        while let Some(pending) = self.queue.take() {
+            self.forget(&pending);
+            self.journal
+                .record(RunRecord::skipped(&pending, SkipReason::Removed, now));
+        }
+    }
+
     pub fn forget(&self, pending: &Pending) {
         self.gatekeeper.dequeued(&pending.automation.id);
         self.active.remove(pending.run_id);
@@ -142,9 +151,11 @@ impl EventSink for AutomationSink {
             return;
         }
         let stopping = event.name == EventName::PortalStopping;
-        let automations = self.cache.automations();
-        for automation in matching(&automations, &event) {
-            self.admit(automation, event.clone(), None);
+        if self.cache.automations_on() {
+            let automations = self.cache.automations();
+            for automation in matching(&automations, &event) {
+                self.admit(automation, event.clone(), None);
+            }
         }
         if stopping {
             self.phase.stopping.store(true, Ordering::SeqCst);

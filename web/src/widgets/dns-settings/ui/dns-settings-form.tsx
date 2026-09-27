@@ -14,7 +14,6 @@ import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
 import { TagInput } from "@/shared/ui/tag-input";
 
 const FIELDS: Record<string, Path<DnsForm>> = {
-  "dns.enabled": "enabled",
   "dns.address": "address",
   "dns.port": "port",
   "dns.ttl": "ttl",
@@ -84,10 +83,6 @@ export function DnsSettingsForm({ dns, revision }: DnsSettingsFormProps) {
     <form onSubmit={submit} className="grid gap-5" noValidate>
       {conflict ? <ErrorNotice title={common("errors.conflict")} /> : null}
       {problems.length > 0 ? <ErrorNotice title={t("refused")} description={problems.join("; ")} /> : null}
-      <div className="flex items-center justify-between gap-4">
-        <Label htmlFor="dns-enabled">{t("enabledLabel")}</Label>
-        <Controller control={form.control} name="enabled" render={({ field }) => <Switch id="dns-enabled" checked={field.value} onCheckedChange={field.onChange} />} />
-      </div>
       <div className="grid gap-5 sm:grid-cols-3">
         <FormField id="dns-address" label={t("address")} hint={t("addressHint")} error={errors.address?.message}>
           <Input id="dns-address" spellCheck={false} autoComplete="off" {...form.register("address")} />

@@ -33,10 +33,9 @@ pub async fn receive(
         .map(|Extension(ClientAddress(address))| address.to_string())
         .or_else(|| connect.map(|Extension(ConnectInfo(address))| address.ip().to_string()))
         .unwrap_or_default();
-    let webhook = state
-        .sink
-        .cache
-        .webhook(&id)
+    let webhook = Some(&state.sink.cache)
+        .filter(|cache| cache.webhooks_on())
+        .and_then(|cache| cache.webhook(&id))
         .filter(|webhook| webhook.enabled)
         .ok_or(ApiError::NotFound(Webhook::UNKNOWN))?;
     if let Some(expected) = &webhook.token_sha256 {

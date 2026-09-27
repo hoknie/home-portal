@@ -5,7 +5,9 @@ export const routes = {
   adminServices: "/admin/services/",
   adminLayout: "/admin/layout/",
   adminNetwork: "/admin/network/",
+  adminModules: "/admin/modules/",
   adminProxy: "/admin/proxy/",
+  adminDns: "/admin/dns/",
   adminAutomations: "/admin/automations/",
   newAutomation: "/admin/automations/new/",
   editAutomation: (id: string) => `/admin/automations/edit/?id=${encodeURIComponent(id)}`,
@@ -38,6 +40,8 @@ export const api = {
   publicIcon: (id: string) => `/api/public/icons/${encodeURIComponent(id)}`,
   proxy: "/api/proxy",
   dns: "/api/dns",
+  modules: "/api/modules",
+  module: (name: string) => `/api/modules/${encodeURIComponent(name)}`,
   proxyApply: "/api/proxy/apply",
   proxyContinue: (to: string) => `/api/proxy/continue?to=${encodeURIComponent(to)}`,
   proxyRootCertificate: "/api/proxy/root-certificate",
@@ -66,6 +70,13 @@ export const api = {
   webhooks: "/api/webhooks",
   webhook: (id: string) => `/api/webhooks/${encodeURIComponent(id)}`,
   webhookToken: (id: string) => `/api/webhooks/${encodeURIComponent(id)}/token`,
+} as const;
+
+export const MODULE_PAGES = {
+  proxy: routes.adminProxy,
+  dns: routes.adminDns,
+  automations: routes.adminAutomations,
+  webhooks: routes.adminWebhooks,
 } as const;
 
 export const STATUS_REFRESH_MILLISECONDS = 10_000;

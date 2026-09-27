@@ -7,7 +7,6 @@ use crate::types::DnsChoice;
 
 fn request() -> DnsChoice {
     DnsChoice {
-        enabled: true,
         address: "0.0.0.0".into(),
         port: 5353,
         zones: vec!["home".into()],
@@ -22,23 +21,23 @@ fn request() -> DnsChoice {
 }
 
 #[test]
-fn a_new_section_is_written_whole() {
+fn a_new_section_is_written_whole_without_a_switch() {
     let mut document = DocumentMut::new();
     write_dns(&mut document, &request());
     assert_eq!(
         document.to_string(),
-        "[dns]\nenabled = true\naddress = \"0.0.0.0\"\nport = 5353\nzones = [\"home\"]\nttl = 60\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\nvpn = [\"10.8.0.1\", \"fd00::1\"]\n\n[dns.tls]\nenabled = false\n\n[dns.https]\nenabled = false\n"
+        "[dns]\naddress = \"0.0.0.0\"\nport = 5353\nzones = [\"home\"]\nttl = 60\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\nvpn = [\"10.8.0.1\", \"fd00::1\"]\n\n[dns.tls]\nenabled = false\n\n[dns.https]\nenabled = false\n"
     );
 }
 
 #[test]
-fn an_edit_keeps_comments_records_and_untouched_keys() {
+fn an_edit_keeps_comments_records_untouched_keys_and_a_legacy_switch() {
     let original = "# Local names.\n[dns]\nenabled = false # off for now\nport = 53\n\n[dns.addresses]\noffice = \"10.0.0.1\"\n\n[[dns.records]]\n# The printer.\nname = \"printer.home\"\ntype = \"A\"\nvalue = \"192.168.1.9\"\n";
     let mut document: DocumentMut = original.parse().unwrap();
     write_dns(&mut document, &request());
     let text = document.to_string();
     assert!(
-        text.starts_with("# Local names.\n[dns]\nenabled = true # off for now\n"),
+        text.starts_with("# Local names.\n[dns]\nenabled = false # off for now\n"),
         "{text}"
     );
     assert!(text.contains("port = 5353\n"), "{text}");
