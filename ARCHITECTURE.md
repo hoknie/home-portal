@@ -371,6 +371,16 @@ too.
 - Users are `[[users]]` entries with an argon2id hash printed by `home-portal password-hash`. The
   portal refuses to start without one, and the example ships without one on purpose — a known
   password in an example becomes a live account the day someone copies it.
+- **Users can also be written by the interface** while the `users` module is on: `portal-auth`
+  owns `/api/users` (`ListUsers`, `CreateUser`, `ChangePassword`, `DeleteUser`) and writes the same
+  `[[users]]` entries through `repositories/users.rs`, back to the file each entry came from and a
+  new one after the last. Passwords are hashed off the runtime (`spawn_blocking`) and never stored,
+  logged or answered; nobody deletes themselves or the last user. While the module is off the list
+  is readable and every write answers 409.
+- **A session carries a credential fingerprint**: 16 hex digits of SHA-256 over its user's
+  `password_hash`. A hash that changes, from the interface or by hand, ends the other sessions on
+  their next request; changing one's own password restamps the session that did it. Sessions from
+  before the fingerprint are stamped on their next request.
 - A session is a random 256-bit token in an `HttpOnly`, `SameSite=Strict` cookie, sliding 7 days,
   and invalid as soon as its user leaves the configuration. The cookie scope follows the way the
   sign-in came: through Caddy under `proxy.cookie_domain` it is `Secure` with

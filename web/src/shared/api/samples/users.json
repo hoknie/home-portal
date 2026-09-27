@@ -1,0 +1,13 @@
+{
+  "editable": true,
+  "users": [
+    {
+      "name": "admin",
+      "you": true
+    },
+    {
+      "name": "anna",
+      "you": false
+    }
+  ]
+}

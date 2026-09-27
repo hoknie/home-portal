@@ -1,4 +1,4 @@
-import { Blocks, Globe, LayoutDashboard, type LucideIcon, Network, Server, Waypoints, Webhook, Workflow } from "lucide-react";
+import { Blocks, Globe, LayoutDashboard, type LucideIcon, Network, Server, Users, Waypoints, Webhook, Workflow } from "lucide-react";
 
 import type { ModuleName } from "@/entities/module";
 import { routes } from "@/shared/config";
@@ -15,6 +15,7 @@ export const MODULE_LINKS = [
   { module: "dns", href: routes.adminDns, label: "dns", icon: Globe },
   { module: "automations", href: routes.adminAutomations, label: "automations", icon: Workflow },
   { module: "webhooks", href: routes.adminWebhooks, label: "webhooks", icon: Webhook },
+  { module: "users", href: routes.adminUsers, label: "users", icon: Users },
 ] as const satisfies ReadonlyArray<{ module: ModuleName; href: string; label: string; icon: LucideIcon }>;
 
 export function moduleLinks(enabled: ReadonlySet<ModuleName>) {

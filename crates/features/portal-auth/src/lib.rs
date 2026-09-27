@@ -12,6 +12,6 @@ mod usecases;
 pub use features::AuthFeature;
 pub use helpers::{SESSION_COOKIE, hash_password};
 pub use ports::Connection;
-pub use responses::SessionResponse;
+pub use responses::{SessionResponse, UserResponse, UsersResponse};
 pub use types::CookieScope;
 pub use usecases::UserNames;

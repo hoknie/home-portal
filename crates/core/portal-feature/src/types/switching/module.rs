@@ -4,14 +4,16 @@ pub enum Module {
     Dns,
     Automations,
     Webhooks,
+    Users,
 }
 
 impl Module {
-    pub const ALL: [Module; 4] = [
+    pub const ALL: [Module; 5] = [
         Module::Proxy,
         Module::Dns,
         Module::Automations,
         Module::Webhooks,
+        Module::Users,
     ];
 
     pub fn name(self) -> &'static str {
@@ -20,6 +22,7 @@ impl Module {
             Module::Dns => "dns",
             Module::Automations => "automations",
             Module::Webhooks => "webhooks",
+            Module::Users => "users",
         }
     }
 
@@ -31,7 +34,7 @@ impl Module {
         match self {
             Module::Dns => &[Module::Proxy],
             Module::Webhooks => &[Module::Automations],
-            Module::Proxy | Module::Automations => &[],
+            Module::Proxy | Module::Automations | Module::Users => &[],
         }
     }
 
@@ -43,7 +46,7 @@ impl Module {
         match self {
             Module::Proxy => Some("proxy"),
             Module::Dns => Some("dns"),
-            Module::Automations | Module::Webhooks => None,
+            Module::Automations | Module::Webhooks | Module::Users => None,
         }
     }
 
@@ -53,6 +56,7 @@ impl Module {
             Module::Dns => 1,
             Module::Automations => 2,
             Module::Webhooks => 3,
+            Module::Users => 4,
         }
     }
 }

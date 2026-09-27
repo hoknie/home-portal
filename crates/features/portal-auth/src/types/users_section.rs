@@ -3,6 +3,7 @@ use serde::Deserialize;
 use toml_edit::DocumentMut;
 
 use super::User;
+use crate::helpers::credential_of;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct UsersSection {
@@ -17,5 +18,10 @@ impl UsersSection {
 
     pub fn find(&self, name: &str) -> Option<&User> {
         self.users.iter().find(|user| user.name == name)
+    }
+
+    pub fn credential(&self, name: &str) -> Option<String> {
+        self.find(name)
+            .map(|user| credential_of(&user.password_hash))
     }
 }

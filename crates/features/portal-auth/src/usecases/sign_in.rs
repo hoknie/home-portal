@@ -55,6 +55,7 @@ impl SignIn {
         let hash = users
             .find(&visitor.user)
             .map(|user| user.password_hash.clone());
+        let credential = users.credential(&visitor.user).unwrap_or_default();
         let verified =
             tokio::task::spawn_blocking(move || verify_password(&password, hash.as_deref()))
                 .await
@@ -71,7 +72,7 @@ impl SignIn {
             return Err(ApiError::Unauthorized);
         }
         self.throttle.succeed(client);
-        let token = self.sessions.create(&visitor.user, now);
+        let token = self.sessions.create(&visitor.user, &credential, now);
         self.announce(EventName::UserSignedIn, &visitor);
         Ok(token)
     }

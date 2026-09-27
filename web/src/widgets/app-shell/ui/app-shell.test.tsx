@@ -111,3 +111,11 @@ it("switching a module updates the menu without a reload", async () => {
   });
   expect((await screen.findAllByRole("link", { name: "Webhooks" }))[0]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/webhooks\/?$/));
 });
+
+it("users appear last in the modules section while their module is on", () => {
+  shellWith(["automations", "users"]);
+  const section = screen.getAllByRole("group", { name: "Modules" })[0];
+  const links = within(section).getAllByRole("link");
+  expect(links.map((link) => link.textContent)).toEqual(["Automations", "Users"]);
+  expect(links[1]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/users\/?$/));
+});

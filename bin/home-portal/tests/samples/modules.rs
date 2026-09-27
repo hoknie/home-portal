@@ -24,6 +24,7 @@ fn the_modules_sample_matches_its_serializer() {
             module("dns", true, vec!["proxy"], vec![]),
             module("automations", true, vec![], vec![]),
             module("webhooks", false, vec!["automations"], vec![]),
+            module("users", true, vec![], vec![]),
         ],
     };
     check("modules", serde_json::to_value(modules).unwrap());

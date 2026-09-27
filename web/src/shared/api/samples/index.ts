@@ -17,6 +17,7 @@ import publicPortal from "./public-portal.json";
 import secrets from "./secrets.json";
 import services from "./services.json";
 import session from "./session.json";
+import users from "./users.json";
 import widgetCalendar from "./widget-calendar.json";
 import widgetHostMetrics from "./widget-host-metrics.json";
 import widgetKinds from "./widget-kinds.json";
@@ -46,6 +47,7 @@ export const apiSamples = {
   secrets,
   services,
   session,
+  users,
   widgetCalendar,
   widgetHostMetrics,
   widgetKinds,

@@ -9,8 +9,8 @@ const byName = (name: string) => modules.modules.find((module) => module.name ==
 
 describe("modules", () => {
   it("the sample parses with every module in order", () => {
-    expect(modules.modules.map((module) => module.name)).toEqual(["proxy", "dns", "automations", "webhooks"]);
-    expect([...enabledModules(modules)]).toEqual(["proxy", "dns", "automations"]);
+    expect(modules.modules.map((module) => module.name)).toEqual(["proxy", "dns", "automations", "webhooks", "users"]);
+    expect([...enabledModules(modules)]).toEqual(["proxy", "dns", "automations", "users"]);
   });
 
   it("an enabled module that another needs is locked by it", () => {

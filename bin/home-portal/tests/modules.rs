@@ -72,6 +72,18 @@ async fn eventually(check: impl Fn() -> bool, within: Duration) -> bool {
 }
 
 #[tokio::test]
+async fn users_need_a_session() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = portal::with_extra(&directory, "secret", "");
+    let registry = registered(&portal::wiring_for(&path)).unwrap();
+    let response = assemble(&registry)
+        .oneshot(Request::get("/api/users").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
 async fn modules_need_a_session() {
     let directory = tempfile::tempdir().unwrap();
     let path = portal::with_extra(&directory, "secret", "");

@@ -35,7 +35,8 @@
     "webhooks": "Webhooks",
     "modules": "Módulos",
     "modulesSection": "Módulos",
-    "dns": "DNS"
+    "dns": "DNS",
+    "users": "Usuarios"
   },
   "theme": {
     "label": "Tema",
@@ -289,7 +290,10 @@
     "automationFromUnknown": "El estado desconocido solo cuenta con «Incluir el primer estado» activado",
     "automationReserved": "Este identificador lo usan las páginas de la interfaz: runs, catalogue, scripts, schedule",
     "webhookVariable": "Minúsculas, dígitos y _, empezando por una letra",
-    "tags": "Como máximo 20 etiquetas de hasta 40 caracteres"
+    "tags": "Como máximo 20 etiquetas de hasta 40 caracteres",
+    "userName": "Un nombre de 1 a 64 caracteres, sin caracteres de control",
+    "userPassword": "Usa de 8 a 1024 caracteres",
+    "userPasswordsDiffer": "Las contraseñas no coinciden"
   },
   "conditions": {
     "clear": "despejado",
@@ -1048,13 +1052,15 @@
       "proxy": "Proxy",
       "dns": "DNS",
       "automations": "Automatizaciones",
-      "webhooks": "Webhooks"
+      "webhooks": "Webhooks",
+      "users": "Usuarios"
     },
     "descriptions": {
       "proxy": "Publica los servicios con sus propios nombres a través de Caddy, con certificados e inicio de sesión mediante el portal.",
       "dns": "Responde DNS para los nombres que publica el proxy, con la dirección correcta en cada una de tus redes.",
       "automations": "Ejecuta tus scripts según un horario o cuando ocurre algo en el portal.",
-      "webhooks": "Direcciones que otros sistemas llaman para iniciar tus scripts o automatizaciones."
+      "webhooks": "Direcciones que otros sistemas llaman para iniciar tus scripts o automatizaciones.",
+      "users": "Quién puede iniciar sesión: añadir personas, cambiar contraseñas y eliminarlas desde la interfaz. Mientras está apagado, los usuarios se editan solo en el archivo de configuración."
     },
     "switchLabel": "{name}: encender o apagar",
     "on": "Encendido",
@@ -1073,5 +1079,36 @@
     "offNotice": "El módulo {name} está apagado. Sus ajustes pueden prepararse aquí; empezará a funcionar al encenderlo.",
     "offNoticeLink": "Abrir módulos",
     "offReason": "El módulo está apagado"
+  },
+  "users": {
+    "title": "Usuarios",
+    "subtitle": "Las personas que pueden iniciar sesión. Son entradas [[users]] de la configuración; los cambios hechos aquí se escriben allí, conservando los comentarios.",
+    "add": "Añadir usuario",
+    "addTitle": "Añadir un usuario",
+    "addDescription": "Inicia sesión con este nombre y contraseña. La contraseña solo se guarda como hash.",
+    "name": "Nombre",
+    "password": "Contraseña",
+    "repeat": "Repite la contraseña",
+    "passwordHint": "De 8 a 1024 caracteres",
+    "create": "Añadir",
+    "created": "{name} ya puede iniciar sesión",
+    "changePassword": "Cambiar contraseña",
+    "passwordTitle": "Nueva contraseña para {name}",
+    "passwordDescription": "La sesión de {name} se cierra en todos los demás sitios. La contraseña solo se guarda como hash.",
+    "savePassword": "Guardar contraseña",
+    "passwordChanged": "Se cambió la contraseña de {name}",
+    "delete": "Eliminar",
+    "deleteTitle": "¿Eliminar a {name}?",
+    "deleteDescription": "{name} ya no podrá iniciar sesión y sus sesiones terminarán.",
+    "deleted": "{name} fue eliminado",
+    "you": "tú",
+    "cannotDeleteYourself": "No puedes eliminarte a ti mismo",
+    "cannotDeleteLast": "Se necesita al menos un usuario",
+    "moduleOff": "Enciende el módulo de usuarios para cambiar usuarios",
+    "refused": "No se guardó: {message}",
+    "columns": {
+      "name": "Nombre",
+      "actions": "Acciones"
+    }
   }
 }

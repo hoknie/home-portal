@@ -20,7 +20,7 @@ impl SessionGate {
         let users = UsersSection::read(&self.configuration.read().document).unwrap_or_default();
         self.sessions
             .admit(token, OffsetDateTime::now_utc(), |name| {
-                users.find(name).is_some()
+                users.credential(name)
             })
             .map(|name| Principal { name })
     }

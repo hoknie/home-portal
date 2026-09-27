@@ -50,12 +50,14 @@ trusted_proxies = []
 
 # The optional parts of the portal, switched on and off here or under Management → Modules.
 # DNS needs the proxy and webhooks need automations. Unset, automations and webhooks are
-# on, and the proxy and DNS are off. A part that is off keeps its settings below.
+# on, and the proxy, DNS and users are off. A part that is off keeps its settings below.
+# users lets Management → Users add people, change passwords and remove them.
 # [modules]
 # proxy = true
 # dns = true
 # automations = true
 # webhooks = true
+# users = true
 
 # Publishing services under their own names through Caddy, which the portal manages.
 # examples/README.md ("Publishing through Caddy") and examples/split/ show a whole setup;
@@ -106,6 +108,8 @@ trusted_proxies = []
 
 # People who may sign in. At least one is required.
 # Create a hash with:  home-portal password-hash
+# With [modules] users = true, Management → Users edits these entries too, in the file
+# they live in, keeping comments; a changed password ends that person's other sessions.
 # [[users]]
 # name = "admin"
 # password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."

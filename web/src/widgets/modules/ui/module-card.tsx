@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, type LucideIcon, Settings2, Waypoints, Webhook, Workflow } from "lucide-react";
+import { Globe, type LucideIcon, Settings2, Users, Waypoints, Webhook, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -16,6 +16,7 @@ const ICONS: Record<ModuleName, LucideIcon> = {
   dns: Globe,
   automations: Workflow,
   webhooks: Webhook,
+  users: Users,
 };
 
 export type ModuleCardProps = { module: Module; modules: Modules; revision: string | null };

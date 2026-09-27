@@ -28,11 +28,12 @@ impl SessionStore {
         }
     }
 
-    pub fn create(&self, name: &str, now: OffsetDateTime) -> String {
+    pub fn create(&self, name: &str, credential: &str, now: OffsetDateTime) -> String {
         let token = new_token();
         let session = Session {
             name: name.to_string(),
             expires_at: now + Self::LIFETIME,
+            credential: Some(credential.to_string()),
         };
         let mut sessions = self.sessions.lock().unwrap_or_else(PoisonError::into_inner);
         sessions.insert(token_hash(&token), session);
@@ -44,19 +45,37 @@ impl SessionStore {
         &self,
         token: &str,
         now: OffsetDateTime,
-        user_exists: impl Fn(&str) -> bool,
+        credential_of: impl Fn(&str) -> Option<String>,
     ) -> Option<String> {
         let key = token_hash(token);
         let mut sessions = self.sessions.lock().unwrap_or_else(PoisonError::into_inner);
         let session = sessions.get_mut(&key)?;
-        if session.expires_at <= now || !user_exists(&session.name) {
+        let current = credential_of(&session.name);
+        let valid = session.expires_at > now
+            && match (&current, &session.credential) {
+                (None, _) => false,
+                (Some(current), Some(remembered)) => current == remembered,
+                (Some(_), None) => true,
+            };
+        if !valid {
             sessions.remove(&key);
             self.save(&sessions);
             return None;
         }
+        if session.credential.is_none() {
+            session.credential = current;
+        }
         session.expires_at = now + Self::LIFETIME;
         self.extended.store(true, Ordering::Relaxed);
         Some(session.name.clone())
+    }
+
+    pub fn restamp(&self, token: &str, credential: &str) {
+        let mut sessions = self.sessions.lock().unwrap_or_else(PoisonError::into_inner);
+        if let Some(session) = sessions.get_mut(&token_hash(token)) {
+            session.credential = Some(credential.to_string());
+            self.save(&sessions);
+        }
     }
 
     pub fn end(&self, token: &str) {

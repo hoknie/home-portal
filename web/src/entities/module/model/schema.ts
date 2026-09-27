@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const MODULE_NAMES = ["proxy", "dns", "automations", "webhooks"] as const;
+export const MODULE_NAMES = ["proxy", "dns", "automations", "webhooks", "users"] as const;
 
 export const moduleNameSchema = z.enum(MODULE_NAMES);
 

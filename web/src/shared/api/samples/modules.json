@@ -29,6 +29,12 @@
       "requires": [
         "automations"
       ]
+    },
+    {
+      "enabled": true,
+      "name": "users",
+      "required_by": [],
+      "requires": []
     }
   ]
 }

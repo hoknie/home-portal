@@ -12,6 +12,7 @@ export const routes = {
   newAutomation: "/admin/automations/new/",
   editAutomation: (id: string) => `/admin/automations/edit/?id=${encodeURIComponent(id)}`,
   adminWebhooks: "/admin/webhooks/",
+  adminUsers: "/admin/users/",
   newWebhook: "/admin/webhooks/new/",
   editWebhook: (id: string) => `/admin/webhooks/edit/?id=${encodeURIComponent(id)}`,
   webhookDetails: (id: string) => `/admin/webhooks/details/?id=${encodeURIComponent(id)}`,
@@ -42,6 +43,9 @@ export const api = {
   dns: "/api/dns",
   modules: "/api/modules",
   module: (name: string) => `/api/modules/${encodeURIComponent(name)}`,
+  users: "/api/users",
+  user: (name: string) => `/api/users/${encodeURIComponent(name)}`,
+  userPassword: (name: string) => `/api/users/${encodeURIComponent(name)}/password`,
   proxyApply: "/api/proxy/apply",
   proxyContinue: (to: string) => `/api/proxy/continue?to=${encodeURIComponent(to)}`,
   proxyRootCertificate: "/api/proxy/root-certificate",
@@ -77,6 +81,7 @@ export const MODULE_PAGES = {
   dns: routes.adminDns,
   automations: routes.adminAutomations,
   webhooks: routes.adminWebhooks,
+  users: routes.adminUsers,
 } as const;
 
 export const STATUS_REFRESH_MILLISECONDS = 10_000;

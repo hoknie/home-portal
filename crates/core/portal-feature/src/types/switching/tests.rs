@@ -38,6 +38,14 @@ fn without_any_switch_automations_and_webhooks_are_on_and_the_rest_off() {
     assert!(!resolved.is_on(Module::Dns));
     assert!(resolved.is_on(Module::Automations));
     assert!(resolved.is_on(Module::Webhooks));
+    assert!(!resolved.is_on(Module::Users));
+}
+
+#[test]
+fn users_require_nothing_and_are_switched_on_by_the_modules_section() {
+    assert!(Module::Users.requires().is_empty());
+    assert!(switches("[modules]\nusers = true\n").is_on(Module::Users));
+    assert!(fields("[modules]\nusers = true\n").is_empty());
 }
 
 #[test]

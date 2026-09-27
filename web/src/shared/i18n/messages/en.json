@@ -35,7 +35,8 @@
     "webhooks": "Webhooks",
     "modules": "Modules",
     "modulesSection": "Modules",
-    "dns": "DNS"
+    "dns": "DNS",
+    "users": "Users"
   },
   "theme": {
     "label": "Theme",
@@ -289,7 +290,10 @@
     "automationFromUnknown": "The unknown state counts only with “Including the first state” on",
     "automationReserved": "This id is taken by the interface's own pages: runs, catalogue, scripts, schedule",
     "webhookVariable": "Lowercase letters, digits and _, starting with a letter",
-    "tags": "At most 20 tags of up to 40 characters"
+    "tags": "At most 20 tags of up to 40 characters",
+    "userName": "Give a name of 1 to 64 characters, without control characters",
+    "userPassword": "Use 8 to 1024 characters",
+    "userPasswordsDiffer": "The passwords do not match"
   },
   "conditions": {
     "clear": "clear",
@@ -1048,13 +1052,15 @@
       "proxy": "Proxy",
       "dns": "DNS",
       "automations": "Automations",
-      "webhooks": "Webhooks"
+      "webhooks": "Webhooks",
+      "users": "Users"
     },
     "descriptions": {
       "proxy": "Publishes services under their own names through Caddy, with certificates and signing in through the portal.",
       "dns": "Answers DNS for the names the proxy publishes, with the right address in each of your networks.",
       "automations": "Runs your scripts on a schedule or when something happens in the portal.",
-      "webhooks": "Addresses other systems call to start your scripts or automations."
+      "webhooks": "Addresses other systems call to start your scripts or automations.",
+      "users": "Who may sign in: add people, change passwords and remove them from the interface. While it is off, users are edited only in the configuration file."
     },
     "switchLabel": "{name}: on or off",
     "on": "On",
@@ -1073,5 +1079,36 @@
     "offNotice": "The {name} module is off. Its settings can be prepared here; it starts working once it is switched on.",
     "offNoticeLink": "Open modules",
     "offReason": "The module is off"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "The people who may sign in. They are [[users]] entries in the configuration; changes here are written there, with comments kept.",
+    "add": "Add user",
+    "addTitle": "Add a user",
+    "addDescription": "They sign in with this name and password. The password is stored only as a hash.",
+    "name": "Name",
+    "password": "Password",
+    "repeat": "Repeat the password",
+    "passwordHint": "8 to 1024 characters",
+    "create": "Add",
+    "created": "{name} can now sign in",
+    "changePassword": "Change password",
+    "passwordTitle": "New password for {name}",
+    "passwordDescription": "{name} is signed out everywhere else. The password is stored only as a hash.",
+    "savePassword": "Save password",
+    "passwordChanged": "The password of {name} was changed",
+    "delete": "Delete",
+    "deleteTitle": "Delete {name}?",
+    "deleteDescription": "{name} can no longer sign in, and their sessions end.",
+    "deleted": "{name} was deleted",
+    "you": "you",
+    "cannotDeleteYourself": "You cannot delete yourself",
+    "cannotDeleteLast": "At least one user is required",
+    "moduleOff": "Switch the users module on to change users",
+    "refused": "Not saved: {message}",
+    "columns": {
+      "name": "Name",
+      "actions": "Actions"
+    }
   }
 }

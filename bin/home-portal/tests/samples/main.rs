@@ -8,6 +8,7 @@ mod history;
 mod modules;
 mod proxy;
 mod public;
+mod users;
 mod widgets;
 
 use std::env;

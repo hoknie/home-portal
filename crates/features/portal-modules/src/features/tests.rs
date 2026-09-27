@@ -141,7 +141,12 @@ async fn every_module_is_listed_in_order_with_its_requirements() {
         .iter()
         .map(|module| module["name"].as_str().unwrap())
         .collect();
-    assert_eq!(names, vec!["proxy", "dns", "automations", "webhooks"]);
+    assert_eq!(
+        names,
+        vec!["proxy", "dns", "automations", "webhooks", "users"]
+    );
+    assert_eq!(entry(&body, "users")["enabled"], false);
+    assert_eq!(entry(&body, "users")["requires"], serde_json::json!([]));
     assert_eq!(entry(&body, "proxy")["enabled"], false);
     assert_eq!(
         entry(&body, "dns")["requires"],
