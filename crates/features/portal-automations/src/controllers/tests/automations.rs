@@ -43,7 +43,6 @@ pub struct Api {
 pub fn api(text: &str) -> Api {
     let (folder, feature) = portal(text, &[("restart.sh", "echo \"$@\"")]);
     feature
-        .state
         .configuration
         .adopt(vec![feature.validator().unwrap()])
         .unwrap();

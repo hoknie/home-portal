@@ -4,30 +4,20 @@ use axum::extract::{Path, State};
 use axum::http::header::ETAG;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
-use portal_config::{Revision, Snapshot};
-use portal_feature::{ApiError, EventName, PortalEvent, Principal};
+use portal_config::{Revision, Revisioned};
+use portal_feature::{ApiError, Principal};
 use portal_model::Environment;
-use time::OffsetDateTime;
 
-use crate::repositories::{
-    append, origin, position, published_elsewhere, remove as remove_entry, replace,
-};
 use crate::requests::ServiceRequest;
 use crate::responses::{ServiceResponse, ServicesResponse};
-use crate::services::{check_entry, known_of};
-use crate::types::{ServiceEntry, ServicesSection, ServicesState, Viewpoint};
-
-pub const UNKNOWN_SERVICE: &str = "no such service";
-pub const TAKEN_ID: &str = "is used by another service";
-pub const TAKEN_HOST: &str = "is published by another service";
+use crate::types::{ServicesState, ShownService, Viewpoint};
 
 pub async fn list(
     State(state): State<ServicesState>,
     Extension(environment): Extension<Environment>,
 ) -> Result<Response, ApiError> {
-    let snapshot = state.configuration.read();
-    let body = services_of(&state, &snapshot, &environment)?;
-    Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
+    let listed = state.list.run(&environment)?;
+    Ok(listing(StatusCode::OK, listed, &environment))
 }
 
 pub async fn create(
@@ -38,37 +28,11 @@ pub async fn create(
     Json(request): Json<ServiceRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let entry = checked(request, &state)?;
-    let target = state.configuration.writes_to();
-    let (_, snapshot) = state
-        .configuration
-        .update(&target, &revision, |document| {
-            if position(document, &entry.id).is_some() {
-                return Err(ApiError::invalid("id", TAKEN_ID));
-            }
-            if published_elsewhere(document, &entry, &entry.id) {
-                return Err(ApiError::invalid("proxy.host", TAKEN_HOST));
-            }
-            append(document, &entry);
-            Ok(())
-        })
+    let created = state
+        .create
+        .run(request.into_entry(), &revision, &user_of(principal))
         .await?;
-    state.supervisor.reconcile();
-    announce(
-        &state,
-        EventName::ServiceCreated,
-        &[
-            ("service.id", &entry.id),
-            ("service.name", &entry.name),
-            ("user.name", &user_of(principal)),
-        ],
-    );
-    let body = ServiceResponse::of(
-        entry.clone(),
-        viewpoint(&state, &environment),
-        state.board.status(&entry.id),
-    );
-    Ok(with_revision(StatusCode::CREATED, &snapshot, Json(body)))
+    Ok(one(StatusCode::CREATED, created, &environment))
 }
 
 pub async fn update(
@@ -80,43 +44,11 @@ pub async fn update(
     Json(request): Json<ServiceRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let entry = checked(request, &state)?;
-    let target =
-        origin(&state.configuration.read(), &id).ok_or(ApiError::NotFound(UNKNOWN_SERVICE))?;
-    let (_, snapshot) = state
-        .configuration
-        .update(&target, &revision, |document| {
-            let index = position(document, &id).ok_or(ApiError::NotFound(UNKNOWN_SERVICE))?;
-            if entry.id != id && position(document, &entry.id).is_some() {
-                return Err(ApiError::invalid("id", TAKEN_ID));
-            }
-            if published_elsewhere(document, &entry, &id) {
-                return Err(ApiError::invalid("proxy.host", TAKEN_HOST));
-            }
-            replace(document, index, &entry);
-            Ok(())
-        })
+    let changed = state
+        .change
+        .run(&id, request.into_entry(), &revision, &user_of(principal))
         .await?;
-    if entry.id != id {
-        state.board.rename(&id, &entry.id);
-    }
-    state.supervisor.reconcile();
-    announce(
-        &state,
-        EventName::ServiceUpdated,
-        &[
-            ("service.id", &entry.id),
-            ("service.name", &entry.name),
-            ("service.previous_id", &id),
-            ("user.name", &user_of(principal)),
-        ],
-    );
-    let body = ServiceResponse::of(
-        entry.clone(),
-        viewpoint(&state, &environment),
-        state.board.status(&entry.id),
-    );
-    Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
+    Ok(one(StatusCode::OK, changed, &environment))
 }
 
 pub async fn remove(
@@ -127,39 +59,11 @@ pub async fn remove(
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let name = ServicesSection::read(&state.configuration.read().document)
-        .ok()
-        .and_then(|section| section.services.into_iter().find(|entry| entry.id == id))
-        .map(|entry| entry.name)
-        .unwrap_or_default();
-    let target =
-        origin(&state.configuration.read(), &id).ok_or(ApiError::NotFound(UNKNOWN_SERVICE))?;
-    let (_, snapshot) = state
-        .configuration
-        .update(&target, &revision, |document| {
-            let index = position(document, &id).ok_or(ApiError::NotFound(UNKNOWN_SERVICE))?;
-            remove_entry(document, index);
-            Ok(())
-        })
+    let remaining = state
+        .delete
+        .run(&id, &revision, &environment, &user_of(principal))
         .await?;
-    state.supervisor.reconcile();
-    announce(
-        &state,
-        EventName::ServiceDeleted,
-        &[
-            ("service.id", &id),
-            ("service.name", &name),
-            ("user.name", &user_of(principal)),
-        ],
-    );
-    let body = services_of(&state, &snapshot, &environment)?;
-    Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
-}
-
-fn announce(state: &ServicesState, name: EventName, values: &[(&str, &str)]) {
-    state
-        .events
-        .emit(PortalEvent::of(name, OffsetDateTime::now_utc(), values));
+    Ok(listing(StatusCode::OK, remaining, &environment))
 }
 
 fn user_of(principal: Option<Extension<Principal>>) -> String {
@@ -168,51 +72,45 @@ fn user_of(principal: Option<Extension<Principal>>) -> String {
         .unwrap_or_default()
 }
 
-fn checked(request: ServiceRequest, state: &ServicesState) -> Result<ServiceEntry, ApiError> {
-    let entry = request.into_entry();
-    let known = known_of(&state.configuration.read().document);
-    let mut errors = check_entry(&entry, &known);
-    if let Some(publication) = &entry.proxy {
-        errors.extend(state.publishing.problems(publication));
-    }
-    if errors.is_empty() {
-        Ok(entry)
-    } else {
-        Err(ApiError::Invalid(errors))
-    }
-}
-
-fn services_of(
-    state: &ServicesState,
-    snapshot: &Snapshot,
-    environment: &Environment,
-) -> Result<ServicesResponse, ApiError> {
-    let section = ServicesSection::read(&snapshot.document)
-        .map_err(|message| ApiError::Internal(format!("services section: {message}")))?;
-    let services = section
-        .services
-        .into_iter()
-        .filter(|entry| entry.visible_to(environment))
-        .map(|entry| {
-            let status = state.board.status(&entry.id);
-            ServiceResponse::of(entry, viewpoint(state, environment), status)
-        })
-        .collect();
-    Ok(ServicesResponse { services })
-}
-
-fn viewpoint<'a>(state: &'a ServicesState, environment: &'a Environment) -> Viewpoint<'a> {
-    Viewpoint {
+fn response_of(shown: ShownService, environment: &Environment) -> ServiceResponse {
+    let ShownService {
+        entry,
+        status,
+        host,
+        publishing,
+    } = shown;
+    let viewpoint = Viewpoint {
         environment,
-        host: state.supervisor.host(),
-        publishing: state.publishing.https_port(),
-    }
+        host: &host,
+        publishing,
+    };
+    ServiceResponse::of(entry, viewpoint, status)
 }
 
-fn with_revision(status: StatusCode, snapshot: &Snapshot, body: impl IntoResponse) -> Response {
+fn one(status: StatusCode, shown: Revisioned<ShownService>, environment: &Environment) -> Response {
+    let body = response_of(shown.value, environment);
+    with_revision(status, &shown.revision, Json(body))
+}
+
+fn listing(
+    status: StatusCode,
+    listed: Revisioned<Vec<ShownService>>,
+    environment: &Environment,
+) -> Response {
+    let services = listed
+        .value
+        .into_iter()
+        .map(|shown| response_of(shown, environment))
+        .collect();
+    with_revision(
+        status,
+        &listed.revision,
+        Json(ServicesResponse { services }),
+    )
+}
+
+fn with_revision(status: StatusCode, revision: &Revision, body: impl IntoResponse) -> Response {
     let mut response = (status, body).into_response();
-    response
-        .headers_mut()
-        .insert(ETAG, snapshot.revision.etag());
+    response.headers_mut().insert(ETAG, revision.etag());
     response
 }

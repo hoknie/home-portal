@@ -16,6 +16,8 @@ pub struct Automation {
 }
 
 impl Automation {
+    pub const UNKNOWN: &'static str = "no such automation";
+    pub const TAKEN_ID: &'static str = "is used by another automation";
     pub const LONGEST_ID: usize = 63;
     pub const RESERVED_IDS: [&'static str; 4] = ["runs", "catalogue", "scripts", "schedule"];
 

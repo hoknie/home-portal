@@ -6,6 +6,7 @@ mod service_link;
 mod services_ports;
 mod services_section;
 mod services_state;
+mod shown_service;
 mod tracked;
 mod viewpoint;
 
@@ -20,5 +21,6 @@ pub use service_link::ServiceLink;
 pub use services_ports::ServicesPorts;
 pub use services_section::ServicesSection;
 pub use services_state::ServicesState;
+pub use shown_service::ShownService;
 pub use tracked::Tracked;
 pub use viewpoint::Viewpoint;

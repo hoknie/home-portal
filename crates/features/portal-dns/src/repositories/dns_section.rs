@@ -1,29 +1,29 @@
 use toml_edit::{Array, DocumentMut, Item, Table, TableLike, Value, value};
 
-use crate::requests::DnsRequest;
+use crate::types::DnsChoice;
 
 pub const SECTION: &str = "dns";
 pub const ADDRESSES: &str = "addresses";
 pub const TLS: &str = "tls";
 pub const HTTPS: &str = "https";
 
-pub fn write_dns(document: &mut DocumentMut, request: &DnsRequest) {
+pub fn write_dns(document: &mut DocumentMut, choice: &DnsChoice) {
     let table = section(document, SECTION);
-    set(table, "enabled", request.enabled.into());
-    set(table, "address", request.address.trim().into());
-    set(table, "port", i64::from(request.port).into());
-    set(table, "zones", strings(&request.zones).into());
-    set(table, "ttl", i64::from(request.ttl).into());
+    set(table, "enabled", choice.enabled.into());
+    set(table, "address", choice.address.trim().into());
+    set(table, "port", i64::from(choice.port).into());
+    set(table, "zones", strings(&choice.zones).into());
+    set(table, "ttl", i64::from(choice.ttl).into());
     let addresses = child(table, ADDRESSES);
     let stale: Vec<String> = addresses
         .iter()
         .map(|(key, _)| key.to_string())
-        .filter(|key| !request.addresses.contains_key(key))
+        .filter(|key| !choice.addresses.contains_key(key))
         .collect();
     for key in stale {
         addresses.remove(&key);
     }
-    for (environment, found) in &request.addresses {
+    for (environment, found) in &choice.addresses {
         let written = match found.as_slice() {
             [one] => Value::from(one.trim()),
             many => strings(many).into(),
@@ -31,21 +31,21 @@ pub fn write_dns(document: &mut DocumentMut, request: &DnsRequest) {
         set(addresses, environment, written);
     }
     let tls = child(table, TLS);
-    set(tls, "enabled", request.tls.enabled.into());
+    set(tls, "enabled", choice.tls.enabled.into());
     optional(
         tls,
         "port",
-        request.tls.port.map(|port| i64::from(port).into()),
+        choice.tls.port.map(|port| i64::from(port).into()),
     );
     optional(
         tls,
         "certificate",
-        present(&request.tls.certificate).map(Value::from),
+        present(&choice.tls.certificate).map(Value::from),
     );
-    optional(tls, "key", present(&request.tls.key).map(Value::from));
+    optional(tls, "key", present(&choice.tls.key).map(Value::from));
     let https = child(table, HTTPS);
-    set(https, "enabled", request.https.enabled.into());
-    optional(https, "host", present(&request.https.host).map(Value::from));
+    set(https, "enabled", choice.https.enabled.into());
+    optional(https, "host", present(&choice.https.host).map(Value::from));
 }
 
 fn present(text: &Option<String>) -> Option<&str> {

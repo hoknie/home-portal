@@ -1,19 +1,20 @@
 use std::env;
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 use portal_config::{ConfigError, ConfigStore};
-use portal_network::{EffectiveAddress, read_network};
+use portal_network::{CurrentNetwork, EffectiveAddress};
 
 use crate::types::BootError;
 
 pub const ADDRESS_VARIABLE: &str = "HOME_PORTAL_ADDRESS";
 
-pub fn from_environment(store: &ConfigStore) -> Result<EffectiveAddress, BootError> {
+pub fn from_environment(store: &Arc<ConfigStore>) -> Result<EffectiveAddress, BootError> {
     resolve_address(store, env::var(ADDRESS_VARIABLE).ok())
 }
 
 pub fn resolve_address(
-    store: &ConfigStore,
+    store: &Arc<ConfigStore>,
     environment: Option<String>,
 ) -> Result<EffectiveAddress, BootError> {
     if let Some(value) = environment {
@@ -22,12 +23,15 @@ pub fn resolve_address(
             overridden: true,
         });
     }
-    let settings = read_network(&store.read().document).map_err(|errors| {
-        BootError::Configuration(ConfigError::Invalid {
-            path: store.path().to_path_buf(),
-            errors,
-        })
-    })?;
+    let settings = CurrentNetwork::new(store.clone())
+        .run()
+        .settings
+        .map_err(|errors| {
+            BootError::Configuration(ConfigError::Invalid {
+                path: store.path().to_path_buf(),
+                errors,
+            })
+        })?;
     Ok(EffectiveAddress {
         address: settings.socket_address(),
         overridden: false,

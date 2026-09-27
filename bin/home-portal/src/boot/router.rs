@@ -1,6 +1,8 @@
 use axum::Router;
 use axum::middleware;
 use axum::routing::{any, post};
+use portal_network::CurrentNetwork;
+use portal_web::CurrentInterface;
 
 use crate::controllers::{RESTART_PATH, not_found, restart};
 use crate::middlewares::{decide_environment, decide_language, json_only, require_session};
@@ -40,11 +42,11 @@ pub fn assemble(registry: &Registry) -> Router {
         .fallback_service(portal_web::interface(registry.interface.clone()))
         .layer(middleware::from_fn(json_only))
         .layer(middleware::from_fn_with_state(
-            configuration.clone(),
+            CurrentNetwork::new(configuration.clone()),
             decide_environment,
         ))
         .layer(middleware::from_fn_with_state(
-            configuration,
+            CurrentInterface::new(configuration),
             decide_language,
         ))
 }

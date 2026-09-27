@@ -3,16 +3,15 @@ use axum::extract::State;
 use axum::http::header::ETAG;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
-use portal_config::Revision;
+use portal_config::{Revision, Revisioned};
 use portal_feature::ApiError;
 
-use crate::repositories::{SECTION, write_dns};
 use crate::requests::DnsRequest;
 use crate::responses::DnsResponse;
-use crate::types::DnsContext;
+use crate::types::{DnsContext, DnsView};
 
 pub async fn show(State(context): State<DnsContext>) -> Response {
-    answer(&context)
+    answer(context.show.run())
 }
 
 pub async fn change(
@@ -21,30 +20,17 @@ pub async fn change(
     Json(request): Json<DnsRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let target = context
-        .configuration
-        .read()
-        .origins
-        .table(SECTION)
-        .map(std::path::Path::to_path_buf)
-        .unwrap_or_else(|| context.configuration.writes_to());
-    context
-        .configuration
-        .update(&target, &revision, |document| {
-            write_dns(document, &request);
-            Ok(())
-        })
+    let changed = context
+        .change
+        .run(&request.into_choice(), &revision)
         .await?;
-    context.runtime.refresh_now();
-    Ok(answer(&context))
+    Ok(answer(changed))
 }
 
-fn answer(context: &DnsContext) -> Response {
-    let library = &context.runtime.library;
-    let body = DnsResponse::of(&library.settings(), &library.book(), &library.state());
+fn answer(view: Revisioned<DnsView>) -> Response {
+    let shown = &view.value;
+    let body = DnsResponse::of(&shown.settings, &shown.book, &shown.state);
     let mut response = (StatusCode::OK, Json(body)).into_response();
-    response
-        .headers_mut()
-        .insert(ETAG, context.configuration.read().revision.etag());
+    response.headers_mut().insert(ETAG, view.revision.etag());
     response
 }

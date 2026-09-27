@@ -15,7 +15,6 @@ use crate::helpers::{same_secret, token_hash};
 use crate::responses::AcceptedResponse;
 use crate::types::{AutomationsState, Webhook, WebhookAction};
 
-pub const UNKNOWN_WEBHOOK: &str = "no such webhook";
 pub const TOKEN_HEADER: &str = "x-webhook-token";
 pub const BEARER: &str = "Bearer ";
 pub const STOPPING: &str = "the portal is stopping";
@@ -39,7 +38,7 @@ pub async fn receive(
         .cache
         .webhook(&id)
         .filter(|webhook| webhook.enabled)
-        .ok_or(ApiError::NotFound(UNKNOWN_WEBHOOK))?;
+        .ok_or(ApiError::NotFound(Webhook::UNKNOWN))?;
     if let Some(expected) = &webhook.token_sha256 {
         let presented = presented_token(&headers).ok_or(ApiError::Unauthorized)?;
         if !same_secret(&token_hash(&presented), expected) {

@@ -10,11 +10,13 @@ use time::OffsetDateTime;
 use crate::controllers::{sign_in, sign_out, who_am_i};
 use crate::ports::Connection;
 use crate::repositories::SessionFile;
-use crate::services::{SessionGate, SessionStore, Throttle, validate_users};
+use crate::services::{SessionGate, SessionStore, validate_users};
 use crate::types::AuthState;
+use crate::usecases::{ShowSession, SignIn, SignOut};
 
 pub struct AuthFeature {
     state: AuthState,
+    gate: SessionGate,
 }
 
 impl AuthFeature {
@@ -31,22 +33,24 @@ impl AuthFeature {
             SessionFile::at(configuration.storage(Storage::Sessions)),
             OffsetDateTime::now_utc(),
         );
+        let sessions = Arc::new(sessions);
+        let gate = SessionGate {
+            configuration: configuration.clone(),
+            sessions: sessions.clone(),
+        };
         AuthFeature {
             state: AuthState {
-                configuration,
-                sessions: Arc::new(sessions),
-                throttle: Arc::new(Throttle::default()),
+                sign_in: SignIn::new(configuration, sessions, events.clone()),
+                session: ShowSession::new(gate.clone()),
+                sign_out: SignOut::new(gate.clone(), events),
                 connection,
-                events,
             },
+            gate,
         }
     }
 
     pub fn gate(&self) -> Arc<dyn Gate> {
-        Arc::new(SessionGate {
-            configuration: self.state.configuration.clone(),
-            sessions: self.state.sessions.clone(),
-        })
+        Arc::new(self.gate.clone())
     }
 }
 
@@ -72,7 +76,7 @@ impl Feature for AuthFeature {
     }
 
     fn loops(&self) -> Vec<Loop> {
-        let sessions = self.state.sessions.clone();
+        let sessions = self.gate.sessions.clone();
         vec![Box::pin(async move {
             let mut ticks = tokio::time::interval(Self::PRUNE_EVERY);
             loop {
@@ -83,6 +87,6 @@ impl Feature for AuthFeature {
     }
 
     fn stop(&self) {
-        self.state.sessions.flush();
+        self.gate.sessions.flush();
     }
 }

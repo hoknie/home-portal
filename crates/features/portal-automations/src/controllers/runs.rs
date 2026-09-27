@@ -6,10 +6,9 @@ use axum::http::StatusCode;
 use axum::{Extension, Json};
 use portal_feature::{ApiError, Principal};
 
-use super::UNKNOWN_AUTOMATION;
 use crate::requests::RunsQuery;
 use crate::responses::{QueuedResponse, RunResponse, RunsResponse};
-use crate::types::{AutomationsState, RunFilter, StopAnswer};
+use crate::types::{Automation, AutomationsState, RunFilter, StopAnswer};
 
 pub const DISABLED: &str = "the automation is disabled";
 pub const UNKNOWN_RUN: &str = "no such run";
@@ -25,7 +24,7 @@ pub async fn run_now(
         .sink
         .cache
         .find(&id)
-        .ok_or(ApiError::NotFound(UNKNOWN_AUTOMATION))?;
+        .ok_or(ApiError::NotFound(Automation::UNKNOWN))?;
     if !automation.enabled {
         return Err(ApiError::Conflict(DISABLED.to_string()));
     }

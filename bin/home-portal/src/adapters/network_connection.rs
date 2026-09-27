@@ -1,28 +1,26 @@
 use std::net::{IpAddr, SocketAddr};
-use std::sync::Arc;
 
 use axum::http::HeaderMap;
 use portal_auth::{Connection, CookieScope};
-use portal_config::ConfigStore;
 use portal_model::Publication;
-use portal_network::{NetworkSettings, client_address, read_network};
-use portal_proxy::{TrustedPeers, read_settings};
-use toml_edit::DocumentMut;
+use portal_network::{CurrentNetwork, NetworkSettings, client_address};
+use portal_proxy::{CurrentProxySettings, TrustedPeers};
 
 pub struct NetworkConnection {
-    pub configuration: Arc<ConfigStore>,
+    pub network: CurrentNetwork,
+    pub proxy: CurrentProxySettings,
 }
 
 impl NetworkConnection {
     pub const FORWARDED_HOST: &'static str = "x-forwarded-host";
 
     fn proxied_domain(
-        document: &DocumentMut,
+        &self,
         network: &NetworkSettings,
         peer: Option<SocketAddr>,
         headers: &HeaderMap,
     ) -> Option<String> {
-        let settings = read_settings(document).ok()?;
+        let settings = self.proxy.run().ok()?;
         let domain = settings.cookie_domain()?;
         let peer = peer?.ip();
         if !network
@@ -44,14 +42,13 @@ impl NetworkConnection {
 
 impl Connection for NetworkConnection {
     fn client_address(&self, peer: Option<SocketAddr>, headers: &HeaderMap) -> IpAddr {
-        let settings = read_network(&self.configuration.read().document).unwrap_or_default();
+        let settings = self.network.run().settings.unwrap_or_default();
         client_address(peer, headers, &settings.trusted_proxies)
     }
 
     fn cookie_scope(&self, peer: Option<SocketAddr>, headers: &HeaderMap) -> CookieScope {
-        let document = self.configuration.read().document;
-        let network = read_network(&document).unwrap_or_default();
-        match Self::proxied_domain(&document, &network, peer, headers) {
+        let network = self.network.run().settings.unwrap_or_default();
+        match self.proxied_domain(&network, peer, headers) {
             Some(domain) => CookieScope {
                 secure: true,
                 domain: Some(domain),
@@ -66,7 +63,9 @@ impl Connection for NetworkConnection {
 
 impl TrustedPeers for NetworkConnection {
     fn trusts(&self, peer: IpAddr) -> bool {
-        read_network(&self.configuration.read().document)
+        self.network
+            .run()
+            .settings
             .map(|settings| {
                 settings
                     .trusted_proxies

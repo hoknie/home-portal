@@ -8,6 +8,7 @@ use portal_feature::{Feature, Validator};
 use crate::controllers::{change, show, show_environment};
 use crate::services::{validate_environments, validate_network};
 use crate::types::{EffectiveAddress, NetworkState};
+use crate::usecases::{ChangeNetwork, CurrentEnvironments, ShowNetwork};
 
 fn validate_section(document: &toml_edit::DocumentMut) -> Vec<portal_feature::FieldError> {
     let mut errors = validate_network(document);
@@ -27,7 +28,9 @@ impl NetworkFeature {
     pub fn new(configuration: Arc<ConfigStore>, effective: EffectiveAddress) -> NetworkFeature {
         NetworkFeature {
             state: NetworkState {
-                configuration,
+                show: ShowNetwork::new(configuration.clone()),
+                change: ChangeNetwork::new(configuration.clone()),
+                environments: CurrentEnvironments::new(configuration),
                 effective,
             },
         }

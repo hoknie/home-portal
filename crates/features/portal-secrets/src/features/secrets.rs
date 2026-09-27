@@ -6,9 +6,11 @@ use portal_config::ConfigStore;
 use portal_feature::Feature;
 
 use crate::controllers::list;
+use crate::types::SecretsState;
+use crate::usecases::ListSecrets;
 
 pub struct SecretsFeature {
-    configuration: Arc<ConfigStore>,
+    state: SecretsState,
 }
 
 impl SecretsFeature {
@@ -16,7 +18,11 @@ impl SecretsFeature {
     pub const PATH: &'static str = "/api/secrets";
 
     pub fn new(configuration: Arc<ConfigStore>) -> SecretsFeature {
-        SecretsFeature { configuration }
+        SecretsFeature {
+            state: SecretsState {
+                list: ListSecrets::new(configuration),
+            },
+        }
     }
 }
 
@@ -28,6 +34,6 @@ impl Feature for SecretsFeature {
     fn router(&self) -> Router {
         Router::new()
             .route(Self::PATH, get(list))
-            .with_state(self.configuration.clone())
+            .with_state(self.state.clone())
     }
 }

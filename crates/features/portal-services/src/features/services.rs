@@ -11,11 +11,17 @@ use crate::controllers::{create, history, list, probe_now, remove, update};
 use crate::loops::HistoryWriter;
 use crate::probes::Probe;
 use crate::repositories::HistoryFiles;
-use crate::services::{StatusBoard, Supervisor, validate_services};
+use crate::services::{Showcase, StatusBoard, Supervisor, validate_services};
 use crate::types::{ServiceEntry, ServicesPorts, ServicesSection, ServicesState};
+use crate::usecases::{
+    ChangeService, CreateService, DeleteService, ListServices, ServiceEntries, ShowHistory,
+    WakeProbe,
+};
 
 pub struct ServicesFeature {
     state: ServicesState,
+    showcase: Showcase,
+    entries: ServiceEntries,
     history: Arc<HistoryWriter>,
 }
 
@@ -51,14 +57,23 @@ impl ServicesFeature {
             board.clone(),
             probe,
         ));
+        let showcase = Showcase {
+            board: board.clone(),
+            supervisor: supervisor.clone(),
+            publishing: ports.publishing,
+        };
+        let events = ports.events;
         Ok(ServicesFeature {
             state: ServicesState {
-                configuration,
-                board,
-                supervisor,
-                publishing: ports.publishing,
-                events: ports.events,
+                list: ListServices::new(configuration.clone(), showcase.clone()),
+                create: CreateService::new(configuration.clone(), showcase.clone(), events.clone()),
+                change: ChangeService::new(configuration.clone(), showcase.clone(), events.clone()),
+                delete: DeleteService::new(configuration.clone(), showcase.clone(), events),
+                wake: WakeProbe::new(configuration.clone(), supervisor),
+                history: ShowHistory::new(configuration.clone(), board),
             },
+            showcase,
+            entries: ServiceEntries::new(configuration),
             history,
         })
     }
@@ -66,21 +81,19 @@ impl ServicesFeature {
 
 impl ServicesFeature {
     pub fn entries(&self) -> Vec<ServiceEntry> {
-        ServicesSection::read(&self.state.configuration.read().document)
-            .map(|section| section.services)
-            .unwrap_or_default()
+        self.entries.run().unwrap_or_default()
     }
 
     pub fn host(&self) -> &Environment {
-        self.state.supervisor.host()
+        self.showcase.supervisor.host()
     }
 
     pub fn publishing(&self) -> Option<u16> {
-        self.state.publishing.https_port()
+        self.showcase.publishing.https_port()
     }
 
     pub fn status_of(&self, id: &str) -> ServiceStatus {
-        self.state.board.status(id)
+        self.showcase.board.status(id)
     }
 }
 
@@ -104,7 +117,7 @@ impl Feature for ServicesFeature {
 
     fn loops(&self) -> Vec<Loop> {
         vec![
-            Box::pin(self.state.supervisor.clone().run()),
+            Box::pin(self.showcase.supervisor.clone().run()),
             Box::pin(self.history.clone().run()),
         ]
     }

@@ -15,13 +15,18 @@ use crate::loops::{JournalWriter, dispatch_forever, schedule_forever, watch_fore
 use crate::ports::{Clock, Directory};
 use crate::repositories::RunFile;
 use crate::services::{
-    AutomationCache, AutomationSink, Journal, ScriptsDirectory, StatusRelay, SystemClock,
-    validate_automations,
+    AutomationCache, AutomationSink, Journal, ScriptsDirectory, StatusRelay, SystemClock, Views,
+    WebhookBook, WebhookWriter, validate_automations,
 };
 use crate::types::AutomationsState;
+use crate::usecases::{
+    ChangeAutomation, ChangeWebhook, CreateAutomation, CreateWebhook, DeleteAutomation,
+    DeleteWebhook, IssueToken, ListAutomations, ListWebhooks, RemoveToken,
+};
 
 pub struct AutomationsFeature {
     pub(crate) state: AutomationsState,
+    pub(crate) configuration: Arc<ConfigStore>,
     clock: Arc<dyn Clock>,
     writer: Arc<JournalWriter>,
 }
@@ -52,15 +57,38 @@ impl AutomationsFeature {
         let file = Arc::new(RunFile::at(&configuration.storage(Storage::Automations)));
         let sink = Arc::new(AutomationSink::restored(cache, file.load(Journal::KEPT)));
         let writer = Arc::new(JournalWriter::new(sink.journal.clone(), file));
+        let webhooks = Arc::new(WebhookBook::default());
+        let views = Views {
+            sink: sink.clone(),
+            webhooks: webhooks.clone(),
+        };
+        let webhook_writer = WebhookWriter {
+            configuration: configuration.clone(),
+            sink: sink.clone(),
+        };
         AutomationsFeature {
             state: AutomationsState {
-                configuration,
+                list: ListAutomations::new(configuration.clone(), views.clone()),
+                create: CreateAutomation::new(configuration.clone(), sink.clone()),
+                change: ChangeAutomation::new(configuration.clone(), views.clone()),
+                delete: DeleteAutomation::new(configuration.clone(), views.clone()),
+                list_webhooks: ListWebhooks::new(configuration.clone(), views.clone()),
+                create_webhook: CreateWebhook::new(configuration.clone(), sink.clone()),
+                change_webhook: ChangeWebhook::new(
+                    configuration.clone(),
+                    webhook_writer.clone(),
+                    views.clone(),
+                ),
+                delete_webhook: DeleteWebhook::new(webhook_writer.clone(), views.clone()),
+                issue_token: IssueToken::new(webhook_writer.clone()),
+                remove_token: RemoveToken::new(webhook_writer, views),
                 sink,
                 directory,
                 scripts,
                 manual_runs: Arc::new(Mutex::new(HashMap::new())),
-                webhooks: Arc::new(crate::services::WebhookBook::default()),
+                webhooks,
             },
+            configuration,
             clock: Arc::new(SystemClock),
             writer,
         }
@@ -122,7 +150,7 @@ impl Feature for AutomationsFeature {
             )),
             Box::pin(self.writer.clone().run()),
             Box::pin(watch_forever(
-                self.state.configuration.clone(),
+                self.configuration.clone(),
                 self.state.sink.clone(),
             )),
         ]

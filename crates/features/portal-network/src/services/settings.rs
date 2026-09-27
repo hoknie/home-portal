@@ -2,7 +2,7 @@ use std::net::IpAddr;
 
 use ipnet::IpNet;
 use portal_config::deserialize_section;
-use portal_feature::FieldError;
+use portal_feature::{ApiError, FieldError};
 use toml_edit::DocumentMut;
 use url::Url;
 
@@ -25,6 +25,18 @@ pub fn read_network(document: &DocumentMut) -> Result<NetworkSettings, Vec<Field
             .into_iter()
             .map(|error| error.prefixed(SECTION_PREFIX))
             .collect()
+    })
+}
+
+pub fn configured_network(document: &DocumentMut) -> Result<NetworkSettings, ApiError> {
+    read_network(document).map_err(|errors| {
+        ApiError::Internal(format!(
+            "network section: {}",
+            errors
+                .first()
+                .map(|error| error.message.as_str())
+                .unwrap_or_default()
+        ))
     })
 }
 

@@ -1,9 +1,10 @@
 use std::process::ExitCode;
+use std::sync::Arc;
 
 use portal_config::{ConfigStore, configuration_path};
 use portal_model::Environment;
-use portal_network::{host_environment, read_environments};
-use portal_services::{ProbeKind, ProbeReport, ServiceEntry, ServicesSection, advice, probe_once};
+use portal_network::{CurrentEnvironments, host_environment};
+use portal_services::{ProbeKind, ProbeReport, ServiceEntries, ServiceEntry, advice, probe_once};
 
 pub const PROBE: &str = "probe";
 pub const KIND_FLAG: &str = "--kind";
@@ -45,19 +46,24 @@ fn target_of(arguments: &[String]) -> Result<(ServiceEntry, Environment), String
         entry.probe.kind = kind.unwrap_or_default();
         return Ok((entry, Environment::internet()));
     }
-    let store = configuration_path()
-        .and_then(|location| ConfigStore::open_located(&location))
-        .map_err(|error| error.to_string())?;
-    let document = store.read().document;
-    let mut entry = ServicesSection::read(&document)?
-        .services
+    let store = Arc::new(
+        configuration_path()
+            .and_then(|location| ConfigStore::open_located(&location))
+            .map_err(|error| error.to_string())?,
+    );
+    let mut entry = ServiceEntries::new(store.clone())
+        .run()?
         .into_iter()
         .find(|entry| &entry.id == target)
         .ok_or_else(|| format!("no service {target:?} in {}", store.path().display()))?;
     if let Some(kind) = kind {
         entry.probe.kind = kind;
     }
-    let host = host_environment(&read_environments(&document).unwrap_or_default());
+    let host = host_environment(
+        &CurrentEnvironments::new(store.clone())
+            .run()
+            .unwrap_or_default(),
+    );
     Ok((entry, host))
 }
 

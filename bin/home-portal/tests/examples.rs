@@ -6,7 +6,10 @@ use std::path::{Path, PathBuf};
 
 use home_portal::registered;
 use portal_auth::hash_password;
-use portal_services::ServicesSection;
+use std::sync::Arc;
+
+use portal_config::ConfigStore;
+use portal_services::ServiceEntries;
 use toml_edit::DocumentMut;
 
 const EXAMPLES: &str = "examples";
@@ -54,10 +57,10 @@ fn every_error(path: &Path) -> String {
 }
 
 fn services_of(path: &Path) -> Vec<portal_services::ServiceEntry> {
-    let document: DocumentMut = fs::read_to_string(path).unwrap().parse().unwrap();
-    ServicesSection::read(&document)
+    let store = Arc::new(ConfigStore::open(path).unwrap());
+    ServiceEntries::new(store)
+        .run()
         .unwrap_or_else(|message| panic!("{}: {message}", path.display()))
-        .services
 }
 
 fn unknown_keys(path: &Path) -> Vec<String> {

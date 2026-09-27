@@ -1,16 +1,13 @@
-use std::sync::Arc;
-
-use portal_config::ConfigStore;
-use portal_feature::EventSink;
-
-use crate::ports::Publishing;
-use crate::services::{StatusBoard, Supervisor};
+use crate::usecases::{
+    ChangeService, CreateService, DeleteService, ListServices, ShowHistory, WakeProbe,
+};
 
 #[derive(Clone)]
 pub struct ServicesState {
-    pub configuration: Arc<ConfigStore>,
-    pub board: Arc<StatusBoard>,
-    pub supervisor: Arc<Supervisor>,
-    pub publishing: Arc<dyn Publishing>,
-    pub events: Arc<dyn EventSink>,
+    pub list: ListServices,
+    pub create: CreateService,
+    pub change: ChangeService,
+    pub delete: DeleteService,
+    pub wake: WakeProbe,
+    pub history: ShowHistory,
 }

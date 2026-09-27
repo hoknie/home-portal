@@ -1,4 +1,5 @@
 use std::fs;
+use std::sync::Arc;
 
 use portal_config::ConfigStore;
 
@@ -9,11 +10,11 @@ use super::start::replaced_executable;
 use super::{parse_address, resolve_address};
 use crate::types::{BootError, Ended, Restart, Signals};
 
-fn store(text: &str) -> (tempfile::TempDir, ConfigStore) {
+fn store(text: &str) -> (tempfile::TempDir, Arc<ConfigStore>) {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     fs::write(&path, text).unwrap();
-    let store = ConfigStore::open(&path).unwrap();
+    let store = Arc::new(ConfigStore::open(&path).unwrap());
     (directory, store)
 }
 

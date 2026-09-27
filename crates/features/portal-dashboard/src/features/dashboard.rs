@@ -7,9 +7,11 @@ use portal_feature::{Feature, Validator};
 
 use crate::controllers::{show, update};
 use crate::services::validate_dashboard;
+use crate::types::DashboardState;
+use crate::usecases::{ChangeLayout, ShowLayout};
 
 pub struct DashboardFeature {
-    configuration: Arc<ConfigStore>,
+    state: DashboardState,
 }
 
 impl DashboardFeature {
@@ -17,7 +19,12 @@ impl DashboardFeature {
     pub const PATH: &'static str = "/api/dashboard";
 
     pub fn new(configuration: Arc<ConfigStore>) -> DashboardFeature {
-        DashboardFeature { configuration }
+        DashboardFeature {
+            state: DashboardState {
+                show: ShowLayout::new(configuration.clone()),
+                change: ChangeLayout::new(configuration),
+            },
+        }
     }
 }
 
@@ -29,7 +36,7 @@ impl Feature for DashboardFeature {
     fn router(&self) -> Router {
         Router::new()
             .route(Self::PATH, get(show).put(update))
-            .with_state(self.configuration.clone())
+            .with_state(self.state.clone())
     }
 
     fn validator(&self) -> Option<Validator> {

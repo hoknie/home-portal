@@ -1,6 +1,7 @@
 mod allows;
 mod comments;
 mod folders;
+mod layers;
 mod registry;
 mod roots;
 mod scanner;

@@ -11,9 +11,11 @@ use crate::loops::DnsRuntime;
 use crate::ports::DnsSources;
 use crate::services::{Library, validate_dns};
 use crate::types::{Cadence, DnsContext};
+use crate::usecases::{ChangeDns, ShowDns};
 
 pub struct DnsFeature {
     context: DnsContext,
+    runtime: Arc<DnsRuntime>,
 }
 
 impl DnsFeature {
@@ -39,9 +41,10 @@ impl DnsFeature {
         runtime.refresh_now();
         DnsFeature {
             context: DnsContext {
-                configuration,
-                runtime,
+                show: ShowDns::new(configuration.clone(), runtime.clone()),
+                change: ChangeDns::new(configuration, runtime.clone()),
             },
+            runtime,
         }
     }
 }
@@ -61,7 +64,7 @@ impl Feature for DnsFeature {
         Router::new()
             .route(Self::QUERY_PATH, get(resolve_encoded).post(resolve_posted))
             .layer(DefaultBodyLimit::max(Cadence::LARGEST_MESSAGE))
-            .with_state(self.context.runtime.library.clone())
+            .with_state(self.runtime.library.clone())
     }
 
     fn validator(&self) -> Option<Validator> {
@@ -69,6 +72,6 @@ impl Feature for DnsFeature {
     }
 
     fn loops(&self) -> Vec<Loop> {
-        vec![Box::pin(self.context.runtime.clone().run())]
+        vec![Box::pin(self.runtime.clone().run())]
     }
 }

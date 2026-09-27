@@ -1,20 +1,19 @@
 use std::net::IpAddr;
 use std::sync::Arc;
 
-use portal_config::ConfigStore;
 use portal_dns::{DnsSources, PublishedHost};
 use portal_model::{Environment, Environments};
-use portal_network::{host_interfaces, read_environments};
+use portal_network::{CurrentEnvironments, host_interfaces};
 use portal_services::ServicesFeature;
 
 pub struct DnsDirectory {
-    pub configuration: Arc<ConfigStore>,
+    pub environments: CurrentEnvironments,
     pub services: Arc<ServicesFeature>,
 }
 
 impl DnsSources for DnsDirectory {
     fn environments(&self) -> Environments {
-        read_environments(&self.configuration.read().document).unwrap_or_default()
+        self.environments.run().unwrap_or_default()
     }
 
     fn published(&self) -> Vec<PublishedHost> {

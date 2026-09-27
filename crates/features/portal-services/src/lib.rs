@@ -11,6 +11,7 @@ mod requests;
 mod responses;
 mod services;
 mod types;
+mod usecases;
 
 pub use features::ServicesFeature;
 pub use helpers::advice;
@@ -22,5 +23,6 @@ pub use responses::{
 pub use services::{ServiceHistory, probe_once};
 pub use types::{
     HistoryRange, ProbeKind, ProbeReport, ProbeSettings, ServiceEntry, ServiceLink, ServicesPorts,
-    ServicesSection, Viewpoint,
+    Viewpoint,
 };
+pub use usecases::ServiceEntries;

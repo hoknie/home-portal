@@ -9,6 +9,7 @@ mod requests;
 mod responses;
 mod services;
 mod types;
+mod usecases;
 
 pub use features::DnsFeature;
 pub use ports::DnsSources;

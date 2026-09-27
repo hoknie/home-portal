@@ -21,6 +21,13 @@ impl EventSink for Silent {
 
 const FILE: &str = "[environments.local]\nnetworks = [\"192.168.0.0/16\"]\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://media.lan:8096\"\naddresses = { local = \"http://192.168.1.10:8096\" }\nproxy = { host = \"media.example.com\" }\nprobe = { enabled = false }\n\n[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"http://192.168.1.5\"\nproxy = { host = \"nas.example.com\", upstream = \"https://192.168.1.5:5001\" }\nprobe = { enabled = false }\n\n[[services]]\nid = \"printer\"\nname = \"Printer\"\nurl = \"http://192.168.1.30\"\nprobe = { enabled = false }\n";
 
+fn publishing_of(store: &Arc<ConfigStore>) -> ProxyPublishing {
+    ProxyPublishing::new(
+        portal_proxy::CurrentProxySettings::new(store.clone()),
+        portal_proxy::CheckPublication::new(store.clone()),
+    )
+}
+
 fn services(text: &str) -> (tempfile::TempDir, Arc<ConfigStore>, Arc<ServicesFeature>) {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
@@ -31,9 +38,7 @@ fn services(text: &str) -> (tempfile::TempDir, Arc<ConfigStore>, Arc<ServicesFea
         Environment::parse("local").unwrap(),
         ServicesPorts {
             observers: Vec::new(),
-            publishing: Arc::new(ProxyPublishing {
-                configuration: store.clone(),
-            }),
+            publishing: Arc::new(publishing_of(&store)),
             events: Arc::new(Silent),
         },
     )
@@ -61,20 +66,12 @@ fn a_service_without_an_upstream_is_proxied_to_the_address_it_is_probed_at() {
 #[test]
 fn publishing_follows_the_proxy_section() {
     let (_directory, store, _) = services(FILE);
-    let publishing = ProxyPublishing {
-        configuration: store,
-    };
+    let publishing = publishing_of(&store);
     assert_eq!(publishing.https_port(), None);
     let (_directory, store, _) = services(&format!(
         "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\n\n{FILE}"
     ));
-    assert_eq!(
-        ProxyPublishing {
-            configuration: store
-        }
-        .https_port(),
-        Some(443)
-    );
+    assert_eq!(publishing_of(&store).https_port(), Some(443));
 }
 
 #[test]
@@ -88,10 +85,7 @@ fn publishing_names_a_sign_in_the_cookie_domain_cannot_reach_by_the_service_fiel
         tls: None,
         upstream_verify: true,
     };
-    let errors = ProxyPublishing {
-        configuration: store,
-    }
-    .problems(&publication);
+    let errors = publishing_of(&store).problems(&publication);
     let fields: Vec<&str> = errors.iter().map(|error| error.field.as_str()).collect();
     assert_eq!(fields, vec!["proxy.auth"]);
 }
@@ -101,7 +95,13 @@ fn connection(text: &str) -> (tempfile::TempDir, super::NetworkConnection) {
     let path = directory.path().join("home-portal.toml");
     fs::write(&path, text).unwrap();
     let configuration = Arc::new(ConfigStore::open(&path).unwrap());
-    (directory, super::NetworkConnection { configuration })
+    (
+        directory,
+        super::NetworkConnection {
+            network: portal_network::CurrentNetwork::new(configuration.clone()),
+            proxy: portal_proxy::CurrentProxySettings::new(configuration),
+        },
+    )
 }
 
 const PROXIED: &str = "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\ncookie_domain = \"example.com\"\n";
@@ -161,7 +161,9 @@ fn the_automation_directory_lists_services_users_and_environments_with_internet(
     );
     let (_directory, store, _) = services(&text);
     let directory = AutomationDirectory {
-        configuration: store,
+        services: portal_services::ServiceEntries::new(store.clone()),
+        environments: portal_network::CurrentEnvironments::new(store.clone()),
+        users: portal_auth::UserNames::new(store),
     };
     let services: Vec<String> = directory
         .services()

@@ -1,11 +1,7 @@
-use std::sync::Arc;
-
-use portal_config::ConfigStore;
-
-use crate::loops::DnsRuntime;
+use crate::usecases::{ChangeDns, ShowDns};
 
 #[derive(Clone)]
 pub struct DnsContext {
-    pub configuration: Arc<ConfigStore>,
-    pub runtime: Arc<DnsRuntime>,
+    pub show: ShowDns,
+    pub change: ChangeDns,
 }

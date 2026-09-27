@@ -3,6 +3,7 @@ mod history;
 mod one_probe;
 mod probe_validation;
 mod publishing;
+mod showcase;
 mod status_board;
 mod supervisor;
 mod validation;
@@ -12,6 +13,7 @@ mod tests;
 
 pub use history::ServiceHistory;
 pub use one_probe::probe_once;
+pub use showcase::Showcase;
 pub use status_board::StatusBoard;
 pub use supervisor::Supervisor;
 pub use validation::{check_entry, known_of, validate_services};

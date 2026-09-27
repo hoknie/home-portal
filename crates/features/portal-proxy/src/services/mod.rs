@@ -1,6 +1,7 @@
 mod caddy_installer;
 mod caddy_launcher;
 mod caddy_manager;
+mod managed_writes;
 mod publications;
 mod settings;
 
@@ -8,5 +9,6 @@ mod settings;
 mod tests;
 
 pub use caddy_manager::CaddyManager;
+pub use managed_writes::{section_target, store_managed};
 pub use publications::{publication_problems, validate_publications};
 pub use settings::{read_settings, validate_settings};

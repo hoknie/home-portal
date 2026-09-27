@@ -5,7 +5,6 @@ use portal_feature::ApiError;
 use portal_model::{DetectedEnvironment, Environment};
 
 use crate::responses::EnvironmentResponse;
-use crate::services::read_environments;
 use crate::types::NetworkState;
 
 pub async fn show_environment(
@@ -13,7 +12,9 @@ pub async fn show_environment(
     Extension(environment): Extension<Environment>,
     Extension(detected): Extension<DetectedEnvironment>,
 ) -> Result<Json<EnvironmentResponse>, ApiError> {
-    let environments = read_environments(&state.configuration.read().document)
+    let environments = state
+        .environments
+        .run()
         .map_err(|errors| ApiError::Internal(format!("environments: {}", errors.len())))?;
     Ok(Json(EnvironmentResponse {
         environment,

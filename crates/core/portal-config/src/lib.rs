@@ -7,5 +7,6 @@ pub use helpers::{
 };
 pub use services::ConfigStore;
 pub use types::{
-    ConfigError, ConfigurationLocation, Origins, Revision, SecretString, Snapshot, Storage,
+    ConfigError, ConfigurationLocation, Origins, Revision, Revisioned, SecretString, Snapshot,
+    Storage,
 };

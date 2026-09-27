@@ -119,9 +119,10 @@ subdomain into subfolders of the same kind. **Checked:** `tests/architecture/siz
 |---|---|---|
 | `ports/` | requirement traits towards other subsystems, one per file | implementations, answer shapes (`types/`) |
 | `features/` | the `impl Feature` of the crate: name and router | handlers, business logic |
-| `controllers/` | axum handlers for one resource per file: extract, call a service, answer | business decisions, io beyond the service |
+| `controllers/` | axum handlers for one resource per file: extract, call a use case, answer | business decisions, storage, `ConfigStore` |
 | `requests/` | wire shapes of incoming bodies and queries | domain types |
 | `responses/` | wire shapes of outgoing bodies | domain types |
+| `usecases/` | one operation an entry point performs, one struct per file: storage, business refusals, events | wire types, axum, another use case |
 | `services/` | application logic over the crate's own domain | wire types, axum |
 | `clients/` | the transport to one external service, with its timeouts | decisions about what the answer means |
 | `probes/` | one status check of one service per file: call through a client, return a status | storage, handlers |
@@ -136,6 +137,18 @@ subdomain into subfolders of the same kind. **Checked:** `tests/architecture/siz
 
 **Forbidden folder names:** `utils`, `util`, `common`, `misc`, `structs`, `enums`, `traits`,
 `impls`. **Checked:** `tests/architecture/folders.rs`.
+
+**Entry points reach storage only through use cases.** Storage is a crate's `repositories/` and
+`ConfigStore` (with its `Snapshot` and document): `ConfigStore` is a repository, even though it
+lives in `portal-config`. An entry point is a file under `controllers/`, and under
+`bin/home-portal/src/` `adapters/`, `middlewares/` and `cli/`; it calls a use case and never
+names `repositories`, `ConfigStore`, `Snapshot`, `.document` or `.configuration`. Only `cli/` may
+open the store and hand it to use cases. Use cases, services, loops and a feature's own assembly
+(`features/`) may use storage; another crate reaches it only through the public use cases a feature
+exports (`CurrentNetwork`, `CurrentEnvironments`, `CurrentProxySettings`, `CheckPublication`,
+`ServiceEntries`, `UserNames`, `CurrentInterface`). A use case that reads or changes the
+configuration answers `portal_config::Revisioned`, never `Snapshot`; a use case never calls
+another, a shared step goes to `services/`. **Checked:** `tests/architecture/layers.rs`.
 
 A **domain** folder is named after its subject in the singular (`status/`, `service/`); a **kind**
 folder after its role in the plural. A domain may contain kinds; a kind never contains another
@@ -232,7 +245,7 @@ pub trait Feature: Send + Sync {
 ## 5. The web layer
 
 - **Wire types stay at the edge.** A controller converts a request into domain values, calls a
-  service and converts the result into a response. Services never see `requests/` or
+  use case and converts the result into a response. Services never see `requests/` or
   `responses/` types, and domain types are never serialized to the client directly.
 - **One error type**: `portal_feature::ApiError`. Variants map to statuses — `BadRequest` 400,
   `Unauthorized` 401, `NotFound` 404, `Conflict` 409, `UnsupportedMediaType` 415, `Invalid` 422,
@@ -632,6 +645,7 @@ too.
 | File / function / folder size | 400 / 300 lines, 12 files — `tests/architecture/sizes.rs` | ✅ |
 | Folder names | no catch-alls — `tests/architecture/folders.rs` | ✅ |
 | Feature registry | matches `crates/features/` — `tests/architecture/registry.rs` | ✅ |
+| Entry points and storage | only through use cases — `tests/architecture/layers.rs` | ✅ |
 | `main.rs` is a shim, the root is `boot/` | `bin/home-portal` | ✅ |
 | API samples match the frontend schemas | `bin/home-portal/tests/samples/` + entity schema tests; `just samples` rewrites | ✅ |
 | Widget kinds the interface can draw | `web/src/features/widget-board/model/registry.test.ts` against `widget-kinds.json` | ✅ |

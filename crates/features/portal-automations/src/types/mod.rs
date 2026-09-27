@@ -5,6 +5,7 @@ mod journal;
 mod running;
 mod schedule;
 mod stored;
+mod views;
 mod webhooks;
 mod wildcards;
 
@@ -24,5 +25,6 @@ pub use running::{
 };
 pub use schedule::Schedule;
 pub use stored::StoredRun;
+pub use views::{AutomationView, CreatedWebhook, WebhookView};
 pub use webhooks::{RawMarks, RawWebhook, Reception, Webhook, WebhookAction};
 pub use wildcards::Wildcards;

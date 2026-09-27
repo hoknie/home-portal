@@ -39,6 +39,9 @@ pub struct ServiceEntry {
 }
 
 impl ServiceEntry {
+    pub const UNKNOWN: &'static str = "no such service";
+    pub const TAKEN_ID: &'static str = "is used by another service";
+    pub const TAKEN_HOST: &'static str = "is published by another service";
     pub const MAXIMUM_NAME_LENGTH: usize = 80;
     pub const MAXIMUM_DESCRIPTION_LENGTH: usize = 200;
     pub const MAXIMUM_LINKS: usize = 20;

@@ -1,11 +1,10 @@
-use std::sync::Arc;
-
-use portal_config::ConfigStore;
-
 use super::EffectiveAddress;
+use crate::usecases::{ChangeNetwork, CurrentEnvironments, ShowNetwork};
 
 #[derive(Clone)]
 pub struct NetworkState {
-    pub configuration: Arc<ConfigStore>,
+    pub show: ShowNetwork,
+    pub change: ChangeNetwork,
+    pub environments: CurrentEnvironments,
     pub effective: EffectiveAddress,
 }

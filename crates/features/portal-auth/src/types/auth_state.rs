@@ -1,16 +1,12 @@
 use std::sync::Arc;
 
-use portal_config::ConfigStore;
-use portal_feature::EventSink;
-
 use crate::ports::Connection;
-use crate::services::{SessionStore, Throttle};
+use crate::usecases::{ShowSession, SignIn, SignOut};
 
 #[derive(Clone)]
 pub struct AuthState {
-    pub configuration: Arc<ConfigStore>,
-    pub sessions: Arc<SessionStore>,
-    pub throttle: Arc<Throttle>,
+    pub sign_in: SignIn,
+    pub session: ShowSession,
+    pub sign_out: SignOut,
     pub connection: Arc<dyn Connection>,
-    pub events: Arc<dyn EventSink>,
 }

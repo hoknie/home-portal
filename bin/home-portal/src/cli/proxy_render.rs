@@ -3,9 +3,9 @@ use std::process::ExitCode;
 use std::sync::Arc;
 
 use portal_config::{ConfigStore, configuration_path};
-use portal_network::{host_environment, read_environments};
-use portal_proxy::{read_settings, render};
-use portal_services::ServicesSection;
+use portal_network::{CurrentEnvironments, host_environment};
+use portal_proxy::{CurrentProxySettings, render};
+use portal_services::ServiceEntries;
 
 use crate::adapters::ServicePublications;
 use crate::boot::{ADDRESS_VARIABLE, adopt, resolve_address};
@@ -48,13 +48,18 @@ fn rendered() -> Result<String, String> {
     })
     .map_err(|error| error.to_string())?;
     adopt(&store, &registry).map_err(|error| error.to_string())?;
-    let document = store.read().document;
-    let settings = read_settings(&document).map_err(|errors| format!("{errors:?}"))?;
+    let settings = CurrentProxySettings::new(store.clone())
+        .run()
+        .map_err(|errors| format!("{errors:?}"))?;
     if !settings.enabled {
         return Err(DISABLED.to_string());
     }
-    let entries = ServicesSection::read(&document)?.services;
-    let host = host_environment(&read_environments(&document).unwrap_or_default());
+    let entries = ServiceEntries::new(store.clone()).run()?;
+    let host = host_environment(
+        &CurrentEnvironments::new(store.clone())
+            .run()
+            .unwrap_or_default(),
+    );
     let configuration = render(
         &settings,
         &ServicePublications::of(entries, &host),

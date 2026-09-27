@@ -3,22 +3,15 @@ use axum::extract::{Path, State};
 use axum::http::header::ETAG;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
-use portal_config::{Revision, Snapshot};
+use portal_config::{Revision, Revisioned};
 use portal_feature::ApiError;
 
-use crate::repositories::{append, origin, position, remove as remove_entry, replace};
 use crate::requests::AutomationRequest;
 use crate::responses::{AutomationResponse, AutomationsResponse};
-use crate::services::decoded;
-use crate::types::{Automation, AutomationsState};
-
-pub const UNKNOWN_AUTOMATION: &str = "no such automation";
-pub const TAKEN_ID: &str = "is used by another automation";
+use crate::types::{AutomationView, AutomationsState};
 
 pub async fn list(State(state): State<AutomationsState>) -> Response {
-    let snapshot = state.configuration.read();
-    let body = listed(&state, &snapshot);
-    with_revision(StatusCode::OK, &snapshot, Json(body))
+    listing(StatusCode::OK, state.list.run())
 }
 
 pub async fn create(
@@ -27,21 +20,8 @@ pub async fn create(
     Json(request): Json<AutomationRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let automation = checked(request)?;
-    let target = state.configuration.writes_to();
-    let (_, snapshot) = state
-        .configuration
-        .update(&target, &revision, |document| {
-            if position(document, &automation.id).is_some() {
-                return Err(ApiError::invalid("id", TAKEN_ID));
-            }
-            append(document, &automation);
-            Ok(())
-        })
-        .await?;
-    state.sink.cache.refresh(&snapshot.document);
-    let body = AutomationResponse::of(&automation, None, None);
-    Ok(with_revision(StatusCode::CREATED, &snapshot, Json(body)))
+    let created = state.create.run(&request.into_raw(), &revision).await?;
+    Ok(one(StatusCode::CREATED, created))
 }
 
 pub async fn update(
@@ -51,25 +31,11 @@ pub async fn update(
     Json(request): Json<AutomationRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let automation = checked(request)?;
-    let target =
-        origin(&state.configuration.read(), &id).ok_or(ApiError::NotFound(UNKNOWN_AUTOMATION))?;
-    let (_, snapshot) = state
-        .configuration
-        .update(&target, &revision, |document| {
-            let index = position(document, &id).ok_or(ApiError::NotFound(UNKNOWN_AUTOMATION))?;
-            if automation.id != id && position(document, &automation.id).is_some() {
-                return Err(ApiError::invalid("id", TAKEN_ID));
-            }
-            replace(document, index, &automation);
-            Ok(())
-        })
+    let changed = state
+        .change
+        .run(&id, &request.into_raw(), &revision)
         .await?;
-    state.sink.cache.refresh(&snapshot.document);
-    let last = state.sink.journal.last_of(&automation.id);
-    let active = state.sink.active.of_automation(&automation.id);
-    let body = AutomationResponse::of(&automation, last.as_ref(), active.as_ref());
-    Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
+    Ok(one(StatusCode::OK, changed))
 }
 
 pub async fn remove(
@@ -78,42 +44,29 @@ pub async fn remove(
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let target =
-        origin(&state.configuration.read(), &id).ok_or(ApiError::NotFound(UNKNOWN_AUTOMATION))?;
-    let (_, snapshot) = state
-        .configuration
-        .update(&target, &revision, |document| {
-            let index = position(document, &id).ok_or(ApiError::NotFound(UNKNOWN_AUTOMATION))?;
-            remove_entry(document, index);
-            Ok(())
-        })
-        .await?;
-    state.sink.cache.refresh(&snapshot.document);
-    let body = listed(&state, &snapshot);
-    Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
+    Ok(listing(
+        StatusCode::OK,
+        state.delete.run(&id, &revision).await?,
+    ))
 }
 
-fn checked(request: AutomationRequest) -> Result<Automation, ApiError> {
-    Automation::decode(&request.into_raw()).map_err(ApiError::Invalid)
+fn response_of(view: &AutomationView) -> AutomationResponse {
+    AutomationResponse::of(&view.automation, view.last.as_ref(), view.active.as_ref())
 }
 
-fn listed(state: &AutomationsState, snapshot: &Snapshot) -> AutomationsResponse {
-    AutomationsResponse {
-        automations: decoded(&snapshot.document)
-            .iter()
-            .map(|automation| {
-                let last = state.sink.journal.last_of(&automation.id);
-                let active = state.sink.active.of_automation(&automation.id);
-                AutomationResponse::of(automation, last.as_ref(), active.as_ref())
-            })
-            .collect(),
-    }
+fn one(status: StatusCode, view: Revisioned<AutomationView>) -> Response {
+    with_revision(status, &view.revision, Json(response_of(&view.value)))
 }
 
-fn with_revision(status: StatusCode, snapshot: &Snapshot, body: impl IntoResponse) -> Response {
+fn listing(status: StatusCode, views: Revisioned<Vec<AutomationView>>) -> Response {
+    let body = AutomationsResponse {
+        automations: views.value.iter().map(response_of).collect(),
+    };
+    with_revision(status, &views.revision, Json(body))
+}
+
+fn with_revision(status: StatusCode, revision: &Revision, body: impl IntoResponse) -> Response {
     let mut response = (status, body).into_response();
-    response
-        .headers_mut()
-        .insert(ETAG, snapshot.revision.etag());
+    response.headers_mut().insert(ETAG, revision.etag());
     response
 }

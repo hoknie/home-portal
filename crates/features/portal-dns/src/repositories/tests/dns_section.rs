@@ -3,10 +3,10 @@ use std::collections::BTreeMap;
 use toml_edit::DocumentMut;
 
 use crate::repositories::write_dns;
-use crate::requests::DnsRequest;
+use crate::types::DnsChoice;
 
-fn request() -> DnsRequest {
-    DnsRequest {
+fn request() -> DnsChoice {
+    DnsChoice {
         enabled: true,
         address: "0.0.0.0".into(),
         port: 5353,

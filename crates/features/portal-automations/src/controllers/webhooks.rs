@@ -3,23 +3,15 @@ use axum::extract::{Path, State};
 use axum::http::header::ETAG;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
-use portal_config::{Revision, Snapshot};
+use portal_config::{Revision, Revisioned};
 use portal_feature::ApiError;
 
-use super::UNKNOWN_WEBHOOK;
-use crate::helpers::{new_token, new_webhook_id, token_hash};
-use crate::repositories::{
-    append_webhook, remove_webhook, replace_webhook, set_token, webhook_origin, webhook_position,
-};
 use crate::requests::WebhookRequest;
 use crate::responses::{CreatedWebhookResponse, TokenResponse, WebhookResponse, WebhooksResponse};
-use crate::services::decoded_webhooks;
-use crate::types::{AutomationsSection, AutomationsState, Webhook};
+use crate::types::{AutomationsState, WebhookView};
 
 pub async fn list_webhooks(State(state): State<AutomationsState>) -> Response {
-    let snapshot = state.configuration.read();
-    let body = listed(&state, &snapshot);
-    with_revision(StatusCode::OK, &snapshot, Json(body))
+    listing(state.list_webhooks.run())
 }
 
 pub async fn create_webhook(
@@ -28,23 +20,20 @@ pub async fn create_webhook(
     Json(request): Json<WebhookRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let token = request.with_token.then(new_token);
-    let raw = request.into_raw(&new_webhook_id(), token.as_deref().map(token_hash));
-    let webhook = Webhook::decode(&raw).map_err(ApiError::Invalid)?;
-    let target = state.configuration.writes_to();
-    let (_, snapshot) = state
-        .configuration
-        .update(&target, &revision, |document| {
-            append_webhook(document, &webhook);
-            Ok(())
-        })
+    let with_token = request.with_token;
+    let created = state
+        .create_webhook
+        .run(request.into_raw("", None), with_token, &revision)
         .await?;
-    state.sink.cache.refresh(&snapshot.document);
     let body = CreatedWebhookResponse {
-        webhook: WebhookResponse::of(&webhook, None),
-        token,
+        webhook: response_of(&created.value.view),
+        token: created.value.token,
     };
-    Ok(with_revision(StatusCode::CREATED, &snapshot, Json(body)))
+    Ok(with_revision(
+        StatusCode::CREATED,
+        &created.revision,
+        Json(body),
+    ))
 }
 
 pub async fn update_webhook(
@@ -54,19 +43,12 @@ pub async fn update_webhook(
     Json(request): Json<WebhookRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let token_sha256 = AutomationsSection::read(&state.configuration.read().document)
-        .ok()
-        .and_then(|section| section.webhooks.into_iter().find(|raw| raw.id == id))
-        .ok_or(ApiError::NotFound(UNKNOWN_WEBHOOK))?
-        .token_sha256;
-    let webhook =
-        Webhook::decode(&request.into_raw(&id, token_sha256)).map_err(ApiError::Invalid)?;
-    let snapshot = write(&state, &id, &revision, |document, index| {
-        replace_webhook(document, index, &webhook)
-    })
-    .await?;
-    let body = WebhookResponse::of(&webhook, state.webhooks.last(&id));
-    Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
+    let changed = state
+        .change_webhook
+        .run(&id, request.into_raw(&id, None), &revision)
+        .await?;
+    let body = response_of(&changed.value);
+    Ok(with_revision(StatusCode::OK, &changed.revision, Json(body)))
 }
 
 pub async fn delete_webhook(
@@ -75,9 +57,7 @@ pub async fn delete_webhook(
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let snapshot = write(&state, &id, &revision, remove_webhook).await?;
-    let body = listed(&state, &snapshot);
-    Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
+    Ok(listing(state.delete_webhook.run(&id, &revision).await?))
 }
 
 pub async fn issue_token(
@@ -86,17 +66,11 @@ pub async fn issue_token(
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let token = new_token();
-    let hash = token_hash(&token);
-    let snapshot = write(&state, &id, &revision, |document, index| {
-        set_token(document, index, Some(&hash))
-    })
-    .await?;
-    Ok(with_revision(
-        StatusCode::OK,
-        &snapshot,
-        Json(TokenResponse { token }),
-    ))
+    let issued = state.issue_token.run(&id, &revision).await?;
+    let body = TokenResponse {
+        token: issued.value,
+    };
+    Ok(with_revision(StatusCode::OK, &issued.revision, Json(body)))
 }
 
 pub async fn remove_token(
@@ -105,48 +79,22 @@ pub async fn remove_token(
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let snapshot = write(&state, &id, &revision, |document, index| {
-        set_token(document, index, None)
-    })
-    .await?;
-    let body = listed(&state, &snapshot);
-    Ok(with_revision(StatusCode::OK, &snapshot, Json(body)))
+    Ok(listing(state.remove_token.run(&id, &revision).await?))
 }
 
-async fn write(
-    state: &AutomationsState,
-    id: &str,
-    revision: &Revision,
-    change: impl FnOnce(&mut toml_edit::DocumentMut, usize),
-) -> Result<Snapshot, ApiError> {
-    let target = webhook_origin(&state.configuration.read(), id)
-        .ok_or(ApiError::NotFound(UNKNOWN_WEBHOOK))?;
-    let (_, snapshot) = state
-        .configuration
-        .update(&target, revision, |document| {
-            let index =
-                webhook_position(document, id).ok_or(ApiError::NotFound(UNKNOWN_WEBHOOK))?;
-            change(document, index);
-            Ok(())
-        })
-        .await?;
-    state.sink.cache.refresh(&snapshot.document);
-    Ok(snapshot)
+fn response_of(view: &WebhookView) -> WebhookResponse {
+    WebhookResponse::of(&view.webhook, view.last)
 }
 
-fn listed(state: &AutomationsState, snapshot: &Snapshot) -> WebhooksResponse {
-    WebhooksResponse {
-        webhooks: decoded_webhooks(&snapshot.document)
-            .iter()
-            .map(|webhook| WebhookResponse::of(webhook, state.webhooks.last(&webhook.id)))
-            .collect(),
-    }
+fn listing(views: Revisioned<Vec<WebhookView>>) -> Response {
+    let body = WebhooksResponse {
+        webhooks: views.value.iter().map(response_of).collect(),
+    };
+    with_revision(StatusCode::OK, &views.revision, Json(body))
 }
 
-fn with_revision(status: StatusCode, snapshot: &Snapshot, body: impl IntoResponse) -> Response {
+fn with_revision(status: StatusCode, revision: &Revision, body: impl IntoResponse) -> Response {
     let mut response = (status, body).into_response();
-    response
-        .headers_mut()
-        .insert(ETAG, snapshot.revision.etag());
+    response.headers_mut().insert(ETAG, revision.etag());
     response
 }

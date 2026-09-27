@@ -16,6 +16,7 @@ pub struct Webhook {
 }
 
 impl Webhook {
+    pub const UNKNOWN: &'static str = "no such webhook";
     pub const ADDRESS_PREFIX: &'static str = "/webhook/";
     pub const LONGEST_VARIABLE: usize = 63;
     pub const RESERVED_VARIABLES: [&'static str; 2] = ["id", "title"];

@@ -10,6 +10,7 @@ mod requests;
 mod responses;
 mod services;
 mod types;
+mod usecases;
 
 pub use features::AutomationsFeature;
 pub use parsers::parse_cron;

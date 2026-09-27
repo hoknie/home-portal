@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use portal_auth::AuthFeature;
+use portal_auth::{AuthFeature, UserNames};
 use portal_automations::AutomationsFeature;
 use portal_calendar::CalendarFeature;
 use portal_dashboard::DashboardFeature;
@@ -9,11 +9,11 @@ use portal_feature::Feature;
 use portal_health::HealthFeature;
 use portal_icons::IconsFeature;
 use portal_metrics::MetricsFeature;
-use portal_network::{NetworkFeature, host_environment};
-use portal_proxy::{ProxyFeature, ProxyPorts};
+use portal_network::{CurrentEnvironments, CurrentNetwork, NetworkFeature, host_environment};
+use portal_proxy::{CheckPublication, CurrentProxySettings, ProxyFeature, ProxyPorts};
 use portal_public::PublicFeature;
 use portal_secrets::SecretsFeature;
-use portal_services::{ServicesFeature, ServicesPorts};
+use portal_services::{ServiceEntries, ServicesFeature, ServicesPorts};
 use portal_telegram::TelegramFeature;
 use portal_weather::WeatherFeature;
 use portal_widget::WidgetRegistry;
@@ -28,12 +28,15 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
     let configuration = wiring.configuration.clone();
     let configuration_for_widgets = wiring.configuration.clone();
     let connection = Arc::new(NetworkConnection {
-        configuration: configuration.clone(),
+        network: CurrentNetwork::new(configuration.clone()),
+        proxy: CurrentProxySettings::new(configuration.clone()),
     });
     let automations = Arc::new(AutomationsFeature::new(
         configuration.clone(),
         Arc::new(AutomationDirectory {
-            configuration: configuration.clone(),
+            users: UserNames::new(configuration.clone()),
+            services: ServiceEntries::new(configuration.clone()),
+            environments: CurrentEnvironments::new(configuration.clone()),
         }),
     ));
     let events = automations.events();
@@ -43,7 +46,9 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         events.clone(),
     ));
     let host = host_environment(
-        &portal_network::read_environments(&configuration.read().document).unwrap_or_default(),
+        &CurrentEnvironments::new(configuration.clone())
+            .run()
+            .unwrap_or_default(),
     );
     let telegram = TelegramFeature::new(configuration.clone(), portal_telegram::ENDPOINT).map_err(
         |message| BootError::Feature {
@@ -76,9 +81,10 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
             host,
             ServicesPorts {
                 observers: vec![telegram.observer(), automations.observer()],
-                publishing: Arc::new(ProxyPublishing {
-                    configuration: configuration.clone(),
-                }),
+                publishing: Arc::new(ProxyPublishing::new(
+                    CurrentProxySettings::new(configuration.clone()),
+                    CheckPublication::new(configuration.clone()),
+                )),
                 events: events.clone(),
             },
         )
@@ -103,7 +109,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         Arc::new(DnsFeature::new(
             configuration.clone(),
             Arc::new(DnsDirectory {
-                configuration: configuration.clone(),
+                environments: CurrentEnvironments::new(configuration.clone()),
                 services: services.clone(),
             }),
         )),

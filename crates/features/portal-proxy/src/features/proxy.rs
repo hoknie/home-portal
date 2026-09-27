@@ -14,6 +14,9 @@ use crate::loops::CaddySync;
 use crate::renderers::AUTHORIZE_PATH;
 use crate::services::{CaddyManager, validate_publications, validate_settings};
 use crate::types::{CaddyHome, Cadence, ProxyPorts, ProxyState, SyncSetup};
+use crate::usecases::{
+    ApplyProxy, ChangeCaddySource, ChangeProxy, DownloadCaddy, ShowProxy, StartCaddy, StopCaddy,
+};
 
 pub struct ProxyFeature {
     state: ProxyState,
@@ -59,7 +62,13 @@ impl ProxyFeature {
         ));
         ProxyFeature {
             state: ProxyState {
-                configuration,
+                show: ShowProxy::new(configuration.clone(), sync.clone()),
+                apply: ApplyProxy::new(configuration.clone(), sync.clone()),
+                change: ChangeProxy::new(configuration.clone(), sync.clone()),
+                download: DownloadCaddy::new(configuration.clone(), sync.clone()),
+                start: StartCaddy::new(configuration.clone(), sync.clone()),
+                stop: StopCaddy::new(configuration.clone(), sync.clone()),
+                change_source: ChangeCaddySource::new(configuration, sync.clone()),
                 ports,
                 sync,
             },
