@@ -1,46 +1,38 @@
+use std::io::Write;
 use std::process::ExitCode;
 use std::sync::Arc;
 
+use clap::builder::styling::Style;
 use portal_config::{ConfigStore, configuration_path};
-use portal_model::Environment;
+use portal_model::{Environment, ServiceState};
 use portal_network::{CurrentEnvironments, host_environment};
 use portal_services::{ProbeKind, ProbeReport, ServiceEntries, ServiceEntry, advice, probe_once};
 
-pub const PROBE: &str = "probe";
-pub const KIND_FLAG: &str = "--kind";
-pub const USAGE: &str = "usage: home-portal probe <service id | url> [--kind http|tcp|icmp]";
-pub const ADHOC_ID: &str = "probe";
+use super::failure::fail;
+use super::palette::{ALERT, EMPHASIS, ERROR, MUTED, SUCCESS, WARNING};
 
-pub async fn probe(arguments: &[String]) -> ExitCode {
-    let (entry, host) = match target_of(arguments) {
+pub const ADHOC_ID: &str = "probe";
+pub const LABEL_WIDTH: usize = 10;
+
+pub async fn probe(target: String, kind: Option<ProbeKind>) -> ExitCode {
+    let (entry, host) = match target_of(&target, kind) {
         Ok(target) => target,
-        Err(message) => {
-            eprintln!("home-portal: {message}");
-            return ExitCode::FAILURE;
-        }
+        Err(message) => return fail(message),
     };
     match probe_once(&entry, &host).await {
         Ok(report) => {
-            print!("{}", describe(&entry, &report));
+            let _ = write!(anstream::stdout(), "{}", describe(&entry, &report));
             if report.outcome.state.answered() {
                 ExitCode::SUCCESS
             } else {
                 ExitCode::FAILURE
             }
         }
-        Err(message) => {
-            eprintln!("home-portal: cannot probe: {message}");
-            ExitCode::FAILURE
-        }
+        Err(message) => fail(format!("cannot probe: {message}")),
     }
 }
 
-fn target_of(arguments: &[String]) -> Result<(ServiceEntry, Environment), String> {
-    let (target, kind) = match arguments {
-        [target] => (target, None),
-        [target, flag, kind] if flag == KIND_FLAG => (target, Some(kind_of(kind)?)),
-        _ => return Err(USAGE.to_string()),
-    };
+fn target_of(target: &str, kind: Option<ProbeKind>) -> Result<(ServiceEntry, Environment), String> {
     if target.contains("://") {
         let mut entry = ServiceEntry::new(ADHOC_ID, target, target);
         entry.probe.kind = kind.unwrap_or_default();
@@ -54,7 +46,7 @@ fn target_of(arguments: &[String]) -> Result<(ServiceEntry, Environment), String
     let mut entry = ServiceEntries::new(store.clone())
         .run()?
         .into_iter()
-        .find(|entry| &entry.id == target)
+        .find(|entry| entry.id == target)
         .ok_or_else(|| format!("no service {target:?} in {}", store.path().display()))?;
     if let Some(kind) = kind {
         entry.probe.kind = kind;
@@ -67,33 +59,45 @@ fn target_of(arguments: &[String]) -> Result<(ServiceEntry, Environment), String
     Ok((entry, host))
 }
 
-fn kind_of(name: &str) -> Result<ProbeKind, String> {
-    match name {
-        "http" => Ok(ProbeKind::Http),
-        "tcp" => Ok(ProbeKind::Tcp),
-        "icmp" => Ok(ProbeKind::Icmp),
-        other => Err(format!("unknown probe kind {other:?}; {USAGE}")),
-    }
-}
-
 fn describe(entry: &ServiceEntry, report: &ProbeReport) -> String {
     let outcome = &report.outcome;
+    let state = state_style(outcome.state);
     let mut lines = vec![
-        format!("service    {}", entry.id),
-        format!("kind       {}", report.kind.name()),
-        format!("target     {}", report.target),
-        format!("state      {}", outcome.state.name()),
+        line("service", &entry.id),
+        line("kind", report.kind.name()),
+        line("target", &report.target),
+        line(
+            "state",
+            &format!("{state}{}{state:#}", outcome.state.name()),
+        ),
     ];
     if let Some(latency) = outcome.latency_milliseconds {
-        lines.push(format!("latency    {latency} ms"));
+        lines.push(line("latency", &format!("{latency} ms")));
     }
     if let Some(error) = &outcome.error {
-        lines.push(format!("error      {error}"));
+        lines.push(line("error", error));
     }
     if let Some(diagnosis) = outcome.diagnosis {
-        lines.push(format!("diagnosis  {}", diagnosis.code()));
-        lines.push(format!("advice     {}", advice(diagnosis)));
+        lines.push(line(
+            "diagnosis",
+            &format!("{EMPHASIS}{}{EMPHASIS:#}", diagnosis.code()),
+        ));
+        lines.push(line("advice", advice(diagnosis)));
     }
     lines.push(String::new());
     lines.join("\n")
+}
+
+fn line(label: &str, value: &str) -> String {
+    format!("{MUTED}{label:<LABEL_WIDTH$}{MUTED:#} {value}")
+}
+
+fn state_style(state: ServiceState) -> Style {
+    match state {
+        ServiceState::Up => SUCCESS,
+        ServiceState::Degraded => WARNING,
+        ServiceState::Down => ERROR,
+        ServiceState::Unreadable => ALERT,
+        ServiceState::Unknown => MUTED,
+    }
 }

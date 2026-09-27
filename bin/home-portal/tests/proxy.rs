@@ -20,6 +20,10 @@ probe = { enabled = false }
 "#;
 
 fn render_with(text: &str) -> Output {
+    render_in(text, &[])
+}
+
+fn render_in(text: &str, variables: &[(&str, &str)]) -> Output {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     let hash = portal_auth::hash_password("secret").unwrap();
@@ -32,6 +36,7 @@ fn render_with(text: &str) -> Output {
         .args(["proxy", "render"])
         .env("HOME_PORTAL_CONFIG", &path)
         .env_remove("HOME_PORTAL_ADDRESS")
+        .envs(variables.iter().copied())
         .output()
         .unwrap()
 }
@@ -68,6 +73,20 @@ fn an_invalid_configuration_is_refused_with_its_error() {
 #[test]
 fn a_disabled_proxy_has_nothing_to_render() {
     let output = render_with(&ENABLED.replace("enabled = true", "enabled = false"));
-    assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr).contains("not enabled"));
+    assert_eq!(output.status.code(), Some(1));
+    let error = String::from_utf8_lossy(&output.stderr);
+    assert!(error.starts_with("error: "), "{error}");
+    assert!(error.contains("not enabled"), "{error}");
+}
+
+#[test]
+fn forced_colour_never_reaches_the_rendered_json() {
+    let output = render_in(ENABLED, &[("CLICOLOR_FORCE", "1")]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(!output.stdout.contains(&0x1b));
+    serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap();
 }

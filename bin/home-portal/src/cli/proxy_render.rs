@@ -7,30 +7,23 @@ use portal_network::{CurrentEnvironments, host_environment};
 use portal_proxy::{CurrentProxySettings, render};
 use portal_services::ServiceEntries;
 
+use super::failure::fail;
 use crate::adapters::ServicePublications;
 use crate::boot::{ADDRESS_VARIABLE, adopt, resolve_address};
 use crate::features::registered;
-use crate::types::Wiring;
+use crate::types::{ProxyAction, Wiring};
 
-pub const PROXY: &str = "proxy";
-pub const RENDER: &str = "render";
-pub const USAGE: &str = "usage: home-portal proxy render";
 pub const DISABLED: &str = "the proxy is not enabled; set enabled = true in the [proxy] section to render its configuration";
 
-pub fn proxy(arguments: &[String]) -> ExitCode {
-    if arguments != [RENDER] {
-        eprintln!("home-portal: {USAGE}");
-        return ExitCode::FAILURE;
-    }
-    match rendered() {
-        Ok(text) => {
-            println!("{text}");
-            ExitCode::SUCCESS
-        }
-        Err(message) => {
-            eprintln!("home-portal: {message}");
-            ExitCode::FAILURE
-        }
+pub fn proxy(action: ProxyAction) -> ExitCode {
+    match action {
+        ProxyAction::Render => match rendered() {
+            Ok(text) => {
+                println!("{text}");
+                ExitCode::SUCCESS
+            }
+            Err(message) => fail(message),
+        },
     }
 }
 

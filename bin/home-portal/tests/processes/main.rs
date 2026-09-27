@@ -4,4 +4,6 @@ mod home;
 mod interface;
 #[cfg(unix)]
 mod restart;
+#[cfg(unix)]
+mod serve;
 mod shutdown;

@@ -81,11 +81,56 @@ fn probing_a_configured_service_uses_its_address_and_settings() {
 }
 
 #[test]
-fn an_unknown_service_or_kind_is_refused_with_usage() {
+fn an_unknown_kind_is_a_usage_error_that_lists_the_kinds() {
     let output = Command::new(BINARY)
         .args(["probe", "http://127.0.0.1:1", "--kind", "udp"])
         .output()
         .unwrap();
-    assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr).contains("usage"));
+    assert_eq!(output.status.code(), Some(2));
+    let error = String::from_utf8_lossy(&output.stderr);
+    for word in ["udp", "http", "tcp", "icmp"] {
+        assert!(error.contains(word), "{error}");
+    }
+}
+
+#[test]
+fn an_unknown_service_id_fails_with_an_error_line_and_status_one() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("home-portal.toml");
+    std::fs::write(&path, "").unwrap();
+    let output = Command::new(BINARY)
+        .args(["probe", "nothing"])
+        .env("HOME_PORTAL_CONFIG", &path)
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    let error = String::from_utf8_lossy(&output.stderr);
+    assert!(error.starts_with("error: "), "{error}");
+    assert!(error.contains("\"nothing\""), "{error}");
+    assert!(error.contains(&path.display().to_string()), "{error}");
+}
+
+#[test]
+fn a_piped_probe_report_has_no_escape_sequences() {
+    let port = answering_http();
+    let output = Command::new(BINARY)
+        .args(["probe", &format!("http://127.0.0.1:{port}")])
+        .env_remove("CLICOLOR_FORCE")
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    assert!(!output.stdout.contains(&0x1b));
+}
+
+#[test]
+fn a_forced_colour_probe_report_colours_the_state() {
+    let port = closed_port();
+    let output = Command::new(BINARY)
+        .args(["probe", &format!("tcp://127.0.0.1:{port}"), "--kind", "tcp"])
+        .env("CLICOLOR_FORCE", "1")
+        .env_remove("NO_COLOR")
+        .output()
+        .unwrap();
+    let text = String::from_utf8_lossy(&output.stdout);
+    assert!(text.contains("\u{1b}[1m\u{1b}[31mdown"), "{text:?}");
 }

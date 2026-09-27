@@ -3,30 +3,24 @@ use std::process::ExitCode;
 
 use portal_auth::hash_password;
 
-pub const PASSWORD_HASH: &str = "password-hash";
+use super::failure::fail;
+
 pub const PROMPT: &str = "Password: ";
 
 pub fn password_hash() -> ExitCode {
     let password = match read_password() {
         Ok(password) => password,
-        Err(error) => {
-            eprintln!("home-portal: cannot read the password: {error}");
-            return ExitCode::FAILURE;
-        }
+        Err(error) => return fail(format!("cannot read the password: {error}")),
     };
     if password.is_empty() {
-        eprintln!("home-portal: the password must not be empty");
-        return ExitCode::FAILURE;
+        return fail("the password must not be empty");
     }
     match hash_password(&password) {
         Ok(hash) => {
             println!("{hash}");
             ExitCode::SUCCESS
         }
-        Err(error) => {
-            eprintln!("home-portal: cannot hash the password: {error}");
-            ExitCode::FAILURE
-        }
+        Err(error) => fail(format!("cannot hash the password: {error}")),
     }
 }
 

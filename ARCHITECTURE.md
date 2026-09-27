@@ -150,6 +150,17 @@ exports (`CurrentNetwork`, `CurrentEnvironments`, `CurrentProxySettings`, `Check
 configuration answers `portal_config::Revisioned`, never `Snapshot`; a use case never calls
 another, a shared step goes to `services/`. **Checked:** `tests/architecture/layers.rs`.
 
+**The command line is declared once.** `bin/home-portal/src/types/command_line.rs` (`CommandLine`)
+and its `command.rs`, `probe_kind_choice.rs` and `proxy_action.rs` describe every command, argument
+and help text for `clap`; `boot/start.rs` parses them with `try_parse` and hands each command to its
+handler in `cli/`. Help text is given through attributes and constants, never `///`. No command is
+`serve`, so service files and the in-place restart pass the same argv as before. Usage errors exit
+2, a failed command writes `error: <message>` and exits 1. `cli/palette.rs` is the only palette:
+help, errors and reports are styled through it and written through `anstream`, which drops the
+styles when the stream is not a terminal or `NO_COLOR` is set. Machine output (`password-hash`,
+`proxy render`) is written with plain `println!` and never styled. **Checked:**
+`tests/command_line.rs`, `tests/probe.rs`, `tests/proxy.rs`.
+
 A **domain** folder is named after its subject in the singular (`status/`, `service/`); a **kind**
 folder after its role in the plural. A domain may contain kinds; a kind never contains another
 kind.
@@ -586,6 +597,14 @@ too.
   threaded process. `cron` and `croner` were refused because they bring `chrono` and a zone
   database of their own; the cron parser is ours and tested by tables. `libc` was in the graph
   already. The rest of the last step is the automation pages in three languages.
+
+  The command line adds `clap` (derive, with `color`, `help`, `usage`, `error-context` and
+  `suggestions`, default features off) and uses its `anstream` for styled output: 289 → 303
+  packages, the clean release build unchanged at about 66 s on 8 cores, and the binary 14.99 →
+  15.38 MB (+382 KiB). `wrap_help` was left out because it brings `terminal_size` and the help fits
+  80 columns. `argh` and `pico-args` were refused because they have no styled help, suggestions or
+  value lists, and `owo-colors`/`console` because they are a second terminal-detection stack next to
+  clap's.
 
   The interface counts its cost in gzipped JavaScript a page loads. `react-markdown` renders service
   notes and costs the service page 35 KiB (445 → 481 KiB); `@dnd-kit` drags widgets in the layout

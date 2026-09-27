@@ -3,30 +3,33 @@ use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
+use clap::Parser;
+
 use super::run;
-use crate::cli::{PASSWORD_HASH, PROBE, PROXY, password_hash, probe, proxy};
-use crate::types::Ended;
+use crate::cli::{fail, password_hash, probe, proxy};
+use crate::types::{Command as Invocation, CommandLine, Ended};
 
 pub async fn start() -> ExitCode {
-    let command = env::args().nth(1);
-    match command.as_deref() {
-        None => match run().await {
-            Ok(Ended::Stopped) => ExitCode::SUCCESS,
-            Ok(Ended::Restart) => relaunch(),
-            Err(error) => {
-                eprintln!("home-portal: {error}");
-                ExitCode::FAILURE
-            }
-        },
-        Some(PASSWORD_HASH) => password_hash(),
-        Some(PROBE) => probe(&env::args().skip(2).collect::<Vec<_>>()).await,
-        Some(PROXY) => proxy(&env::args().skip(2).collect::<Vec<_>>()),
-        Some(other) => {
-            eprintln!(
-                "home-portal: unknown command {other:?}; the commands are {PASSWORD_HASH}, {PROBE} and {PROXY}"
-            );
-            ExitCode::FAILURE
+    let line = match CommandLine::try_parse() {
+        Ok(line) => line,
+        Err(error) => {
+            let _ = error.print();
+            return ExitCode::from(u8::try_from(error.exit_code()).unwrap_or(u8::MAX));
         }
+    };
+    match line.command.unwrap_or(Invocation::Serve) {
+        Invocation::Serve => serve().await,
+        Invocation::PasswordHash => password_hash(),
+        Invocation::Probe { target, kind } => probe(target, kind.map(Into::into)).await,
+        Invocation::Proxy { action } => proxy(action),
+    }
+}
+
+async fn serve() -> ExitCode {
+    match run().await {
+        Ok(Ended::Stopped) => ExitCode::SUCCESS,
+        Ok(Ended::Restart) => relaunch(),
+        Err(error) => fail(error),
     }
 }
 

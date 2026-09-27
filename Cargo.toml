@@ -26,7 +26,7 @@ members = [
 
 [workspace.package]
 edition = "2024"
-version = "0.1.6"
+version = "0.1.7"
 
 [workspace.dependencies]
 async-trait = "0.1"
@@ -60,6 +60,8 @@ base64 = "0.22"
 ipnet = { version = "2", features = ["serde"] }
 if-addrs = "0.15"
 rpassword = "7"
+clap = { version = "4", default-features = false, features = ["std", "derive", "color", "help", "usage", "error-context", "suggestions"] }
+anstream = "1"
 tempfile = "3"
 jiff = { version = "0.2", default-features = false, features = ["std", "tz-system", "tzdb-zoneinfo"] }
 libc = "0.2"

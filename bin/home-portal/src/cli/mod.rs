@@ -1,7 +1,14 @@
+mod failure;
+mod palette;
 mod password_hash;
 mod probe;
 mod proxy_render;
 
-pub use password_hash::{PASSWORD_HASH, password_hash};
-pub use probe::{PROBE, probe};
-pub use proxy_render::{PROXY, proxy};
+#[cfg(test)]
+mod tests;
+
+pub use failure::fail;
+pub use palette::{examples, palette, sections};
+pub use password_hash::password_hash;
+pub use probe::probe;
+pub use proxy_render::proxy;
