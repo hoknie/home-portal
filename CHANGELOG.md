@@ -4,6 +4,47 @@ Every notable change of home-portal. Sections are written by `packaging/changelo
 Conventional Commits between release tags; the release on GitHub carries the section of its tag.
 The versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Features
+
+- Improved workflow ui and vars setters ([7d742f5](https://github.com/hoknie/home-portal/commit/7d742f58259533cffaac9dc2301293a0a7a2cf83))
+- Added breadcrumbs ([a461ca9](https://github.com/hoknie/home-portal/commit/a461ca90f2d5d29cbcb0d025d2688c90abe64a99))
+- Added workflows ([a7f5c5e](https://github.com/hoknie/home-portal/commit/a7f5c5e007c9b9e1466af81f1d7f4190b7fd50bb))
+
+### Dependencies
+
+- Bump base64 from 0.22.1 to 0.23.1 ([a33d67f](https://github.com/hoknie/home-portal/commit/a33d67f883249c7fe6220a773b10ca287c8470ac))
+
+[Full diff](https://github.com/hoknie/home-portal/compare/v0.1.7...HEAD)
+
+## [0.1.7] - 2026-09-27
+
+### Features
+
+- Added user module ([639d4e8](https://github.com/hoknie/home-portal/commit/639d4e863b9b67c933e1bbca68e74a21daac452c))
+- Added modules ([ea47401](https://github.com/hoknie/home-portal/commit/ea47401e4b8148d526806e88680c2fd1016865b1))
+- Added clap for cli ([33052fd](https://github.com/hoknie/home-portal/commit/33052fd2996d463a19cad99bd2d8c2af6985c050))
+- Moved logic to use case (1/2) ([fb7c96b](https://github.com/hoknie/home-portal/commit/fb7c96bcb9c4a3ceae36c7f35f776a105cb70957))
+
+### Other
+
+- Added arch md ([5b874f1](https://github.com/hoknie/home-portal/commit/5b874f19a19b9e021f4f479d893940d9c24bdb05))
+
+[Full diff](https://github.com/hoknie/home-portal/compare/v0.1.6...v0.1.7)
+
+## [0.1.6] - 2026-09-26
+
+### Features
+
+- Added changelog auto ([ce049c9](https://github.com/hoknie/home-portal/commit/ce049c9ada3a62bc8862c0094712e5ab4ec84623))
+
+### Other
+
+- Readme updated ([4826a73](https://github.com/hoknie/home-portal/commit/4826a73b1ea1e02a0998694ea84cee3314771dd3))
+
+[Full diff](https://github.com/hoknie/home-portal/compare/v0.1.5...v0.1.6)
+
 ## [0.1.5] - 2026-09-26
 
 ### Features
