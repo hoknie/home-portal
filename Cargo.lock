@@ -1380,7 +1380,7 @@ name = "portal-dns"
 version = "0.1.8"
 dependencies = [
  "axum",
- "base64 0.22.1",
+ "base64 0.23.1",
  "hickory-proto",
  "http-body-util",
  "ipnet",
