@@ -24,9 +24,9 @@ pub use responses::{
 pub use responses::{
     AutomationResponse, AutomationsResponse, CatalogueResponse, ChoiceResponse, ChoicesResponse,
     EventResponse, FieldResponse, MarksResponse, OutcomeResponse, OutputResponse, QueuedResponse,
-    RunResponse, RunSettingsResponse, RunsResponse, ScheduleResponse, ScriptResponse,
-    ScriptsResponse, StatesResponse, TraceEntryResponse, TraceResponse, WhenResponse,
-    WorkflowCallResponse,
+    RenderedResponse, RunResponse, RunSettingsResponse, RunsResponse, ScheduleResponse,
+    ScriptResponse, ScriptsResponse, StatesResponse, TraceEntryResponse, TraceResponse,
+    WhenResponse, WorkflowCallResponse,
 };
 pub use responses::{
     InputResponse, WorkflowCatalogueResponse, WorkflowResponse, WorkflowUsageResponse,
@@ -34,7 +34,7 @@ pub use responses::{
 };
 pub use services::{ScriptsDirectory, validate_automations};
 pub use types::{
-    Choice, ProbeResult, RawMarks, RawOperation, RawRun, RawWebhook, Refusal, RefusalCode,
-    Schedule, StatusResult, Webhook,
+    Choice, PortalService, PortalState, ProbeResult, RawMarks, RawOperation, RawRun, RawWebhook,
+    Refusal, RefusalCode, Schedule, StatusResult, StepLogging, Webhook,
 };
 pub use usecases::{TransformValue, WorkflowCatalogue};

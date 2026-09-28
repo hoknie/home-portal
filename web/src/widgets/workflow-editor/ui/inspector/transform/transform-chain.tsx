@@ -59,6 +59,7 @@ export type OperationsListProps = {
 export function OperationsList({ path, field, operations, input, depth, onChange }: OperationsListProps) {
   const t = useTranslations("workflowEditor.transform");
   const help = useTranslations("workflowHelp.operations");
+  const filterHelp = useTranslations("workflowHelp.filters");
   const editor = useEditor();
   const [chosen, setChosen] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
@@ -67,7 +68,7 @@ export function OperationsList({ path, field, operations, input, depth, onChange
   const previews = input === null ? null : previewOperations(input.value, operations);
   const filters = editor.catalogue.filters;
   const offered = LIST_OPERATIONS.filter((name) => name !== "each" || depth < DEEPEST_EACH);
-  const groupOf = (accepts: string[]) => FILTER_GROUPS.find((group) => accepts.includes(group)) ?? "any";
+  const labelOf = (name: string) => (filterHelp.has(`${name}.label` as "get.label") ? filterHelp(`${name}.label` as "get.label") : name);
   const drop = (event: DragEndEvent) => {
     const from = ids.indexOf(String(event.active.id));
     const to = event.over ? ids.indexOf(String(event.over.id)) : -1;
@@ -91,7 +92,7 @@ export function OperationsList({ path, field, operations, input, depth, onChange
             .filter((filter) => filter.accepts.includes(now) || filter.accepts.includes("any") || (now === "list" && filter.element))
             .map((filter) => ({
               name: filter.name,
-              label: now === "list" && filter.element && !filter.accepts.includes("list") ? t("forEachElement", { name: filter.name }) : filter.name,
+              label: now === "list" && filter.element && !filter.accepts.includes("list") ? t("forEachElement", { name: filter.name }) : labelOf(filter.name),
             })),
         ];
   const choice = chosen ?? fitting[0]?.name ?? LIST_OPERATIONS[0];
@@ -117,7 +118,7 @@ export function OperationsList({ path, field, operations, input, depth, onChange
                   operation={operation}
                   preview={previews ? previews[index] : null}
                   from={input?.from ?? null}
-                  item={Array.isArray(value) ? value[0] : undefined}
+                  item={Array.isArray(value) ? value[0] : value !== null && typeof value === "object" ? value : undefined}
                   problem={problemAt(index)}
                   nested={OperationsList}
                   onChange={(next) => onChange(operations.map((current, position) => (position === index ? next : current)))}
@@ -151,10 +152,10 @@ export function OperationsList({ path, field, operations, input, depth, onChange
           {FILTER_GROUPS.map((group) => (
             <optgroup key={group} label={t(`groups.${group}`)}>
               {filters
-                .filter((filter) => groupOf(filter.accepts) === group)
+                .filter((filter) => filter.accepts.includes(group))
                 .map((filter) => (
-                  <option key={filter.name} value={filter.name}>
-                    {filter.name}
+                  <option key={`${group}-${filter.name}`} value={filter.name}>
+                    {labelOf(filter.name)}
                   </option>
                 ))}
             </optgroup>

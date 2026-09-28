@@ -22,7 +22,7 @@ import { ErrorNotice } from "@/shared/ui/error-notice";
 
 import { blocksToOpen, problemsFromServer } from "../model/checks/placing";
 import { type Problem, blocking } from "../model/checks/problems";
-import { type Draft, requestOf, sameDraft } from "../model/draft";
+import { type Draft, requestOf, sameDraft, sameSteps } from "../model/draft";
 import { EditorContext, type Sources } from "../model/editor-context";
 import { useEditorState } from "../model/use-editor-state";
 import { CanvasLoader } from "./canvas/canvas-loader";
@@ -31,7 +31,7 @@ import { Inspector } from "./inspector/inspector";
 import { Legend, legendDismissed, rememberLegend } from "./panels/legend";
 import { Palette } from "./panels/palette";
 import { ProblemsPanel } from "./panels/problems-panel";
-import { RunBar } from "./panels/run-bar";
+import { RunPanel } from "./panels/run-panel";
 import { RunDialog } from "./panels/run-dialog";
 import { RunsPanel } from "./panels/runs-panel";
 import { Toolbar } from "./panels/toolbar";
@@ -123,6 +123,9 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
   };
 
   const saveAndLeave = async () => {
+    if (editor.readOnly) {
+      return;
+    }
     if (await store()) {
       setLeaving(true);
       onSaved();
@@ -157,7 +160,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
     if (moves[event.key]) {
       event.preventDefault();
       state.navigate(moves[event.key]);
-    } else if ((event.key === "Delete" || event.key === "Backspace") && editor.selected && editor.selected !== START_ID) {
+    } else if ((event.key === "Delete" || event.key === "Backspace") && !editor.readOnly && editor.selected && editor.selected !== START_ID) {
       event.preventDefault();
       editor.remove(parsePath(editor.selected).path);
     } else if (event.key === "?") {
@@ -198,6 +201,8 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
             }}
             onLegend={() => setLegendOpen(true)}
             onSaveAndRun={() => void saveAndRun()}
+            mode={editor.mode}
+            onMode={editor.setMode}
           />
           {problemsOpen ? (
             <div className="glass-panel absolute top-full left-0 z-30 mt-2 w-[28rem] max-w-full rounded-xl shadow-lg">
@@ -215,7 +220,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
             </div>
           ) : null}
         </div>
-        <div className="flex h-[calc(100dvh-13rem)] min-h-[34rem] gap-3">
+        <div className="flex h-[calc(100dvh-13rem)] min-h-[34rem] flex-col gap-3 md:flex-row">
           <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-glass-edge bg-background/40">
             <CanvasLoader />
             {legendOpen ? (
@@ -228,16 +233,15 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
                 />
               </div>
             ) : null}
-            {editor.run ? (
-              <div className="absolute inset-x-3 top-3 z-10 sm:left-auto sm:w-96">
-                <RunBar run={editor.run} title={draft.title} onHide={() => state.setShown(null)} />
-              </div>
-            ) : null}
           </div>
-          {editor.selected ? <Inspector /> : null}
+          {editor.readOnly ? (
+            <RunPanel run={editor.run} title={draft.title} stale={editor.stale || (dirty && !sameSteps(draft, base))} onHide={() => editor.setMode("edit")} />
+          ) : editor.selected ? (
+            <Inspector />
+          ) : null}
         </div>
         <Palette
-          target={state.palette}
+          target={editor.readOnly ? null : state.palette}
           onClose={() => state.setPalette(null)}
           onChoose={(kind, target) => {
             state.setPalette(null);

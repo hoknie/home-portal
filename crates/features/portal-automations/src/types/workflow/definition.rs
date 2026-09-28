@@ -17,6 +17,7 @@ pub struct Workflow {
     pub timeout_seconds: u64,
     pub inputs: Vec<InputDeclaration>,
     pub steps: Vec<Step>,
+    pub version: String,
 }
 
 impl Workflow {

@@ -16,7 +16,7 @@ pub fn workflow_errors(section: &AutomationsSection) -> Vec<FieldError> {
         match decode_workflow(raw) {
             Ok(workflow) => {
                 errors.extend(
-                    Scope::errors(&workflow)
+                    Scope::errors(&workflow, section.service_ids())
                         .into_iter()
                         .map(|error| error.prefixed(&prefix)),
                 );

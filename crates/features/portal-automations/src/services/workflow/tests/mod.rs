@@ -2,6 +2,8 @@ mod decoding;
 mod filters;
 mod http;
 mod inputs;
+mod logging;
+mod portal;
 mod running;
 mod scope;
 mod scripts;

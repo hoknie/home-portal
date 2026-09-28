@@ -2,12 +2,14 @@ use std::time::Duration;
 
 use time::OffsetDateTime;
 
-use super::{StepOutcome, TraceEntry};
+use super::TraceEntry;
+use crate::types::{EntryEnd, StepLog};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Trace {
     pub entries: Vec<TraceEntry>,
     pub dropped: usize,
+    pub log_bytes: usize,
 }
 
 impl Trace {
@@ -22,19 +24,23 @@ impl Trace {
         Some(self.entries.len() - 1)
     }
 
-    pub fn finish(
-        &mut self,
-        index: Option<usize>,
-        (outcome, detail, output, shape): (StepOutcome, String, Option<String>, Option<String>),
-        now: OffsetDateTime,
-    ) {
+    pub fn finish(&mut self, index: Option<usize>, end: EntryEnd, now: OffsetDateTime) {
         let Some(entry) = index.and_then(|index| self.entries.get_mut(index)) else {
             return;
         };
-        entry.outcome = outcome;
-        entry.detail = cut(&detail, TraceEntry::LONGEST_DETAIL);
-        entry.output = output.map(|output| cut(&output, TraceEntry::LONGEST_OUTPUT));
-        entry.shape = shape;
+        let bytes = end.log.bytes();
+        entry.log = if self.log_bytes + bytes > StepLog::MOST_BYTES_PER_RUN {
+            end.log.dropped()
+        } else {
+            self.log_bytes += bytes;
+            end.log
+        };
+        entry.outcome = end.outcome;
+        entry.detail = cut(&end.detail, TraceEntry::LONGEST_DETAIL);
+        entry.output = end
+            .output
+            .map(|output| cut(&output, TraceEntry::LONGEST_OUTPUT));
+        entry.shape = end.shape;
         entry.duration = Duration::try_from(now - entry.started_at).unwrap_or_default();
     }
 }

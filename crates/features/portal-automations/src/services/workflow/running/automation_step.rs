@@ -31,11 +31,13 @@ pub async fn run_automation(
             reason.unwrap_or_default()
         ));
     }
+    let queued = format!("queued {automation} as run {run_id}");
     if !wait {
         return StepReport::done(
             WorkflowRunner::step_result(&[("run_id", id)]),
             format!("{automation} queued as run {run_id}"),
-        );
+        )
+        .logged(queued);
     }
     let waited = runner
         .budget
@@ -55,7 +57,8 @@ pub async fn run_automation(
     let result =
         WorkflowRunner::step_result(&[("run_id", id), ("outcome", Value::from(outcome.name()))]);
     let detail = format!("{automation} run {run_id}: {}", outcome.name());
-    match outcome {
+    let ended = format!("run {run_id} ended {}", outcome.name());
+    let report = match outcome {
         Outcome::Succeeded => StepReport::done(result, detail),
         _ => StepReport {
             result,
@@ -64,5 +67,6 @@ pub async fn run_automation(
                 None => detail,
             })
         },
-    }
+    };
+    report.with_log(vec![queued, ended])
 }

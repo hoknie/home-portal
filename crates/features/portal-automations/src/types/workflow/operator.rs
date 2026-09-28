@@ -38,6 +38,20 @@ impl Operator {
         }
     }
 
+    pub fn words(self) -> &'static str {
+        match self {
+            Operator::Equal => "equals",
+            Operator::NotEqual => "does not equal",
+            Operator::Less => "is less than",
+            Operator::LessOrEqual => "is at most",
+            Operator::Greater => "is greater than",
+            Operator::GreaterOrEqual => "is at least",
+            Operator::Contains => "contains",
+            Operator::IsEmpty => "is empty",
+            Operator::IsNotEmpty => "is not empty",
+        }
+    }
+
     pub fn of(name: &str) -> Option<Operator> {
         Self::ALL
             .into_iter()

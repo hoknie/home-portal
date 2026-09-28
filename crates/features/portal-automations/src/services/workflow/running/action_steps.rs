@@ -28,7 +28,13 @@ pub async fn run_action(runner: &WorkflowRunner, kind: &StepKind, frame: &mut Fr
                 .guard(runner.actions.notify(channel.as_deref(), &title, &text))
                 .await
             {
-                Ok(Ok(detail)) => StepReport::done(Value::Null, detail),
+                Ok(Ok(detail)) => {
+                    let line = format!(
+                        "sent to {}: {detail}",
+                        channel.as_deref().unwrap_or("every enabled channel")
+                    );
+                    StepReport::done(Value::Null, detail).logged(line)
+                }
                 Ok(Err(message)) => StepReport::failed(message),
                 Err(ending) => StepReport::ended(ending),
             }
@@ -52,8 +58,18 @@ pub async fn run_action(runner: &WorkflowRunner, kind: &StepKind, frame: &mut Fr
                         ),
                     ]),
                     format!("{service}: {}", probe.state),
-                ),
-                Ok(Err(message)) => StepReport::failed(message),
+                )
+                .logged(format!(
+                    "{service} → {}{}",
+                    probe.state,
+                    probe
+                        .latency_milliseconds
+                        .map(|latency| format!(" in {latency} ms"))
+                        .unwrap_or_default()
+                )),
+                Ok(Err(message)) => {
+                    StepReport::failed(message).with_log(not_found_hint(runner, &service).await)
+                }
                 Err(ending) => StepReport::ended(ending),
             }
         }
@@ -72,11 +88,61 @@ pub async fn run_action(runner: &WorkflowRunner, kind: &StepKind, frame: &mut Fr
                         ),
                     ]),
                     format!("{service}: {}", status.state),
-                ),
-                Ok(Err(message)) => StepReport::failed(message),
+                )
+                .logged(format!("{service} → {}", status.state)),
+                Ok(Err(message)) => {
+                    StepReport::failed(message).with_log(not_found_hint(runner, &service).await)
+                }
                 Err(ending) => StepReport::ended(ending),
             }
         }
+        StepKind::Log { message, level } => match render_text(message, frame) {
+            Ok(message) => StepReport::done(
+                WorkflowRunner::step_result(&[("message", Value::from(message.clone()))]),
+                message.clone(),
+            )
+            .logged(format!("[{}] {message}", level.name())),
+            Err(message) => StepReport::failed(message),
+        },
         other => StepReport::failed(format!("{} steps are not available yet", other.name())),
     }
+}
+
+pub const MOST_KNOWN_IDS: usize = 20;
+
+async fn not_found_hint(runner: &WorkflowRunner, service: &str) -> Vec<String> {
+    let Ok(state) = runner.actions.state().await else {
+        return Vec::new();
+    };
+    if state.services.iter().any(|known| known.id == service) {
+        return Vec::new();
+    }
+    let mut lines = Vec::new();
+    if let Some(named) = state
+        .services
+        .iter()
+        .find(|known| known.name.eq_ignore_ascii_case(service.trim()))
+    {
+        lines.push(format!(
+            "\"{service}\" is the name of the service {id}; use {{{{portal.services.{id}.id}}}}",
+            id = named.id
+        ));
+    }
+    let ids: Vec<&str> = state
+        .services
+        .iter()
+        .take(MOST_KNOWN_IDS)
+        .map(|known| known.id.as_str())
+        .collect();
+    let more = state.services.len().saturating_sub(MOST_KNOWN_IDS);
+    lines.push(format!(
+        "known services: {}{}",
+        ids.join(", "),
+        if more > 0 {
+            format!(" and {more} more")
+        } else {
+            String::new()
+        }
+    ));
+    lines
 }

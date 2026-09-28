@@ -5,8 +5,12 @@
 # whole, so comments inside steps are lost, while comments like these above an entry stay.
 #
 # Every text is a template: {{inputs.x}}, {{vars.x}}, {{steps.<id>.<field>}} (for example
-# {{steps.ping.json.state}}), {{event.<field>}}, {{loop.item}}, {{loop.index}} and
-# {{secrets.<key>}}, which is sent as it is but shown as *** in the journal.
+# {{steps.ping.json.state}}), {{event.<field>}}, {{loop.item}}, {{loop.index}},
+# {{secrets.<key>}}, which is sent as it is but shown as *** in the journal, and the portal's
+# own values, read when the step starts: {{portal.services.<id>.<field>}} (name, group, url,
+# address, state, since, latency_milliseconds, public), {{portal.services}} as a list,
+# {{portal.network.address}}, .port and .url, {{portal.modules.<name>.is_enabled}} and
+# {{portal.environments}}.
 # A name may be followed by filters, applied left to right:
 # {{steps.list.json.disks | pluck("name") | join(", ") | upper}}, {{vars.note | default("none")}}.
 #
@@ -181,3 +185,32 @@ automation = "restart-jellyfin"
 fields = { "service.id" = "jellyfin" }
 wait = false
 
+# Report the portal itself: a loop takes exactly one of repeat, for_each and while; here it
+# goes over every service, and the note reads the NAS directly and a module switch.
+[[workflows]]
+id = "portal-report"
+title = "Portal report"
+
+[[workflows.steps]]
+id = "each"
+kind = "loop"
+for_each = "{{portal.services}}"
+
+[[workflows.steps.body]]
+id = "line"
+kind = "set"
+variable = "last"
+value = "{{loop.item.name}}: {{loop.item.state}}"
+
+# log writes a message into the run's trace (info, warning or error) and never stops the run.
+# Every step's trace entry also keeps what its templates gave and what it did.
+[[workflows.steps.body]]
+id = "note"
+kind = "log"
+message = "{{loop.item.id}} is {{loop.item.state}}"
+level = "info"
+
+[[workflows.steps]]
+id = "tell"
+kind = "notify"
+text = "NAS is {{portal.services.nas.state}}, users module on: {{portal.modules.users.is_enabled}}, portal at {{portal.network.url}}"

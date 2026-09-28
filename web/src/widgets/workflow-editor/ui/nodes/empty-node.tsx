@@ -15,15 +15,19 @@ export function EmptyNode({ id, data }: NodeProps<CanvasNode>) {
   return (
     <div className="size-full">
       <Handle type="target" position={Position.Top} className="!size-1 !min-w-0 !border-0 !bg-transparent" isConnectable={false} />
-      <button
-        type="button"
-        data-slot={target ? slotKey(target) : id}
-        className="nodrag flex size-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-glass-edge text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-        onClick={() => target && editor.openPalette(target)}
-      >
-        <Plus className="size-4" aria-hidden />
-        {t("addStep")}
-      </button>
+      {editor.readOnly ? (
+        <div className="size-full rounded-xl border-2 border-dashed border-glass-edge opacity-40" />
+      ) : (
+        <button
+          type="button"
+          data-slot={target ? slotKey(target) : id}
+          className="nodrag flex size-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-glass-edge text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          onClick={() => target && editor.openPalette(target)}
+        >
+          <Plus className="size-4" aria-hidden />
+          {t("addStep")}
+        </button>
+      )}
       <Handle type="source" position={Position.Bottom} className="!size-1 !min-w-0 !border-0 !bg-transparent" isConnectable={false} />
     </div>
   );

@@ -11,5 +11,5 @@ pub use output_response::OutputResponse;
 pub use queued_response::QueuedResponse;
 pub use run_response::RunResponse;
 pub use runs_response::RunsResponse;
-pub use trace_entry_response::TraceEntryResponse;
+pub use trace_entry_response::{RenderedResponse, TraceEntryResponse};
 pub use trace_response::TraceResponse;

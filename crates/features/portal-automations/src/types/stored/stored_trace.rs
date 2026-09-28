@@ -26,6 +26,7 @@ impl StoredTrace {
                 .filter_map(StoredTraceEntry::into_entry)
                 .collect(),
             dropped: self.dropped,
+            log_bytes: 0,
         }
     }
 }

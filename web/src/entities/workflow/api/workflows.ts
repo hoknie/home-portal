@@ -1,6 +1,7 @@
 import { request } from "@/shared/api";
 import { api } from "@/shared/config";
 
+import { portalValuesSchema } from "../model/portal";
 import { type WorkflowRequest, secretNamesSchema, workflowCatalogueSchema, workflowRunSchema, workflowSchema, workflowsSchema } from "../model/schema";
 
 export function fetchWorkflows() {
@@ -29,4 +30,8 @@ export async function fetchWorkflowCatalogue() {
 
 export async function fetchSecretNames() {
   return (await request(api.secrets, { schema: secretNamesSchema })).data.secrets;
+}
+
+export async function fetchPortalValues() {
+  return (await request(api.workflowPortal, { schema: portalValuesSchema })).data;
 }

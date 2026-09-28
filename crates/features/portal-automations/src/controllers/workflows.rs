@@ -71,6 +71,12 @@ pub async fn run_workflow(
     ))
 }
 
+pub async fn portal_values(
+    State(state): State<AutomationsState>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    Ok(Json(state.workflows.portal.run().await?))
+}
+
 pub async fn workflow_catalogue(
     State(state): State<AutomationsState>,
 ) -> Json<WorkflowCatalogueResponse> {

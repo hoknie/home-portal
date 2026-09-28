@@ -4,10 +4,11 @@ import type { InputDeclaration, Step, Workflow, WorkflowCatalogue } from "../sch
 import { scopeAt } from "../scope";
 import { type Path, everyStep } from "../tree";
 import { itemSample } from "../transforming/known";
+import { type PortalValues, portalSuggestions } from "../portal";
 import { jsonKeys } from "./json-keys";
 import { lastOutput } from "./last-output";
 
-export const SUGGESTION_GROUPS = ["inputs", "vars", "steps", "loop", "item", "event", "secrets"] as const;
+export const SUGGESTION_GROUPS = ["inputs", "vars", "steps", "loop", "item", "event", "secrets", "portal"] as const;
 
 export type SuggestionGroup = (typeof SUGGESTION_GROUPS)[number];
 
@@ -29,6 +30,7 @@ export type SuggestionContext = {
   eventFields: { name: string; sample: string }[];
   secrets: { name: string; set: boolean }[];
   lastRun: Trace | null;
+  portal?: PortalValues | null;
 };
 
 function variablesOf(workflow: Workflow | undefined): string[] {
@@ -121,6 +123,12 @@ export function suggestionsAt(context: SuggestionContext): Suggestion[] {
       group: "secrets",
       description: { key: "suggestions.secret", params: { name: secret.name } },
       warning: secret.set ? undefined : "suggestions.secretUnset",
+    })),
+    ...portalSuggestions(context.portal).map<Suggestion>((entry) => ({
+      value: entry.value,
+      group: "portal",
+      description: { key: `suggestions.portal.${entry.kind}`, params: { subject: entry.subject } },
+      example: entry.example,
     })),
   ];
 }

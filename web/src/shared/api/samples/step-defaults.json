@@ -1,0 +1,118 @@
+{
+  "automation": {
+    "automation": "manual-one",
+    "id": "start",
+    "kind": "automation"
+  },
+  "http": {
+    "id": "ask",
+    "kind": "http",
+    "method": "GET",
+    "url": "http://nas.lan"
+  },
+  "if": {
+    "condition": {
+      "left": "a",
+      "op": "==",
+      "right": "a"
+    },
+    "id": "check",
+    "kind": "if",
+    "then": [
+      {
+        "id": "then_step",
+        "kind": "nothing"
+      }
+    ]
+  },
+  "log": {
+    "id": "note",
+    "kind": "log",
+    "level": "info",
+    "message": "x"
+  },
+  "loop": {
+    "body": [
+      {
+        "id": "body_step",
+        "kind": "nothing"
+      }
+    ],
+    "id": "again",
+    "kind": "loop",
+    "repeat": 1
+  },
+  "nothing": {
+    "id": "idle",
+    "kind": "nothing"
+  },
+  "notify": {
+    "id": "tell",
+    "kind": "notify",
+    "text": "hello"
+  },
+  "parallel": {
+    "branches": [
+      [
+        {
+          "id": "left_step",
+          "kind": "nothing"
+        }
+      ],
+      [
+        {
+          "id": "right_step",
+          "kind": "nothing"
+        }
+      ]
+    ],
+    "id": "both",
+    "kind": "parallel"
+  },
+  "probe": {
+    "id": "probe_it",
+    "kind": "probe",
+    "service": "nas"
+  },
+  "script": {
+    "id": "run",
+    "kind": "script",
+    "script": "restart.sh"
+  },
+  "set": {
+    "id": "remember",
+    "kind": "set",
+    "value": "x",
+    "variable": "note"
+  },
+  "status": {
+    "id": "status_of",
+    "kind": "status",
+    "service": "nas"
+  },
+  "stop": {
+    "id": "done",
+    "kind": "stop",
+    "outcome": "succeeded"
+  },
+  "transform": {
+    "id": "reshape",
+    "input": "[]",
+    "kind": "transform",
+    "operations": [
+      {
+        "op": "reverse"
+      }
+    ]
+  },
+  "wait": {
+    "id": "pause",
+    "kind": "wait",
+    "seconds": 1
+  },
+  "workflow": {
+    "id": "call",
+    "kind": "workflow",
+    "workflow": "other"
+  }
+}

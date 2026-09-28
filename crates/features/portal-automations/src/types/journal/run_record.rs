@@ -13,6 +13,7 @@ pub struct RunRecord {
     pub result: Finished,
     pub workflow: Option<String>,
     pub trace: Option<Trace>,
+    pub steps_version: Option<String>,
 }
 
 impl RunRecord {
@@ -37,6 +38,7 @@ impl RunRecord {
                 .as_ref()
                 .map(|call| call.id.clone()),
             trace: None,
+            steps_version: None,
         }
     }
 

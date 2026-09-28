@@ -47,6 +47,15 @@ pub async fn run_scripted(
     (actions, stop): (Arc<FakeActions>, watch::Receiver<bool>),
     scripts: &[(&str, &str)],
 ) -> Outcome {
+    run_prepared(text, (actions, stop), scripts, Secrets::none()).await
+}
+
+pub async fn run_prepared(
+    text: &str,
+    (actions, stop): (Arc<FakeActions>, watch::Receiver<bool>),
+    scripts: &[(&str, &str)],
+    secrets: Secrets,
+) -> Outcome {
     let folder = tempfile::tempdir().unwrap();
     let root = folder.path().join("scripts");
     std::fs::create_dir(&root).unwrap();
@@ -77,6 +86,8 @@ pub async fn run_scripted(
         trace: Arc::new(Mutex::new(Trace::default())),
         starter: starter.clone(),
         chain: vec!["nas-down".to_string()],
+        switches: portal_feature::ModuleSwitches::default(),
+        logging: crate::types::StepLogging::On,
     };
     let mut frame = Frame::new(
         Arc::new(vec![("automation.id".to_string(), "w".to_string())]),
@@ -85,7 +96,7 @@ pub async fn run_scripted(
             vec![("service".to_string(), serde_json::json!("nas"))],
         )
         .unwrap(),
-        Arc::new(Secrets::none()),
+        Arc::new(secrets),
     );
     let ending = runner.run(&workflow, &mut frame).await;
     let trace = runner.trace().clone();

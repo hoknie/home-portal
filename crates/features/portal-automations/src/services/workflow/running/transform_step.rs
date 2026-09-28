@@ -9,7 +9,8 @@ use crate::services::workflow::evaluating::{
     Frame, Secrets, apply_chain, at_key, holds, order_of, render_value, text_of,
 };
 use crate::types::{
-    Ending, Flow, Operation, RawOperation, RawStep, StepKind, StepReport, TraceEntry, ValueType,
+    Ending, Flow, Operation, RawOperation, RawStep, StepKind, StepLog, StepReport, TraceEntry,
+    ValueType,
 };
 
 pub fn run_transform(input: &str, operations: &[Operation], frame: &mut Frame) -> StepReport {
@@ -19,6 +20,7 @@ pub fn run_transform(input: &str, operations: &[Operation], frame: &mut Frame) -
     };
     let budget = TraceEntry::LONGEST_OUTPUT / (2 * operations.len().max(1));
     let mut snapshots = Vec::with_capacity(operations.len());
+    let mut lines = Vec::with_capacity(operations.len());
     for (index, operation) in operations.iter().enumerate() {
         value = match apply_operation(value, operation, frame) {
             Ok(value) => value,
@@ -30,6 +32,12 @@ pub fn run_transform(input: &str, operations: &[Operation], frame: &mut Frame) -
             }
         };
         snapshots.push(snapshot(&value, budget));
+        lines.push(format!(
+            "after {} ({}): {}",
+            index + 1,
+            operation.name(),
+            StepLog::shortened(&value.to_string(), StepLog::LONGEST)
+        ));
     }
     let names: Vec<&str> = operations.iter().map(Operation::name).collect();
     StepReport {
@@ -38,6 +46,7 @@ pub fn run_transform(input: &str, operations: &[Operation], frame: &mut Frame) -
             WorkflowRunner::step_result(&[("value", value)]),
             names.join(" → "),
         )
+        .with_log(lines)
     }
 }
 

@@ -16,6 +16,7 @@ const SERVER_PHRASES: Record<(typeof REASONS)[number], string> = {
   unknownStep: "comes earlier",
   outsideLoop: "exists only inside a loop as loop.item and loop.index",
   notAValue: "is not a value a workflow knows",
+  notInPortal: "is not a value the portal offers",
   outsideTransform: "exists only inside a transform's filter and map",
   unreadableFilter: "has a filter that cannot be read",
   unknownFilter: "which does not exist",

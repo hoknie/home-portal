@@ -3,6 +3,7 @@ use std::time::Duration;
 use time::OffsetDateTime;
 
 use super::StepOutcome;
+use crate::types::{LogLevel, StepLog};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TraceEntry {
@@ -17,9 +18,13 @@ pub struct TraceEntry {
     pub detail: String,
     pub output: Option<String>,
     pub shape: Option<String>,
+    pub log: StepLog,
+    pub item: Option<String>,
+    pub level: Option<LogLevel>,
 }
 
 impl TraceEntry {
     pub const LONGEST_DETAIL: usize = 500;
     pub const LONGEST_OUTPUT: usize = 4 * 1024;
+    pub const LONGEST_ITEM: usize = 100;
 }

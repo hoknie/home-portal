@@ -1152,7 +1152,20 @@
         "timed_out": "tiempo agotado",
         "unknown": "desconocido"
       },
-      "shortened": "Abreviado: las listas largas conservan sus 3 primeros elementos y los textos largos su comienzo."
+      "shortened": "Abreviado: las listas largas conservan sus 3 primeros elementos y los textos largos su comienzo.",
+      "details": "Valores y registro",
+      "values": "Valores",
+      "log": "Registro",
+      "valuesDropped": "{count, plural, one {# valor más no se muestra} other {# valores más no se muestran}}",
+      "logDropped": "{count, plural, one {# línea más no se muestra} other {# líneas más no se muestran}}",
+      "passWithItem": "Pasada {number}: {item}",
+      "pass": "Pasada {number}",
+      "levels": {
+        "info": "información",
+        "warning": "aviso",
+        "error": "error"
+      },
+      "branch": "Rama {number} (en paralelo)"
     },
     "title": "Flujos",
     "subtitle": "Series de pasos que inician las automatizaciones, los webhooks o usted",
@@ -1264,7 +1277,10 @@
     "choose": "Elija…",
     "choices": {
       "succeeded": "Correcto",
-      "failed": "Fallido"
+      "failed": "Fallido",
+      "info": "Información",
+      "warning": "Aviso",
+      "error": "Error"
     },
     "condition": {
       "left": "Valor",
@@ -1359,12 +1375,17 @@
     "run": {
       "showLast": "Mostrar la última ejecución",
       "hideLast": "Ocultar la ejecución",
-      "passes": "{count, plural, one {# pasada} other {# pasadas}} · {milliseconds} ms",
+      "passes": "Pasadas de este paso",
       "duration": "{milliseconds} ms",
       "title": "Ejecución",
       "hide": "Ocultar ejecución",
       "order": "Paso {number} de la ejecución",
-      "steps": "Pasos de la ejecución"
+      "steps": "Pasos de la ejecución",
+      "stale": "Esta ejecución usó una versión anterior de los pasos; el lienzo puede no coincidir.",
+      "none": "Aún no hay nada que mostrar: ejecuta el flujo o elige una ejecución en el historial.",
+      "notReached": "Este paso no se ejecutó en esta ejecución.",
+      "chooseStep": "Elige un paso en el lienzo o en la lista para ver sus valores y su registro.",
+      "stepDetails": "Datos del paso"
     },
     "summaries": {
       "wait": "esperar {seconds} s",
@@ -1375,7 +1396,9 @@
       "repeat": "{count, plural, one {# vez} other {# veces}}",
       "parallel": "{count, plural, one {# rama} other {# ramas}} a la vez",
       "nothing": "sigue",
-      "automationWaited": "{title}, esperando"
+      "automationWaited": "{title}, esperando",
+      "setList": "{variable}: lista de {count}",
+      "setObject": "{variable}: {count, plural, one {# clave} other {# claves}}"
     },
     "warningCount": "{count, plural, one {# aviso} other {# avisos}}",
     "palette": {
@@ -1404,9 +1427,15 @@
       "redoKeys": "Rehacer (Mayús+Ctrl+Z)",
       "problems": "{errors, plural, one {# error} other {# errores}}, {warnings, plural, one {# aviso} other {# avisos}}",
       "legend": "Cómo funciona",
-      "saveAndRun": "Guardar y ejecutar",
       "saveWithErrors": "Guardar ({count, plural, one {# error} other {# errores}})",
-      "runs": "Ejecuciones"
+      "history": "Historial",
+      "modes": {
+        "label": "Modo",
+        "edit": "Editar",
+        "run": "Ejecutar",
+        "view": "Ver",
+        "runHint": "Guardar si hace falta, ejecutar el flujo y mostrar el resultado"
+      }
     },
     "runs": {
       "title": "Ejecuciones de este flujo",
@@ -1472,14 +1501,22 @@
       "valueNow": "El valor ahora: {type}",
       "forEachElement": "{name} — para cada elemento"
     },
-    "setForms": {
-      "label": "Cómo se escribe el valor",
-      "value": "Texto",
-      "json": "JSON",
-      "list": "Lista",
-      "object": "Diccionario"
-    },
-    "moveItemUp": "Subir el valor {number}"
+    "moveItemUp": "Subir el valor {number}",
+    "exclusive": {
+      "label": {
+        "loop": "Cómo se repite el bucle",
+        "set": "Cómo se escribe el valor"
+      },
+      "fields": {
+        "repeat": "Veces",
+        "for_each": "Para cada",
+        "while": "Mientras",
+        "value": "Texto",
+        "json": "JSON",
+        "list": "Lista",
+        "object": "Diccionario"
+      }
+    }
   },
   "templateInput": {
     "suggestions": "Valores que puede insertar",
@@ -1575,6 +1612,11 @@
         "name": "Iniciar automatización",
         "description": "Pone en cola una de sus automatizaciones como si se iniciara a mano, con los campos de evento que indique; puede esperar su resultado.",
         "example": "restart-media con service.id = '{{'inputs.service'}}'"
+      },
+      "log": {
+        "name": "Registro",
+        "description": "Escribe un mensaje en la traza de la ejecución, con los valores sustituidos. Nunca detiene la ejecución, sea cual sea su nivel.",
+        "example": "comprobando '{{'loop.item'}}': '{{'steps.status.state'}}'"
       }
     },
     "fields": {
@@ -1769,6 +1811,16 @@
           "label": "Esperarla",
           "help": "Esperar a que termine su ejecución y fallar si no tuvo éxito."
         }
+      },
+      "log": {
+        "message": {
+          "label": "Mensaje",
+          "help": "El texto que se escribe; las plantillas se rellenan."
+        },
+        "level": {
+          "label": "Nivel",
+          "help": "Información, aviso o error: solo cambia el color en la traza."
+        }
       }
     },
     "results": {
@@ -1810,6 +1862,9 @@
       "automation": {
         "run_id": "El id de la ejecución puesta en cola",
         "outcome": "Cómo terminó esa ejecución, si se esperó"
+      },
+      "log": {
+        "message": "El mensaje tal como se escribió"
       }
     },
     "suggestions": {
@@ -1820,7 +1875,8 @@
         "loop": "Bucle",
         "event": "El evento que inició la ejecución",
         "secrets": "Secretos",
-        "item": "Elemento actual"
+        "item": "Elemento actual",
+        "portal": "Portal"
       },
       "input": "Entrada {name} de este flujo",
       "variable": "Variable {name}, la asigna el paso {step}",
@@ -1840,7 +1896,14 @@
         "key": "{key} del elemento actual"
       },
       "variableKey": "{key} del diccionario {name}",
-      "forEachElement": "para cada elemento"
+      "forEachElement": "para cada elemento",
+      "portal": {
+        "services": "Todos los servicios, como lista",
+        "service": "{subject} del servicio ahora",
+        "network": "{subject} del portal",
+        "module": "Si el módulo {subject} está activado",
+        "environments": "Los nombres de los entornos"
+      }
     },
     "reasons": {
       "unknownInput": "{name} no es una entrada de este flujo",
@@ -1853,7 +1916,8 @@
       "unknownFilter": "el filtro {filter} no existe",
       "filterArguments": "{filter} recibe {wanted} argumentos y obtuvo {got}",
       "filterArgument": "el argumento {argument} de {filter} debe ser texto entre comillas o un número, según su tipo",
-      "filterType": "{filter} recibe {takes} y obtuvo {got}"
+      "filterType": "{filter} recibe {takes} y obtuvo {got}",
+      "notInPortal": "{name} no es un valor que ofrezca el portal"
     },
     "edges": {
       "then": "entonces",
@@ -2028,6 +2092,7 @@
         "example": "'{{'steps.list.json | values'}}'"
       },
       "get": {
+        "label": "valor por clave",
         "description": "El valor en una clave o ruta como a.b.0.",
         "example": "'{{'steps.list.json | get(\"disks.0.name\")'}}'"
       },

@@ -12,14 +12,17 @@ pub async fn run_http(runner: &WorkflowRunner, step: &HttpStep, frame: &Frame) -
         Ok(request) => request,
         Err(message) => return StepReport::failed(message),
     };
+    let began = std::time::Instant::now();
     let answer = match runner.budget.guard(runner.http.send(&request)).await {
         Ok(Ok(answer)) => answer,
         Ok(Err(message)) => {
-            return StepReport::failed(format!("{} {}: {message}", request.method, request.url));
+            return StepReport::failed(format!("{} {}: {message}", request.method, request.url))
+                .logged(format!("{} {} → {message}", request.method, request.url));
         }
         Err(ending) => return StepReport::ended(ending),
     };
     let detail = format!("{} {} → {}", request.method, request.url, answer.status);
+    let line = format!("{detail} in {} ms", began.elapsed().as_millis());
     let output = Some(
         answer
             .body
@@ -30,7 +33,7 @@ pub async fn run_http(runner: &WorkflowRunner, step: &HttpStep, frame: &Frame) -
     let shape = answer.json.as_ref().map(shape_of);
     let result = result_of(&answer);
     if step.fail_on_error && answer.status >= 400 {
-        let mut report = StepReport::failed(detail);
+        let mut report = StepReport::failed(detail).logged(line);
         report.result = result;
         report.output = output;
         report.shape = shape;
@@ -39,7 +42,7 @@ pub async fn run_http(runner: &WorkflowRunner, step: &HttpStep, frame: &Frame) -
     StepReport {
         output,
         shape,
-        ..StepReport::done(result, detail)
+        ..StepReport::done(result, detail).logged(line)
     }
 }
 

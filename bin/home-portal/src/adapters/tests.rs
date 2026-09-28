@@ -240,3 +240,13 @@ async fn workflow_actions_wait_for_their_features_then_probe_read_and_refuse_tel
         .unwrap_err();
     assert!(refused.contains("not configured"), "{refused}");
 }
+
+#[tokio::test]
+async fn the_portal_state_waits_for_the_portal_to_start() {
+    use portal_automations::PortalActions;
+    let actions = super::WorkflowActions::default();
+    assert_eq!(
+        actions.state().await.unwrap_err(),
+        super::WorkflowActions::NOT_READY
+    );
+}

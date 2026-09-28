@@ -12,7 +12,7 @@ use crate::controllers::{
     remove, remove_token, run, run_now, runs, schedule, scripts, stop, update, update_webhook,
 };
 use crate::controllers::{
-    create_workflow, delete_workflow, list_workflows, run_workflow, update_workflow,
+    create_workflow, delete_workflow, list_workflows, portal_values, run_workflow, update_workflow,
     workflow_catalogue,
 };
 use crate::loops::{
@@ -30,7 +30,8 @@ use crate::usecases::{
     DeleteWebhook, IssueToken, ListAutomations, ListWebhooks, RemoveToken,
 };
 use crate::usecases::{
-    ChangeWorkflow, CreateWorkflow, DeleteWorkflow, ListWorkflows, RunWorkflow, WorkflowCatalogue,
+    ChangeWorkflow, CreateWorkflow, DeleteWorkflow, ListWorkflows, ReadPortalValues, RunWorkflow,
+    WorkflowCatalogue,
 };
 
 pub struct AutomationsFeature {
@@ -60,6 +61,7 @@ impl AutomationsFeature {
     pub const WORKFLOW: &'static str = "/api/workflows/{id}";
     pub const WORKFLOW_RUN: &'static str = "/api/workflows/{id}/run";
     pub const WORKFLOW_CATALOGUE: &'static str = "/api/workflows/catalogue";
+    pub const WORKFLOW_PORTAL: &'static str = "/api/workflows/portal";
     pub const LARGEST_BODY: usize = 64 * 1024;
 
     pub fn new(
@@ -86,6 +88,7 @@ impl AutomationsFeature {
             delete: DeleteWorkflow::new(configuration.clone(), views.clone()),
             run: RunWorkflow::new(sink.clone(), manual_runs.clone()),
             catalogue: WorkflowCatalogue,
+            portal: ReadPortalValues::new(tools.actions.clone(), sink.clone()),
         };
         let webhook_writer = WebhookWriter {
             configuration: configuration.clone(),
@@ -155,6 +158,7 @@ impl Feature for AutomationsFeature {
             .route(Self::WORKFLOW, put(update_workflow).delete(delete_workflow))
             .route(Self::WORKFLOW_RUN, post(run_workflow))
             .route(Self::WORKFLOW_CATALOGUE, get(workflow_catalogue))
+            .route(Self::WORKFLOW_PORTAL, get(portal_values))
             .with_state(self.state.clone())
     }
 

@@ -2,7 +2,7 @@ import { fireEvent, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
-import { type Step, type Workflow, workflowCatalogueSchema, workflowsSchema } from "@/entities/workflow";
+import { type Step, type Workflow, portalValuesSchema, workflowCatalogueSchema, workflowsSchema } from "@/entities/workflow";
 import { apiSamples } from "@/shared/api";
 import { renderWithProviders } from "@/shared/lib/testing";
 
@@ -76,6 +76,7 @@ export function openEditor(workflow: Workflow | null, options: { initial?: Draft
           { name: "sms", readiness: "missing" },
         ],
         eventFields: [{ name: "service.id", sample: "nas" }],
+        portal: portalValuesSchema.parse(apiSamples.workflowPortal),
         automations: [
           { id: "restart-media", title: "Restart media", event: "service.status-changed", enabled: true },
           { id: "sleeping", title: "Sleeping", event: "portal.started", enabled: false },

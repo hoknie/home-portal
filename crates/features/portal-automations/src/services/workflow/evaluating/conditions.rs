@@ -5,10 +5,20 @@ use super::values::{render_text, render_value, text_of};
 use crate::types::{Condition, Operator};
 
 pub fn holds(condition: &Condition, frame: &Frame) -> Result<bool, String> {
+    judge(condition, frame, &mut Vec::new())
+}
+
+pub fn judged(condition: &Condition, frame: &Frame) -> Result<(bool, Vec<String>), String> {
+    let mut lines = Vec::new();
+    let held = judge(condition, frame, &mut lines)?;
+    Ok((held, lines))
+}
+
+fn judge(condition: &Condition, frame: &Frame, lines: &mut Vec<String>) -> Result<bool, String> {
     match condition {
         Condition::All(inner) => {
             for condition in inner {
-                if !holds(condition, frame)? {
+                if !judge(condition, frame, lines)? {
                     return Ok(false);
                 }
             }
@@ -16,7 +26,7 @@ pub fn holds(condition: &Condition, frame: &Frame) -> Result<bool, String> {
         }
         Condition::Any(inner) => {
             for condition in inner {
-                if holds(condition, frame)? {
+                if judge(condition, frame, lines)? {
                     return Ok(true);
                 }
             }
@@ -32,7 +42,18 @@ pub fn holds(condition: &Condition, frame: &Frame) -> Result<bool, String> {
                 Some(right) => render_text(right, frame)?,
                 None => String::new(),
             };
-            Ok(compare(&left, *operator, &right))
+            let held = compare(&left, *operator, &right);
+            let answer = if held { "yes" } else { "no" };
+            lines.push(if operator.takes_right() {
+                format!(
+                    "{left} {} {}: {answer}",
+                    operator.words(),
+                    Value::String(right)
+                )
+            } else {
+                format!("{left} {}: {answer}", operator.words())
+            });
+            Ok(held)
         }
     }
 }

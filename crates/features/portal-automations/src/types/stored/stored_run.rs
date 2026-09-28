@@ -17,6 +17,8 @@ pub struct StoredRun {
     pub workflow: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trace: Option<StoredTrace>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub steps_version: Option<String>,
 }
 
 impl StoredRun {
@@ -41,6 +43,7 @@ impl StoredRun {
             },
             workflow: record.workflow.clone(),
             trace: record.trace.as_ref().map(StoredTrace::of),
+            steps_version: record.steps_version.clone(),
         }
     }
 
@@ -65,6 +68,7 @@ impl StoredRun {
             },
             workflow: self.workflow,
             trace: self.trace.map(StoredTrace::into_trace),
+            steps_version: self.steps_version,
         })
     }
 }

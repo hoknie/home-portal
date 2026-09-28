@@ -24,6 +24,7 @@ export {
 export {
   ACTIVE_OUTCOMES,
   EVENT_NAMES,
+  LOG_LEVELS,
   FILTER_NAMES,
   OUTCOMES,
   UNKNOWN,
@@ -41,7 +42,7 @@ export {
   scriptsSchema,
   traceSchema,
 } from "./model/schema";
-export type { Automation, Catalogue, CatalogueEvent, EventName, FilterName, Outcome, Run, Schedule, Scripts, StepOutcome, Trace, TraceEntry, When } from "./model/schema";
+export type { Automation, Catalogue, CatalogueEvent, EventName, FilterName, LogLevel, Outcome, Run, Schedule, Scripts, StepOutcome, Trace, TraceEntry, When } from "./model/schema";
 export { SCRIPT_PROBLEMS, fixOf, problemOf } from "./model/script-help";
 export { terminalText } from "./model/terminal-text";
 export type { ScriptProblem } from "./model/script-help";
@@ -51,5 +52,8 @@ export { RunDetails } from "./ui/run-details";
 export type { RunDetailsProps } from "./ui/run-details";
 export { RunOutput } from "./ui/run-output";
 export { RunTable } from "./ui/run-table";
-export { TraceTimeline } from "./ui/trace-timeline";
+export { TraceEntryView, TraceTimeline, rowHeading } from "./ui/trace/trace-timeline";
+export { StepLog, LevelMark } from "./ui/trace/step-log";
+export { depthOf, hasLog, loopOf, passRows } from "./ui/trace/pass-groups";
+export type { TraceRow } from "./ui/trace/pass-groups";
 export type { RunTableProps } from "./ui/run-table";

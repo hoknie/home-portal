@@ -1,17 +1,22 @@
 use std::sync::OnceLock;
 
 use async_trait::async_trait;
-use portal_automations::{PortalActions, ProbeResult, StatusResult};
+use portal_automations::{PortalActions, PortalService, PortalState, ProbeResult, StatusResult};
 use portal_feature::Notification;
 use portal_feature::PortalEvent;
+use portal_model::Environment;
+use portal_network::CurrentNetwork;
 use portal_notification::SendNotification;
-use portal_services::{CurrentStatus, ProbeService};
+use portal_services::{CurrentStatus, ProbeService, ServiceEntries};
 
 #[derive(Default)]
 pub struct WorkflowActions {
     pub probe: OnceLock<ProbeService>,
     pub status: OnceLock<CurrentStatus>,
     pub notify: OnceLock<SendNotification>,
+    pub entries: OnceLock<ServiceEntries>,
+    pub network: OnceLock<CurrentNetwork>,
+    pub host: OnceLock<Environment>,
 }
 
 impl WorkflowActions {
@@ -46,6 +51,61 @@ impl PortalActions for WorkflowActions {
         Ok(StatusResult {
             state: status.state.name().to_string(),
             since: Some(PortalEvent::timestamp(status.since)),
+        })
+    }
+
+    async fn state(&self) -> Result<PortalState, String> {
+        let not_ready = || Self::NOT_READY.to_string();
+        let entries = self.entries.get().ok_or_else(not_ready)?.run()?;
+        let current = self.status.get().ok_or_else(not_ready)?;
+        let host = self.host.get().ok_or_else(not_ready)?;
+        let reading = self.network.get().ok_or_else(not_ready)?.run();
+        let settings = reading.settings.unwrap_or_default();
+        let services = entries
+            .into_iter()
+            .map(|entry| {
+                let status = current.run(&entry.id).ok();
+                PortalService {
+                    address: entry
+                        .addresses
+                        .get(host.as_str())
+                        .cloned()
+                        .unwrap_or_else(|| entry.url.clone()),
+                    state: status
+                        .as_ref()
+                        .map_or("unknown", |status| status.state.name())
+                        .to_string(),
+                    since: status
+                        .as_ref()
+                        .map(|status| PortalEvent::timestamp(status.since)),
+                    latency_milliseconds: status.and_then(|status| status.latency_milliseconds),
+                    id: entry.id,
+                    name: entry.name,
+                    group: entry.group,
+                    url: entry.url,
+                    public: entry.public,
+                }
+            })
+            .collect();
+        let url = settings
+            .public_url
+            .clone()
+            .unwrap_or_else(|| format!("http://{}", settings.socket_address()));
+        Ok(PortalState {
+            services,
+            address: settings.address.to_string(),
+            port: settings.port,
+            url,
+            environments: reading
+                .environments
+                .map(|environments| {
+                    environments
+                        .names()
+                        .iter()
+                        .map(|name| name.as_str().to_string())
+                        .collect()
+                })
+                .unwrap_or_default(),
         })
     }
 

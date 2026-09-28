@@ -1,10 +1,13 @@
+use portal_automations::validate_automations;
 use portal_automations::{
-    InputResponse, QueuedResponse, WorkflowCatalogue, WorkflowCatalogueResponse, WorkflowResponse,
-    WorkflowUsageResponse, WorkflowsResponse,
+    InputResponse, PortalService, PortalState, QueuedResponse, RenderedResponse,
+    TraceEntryResponse, TraceResponse, WorkflowCatalogue, WorkflowCatalogueResponse,
+    WorkflowResponse, WorkflowUsageResponse, WorkflowsResponse,
 };
-use serde_json::json;
+use serde_json::{Map, Value, json};
+use toml_edit::{Array, DocumentMut, InlineTable};
 
-use crate::automations::{outcome, run, traced};
+use crate::automations::{outcome, run};
 use crate::check;
 
 fn revive() -> WorkflowResponse {
@@ -27,6 +30,7 @@ fn revive() -> WorkflowResponse {
         ("steps[1]", "down", "if", None, "succeeded", "then"),
     ]));
     WorkflowResponse {
+        steps_version: "5d41402abc4b".into(),
         id: "revive".into(),
         title: "Revive a service".into(),
         enabled: true,
@@ -87,6 +91,7 @@ fn revive() -> WorkflowResponse {
 
 fn spare() -> WorkflowResponse {
     WorkflowResponse {
+        steps_version: "7d793037a076".into(),
         id: "note".into(),
         title: "Note".into(),
         enabled: false,
@@ -121,4 +126,153 @@ fn the_workflow_samples_match_their_serializers() {
         })
         .unwrap(),
     );
+}
+
+#[test]
+fn the_portal_values_sample_matches_its_shape() {
+    let service = |id: &str, name: &str, state: &str| PortalService {
+        id: id.into(),
+        name: name.into(),
+        group: Some("Home".into()),
+        url: format!("http://{id}.lan"),
+        address: format!("http://192.168.1.10/{id}"),
+        state: state.into(),
+        since: Some("2026-09-28T09:00:00Z".into()),
+        latency_milliseconds: Some(12),
+        public: id == "media",
+    };
+    let state = PortalState {
+        services: vec![
+            service("media", "Media", "up"),
+            service("nas", "NAS", "down"),
+        ],
+        address: "0.0.0.0".into(),
+        port: 8080,
+        url: "http://portal.lan:8080".into(),
+        environments: vec!["local".into(), "vpn".into(), "internet".into()],
+    };
+    check(
+        "workflow-portal",
+        state.value(&[("proxy", false), ("users", true), ("workflows", true)]),
+    );
+}
+
+fn nothing(id: &str) -> Value {
+    json!({"id": id, "kind": "nothing"})
+}
+
+fn defaults() -> Vec<Value> {
+    vec![
+        json!({"id": "check", "kind": "if", "condition": {"left": "a", "op": "==", "right": "a"}, "then": [nothing("then_step")]}),
+        json!({"id": "again", "kind": "loop", "repeat": 1, "body": [nothing("body_step")]}),
+        json!({"id": "both", "kind": "parallel", "branches": [[nothing("left_step")], [nothing("right_step")]]}),
+        json!({"id": "call", "kind": "workflow", "workflow": "other"}),
+        nothing("idle"),
+        json!({"id": "done", "kind": "stop", "outcome": "succeeded"}),
+        json!({"id": "remember", "kind": "set", "variable": "note", "value": "x"}),
+        json!({"id": "pause", "kind": "wait", "seconds": 1}),
+        json!({"id": "reshape", "kind": "transform", "input": "[]", "operations": [{"op": "reverse"}]}),
+        json!({"id": "ask", "kind": "http", "method": "GET", "url": "http://nas.lan"}),
+        json!({"id": "run", "kind": "script", "script": "restart.sh"}),
+        json!({"id": "tell", "kind": "notify", "text": "hello"}),
+        json!({"id": "note", "kind": "log", "message": "x", "level": "info"}),
+        json!({"id": "start", "kind": "automation", "automation": "manual-one"}),
+        json!({"id": "probe_it", "kind": "probe", "service": "nas"}),
+        json!({"id": "status_of", "kind": "status", "service": "nas"}),
+    ]
+}
+
+fn toml_value(value: &Value) -> toml_edit::Value {
+    match value {
+        Value::String(text) => text.as_str().into(),
+        Value::Bool(flag) => (*flag).into(),
+        Value::Number(number) => number.as_i64().unwrap_or_default().into(),
+        Value::Array(items) => {
+            toml_edit::Value::Array(items.iter().map(toml_value).collect::<Array>())
+        }
+        Value::Object(map) => {
+            let mut table = InlineTable::new();
+            for (key, item) in map {
+                table.insert(key, toml_value(item));
+            }
+            toml_edit::Value::InlineTable(table)
+        }
+        Value::Null => "".into(),
+    }
+}
+
+#[test]
+fn every_step_kind_has_a_minimal_valid_step_shared_with_the_interface() {
+    let steps = defaults();
+    let catalogue = WorkflowCatalogueResponse::of(&WorkflowCatalogue.run());
+    let kinds: Vec<String> = catalogue
+        .kinds
+        .iter()
+        .map(|kind| kind.name.clone())
+        .collect();
+    let covered: Vec<String> = steps
+        .iter()
+        .map(|step| step["kind"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(
+        covered, kinds,
+        "every kind of the catalogue needs a minimal step here, in catalogue order"
+    );
+    let steps_text: Vec<String> = steps
+        .iter()
+        .map(|step| toml_value(step).to_string())
+        .collect();
+    let text = format!(
+        "[modules]\nworkflows = true\n\n[[workflows]]\nid = \"all\"\ntitle = \"All\"\nsteps = [{}]\n\n[[workflows]]\nid = \"other\"\ntitle = \"Other\"\nsteps = [{{ id = \"n\", kind = \"nothing\" }}]\n\n[[automations]]\nid = \"manual-one\"\ntitle = \"Manual\"\nwhen = {{ event = \"manual\" }}\nrun = {{ script = \"restart.sh\" }}\n",
+        steps_text.join(", ")
+    );
+    let document: DocumentMut = text.parse().unwrap();
+    assert_eq!(validate_automations(&document), Vec::new());
+    let by_kind: Map<String, Value> = steps
+        .into_iter()
+        .map(|step| (step["kind"].as_str().unwrap().to_string(), step))
+        .collect();
+    check("step-defaults", Value::Object(by_kind));
+}
+
+pub type Entry<'a> = (&'a str, &'a str, &'a str, Option<usize>, &'a str, &'a str);
+
+pub fn traced(entries: &[Entry]) -> TraceResponse {
+    TraceResponse {
+        entries: entries
+            .iter()
+            .map(
+                |(path, step, kind, iteration, outcome, detail)| TraceEntryResponse {
+                    path: path.to_string(),
+                    step: step.to_string(),
+                    label: step.to_string(),
+                    kind: kind.to_string(),
+                    iteration: *iteration,
+                    outcome: outcome.to_string(),
+                    started_at: "2026-09-25T03:00:00Z".into(),
+                    duration_milliseconds: 120,
+                    detail: detail.to_string(),
+                    output: (*kind == "http").then(|| "{\"state\":\"down\"}".to_string()),
+                    shape: (*kind == "http").then(|| "{\"state\":\"down\"}".to_string()),
+                    values: (*kind == "if")
+                        .then(|| RenderedResponse {
+                            template: "{{steps.first_probe.state}}".into(),
+                            value: "\"down\"".into(),
+                        })
+                        .into_iter()
+                        .collect(),
+                    log: match *kind {
+                        "if" => vec!["\"down\" equals \"down\": yes".into(), "took then".into()],
+                        "log" => vec!["[warning] nas is down".into()],
+                        _ => Vec::new(),
+                    },
+                    values_dropped: 0,
+                    log_dropped: 0,
+                    item: iteration.map(|index| format!("\"try {}\"", index + 1)),
+                    level: (*kind == "log").then(|| "warning".to_string()),
+                },
+            )
+            .collect(),
+        dropped: 0,
+    }
 }

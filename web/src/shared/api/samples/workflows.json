@@ -54,34 +54,55 @@
           }
         },
         "started_at": "2026-09-25T03:00:00Z",
+        "steps_version": null,
         "trace": {
           "dropped": 0,
           "entries": [
             {
               "detail": "down",
               "duration_milliseconds": 120,
+              "item": null,
               "iteration": null,
               "kind": "probe",
               "label": "first_probe",
+              "level": null,
+              "log": [],
+              "log_dropped": 0,
               "outcome": "succeeded",
               "output": null,
               "path": "steps[0]",
               "shape": null,
               "started_at": "2026-09-25T03:00:00Z",
-              "step": "first_probe"
+              "step": "first_probe",
+              "values": [],
+              "values_dropped": 0
             },
             {
               "detail": "then",
               "duration_milliseconds": 120,
+              "item": null,
               "iteration": null,
               "kind": "if",
               "label": "down",
+              "level": null,
+              "log": [
+                "\"down\" equals \"down\": yes",
+                "took then"
+              ],
+              "log_dropped": 0,
               "outcome": "succeeded",
               "output": null,
               "path": "steps[1]",
               "shape": null,
               "started_at": "2026-09-25T03:00:00Z",
-              "step": "down"
+              "step": "down",
+              "values": [
+                {
+                  "template": "{{steps.first_probe.state}}",
+                  "value": "\"down\""
+                }
+              ],
+              "values_dropped": 0
             }
           ]
         },
@@ -150,6 +171,7 @@
           "text": "{{inputs.service}} is {{steps.nas_state.state}}"
         }
       ],
+      "steps_version": "5d41402abc4b",
       "tags": [
         "media"
       ],
@@ -184,6 +206,7 @@
           "reason": "{{vars.note}}"
         }
       ],
+      "steps_version": "7d793037a076",
       "tags": [],
       "timeout_seconds": 300,
       "title": "Note",

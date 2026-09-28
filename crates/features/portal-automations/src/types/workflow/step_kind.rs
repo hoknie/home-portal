@@ -1,5 +1,5 @@
 use super::{Condition, HttpStep, LoopMode, SetValue, Step};
-use crate::types::{Operation, RunSettings};
+use crate::types::{LogLevel, Operation, RunSettings};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StepKind {
@@ -58,6 +58,10 @@ pub enum StepKind {
     Status {
         service: String,
     },
+    Log {
+        message: String,
+        level: LogLevel,
+    },
 }
 
 impl StepKind {
@@ -78,6 +82,7 @@ impl StepKind {
             StepKind::Status { .. } => "status",
             StepKind::Nothing => "nothing",
             StepKind::Automation { .. } => "automation",
+            StepKind::Log { .. } => "log",
         }
     }
 }

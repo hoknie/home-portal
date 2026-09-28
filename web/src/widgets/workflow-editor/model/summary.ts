@@ -17,11 +17,22 @@ export function summaryOf(
       return { text: [step.input ?? "", ...(step.operations ?? []).map((operation) => operation.op)].filter(Boolean).join(" → ") };
     case "notify":
       return { text: step.title ? `${step.title}: ${step.text ?? ""}` : (step.text ?? "") };
+    case "log":
+      return { text: step.level && step.level !== "info" ? `${step.level}: ${step.message ?? ""}` : (step.message ?? "") };
     case "probe":
     case "status":
       return { text: step.service ?? "" };
-    case "set":
-      return { text: `${step.variable ?? ""} = ${step.json ?? step.value ?? ""}` };
+    case "set": {
+      const variable = step.variable ?? "";
+      if (step.list !== undefined) {
+        return { key: "summaries.setList", params: { variable, count: step.list.length } };
+      }
+      if (step.object !== undefined) {
+        return { key: "summaries.setObject", params: { variable, count: Object.keys(step.object).length } };
+      }
+      const value = step.json ?? step.value;
+      return { text: value === undefined || value === "" ? variable : `${variable} = ${value}` };
+    }
     case "script":
       return { text: [step.script ?? "", ...(step.args ?? [])].join(" ").trim() };
     case "stop":

@@ -3,13 +3,13 @@
 import { Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { type Condition, type KindField, type Path, type Step, emptyRow, idFor, idsOf, pathText, variableProblem } from "@/entities/workflow";
+import { type Condition, type KindField, type Path, type Step, emptyRow, hiddenFields, idFor, idsOf, pathText, variableProblem } from "@/entities/workflow";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
 
 import { useEditor } from "../../model/editor-context";
 import { ConditionBuilder } from "./condition-builder";
-import { SET_FORMS, SetMode, setFormOf } from "./data/set-mode";
+import { ExclusiveChoice } from "./data/exclusive-choice";
 import { ListField } from "./list-field";
 import { SampleField } from "./sample-field";
 import { SELECT } from "./select-class";
@@ -193,10 +193,8 @@ export function StepForm({ path, step }: { path: Path; step: Step }) {
   const at = pathText(path);
   const id = at.replace(/[^a-z0-9_-]/gi, "-");
   const idProblem = editor.problems.find((problem) => problem.at === `${at}.id`);
-  const setForm = step.kind === "set" ? setFormOf(step) : null;
-  const fields = (kind?.fields ?? []).filter(
-    (field) => !NESTED_TYPES.includes(field.type) && (setForm === null || !(SET_FORMS as readonly string[]).includes(field.name) || field.name === setForm),
-  );
+  const hidden = hiddenFields(step, kind);
+  const fields = (kind?.fields ?? []).filter((field) => !NESTED_TYPES.includes(field.type) && !hidden.has(field.name));
   return (
     <div className="grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -236,7 +234,9 @@ export function StepForm({ path, step }: { path: Path; step: Step }) {
         </FormField>
       </div>
       {step.kind === "parallel" ? <Branches path={path} step={step} /> : null}
-      {step.kind === "set" ? <SetMode step={step} onChange={(next) => editor.change(path, () => next, `${at}.form`)} /> : null}
+      {(kind?.exclusive ?? []).map((group) => (
+        <ExclusiveChoice key={group.join("-")} step={step} group={group} onChange={(next) => editor.change(path, () => next, `${at}.${group[0]}-choice`)} />
+      ))}
       <div className="grid gap-4">
         {fields.map((field) => (
           <Field key={field.name} path={path} step={step} field={field} />

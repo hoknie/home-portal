@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { apiSamples } from "@/shared/api";
 
+import { portalValuesSchema } from "../portal";
 import { type Step, workflowCatalogueSchema, workflowsSchema } from "../schema";
 import { scopeAt } from "../scope";
+import { knownType, sampleOf } from "../transforming/known";
 import { parsePath } from "../tree";
 import { checkTemplate } from "./check";
 import { jsonKeys } from "./json-keys";
@@ -83,7 +85,7 @@ describe("workflow suggestions", () => {
   it("keys from the last run's answer are offered with their examples", () => {
     const lastRun = {
       entries: [
-        { path: "steps[1]", step: "list", label: "list", kind: "http", iteration: null, outcome: "succeeded" as const, started_at: "", duration_milliseconds: 1, detail: "200", output: '{"state":"up","uptime":42,"disk":{"free":"12G"}}', shape: null },
+        { path: "steps[1]", step: "list", label: "list", kind: "http", iteration: null, outcome: "succeeded" as const, started_at: "", duration_milliseconds: 1, detail: "200", output: '{"state":"up","uptime":42,"disk":{"free":"12G"}}', shape: null, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null },
       ],
       dropped: 0,
     };
@@ -131,5 +133,40 @@ describe("template checks", () => {
     expect(knownValues("{{steps.ping.status}}", [])).toContainEqual({ value: "404", label: "404" });
     expect(knownValues("{{steps.check.branch}}", [])).toHaveLength(2);
     expect(knownValues("x {{steps.ping.status}}", [])).toEqual([]);
+  });
+});
+
+describe("Portal values offered", () => {
+  const portal = portalValuesSchema.parse(apiSamples.workflowPortal);
+  const scope = scopeAt(steps, parsePath("steps[4]").path, ["service"], "text");
+
+  it("services, the network, modules and environments are offered with their current values", () => {
+    const found = suggestionsAt(context("steps[4].text", { portal })).filter((suggestion) => suggestion.group === "portal");
+    const examples = Object.fromEntries(found.map((suggestion) => [suggestion.value, suggestion.example]));
+    expect(examples["portal.services.media.id"]).toBe("media");
+    expect(examples["portal.services.media.name"]).toBe("Media");
+    const media = found.map((suggestion) => suggestion.value).filter((value) => value.startsWith("portal.services.media."));
+    expect(media[0]).toBe("portal.services.media.id");
+    expect(examples["portal.services.media.state"]).toBe(portal.services[0].state);
+    expect(examples["portal.network.port"]).toBe("8080");
+    expect(examples["portal.modules.users.is_enabled"]).toBe("true");
+    expect(examples["portal.environments"]).toBe("local, vpn, internet");
+    expect(values("steps[4].text")).not.toContain("portal.network.url");
+  });
+
+  it("an unknown service, module or field is refused like the server refuses it", () => {
+    expect(checkTemplate("{{portal.services.media.name}} {{portal.modules.users.is_enabled}} {{portal.network.url}}", scope, portal)).toEqual([]);
+    expect(checkTemplate("{{portal.services.nothing.name}}", scope, portal)[0].reason).toBe("notInPortal");
+    expect(checkTemplate("{{portal.modules.nothing.is_enabled}}", scope, portal)[0].reason).toBe("notInPortal");
+    expect(checkTemplate("{{portal.services.media.colour}}", scope)[0].reason).toBe("notInPortal");
+    expect(checkTemplate("{{portal.network.ip}}", scope)[0].reason).toBe("notInPortal");
+  });
+
+  it("the preview reads the same values the templates will", () => {
+    const known = { steps, inputs: ["service"], path: parsePath("steps[4]").path, field: "text", lastRun: null, catalogue, portal };
+    expect(sampleOf("portal.services.media.name", known)?.value).toBe("Media");
+    expect(sampleOf("portal.network.port", known)?.value).toBe(8080);
+    expect(knownType("portal.modules.users.is_enabled", known)).toBe("boolean");
+    expect(knownType("portal.services", known)).toBe("list");
   });
 });

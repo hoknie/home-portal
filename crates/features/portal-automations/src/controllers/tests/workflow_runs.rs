@@ -240,3 +240,31 @@ async fn the_runs_of_one_workflow_are_filtered_by_its_id() {
     assert_eq!(slow["runs"][0]["id"], other.to_string());
     api.feature.state.sink.stop(other, "admin");
 }
+
+#[tokio::test]
+async fn a_run_carries_the_steps_version_of_its_workflow_and_each_entry_its_log() {
+    let api = ready("workflows = true");
+    let run_id = run(&api, "hello").await;
+    let body = finished(&api, run_id).await;
+    let (_, _, workflows) = send(&api, get(AutomationsFeature::WORKFLOWS)).await;
+    let greet = workflows["workflows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|workflow| workflow["id"] == "greet")
+        .unwrap();
+    let version = greet["steps_version"].as_str().unwrap();
+    assert_eq!(version.len(), 12);
+    assert_eq!(body["steps_version"], version);
+    let slow = workflows["workflows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|workflow| workflow["id"] == "slow")
+        .unwrap();
+    assert_ne!(slow["steps_version"], version);
+    let greeting = &body["trace"]["entries"][0];
+    assert_eq!(greeting["values"][0]["template"], "hello {{inputs.who}}");
+    assert_eq!(greeting["values"][0]["value"], "\"hello world\"");
+    assert_eq!(greeting["log"][0], "greeting = \"hello world\"");
+}

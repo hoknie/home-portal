@@ -89,4 +89,8 @@ pub struct RawStep {
     pub input: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub operations: Option<Vec<RawOperation>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<String>,
 }

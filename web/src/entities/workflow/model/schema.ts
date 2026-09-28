@@ -70,6 +70,8 @@ export type Step = {
   text?: string;
   title?: string;
   channel?: string;
+  message?: string;
+  level?: string;
   service?: string;
   input?: string;
   operations?: Operation[];
@@ -115,6 +117,8 @@ export const stepSchema: z.ZodType<Step> = z.lazy(() =>
     text: z.string().optional(),
     title: z.string().optional(),
     channel: z.string().optional(),
+    message: z.string().optional(),
+    level: z.string().optional(),
     service: z.string().optional(),
     input: z.string().optional(),
     operations: z.array(operationSchema).optional(),
@@ -155,6 +159,7 @@ export const workflowSchema = z.object({
   timeout_seconds: z.number(),
   inputs: z.array(inputDeclarationSchema).default([]),
   steps: z.array(stepSchema),
+  steps_version: z.string().default(""),
   used_by: z.array(usageSchema).default([]),
   last_run: runSchema.nullable().default(null),
   active_run: runSchema.nullable().default(null),
@@ -206,6 +211,7 @@ export const kindSchema = z.object({
   group: z.enum(KIND_GROUPS),
   fields: z.array(kindFieldSchema),
   results: z.array(z.string()),
+  exclusive: z.array(z.array(z.string())).default([]),
 });
 
 export type Kind = z.infer<typeof kindSchema>;

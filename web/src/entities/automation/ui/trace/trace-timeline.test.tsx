@@ -5,8 +5,8 @@ import { afterEach, expect, it, vi } from "vitest";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
 
-import { type Run, type TraceEntry, runsSchema } from "../model/schema";
-import { RunDetails } from "./run-details";
+import { type Run, type TraceEntry, runsSchema } from "../../model/schema";
+import { RunDetails } from "../run-details";
 import { TraceTimeline, depthOf } from "./trace-timeline";
 
 const [running] = runsSchema.parse(apiSamples.automationRuns).runs;
@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 function entry(path: string, step: string, kind: string, outcome: TraceEntry["outcome"], output: string | null = null): TraceEntry {
-  return { path, step, label: step, kind, iteration: null, outcome, started_at: "2026-09-25T03:00:00Z", duration_milliseconds: 20, detail: "", output, shape: null };
+  return { path, step, label: step, kind, iteration: null, outcome, started_at: "2026-09-25T03:00:00Z", duration_milliseconds: 20, detail: "", output, shape: null, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null };
 }
 
 function workflowRun(entries: TraceEntry[], result: Run["outcome"]["result"]): Run {

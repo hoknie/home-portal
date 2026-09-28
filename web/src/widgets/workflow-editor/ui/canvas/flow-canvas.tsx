@@ -9,7 +9,6 @@ import {
   MarkerType,
   MiniMap,
   type NodeChange,
-  Panel,
   type NodeTypes,
   type EdgeTypes,
   ReactFlow,
@@ -35,12 +34,11 @@ import { StartNode } from "../nodes/start-node";
 import { StepNode } from "../nodes/step-node";
 import type { CanvasEdge } from "./edge-data";
 import { FlowEdge, LoopEdge } from "./flow-edge";
-import { StepsStrip } from "./steps-strip";
 
 const NODE_TYPES: NodeTypes = { start: StartNode, step: StepNode, join: JoinNode, frame: FrameNode, empty: EmptyNode, end: EndNode };
 const EDGE_TYPES: EdgeTypes = { flow: FlowEdge, again: LoopEdge };
 
-function nodesOf(flow: Flow, selected: string | null, narrow: boolean, path: RunPath | null): CanvasNode[] {
+function nodesOf(flow: Flow, selected: string | null, fixed: boolean, path: RunPath | null): CanvasNode[] {
   return flow.nodes.map((node) => ({
     id: node.id,
     type: node.type,
@@ -51,7 +49,7 @@ function nodesOf(flow: Flow, selected: string | null, narrow: boolean, path: Run
       node,
       path: path ? { order: path.order.get(node.id), reached: path.nodes.has(node.id), dimmed: !path.nodes.has(node.id) && node.type !== "frame" } : null,
     },
-    draggable: node.type === "step" && !narrow,
+    draggable: node.type === "step" && !fixed,
     selectable: node.type === "step" || node.type === "start",
     focusable: node.type === "step" || node.type === "start",
     selected: node.id === selected,
@@ -109,13 +107,20 @@ function Canvas() {
     () => (run?.trace ? runPath(flow, editor.overlay, run.trace.entries, { active, succeeded: run.outcome.result === "succeeded" }) : null),
     [flow, editor.overlay, run, active],
   );
-  const computed = useMemo(() => nodesOf(flow, editor.selected, editor.narrow, path), [flow, editor.selected, editor.narrow, path]);
+  const computed = useMemo(() => nodesOf(flow, editor.selected, editor.narrow || editor.readOnly, path), [flow, editor.selected, editor.narrow, editor.readOnly, path]);
   const [nodes, setNodes] = useState<CanvasNode[]>(computed);
   const [shownFrom, setShownFrom] = useState(computed);
   if (shownFrom !== computed) {
     setShownFrom(computed);
     setNodes(computed);
   }
+  const revealed = editor.revealed;
+  useEffect(() => {
+    const box = revealed ? flow.nodes.find((node) => node.id === revealed.id)?.box : undefined;
+    if (box) {
+      void view.setCenter(box.x + box.width / 2, box.y + box.height / 2, { zoom: 1, duration: 300 });
+    }
+  }, [revealed, flow, view]);
   useEffect(() => {
     if (editor.narrow) {
       void view.fitView({ padding: 0.1, duration: 200 });
@@ -185,20 +190,6 @@ function Canvas() {
       }}
     >
       <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-      {run?.trace && run.trace.entries.length > 0 ? (
-        <Panel position="bottom-center" className="!m-2 max-w-[calc(100%-1rem)]">
-          <StepsStrip
-            entries={run.trace.entries}
-            onChoose={(id) => {
-              editor.select(id);
-              const box = flow.nodes.find((node) => node.id === id)?.box;
-              if (box) {
-                void view.setCenter(box.x + box.width / 2, box.y + box.height / 2, { zoom: 1, duration: 300 });
-              }
-            }}
-          />
-        </Panel>
-      ) : null}
       <Controls showInteractive={false} position="bottom-left" />
       {editor.narrow ? null : <MiniMap pannable zoomable position="bottom-right" nodeStrokeWidth={2} />}
     </ReactFlow>

@@ -1,0 +1,47 @@
+{
+  "environments": [
+    "local",
+    "vpn",
+    "internet"
+  ],
+  "modules": {
+    "proxy": {
+      "is_enabled": false
+    },
+    "users": {
+      "is_enabled": true
+    },
+    "workflows": {
+      "is_enabled": true
+    }
+  },
+  "network": {
+    "address": "0.0.0.0",
+    "port": 8080,
+    "url": "http://portal.lan:8080"
+  },
+  "services": [
+    {
+      "address": "http://192.168.1.10/media",
+      "group": "Home",
+      "id": "media",
+      "latency_milliseconds": 12,
+      "name": "Media",
+      "public": true,
+      "since": "2026-09-28T09:00:00Z",
+      "state": "up",
+      "url": "http://media.lan"
+    },
+    {
+      "address": "http://192.168.1.10/nas",
+      "group": "Home",
+      "id": "nas",
+      "latency_milliseconds": 12,
+      "name": "NAS",
+      "public": false,
+      "since": "2026-09-28T09:00:00Z",
+      "state": "down",
+      "url": "http://nas.lan"
+    }
+  ]
+}

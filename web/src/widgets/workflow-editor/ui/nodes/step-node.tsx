@@ -90,7 +90,7 @@ export function StepNode({ id, data, selected }: NodeProps<CanvasNode>) {
                 {warnings}
               </span>
             ) : null}
-            <NodeMenu path={path} step={step} />
+            {editor.readOnly ? null : <NodeMenu path={path} step={step} />}
           </span>
         </div>
         <div className="flex min-w-0 items-center gap-2">

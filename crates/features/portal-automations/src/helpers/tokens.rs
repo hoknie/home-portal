@@ -12,6 +12,12 @@ pub fn token_hash(token: &str) -> String {
     hex_of(&Sha256::digest(token.as_bytes()))
 }
 
+pub const VERSION_LENGTH: usize = 12;
+
+pub fn version_of(text: &str) -> String {
+    token_hash(text)[..VERSION_LENGTH].to_string()
+}
+
 pub fn same_secret(left: &str, right: &str) -> bool {
     let (left, right) = (left.as_bytes(), right.as_bytes());
     if left.len() != right.len() {

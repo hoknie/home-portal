@@ -3,7 +3,7 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
-use crate::types::{StepOutcome, TraceEntry};
+use crate::types::{LogLevel, Rendered, StepLog, StepOutcome, TraceEntry};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StoredTraceEntry {
@@ -23,6 +23,22 @@ pub struct StoredTraceEntry {
     pub output: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shape: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub values: Vec<(String, String)>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub log: Vec<String>,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub values_dropped: usize,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub log_dropped: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<String>,
+}
+
+fn is_zero(count: &usize) -> bool {
+    *count == 0
 }
 
 impl StoredTraceEntry {
@@ -39,6 +55,17 @@ impl StoredTraceEntry {
             detail: entry.detail.clone(),
             output: entry.output.clone(),
             shape: entry.shape.clone(),
+            values: entry
+                .log
+                .values
+                .iter()
+                .map(|value| (value.template.clone(), value.value.clone()))
+                .collect(),
+            log: entry.log.lines.clone(),
+            values_dropped: entry.log.values_dropped,
+            log_dropped: entry.log.lines_dropped,
+            item: entry.item.clone(),
+            level: entry.level.map(|level| level.name().to_string()),
         }
     }
 
@@ -55,6 +82,18 @@ impl StoredTraceEntry {
             detail: self.detail,
             output: self.output,
             shape: self.shape,
+            log: StepLog {
+                values: self
+                    .values
+                    .into_iter()
+                    .map(|(template, value)| Rendered { template, value })
+                    .collect(),
+                lines: self.log,
+                values_dropped: self.values_dropped,
+                lines_dropped: self.log_dropped,
+            },
+            item: self.item,
+            level: self.level.as_deref().and_then(LogLevel::of),
         })
     }
 }

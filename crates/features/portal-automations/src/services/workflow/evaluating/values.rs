@@ -3,6 +3,7 @@ use serde_json::Value;
 use super::filters::apply_chain;
 use super::frame::Frame;
 use super::names_in::placeholder_at;
+use super::rendered::record;
 use crate::helpers::{CLOSE, OPEN};
 use crate::types::{Placeholder, Workflow};
 
@@ -15,6 +16,12 @@ pub fn text_of(value: &Value) -> String {
 }
 
 pub fn render_text(template: &str, frame: &Frame) -> Result<String, String> {
+    let rendered = text_without_record(template, frame)?;
+    record(frame, template, &Value::String(rendered.clone()));
+    Ok(rendered)
+}
+
+fn text_without_record(template: &str, frame: &Frame) -> Result<String, String> {
     let mut rendered = String::with_capacity(template.len());
     let mut rest = template;
     while let Some(start) = rest.find(OPEN) {
@@ -53,6 +60,7 @@ pub fn render_value(template: &str, frame: &Frame) -> Result<Value, String> {
         if value.to_string().len() > Workflow::LARGEST_VALUE {
             return Err(too_large());
         }
+        record(frame, template, &value);
         return Ok(value);
     }
     render_text(template, frame).map(Value::String)

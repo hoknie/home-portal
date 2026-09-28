@@ -12,8 +12,8 @@ use crate::services::{
     input_problem,
 };
 use crate::types::{
-    Ending, Finished, InputValue, Invocation, Outcome, Pending, RunControl, RunRecord, Tail, Trace,
-    Workflow, WorkflowCall,
+    Ending, Finished, InputValue, Invocation, Outcome, Pending, RunControl, RunRecord, StepLogging,
+    Tail, Trace, Workflow, WorkflowCall,
 };
 
 pub const WORKFLOWS_OFF: &str = "workflows-off";
@@ -35,6 +35,7 @@ pub async fn execute_workflow(
         .trace(pending.run_id)
         .unwrap_or_else(|| Arc::new(Mutex::new(Trace::default())));
     let workflow = sink.cache.workflow(&call.id);
+    let steps_version = workflow.as_ref().map(|workflow| workflow.version.clone());
     let refusal = if !sink.cache.switches().is_on(Module::Workflows) {
         Some(format!("{WORKFLOWS_OFF}: {}", Workflow::MODULE_OFF))
     } else {
@@ -102,6 +103,8 @@ pub async fn execute_workflow(
                 trace: trace.clone(),
                 starter: sink.clone(),
                 chain: pending.chain(),
+                switches: sink.cache.switches(),
+                logging: StepLogging::On,
             };
             let ending = runner.run(&workflow, &mut frame).await;
             let elapsed = began.elapsed();
@@ -117,6 +120,7 @@ pub async fn execute_workflow(
     };
     let mut record = RunRecord::finished(&pending, Vec::new(), started_at, finished);
     record.trace = Some(trace.lock().unwrap_or_else(PoisonError::into_inner).clone());
+    record.steps_version = steps_version;
     if record.result.outcome == Outcome::Stopped {
         let by = sink.active.stopped_by(pending.run_id).unwrap_or_default();
         record.result.reason = Some(RunRecord::stopped_reason(&by));

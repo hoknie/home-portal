@@ -2,8 +2,8 @@ use super::chains::parse_chain;
 use crate::helpers::{CLOSE, OPEN};
 use crate::types::Placeholder;
 
-pub const NAMESPACES: [&str; 8] = [
-    "event", "inputs", "vars", "steps", "loop", "secrets", "item", "index",
+pub const NAMESPACES: [&str; 9] = [
+    "event", "inputs", "vars", "steps", "loop", "secrets", "item", "index", "portal",
 ];
 pub const BARE_NAMESPACES: [&str; 2] = ["item", "index"];
 pub const BAR: char = '|';

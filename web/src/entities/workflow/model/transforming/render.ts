@@ -3,7 +3,7 @@ import { applyChain } from "./filters";
 import { type FilterCall, parseChain } from "./parse";
 import { textOf, typeOfValue, walk } from "./values";
 
-export const NAMESPACES = ["event", "inputs", "vars", "steps", "loop", "secrets", "item", "index"] as const;
+export const NAMESPACES = ["event", "inputs", "vars", "steps", "loop", "secrets", "item", "index", "portal"] as const;
 
 export const BARE_NAMESPACES = ["item", "index"];
 

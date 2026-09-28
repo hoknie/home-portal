@@ -16,10 +16,16 @@ use super::transform_step::run_transform;
 use crate::clients::{GroupRegistry, HttpClient};
 use crate::ports::{AutomationStarter, PortalActions};
 use crate::services::ScriptsDirectory;
-use crate::services::workflow::evaluating::Frame;
+use portal_feature::ModuleSwitches;
+
+use crate::services::workflow::checking::templates_of;
+use crate::services::workflow::evaluating::{Frame, collected, collector, placeholders_in};
 use crate::types::{
-    Ending, Flow, Place, Step, StepKind, StepOutcome, StepReport, Trace, TraceEntry, Workflow,
+    Ending, EntryEnd, Flow, Place, Step, StepKind, StepLog, StepLogging, StepOutcome, StepReport,
+    Trace, TraceEntry, Workflow,
 };
+
+pub const PORTAL: &str = "portal";
 
 pub struct WorkflowRunner {
     pub workflows: Arc<Vec<Workflow>>,
@@ -31,6 +37,8 @@ pub struct WorkflowRunner {
     pub trace: Arc<Mutex<Trace>>,
     pub starter: Arc<dyn AutomationStarter>,
     pub chain: Vec<String>,
+    pub switches: ModuleSwitches,
+    pub logging: StepLogging,
 }
 
 impl WorkflowRunner {
@@ -77,8 +85,28 @@ impl WorkflowRunner {
             detail: String::new(),
             output: None,
             shape: None,
+            log: StepLog::default(),
+            item: place.item.clone(),
+            level: match &step.kind {
+                StepKind::Log { level, .. } => Some(*level),
+                _ => None,
+            },
         });
-        let report = self.dispatch(step, frame, place).await;
+        let own = (self.logging == StepLogging::On).then(collector);
+        let parent = std::mem::replace(&mut frame.rendered, own.clone());
+        let report = match self.refresh_portal(step, frame).await {
+            Ok(()) => self.dispatch(step, frame, place).await,
+            Err(message) => StepReport::failed(message),
+        };
+        frame.rendered = parent;
+        let log = match &own {
+            Some(own) => {
+                let mut log = collected(own);
+                log.extend_lines(report.log.clone());
+                log.masked(|text| frame.secrets.mask(text))
+            }
+            None => StepLog::default(),
+        };
         if !report.result.is_null() {
             frame.steps.insert(step.id.clone(), report.result.clone());
         }
@@ -99,7 +127,13 @@ impl WorkflowRunner {
             .map(|shape| frame.secrets.mask(shape));
         self.trace().finish(
             index,
-            (outcome, detail, output, shape),
+            EntryEnd {
+                outcome,
+                detail,
+                output,
+                shape,
+                log,
+            },
             OffsetDateTime::now_utc(),
         );
         report.flow
@@ -127,6 +161,20 @@ impl WorkflowRunner {
             }
             _ => run_action(self, &step.kind, frame).await,
         }
+    }
+
+    async fn refresh_portal(&self, step: &Step, frame: &mut Frame) -> Result<(), String> {
+        let named = templates_of(step).iter().any(|(_, template)| {
+            placeholders_in(template)
+                .iter()
+                .any(|placeholder| placeholder.name.starts_with(PORTAL))
+        });
+        if !named {
+            return Ok(());
+        }
+        let state = self.actions.state().await?;
+        frame.portal = Some(state.value_with(self.switches));
+        Ok(())
     }
 
     pub fn trace(&self) -> std::sync::MutexGuard<'_, Trace> {

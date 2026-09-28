@@ -250,3 +250,11 @@ fn a_response_sample_must_be_json_of_at_most_sixteen_kibibytes_and_nothing_takes
         vec!["workflows[0].steps[0].response_sample"]
     );
 }
+
+#[test]
+fn a_loop_with_two_modes_is_refused_naming_the_step() {
+    let found = super::support::fields(
+        "[[workflows]]\nid = \"w\"\ntitle = \"W\"\n[[workflows.steps]]\nid = \"again\"\nkind = \"loop\"\nrepeat = 3\nfor_each = \"[]\"\nbody = [{ id = \"n\", kind = \"nothing\" }]\n",
+    );
+    assert_eq!(found, vec!["workflows[0].steps[0]"]);
+}

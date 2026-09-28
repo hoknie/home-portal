@@ -136,8 +136,10 @@ it("saving again after save and run updates the same workflow without a taken id
     initial: { id: "ping-nas", title: "Ping NAS", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [{ id: "pause", kind: "wait", seconds: 1 }] },
   });
   client.setQueryData(["workflows"], { data: { workflows: [...sampleWorkflows, created] }, revision: '"r2"' });
-  await userEvent.click(screen.getByRole("button", { name: "Save and run" }));
+  await userEvent.click(screen.getByRole("button", { name: "Run" }));
   await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Run now" }));
+  expect(await screen.findByRole("radio", { name: "View" })).toHaveAttribute("aria-checked", "true");
+  await userEvent.click(screen.getByRole("radio", { name: "Edit" }));
   pressOnCanvas(await node("pause"));
   const seconds = within(inspector()).getByLabelText(/Seconds/);
   await userEvent.clear(seconds);
@@ -165,4 +167,32 @@ it("an input gets a type, a default of that type and a description, and saving w
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
   await waitFor(() => expect(onSaved).toHaveBeenCalled());
   expect(sentBody(fetch).inputs).toEqual([{ name: "hosts", type: "list", default: ["nas"], description: "Hosts to check" }]);
+});
+
+it("a loop offers one mode at a time and saves only the chosen one", async () => {
+  const fetch = vi.fn(async () => jsonResponse(sampleWorkflows[1]));
+  vi.stubGlobal("fetch", fetch);
+  const { onSaved } = openEditor(withSteps([{ id: "list", kind: "http", url: "http://nas.lan/items" }]));
+  await addFromSlot(await slot("|steps|1"), "Loop");
+  const modes = within(inspector()).getByRole("radiogroup", { name: "How the loop repeats" });
+  expect(within(modes).getByRole("radio", { name: "Times" })).toHaveAttribute("aria-checked", "true");
+  expect(within(inspector()).queryByRole("combobox", { name: /For each/ })).toBeNull();
+  await userEvent.click(within(modes).getByRole("radio", { name: "For each" }));
+  expect(within(inspector()).queryByLabelText(/^Times/)).toBeNull();
+  fireEvent.change(within(inspector()).getAllByRole("combobox").find((box) => box.getAttribute("aria-label")?.startsWith("For each"))!, { target: { value: "{{steps.list.json}}" } });
+  await addFromSlot(await slot("steps[1]|body|0"), "Do nothing");
+  expect(screen.getByRole("button", { name: "Save" })).not.toHaveTextContent(/\d/);
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  const loop = sentBody(fetch).steps[1];
+  expect(loop.for_each).toBe("{{steps.list.json}}");
+  expect(loop).not.toHaveProperty("repeat");
+  expect(loop).not.toHaveProperty("while");
+});
+
+it("a set node without a stray sign reads as a list of two", async () => {
+  openEditor(withSteps([{ id: "services", kind: "set", variable: "svc", list: ["{{portal.services.media.name}}", "{{portal.services.nas.name}}"] }]));
+  const set = await node("services");
+  expect(set).toHaveTextContent("svc: list of 2");
+  expect(set.textContent).not.toMatch(/svc =/);
 });

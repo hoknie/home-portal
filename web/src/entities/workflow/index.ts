@@ -1,5 +1,7 @@
 export {
+  portalValuesKey,
   secretNamesKey,
+  usePortalValues,
   useDeleteWorkflow,
   useRunWorkflow,
   useSaveWorkflow,
@@ -51,6 +53,9 @@ export {
 } from "./model/tree";
 export type { Path, Place, Target } from "./model/tree";
 export { chipsOf, scopeAt } from "./model/scope";
+export { NETWORK_FIELDS, SERVICE_FIELDS, portalProblem, portalSuggestions, portalValue, portalValuesSchema } from "./model/portal";
+export type { PortalSuggestion, PortalValues } from "./model/portal";
+export { chosenOf, hiddenFields, startingValue, withChoice } from "./model/exclusive";
 export { variableProblem } from "./model/variables";
 export { emptyValue, fitsType, initialValues, inputNames, namedInputs, plainInput, runValues } from "./model/inputs";
 export type { Scope } from "./model/scope";

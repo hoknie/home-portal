@@ -3,7 +3,8 @@ use std::collections::HashSet;
 use portal_feature::FieldError;
 
 use super::action_decoding::{
-    LEGACY_TELEGRAM, decode_automation, decode_http, decode_notify, decode_script, decode_service,
+    LEGACY_TELEGRAM, decode_automation, decode_http, decode_log, decode_notify, decode_script,
+    decode_service,
 };
 use super::flow_decoding::{
     decode_call, decode_if, decode_loop, decode_parallel, decode_set, decode_stop, decode_wait,
@@ -11,7 +12,7 @@ use super::flow_decoding::{
 use super::inputs_decoding::decode_inputs;
 use super::names::{NAME_RULE, between_rule, valid_name, within};
 use super::transform_decoding::decode_transform;
-use crate::helpers::check_tags;
+use crate::helpers::{check_tags, version_of};
 use crate::services::workflow::evaluating::every_step;
 use crate::types::{KINDS, RawStep, RawWorkflow, Step, StepKind, Workflow, kind_named};
 
@@ -76,6 +77,7 @@ pub fn decode_workflow(raw: &RawWorkflow) -> Result<Workflow, Vec<FieldError>> {
         timeout_seconds: timeout as u64,
         inputs,
         steps,
+        version: version_of(&serde_json::to_string(&raw.steps).unwrap_or_default()),
     })
 }
 
@@ -144,6 +146,7 @@ fn decode_step(
         "http" => decode_http(raw, path, errors),
         "script" => decode_script(raw, path, errors),
         "notify" => decode_notify(raw, path, errors),
+        "log" => decode_log(raw, path, errors),
         "nothing" => Some(StepKind::Nothing),
         "automation" => decode_automation(raw, path, errors),
         "probe" => decode_service(raw, path, errors).map(|service| StepKind::Probe { service }),

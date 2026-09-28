@@ -610,6 +610,15 @@ too.
 - **One catalogue** (`types/stepping/kinds.rs`) describes every step kind: its group, its fields with
   their types, defaults and bounds, and its result fields. Validation reads it, and
   `GET /api/workflows/catalogue` serves it to the editor's forms; a test ties it to `StepKind`.
+- **Exclusive groups.** A kind may declare groups of fields of which a step holds exactly one
+  (`exclusive`: a loop's `repeat`/`for_each`/`while`, a set's `value`/`json`/`list`/`object`). The
+  decoders keep their own "exactly one" rule; the editor draws each group as one choice
+  (`widgets/workflow-editor/ui/inspector/data/exclusive-choice.tsx`), shows only the chosen field,
+  and gives a new step the first field of each group (`entities/workflow/model/exclusive.ts`).
+- **Every kind is audited.** `bin/home-portal/tests/samples/workflows.rs` holds one minimal valid
+  step per kind, fails when a kind is missing, validates them and writes `step-defaults.json`; the
+  web test `model/checks/step-defaults.test.ts` builds each kind from the palette, fills the same
+  fields and requires no client problem, the same keys and one field per exclusive group.
 - **Validation is structural and static.** Every error names its full path
   (`workflows[1].steps[2].then[0].url`). `checking/scope.rs` walks the tree in order and refuses a
   template that names an input the workflow does not declare, a variable no earlier step sets, a step
@@ -623,6 +632,14 @@ too.
 - **Templates** `{{event.*}}`, `{{inputs.*}}`, `{{vars.*}}`, `{{steps.<id>.<path>}}`, `{{loop.*}}`
   and `{{secrets.<key>}}` are rendered by `evaluating/values.rs`. A secret is sent as it is, but every
   rendered secret is replaced by `***` in the trace and the journal.
+- **Portal values.** `{{portal.services}}` (a list), `{{portal.services.<id>.<field>}}`,
+  `{{portal.network.{address,port,url}}}`, `{{portal.modules.<name>.is_enabled}}` and
+  `{{portal.environments}}` read the portal's own state. `PortalActions::state()` gives a
+  `PortalState` (`types/portal/`), the crate adds the module switches, and the runner refreshes
+  `Frame.portal` before every step whose templates name `portal`, so a step after a `probe` sees
+  the new state and other steps cost nothing. `checking/scope.rs` refuses at load an unknown
+  service (when the document has `[[services]]`), module or field. `GET /api/workflows/portal`
+  (`ReadPortalValues`) answers the same value, which the editor offers with examples.
 - **Actions leave the crate through ports.** `http` uses one rustls `reqwest` client
   (`clients/http.rs`: 5 redirects, a per-request timeout of 1–60 s, 10 MiB read, 64 KiB kept);
   `script` reuses the process-group runner and the `scripts/` rules of §6.9; `notify`, `probe`
@@ -669,6 +686,18 @@ too.
   - nesting is cut at 8 levels.
 
   The editor reads keys, types and previews from it, and from the run it last showed.
+- **Step logs.** Every trace entry keeps `values`, the templates the step itself rendered and what
+  each gave, and `log`, lines of what it did. `Frame.rendered` collects the values: `run_step`
+  swaps in a fresh collector per step, so nested steps keep their own. `StepReport.log` carries
+  the lines each step runner writes, such as a condition's sides and the branch, an HTTP status and
+  time, or the value after each operation. Both are masked for secrets and bounded
+  (`types/logging/`: 20 values and 20 lines of 300 characters per entry, 256 KiB per run, the rest
+  counted). A `for_each` pass puts its item on its entries (`item`), so the timeline groups passes.
+  The `log` kind writes a message with a level (`info`, `warning`, `error`) and never ends the
+  run. Collection sits behind `StepLogging`, always on for now, so a later setting can switch it
+  off. When `probe` or `status` gets an unknown id, the runner reads `PortalActions::state()` and
+  adds the id of a service with that name and the known ids. A run records `steps_version`, a
+  12-character SHA-256 prefix of the steps' JSON, which the workflow answer also carries.
 - **The trace rides on the run.** `ActiveRun` holds a live `Trace` the runner appends to; `RunRecord`
   and `StoredRun` gain optional `workflow` and `trace` (200 entries, the rest counted), so old
   journal lines still load. The run journal and the workflow pages draw it as a timeline.
@@ -687,7 +716,7 @@ too.
 
   `widgets/workflow-editor` draws the diagram with `@xyflow/react` (loaded by `next/dynamic` on the
   editor pages only), with an inspector (a side panel, or a bottom sheet on a phone), a palette, a
-  problems panel, undo and redo, a runs panel (`GET /api/automations/runs?workflow=<id>`), and the run drawn as a live path: highlighted flowing arrows, order numbers, dimmed unreached nodes and a steps strip. `shared/ui/template-input` is the field with
+  problems panel, undo and redo, a runs panel (`GET /api/automations/runs?workflow=<id>`), and the run drawn as a live path: highlighted flowing arrows, order numbers and dimmed unreached nodes. `shared/ui/template-input` is the field with
   highlighting and completion, also used by the automation builder. `widgets/workflows` is the list,
   and the trace timeline sits in `entities/automation` beside the run details.
 

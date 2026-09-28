@@ -9,6 +9,7 @@ pub struct StepReport {
     pub detail: String,
     pub output: Option<String>,
     pub shape: Option<String>,
+    pub log: Vec<String>,
 }
 
 impl StepReport {
@@ -19,6 +20,7 @@ impl StepReport {
             detail: detail.into(),
             output: None,
             shape: None,
+            log: Vec::new(),
         }
     }
 
@@ -30,6 +32,7 @@ impl StepReport {
             detail: reason,
             output: None,
             shape: None,
+            log: Vec::new(),
         }
     }
 
@@ -46,10 +49,22 @@ impl StepReport {
             detail,
             output: None,
             shape: None,
+            log: Vec::new(),
         }
     }
 
     pub fn with_flow(self, flow: Flow) -> StepReport {
         StepReport { flow, ..self }
+    }
+
+    pub fn logged(mut self, line: impl Into<String>) -> StepReport {
+        self.log.push(line.into());
+        self
+    }
+
+    pub fn with_log(mut self, mut lines: Vec<String>) -> StepReport {
+        lines.append(&mut self.log);
+        self.log = lines;
+        self
     }
 }

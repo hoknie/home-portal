@@ -29,7 +29,8 @@ pub fn run_set(variable: &str, value: &SetValue, frame: &mut Frame) -> StepRepor
         Ok(value) => {
             frame.vars.insert(variable.to_string(), value.clone());
             let detail = format!("{variable} = {}", text_of(&value));
-            StepReport::done(WorkflowRunner::step_result(&[("value", value)]), detail)
+            let line = format!("{variable} = {value}");
+            StepReport::done(WorkflowRunner::step_result(&[("value", value)]), detail).logged(line)
         }
         Err(message) => StepReport::failed(message),
     }
@@ -37,7 +38,8 @@ pub fn run_set(variable: &str, value: &SetValue, frame: &mut Frame) -> StepRepor
 
 pub async fn run_wait(runner: &WorkflowRunner, seconds: u64) -> StepReport {
     match runner.budget.pause(Duration::from_secs(seconds)).await {
-        Ok(()) => StepReport::done(Value::Null, format!("{seconds} s")),
+        Ok(()) => StepReport::done(Value::Null, format!("{seconds} s"))
+            .logged(format!("waited {seconds} s")),
         Err(ending) => StepReport::ended(ending),
     }
 }
@@ -50,11 +52,20 @@ pub fn run_stop(succeeded: bool, reason: Option<&str>, frame: &Frame) -> StepRep
         Ok(reason) => reason.filter(|reason| !reason.trim().is_empty()),
         Err(message) => return StepReport::failed(message),
     };
-    if succeeded {
+    let line = format!(
+        "stopped the run as {}{}",
+        if succeeded { "succeeded" } else { "failed" },
+        reason
+            .as_deref()
+            .map(|reason| format!(": {reason}"))
+            .unwrap_or_default()
+    );
+    let report = if succeeded {
         StepReport::ended(Ending::Succeeded(reason))
     } else {
         StepReport::ended(Ending::Failed(
             reason.unwrap_or_else(|| STOPPED_BY_WORKFLOW.to_string()),
         ))
-    }
+    };
+    report.logged(line)
 }

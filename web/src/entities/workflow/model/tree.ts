@@ -1,5 +1,6 @@
 import { slugOf } from "@/shared/lib/slug";
 
+import { startingValue } from "./exclusive";
 import type { Kind, Step } from "./schema";
 
 export const ROOT = "steps";
@@ -251,8 +252,8 @@ function initial(kind: Kind): Partial<Step> {
       values[field.name] = Number(field.default ?? field.minimum ?? 1);
     }
   }
-  if (kind.name === "loop") {
-    values.repeat = 1;
+  for (const group of kind.exclusive) {
+    values[group[0]] = startingValue(group[0]);
   }
   return values as Partial<Step>;
 }

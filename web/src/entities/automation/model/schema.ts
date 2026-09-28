@@ -42,6 +42,10 @@ export const stepOutcomeSchema = z.enum([...STEP_OUTCOMES, UNKNOWN]).catch(UNKNO
 
 export type StepOutcome = z.infer<typeof stepOutcomeSchema>;
 
+export const LOG_LEVELS = ["info", "warning", "error"] as const;
+
+export type LogLevel = (typeof LOG_LEVELS)[number];
+
 export const traceEntrySchema = z.object({
   path: z.string(),
   step: z.string(),
@@ -54,6 +58,12 @@ export const traceEntrySchema = z.object({
   detail: z.string(),
   output: z.string().nullable(),
   shape: z.string().nullable().default(null),
+  values: z.array(z.object({ template: z.string(), value: z.string() })).default([]),
+  log: z.array(z.string()).default([]),
+  values_dropped: z.number().default(0),
+  log_dropped: z.number().default(0),
+  item: z.string().nullable().default(null),
+  level: z.enum(LOG_LEVELS).nullable().catch(null).default(null),
 });
 
 export type TraceEntry = z.infer<typeof traceEntrySchema>;
@@ -81,6 +91,7 @@ export const runSchema = z.object({
   }),
   workflow: z.string().nullable().default(null),
   trace: traceSchema.nullable().default(null),
+  steps_version: z.string().nullable().default(null),
 });
 
 export type Run = z.infer<typeof runSchema>;

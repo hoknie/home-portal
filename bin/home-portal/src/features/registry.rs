@@ -90,7 +90,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
     let services = Arc::new(
         ServicesFeature::new(
             configuration.clone(),
-            host,
+            host.clone(),
             ServicesPorts {
                 observers: vec![notifications.observer(), automations.observer()],
                 publishing: Arc::new(ProxyPublishing::new(
@@ -108,6 +108,13 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
     let _ = actions.probe.set(services.probe_service());
     let _ = actions.status.set(services.current_status());
     let _ = actions.notify.set(notifications.send_notification());
+    let _ = actions
+        .entries
+        .set(ServiceEntries::new(configuration.clone()));
+    let _ = actions
+        .network
+        .set(CurrentNetwork::new(configuration.clone()));
+    let _ = actions.host.set(host.clone());
     let mut features: Vec<Arc<dyn Feature>> = vec![
         Arc::new(HealthFeature),
         auth.clone(),

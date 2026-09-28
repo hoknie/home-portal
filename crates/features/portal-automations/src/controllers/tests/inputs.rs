@@ -122,3 +122,14 @@ async fn a_literal_of_the_wrong_type_in_an_automation_is_refused() {
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{body}");
     assert!(body.to_string().contains("inputs.hosts"), "{body}");
 }
+
+#[tokio::test]
+async fn the_portal_values_are_answered_as_templates_read_them() {
+    let api = api(FILE);
+    let (status, _, body) = send(&api, get(AutomationsFeature::WORKFLOW_PORTAL)).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert_eq!(body["services"][0]["name"], "Media");
+    assert_eq!(body["network"]["port"], 8080);
+    assert_eq!(body["modules"]["workflows"]["is_enabled"], true);
+    assert_eq!(body["modules"]["users"]["is_enabled"], false);
+}

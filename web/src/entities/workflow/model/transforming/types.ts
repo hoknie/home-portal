@@ -26,6 +26,19 @@ export function certainType(name: string, scope: Scope): ValueType {
   if (namespace === "secrets" && parts.length === 2) {
     return "text";
   }
+  if (namespace === "portal") {
+    const field = parts.at(-1) ?? "";
+    if (parts.length === 2 && (first === "services" || first === "environments")) {
+      return "list";
+    }
+    if (field === "is_enabled" || (first === "services" && field === "public")) {
+      return "boolean";
+    }
+    if ((first === "services" && field === "latency_milliseconds") || (first === "network" && field === "port")) {
+      return "number";
+    }
+    return (first === "services" && parts.length === 4) || (first === "network" && parts.length === 3) ? "text" : "any";
+  }
   if (namespace === "event") {
     return "text";
   }

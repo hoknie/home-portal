@@ -9,6 +9,7 @@ pub struct StepKindResponse {
     pub group: String,
     pub fields: Vec<StepFieldResponse>,
     pub results: Vec<String>,
+    pub exclusive: Vec<Vec<String>>,
 }
 
 impl StepKindResponse {
@@ -21,6 +22,11 @@ impl StepKindResponse {
                 .results
                 .iter()
                 .map(|result| result.to_string())
+                .collect(),
+            exclusive: kind
+                .exclusive
+                .iter()
+                .map(|group| group.iter().map(|field| field.to_string()).collect())
                 .collect(),
         }
     }

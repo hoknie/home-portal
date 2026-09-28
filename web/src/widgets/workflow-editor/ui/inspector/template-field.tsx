@@ -49,7 +49,7 @@ export function useTemplateProblems() {
   const help = useTranslations("workflowHelp.reasons");
   return (path: Path, field: string, text: string) => {
     const scope = scopeAt(editor.draft.steps, path, editor.draft.inputs.filter(Boolean), field);
-    return checkTemplate(text, scope).map((problem) => ({ start: problem.start, end: problem.end, message: help(problem.reason, problem.params) }));
+    return checkTemplate(text, scope, editor.sources.portal).map((problem) => ({ start: problem.start, end: problem.end, message: help(problem.reason, problem.params) }));
   };
 }
 

@@ -3,9 +3,11 @@ use serde_json::Value;
 use super::join::{Pending, join_all};
 use super::runner::WorkflowRunner;
 use crate::services::workflow::evaluating::{
-    Frame, bind_inputs, holds, input_problem, render_value,
+    Frame, bind_inputs, holds, input_problem, judged, render_value,
 };
-use crate::types::{Ending, Flow, LoopMode, Place, Step, StepKind, StepReport, Workflow};
+use crate::types::{
+    Ending, Flow, LoopMode, Place, Step, StepKind, StepLog, StepReport, TraceEntry, Workflow,
+};
 
 pub async fn run_if(
     runner: &WorkflowRunner,
@@ -21,9 +23,9 @@ pub async fn run_if(
     else {
         return StepReport::failed("not an if step");
     };
-    let taken = match holds(condition, frame) {
-        Ok(true) => "then",
-        Ok(false) => "else",
+    let (taken, lines) = match judged(condition, frame) {
+        Ok((true, lines)) => ("then", lines),
+        Ok((false, lines)) => ("else", lines),
         Err(message) => return StepReport::failed(message),
     };
     let branch = if taken == "then" { then } else { otherwise };
@@ -32,6 +34,8 @@ pub async fn run_if(
         WorkflowRunner::step_result(&[("branch", Value::from(taken))]),
         taken,
     )
+    .with_log(lines)
+    .logged(format!("took {taken}"))
     .with_flow(flow)
 }
 
@@ -57,6 +61,11 @@ pub async fn run_loop(
         },
         _ => None,
     };
+    let mut lines = vec![match (mode, &items) {
+        (LoopMode::Repeat(times), _) => format!("repeat {times} times"),
+        (LoopMode::ForEach(_), Some(items)) => format!("for each: {} items", items.len()),
+        _ => "while the condition holds".to_string(),
+    }];
     let previous = frame.loop_item.take();
     let inside = place.inside("body");
     let mut count = 0usize;
@@ -86,8 +95,15 @@ pub async fn run_loop(
             .as_ref()
             .and_then(|items| items.get(count).cloned())
             .unwrap_or_else(|| Value::from(count));
+        let shown = items
+            .is_some()
+            .then(|| StepLog::shortened(&item.to_string(), TraceEntry::LONGEST_ITEM));
+        if let Some(shown) = &shown {
+            lines.push(format!("pass {}: {shown}", count + 1));
+        }
         frame.loop_item = Some((item, count));
-        let result = runner.run_steps(body, frame, &inside.repeated(count)).await;
+        let pass = inside.repeated(count).with_item(shown);
+        let result = runner.run_steps(body, frame, &pass).await;
         count += 1;
         if let Flow::End(ending) = result {
             flow = Flow::End(ending);
@@ -99,10 +115,12 @@ pub async fn run_loop(
         Flow::End(Ending::Failed(reason)) => reason.clone(),
         _ => format!("{count} iterations"),
     };
+    lines.push(format!("ended after {count} passes"));
     StepReport::done(
         WorkflowRunner::step_result(&[("iterations", Value::from(count))]),
         detail,
     )
+    .with_log(lines)
     .with_flow(flow)
 }
 
@@ -133,7 +151,9 @@ pub async fn run_parallel(
         .into_iter()
         .find(|flow| matches!(flow, Flow::End(_)))
         .unwrap_or(Flow::Continue);
-    StepReport::done(Value::Null, format!("{} branches", branches.len())).with_flow(flow)
+    StepReport::done(Value::Null, format!("{} branches", branches.len()))
+        .logged(format!("ran {} branches together", branches.len()))
+        .with_flow(flow)
 }
 
 pub async fn run_call(
@@ -172,6 +192,10 @@ pub async fn run_call(
         Ok(given) => given,
         Err(problem) => return StepReport::failed(input_problem(problem)),
     };
+    let called_with = format!(
+        "called {workflow} with {}",
+        Value::Object(given.clone().into_iter().collect())
+    );
     let mut child = Frame::new(frame.event.clone(), given, frame.secrets.clone());
     let flow = runner
         .run_steps(&called.steps, &mut child, &place.called(workflow))
@@ -181,7 +205,8 @@ pub async fn run_call(
         Flow::Continue | Flow::End(Ending::Succeeded(_)) => StepReport::done(
             WorkflowRunner::step_result(&[("vars", vars)]),
             workflow.clone(),
-        ),
-        Flow::End(ending) => StepReport::ended(ending),
+        )
+        .logged(called_with),
+        Flow::End(ending) => StepReport::ended(ending).logged(called_with),
     }
 }

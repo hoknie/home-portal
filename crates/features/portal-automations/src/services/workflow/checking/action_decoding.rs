@@ -2,7 +2,7 @@ use portal_feature::FieldError;
 
 use super::names::{between_rule, within};
 use crate::helpers::script_shape_problem;
-use crate::types::{HttpStep, Invocation, METHODS, RawStep, RunSettings, StepKind};
+use crate::types::{HttpStep, Invocation, LogLevel, METHODS, RawStep, RunSettings, StepKind};
 
 pub const URL_RULE: &str = "must be an http or https address";
 pub const LEGACY_TELEGRAM: &str = "telegram";
@@ -208,4 +208,25 @@ fn timeout_of(
         return default;
     }
     timeout as u64
+}
+
+pub fn decode_log(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> Option<StepKind> {
+    let level = match raw.level.as_deref() {
+        None => Some(LogLevel::default()),
+        Some(name) => LogLevel::of(name),
+    };
+    if level.is_none() {
+        errors.push(FieldError::new(
+            format!("{path}.level"),
+            format!("must be one of {}", LogLevel::NAMES.join(", ")),
+        ));
+    }
+    let message = raw.message.clone().filter(|text| !text.trim().is_empty());
+    if message.is_none() {
+        errors.push(FieldError::new(format!("{path}.message"), "is required"));
+    }
+    Some(StepKind::Log {
+        message: message?,
+        level: level?,
+    })
 }

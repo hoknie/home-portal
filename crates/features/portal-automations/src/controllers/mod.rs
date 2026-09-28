@@ -16,6 +16,6 @@ pub use webhooks::{
     create_webhook, delete_webhook, issue_token, list_webhooks, remove_token, update_webhook,
 };
 pub use workflows::{
-    create_workflow, delete_workflow, list_workflows, run_workflow, update_workflow,
+    create_workflow, delete_workflow, list_workflows, portal_values, run_workflow, update_workflow,
     workflow_catalogue,
 };

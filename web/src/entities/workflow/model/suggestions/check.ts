@@ -1,6 +1,7 @@
 import type { Scope } from "../scope";
 import { type FilterCall } from "../transforming/parse";
 import { NAMESPACES, placeholderAt } from "../transforming/render";
+import { type PortalValues, portalProblem } from "../portal";
 import { certainType, chainProblem } from "../transforming/types";
 
 export { NAMESPACES };
@@ -12,6 +13,7 @@ export const REASONS = [
   "outsideLoop",
   "outsideTransform",
   "notAValue",
+  "notInPortal",
   "unreadableFilter",
   "unknownFilter",
   "filterArguments",
@@ -49,7 +51,7 @@ export function templateNames(text: string): TemplateName[] {
   }
 }
 
-function reasonFor(name: string, scope: Scope): { reason: Reason; params: Record<string, string> } | null {
+function reasonFor(name: string, scope: Scope, portal: PortalValues | null): { reason: Reason; params: Record<string, string> } | null {
   const [namespace, first = "", second = ""] = name.split(".");
   switch (namespace) {
     case "event":
@@ -63,6 +65,8 @@ function reasonFor(name: string, scope: Scope): { reason: Reason; params: Record
       return scope.steps.some((step) => step.id === first) ? null : { reason: "unknownStep", params: { name: first } };
     case "loop":
       return scope.inLoop && (first === "item" || first === "index") ? null : { reason: "outsideLoop", params: { name: `${first}${second ? `.${second}` : ""}` } };
+    case "portal":
+      return portalProblem(name, portal) ? { reason: "notInPortal", params: { name } } : null;
     case "item":
     case "index":
       return scope.inTransform ? null : { reason: "outsideTransform", params: { name } };
@@ -78,10 +82,10 @@ function filterReason(found: TemplateName, scope: Scope): { reason: Reason; para
   return chainProblem(certainType(found.name, scope), found.filters);
 }
 
-export function checkTemplate(text: string, scope: Scope): TemplateProblem[] {
+export function checkTemplate(text: string, scope: Scope, portal: PortalValues | null = null): TemplateProblem[] {
   return templateNames(text).flatMap((found) => {
     const problem = found.valid
-      ? (reasonFor(found.name, scope) ?? filterReason(found, scope))
+      ? (reasonFor(found.name, scope, portal) ?? filterReason(found, scope))
       : found.name.includes(".")
         ? { reason: "notAValue" as const, params: { name: found.name } }
         : null;

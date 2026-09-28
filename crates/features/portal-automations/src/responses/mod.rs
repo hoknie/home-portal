@@ -21,8 +21,8 @@ pub use catalogue::{
 pub use marks_response::MarksResponse;
 pub use run_settings_response::RunSettingsResponse;
 pub use runs::{
-    OutcomeResponse, OutputResponse, QueuedResponse, RunResponse, RunsResponse, TraceEntryResponse,
-    TraceResponse,
+    OutcomeResponse, OutputResponse, QueuedResponse, RenderedResponse, RunResponse, RunsResponse,
+    TraceEntryResponse, TraceResponse,
 };
 pub use schedule_response::ScheduleResponse;
 pub use script_response::ScriptResponse;

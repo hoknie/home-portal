@@ -19,4 +19,4 @@ pub use script_shape::{DEEPEST, script_shape, script_shape_problem};
 pub use shape::LARGEST_SHAPE;
 pub use shape::shape_of;
 pub use tags::check_tags;
-pub use tokens::{new_token, new_webhook_id, same_secret, token_hash};
+pub use tokens::{new_token, new_webhook_id, same_secret, token_hash, version_of};

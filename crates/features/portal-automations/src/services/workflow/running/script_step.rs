@@ -62,6 +62,18 @@ pub async fn run_script(
         ("stderr", Value::from(stderr.clone())),
     ]);
     let output = Some(format!("{stdout}{stderr}"));
+    let line = format!(
+        "{} → {}",
+        std::iter::once(run.script.as_str())
+            .chain(invocation.arguments.iter().map(String::as_str))
+            .collect::<Vec<_>>()
+            .join(" "),
+        finished
+            .exit_code
+            .map(|code| format!("exit {code}"))
+            .or_else(|| finished.reason.clone())
+            .unwrap_or_else(|| finished.outcome.name().to_string())
+    );
     let detail = match finished.exit_code {
         Some(code) => format!("{} exited {code}", run.script),
         None => finished
@@ -87,6 +99,6 @@ pub async fn run_script(
     };
     StepReport {
         output,
-        ..flow_report
+        ..flow_report.logged(line)
     }
 }

@@ -5,8 +5,14 @@ import { useTranslations } from "next-intl";
 
 import { JsonView } from "@/shared/ui/json-view";
 
-import type { StepOutcome, Trace, TraceEntry } from "../model/schema";
-import { terminalText } from "../model/terminal-text";
+import type { StepOutcome, Trace, TraceEntry } from "../../model/schema";
+import { terminalText } from "../../model/terminal-text";
+import { type TraceRow, depthOf, hasLog, passRows } from "./pass-groups";
+import { LevelMark, StepLog } from "./step-log";
+
+export { depthOf };
+
+export const FAILED: StepOutcome[] = ["failed", "timed-out"];
 
 const MARK: Record<StepOutcome, string> = {
   running: "bg-status-degraded",
@@ -17,10 +23,6 @@ const MARK: Record<StepOutcome, string> = {
   skipped: "bg-muted-foreground/50",
   unknown: "bg-muted-foreground/50",
 };
-
-export function depthOf(path: string) {
-  return Math.max(0, (path.match(/\[\d+\]/g)?.length ?? 1) - 1);
-}
 
 export function answerOf(entry: TraceEntry): { value: unknown; shortened: boolean } | null {
   for (const [text, shortened] of [
@@ -53,7 +55,7 @@ function Output({ entry }: { entry: TraceEntry }) {
   return <pre className={`${frame} font-mono whitespace-pre-wrap break-all`}>{terminalText(entry.output ?? "")}</pre>;
 }
 
-function Entry({ entry }: { entry: TraceEntry }) {
+export function TraceEntryView({ entry }: { entry: TraceEntry }) {
   const t = useTranslations("workflows.trace");
   const outcome = t(`outcomes.${entry.outcome.replace("-", "_")}` as "outcomes.running");
   return (
@@ -67,16 +69,41 @@ function Entry({ entry }: { entry: TraceEntry }) {
         <span className="sr-only">{outcome}</span>
         <span className="font-medium">{entry.label}</span>
         <span className="font-mono text-xs text-muted-foreground">{entry.kind}</span>
+        {entry.level ? <LevelMark level={entry.level} /> : null}
         {entry.iteration !== null ? <span className="text-xs text-muted-foreground">{t("iteration", { number: entry.iteration + 1 })}</span> : null}
         <span className="ms-auto text-xs text-muted-foreground tabular-nums">{t("duration", { value: entry.duration_milliseconds })}</span>
       </div>
       {entry.detail ? <p className="text-xs break-all text-muted-foreground">{entry.detail}</p> : null}
+      {hasLog(entry) ? (
+        <details className="text-xs" open={FAILED.includes(entry.outcome)}>
+          <summary className="cursor-pointer text-muted-foreground">{t("details")}</summary>
+          <div className="mt-1 rounded-md border border-glass-edge bg-glass-tint p-2">
+            <StepLog entry={entry} />
+          </div>
+        </details>
+      ) : null}
       {entry.output || entry.shape ? (
         <details className="text-xs">
           <summary className="cursor-pointer text-muted-foreground">{t(entry.kind === "http" ? "answer" : "output")}</summary>
           <Output entry={entry} />
         </details>
       ) : null}
+    </li>
+  );
+}
+
+export function rowHeading(row: Exclude<TraceRow, { type: "entry" }>, t: (key: "pass" | "passWithItem" | "branch", values: Record<string, string | number>) => string) {
+  if (row.type === "branch") {
+    return t("branch", { number: row.number });
+  }
+  return row.item === null ? t("pass", { number: row.number }) : t("passWithItem", { number: row.number, item: row.item });
+}
+
+function Heading({ row }: { row: Exclude<TraceRow, { type: "entry" }> }) {
+  const t = useTranslations("workflows.trace");
+  return (
+    <li className="py-1 text-xs font-medium text-muted-foreground" style={{ paddingInlineStart: `${row.depth * 1.25}rem` }} data-pass={row.type === "pass" ? row.number : undefined} data-branch={row.type === "branch" ? row.number : undefined}>
+      {rowHeading(row, t)}
     </li>
   );
 }
@@ -88,9 +115,7 @@ export function TraceTimeline({ trace }: { trace: Trace }) {
       <p className="text-sm font-medium">{t("title")}</p>
       {trace.entries.length === 0 ? <p className="text-xs text-muted-foreground">{t("empty")}</p> : null}
       <ol className="divide-y divide-glass-edge" aria-label={t("title")}>
-        {trace.entries.map((entry, index) => (
-          <Entry key={`${index}-${entry.path}`} entry={entry} />
-        ))}
+        {passRows(trace.entries).map((row, index) => (row.type === "entry" ? <TraceEntryView key={`${row.index}-${row.entry.path}`} entry={row.entry} /> : <Heading key={`${row.type}-${"loop" in row ? row.loop : row.parallel}-${row.number}-${index}`} row={row} />))}
       </ol>
       {trace.dropped > 0 ? <p className="text-xs text-muted-foreground">{t("dropped", { count: trace.dropped })}</p> : null}
     </div>

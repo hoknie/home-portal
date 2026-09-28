@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 
 import { type Automation, type Catalogue, useAutomations, useCatalogue, useScripts } from "@/entities/automation";
 import { useNotifications } from "@/entities/notification";
-import { TEMPLATE_PARAMETER, type Workflow, useSecretNames, useWorkflowCatalogue, useWorkflows } from "@/entities/workflow";
+import { TEMPLATE_PARAMETER, type Workflow, usePortalValues, useSecretNames, useWorkflowCatalogue, useWorkflows } from "@/entities/workflow";
 import { routes } from "@/shared/config";
 import { slugOf, uniqueId } from "@/shared/lib/slug";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -62,6 +62,7 @@ export function WorkflowEditorScreen({ mode }: { mode: "new" | "edit" }) {
   const events = useCatalogue();
   const secrets = useSecretNames();
   const notifications = useNotifications();
+  const portal = usePortalValues();
   const all = workflows.data?.data.workflows ?? [];
   const workflow = mode === "edit" ? (all.find((candidate) => candidate.id === id) ?? null) : null;
   const last = mode === "new" ? t("breadcrumbs.new.workflow") : (workflow?.title ?? id);
@@ -122,6 +123,7 @@ export function WorkflowEditorScreen({ mode }: { mode: "new" | "edit" }) {
           scripts: scripts.data?.scripts ?? [],
           secrets: secrets.data ?? [],
           channels: notifications.data?.data.channels ?? [],
+          portal: portal.data ?? null,
           automations: (automations.data?.data.automations ?? []).map((automation) => ({
             id: automation.id,
             title: automation.title,

@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use serde_json::Value;
 
+use super::rendered::Collector;
 use super::secrets::Secrets;
 
 #[derive(Clone)]
@@ -13,7 +14,9 @@ pub struct Frame {
     pub steps: BTreeMap<String, Value>,
     pub loop_item: Option<(Value, usize)>,
     pub transform_item: Option<(Value, usize)>,
+    pub portal: Option<Value>,
     pub secrets: Arc<Secrets>,
+    pub rendered: Option<Collector>,
 }
 
 impl Frame {
@@ -29,7 +32,9 @@ impl Frame {
             steps: BTreeMap::new(),
             loop_item: None,
             transform_item: None,
+            portal: None,
             secrets,
+            rendered: None,
         }
     }
 
@@ -37,6 +42,9 @@ impl Frame {
         let mut parts = name.split('.');
         let namespace = parts.next().unwrap_or_default();
         let rest: Vec<&str> = parts.collect();
+        if namespace == "portal" {
+            return Ok(portal_lookup(self.portal.as_ref(), &rest));
+        }
         match (namespace, &self.transform_item) {
             ("item", Some((item, _))) => return Ok(walk(item.clone(), &rest)),
             ("index", Some((_, index))) => return Ok(Value::from(*index)),
@@ -90,4 +98,17 @@ pub fn walk(value: Value, path: &[&str]) -> Value {
             .unwrap_or(Value::Null),
         _ => Value::Null,
     })
+}
+
+fn portal_lookup(portal: Option<&Value>, path: &[&str]) -> Value {
+    let Some(portal) = portal else {
+        return Value::Null;
+    };
+    match path {
+        ["services", id, rest @ ..] => portal["services"]
+            .as_array()
+            .and_then(|services| services.iter().find(|service| service["id"] == *id))
+            .map_or(Value::Null, |service| walk(service.clone(), rest)),
+        _ => walk(portal.clone(), path),
+    }
 }

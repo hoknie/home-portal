@@ -5,8 +5,7 @@ use portal_automations::{
     CreatedWebhookResponse, Directory, MarksResponse, OutcomeResponse, OutputResponse,
     QueuedResponse, RawMarks, RawRun, RawWebhook, ReceptionResponse, RunResponse,
     RunSettingsResponse, RunsResponse, ScheduleResponse, ScriptResponse, ScriptsResponse,
-    StatesResponse, TokenResponse, TraceEntryResponse, TraceResponse, Webhook, WebhookResponse,
-    WebhooksResponse, WhenResponse,
+    StatesResponse, TokenResponse, Webhook, WebhookResponse, WebhooksResponse, WhenResponse,
 };
 
 use crate::check;
@@ -66,32 +65,7 @@ pub fn run(id: &str, automation: &str, event: &str, outcome: OutcomeResponse) ->
         outcome,
         workflow: None,
         trace: None,
-    }
-}
-
-pub type Entry<'a> = (&'a str, &'a str, &'a str, Option<usize>, &'a str, &'a str);
-
-pub fn traced(entries: &[Entry]) -> TraceResponse {
-    TraceResponse {
-        entries: entries
-            .iter()
-            .map(
-                |(path, step, kind, iteration, outcome, detail)| TraceEntryResponse {
-                    path: path.to_string(),
-                    step: step.to_string(),
-                    label: step.to_string(),
-                    kind: kind.to_string(),
-                    iteration: *iteration,
-                    outcome: outcome.to_string(),
-                    started_at: "2026-09-25T03:00:00Z".into(),
-                    duration_milliseconds: 120,
-                    detail: detail.to_string(),
-                    output: (*kind == "http").then(|| "{\"state\":\"down\"}".to_string()),
-                    shape: (*kind == "http").then(|| "{\"state\":\"down\"}".to_string()),
-                },
-            )
-            .collect(),
-        dropped: 0,
+        steps_version: None,
     }
 }
 
@@ -131,7 +105,7 @@ fn runs() -> Vec<RunResponse> {
     );
     revived.arguments = Vec::new();
     revived.workflow = Some("revive".into());
-    revived.trace = Some(traced(&[
+    revived.trace = Some(crate::workflows::traced(&[
         (
             "steps[0]",
             "first_probe",

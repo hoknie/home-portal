@@ -7,7 +7,7 @@ use crate::services::{AutomationSink, ScriptsDirectory, WebhookBook};
 use crate::usecases::{
     ChangeAutomation, ChangeWebhook, ChangeWorkflow, CreateAutomation, CreateWebhook,
     CreateWorkflow, DeleteAutomation, DeleteWebhook, DeleteWorkflow, IssueToken, ListAutomations,
-    ListWebhooks, ListWorkflows, RemoveToken, RunWorkflow, WorkflowCatalogue,
+    ListWebhooks, ListWorkflows, ReadPortalValues, RemoveToken, RunWorkflow, WorkflowCatalogue,
 };
 
 #[derive(Clone)]
@@ -38,4 +38,5 @@ pub struct WorkflowCases {
     pub delete: DeleteWorkflow,
     pub run: RunWorkflow,
     pub catalogue: WorkflowCatalogue,
+    pub portal: ReadPortalValues,
 }

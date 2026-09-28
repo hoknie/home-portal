@@ -17,6 +17,7 @@ pub struct RunResponse {
     pub outcome: OutcomeResponse,
     pub workflow: Option<String>,
     pub trace: Option<TraceResponse>,
+    pub steps_version: Option<String>,
 }
 
 impl RunResponse {
@@ -44,6 +45,7 @@ impl RunResponse {
             },
             workflow: record.workflow.clone(),
             trace: record.trace.as_ref().map(TraceResponse::of),
+            steps_version: record.steps_version.clone(),
         }
     }
 
@@ -89,6 +91,7 @@ impl RunResponse {
                         .unwrap_or_else(std::sync::PoisonError::into_inner),
                 )
             }),
+            steps_version: None,
         }
     }
 }

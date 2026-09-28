@@ -29,8 +29,10 @@ import webhookCreated from "./webhook-created.json";
 import webhookToken from "./webhook-token.json";
 import webhooks from "./webhooks.json";
 import widgetWeather from "./widget-weather.json";
+import stepDefaults from "./step-defaults.json";
 import transforms from "./transforms.json";
 import workflowCatalogue from "./workflow-catalogue.json";
+import workflowPortal from "./workflow-portal.json";
 import workflowRun from "./workflow-run.json";
 import workflows from "./workflows.json";
 
@@ -66,8 +68,10 @@ export const apiSamples = {
   webhookToken,
   webhooks,
   widgetWeather,
+  stepDefaults,
   transforms,
   workflowCatalogue,
+  workflowPortal,
   workflowRun,
   workflows,
 };

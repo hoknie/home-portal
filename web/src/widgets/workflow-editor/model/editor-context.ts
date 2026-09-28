@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 
 import type { Run, Trace } from "@/entities/automation";
-import type { FilterOffer, Kind, KnownContext, Overlay, Path, Step, Suggestion, Target, Usage, Workflow, WorkflowCatalogue } from "@/entities/workflow";
+import type { FilterOffer, Kind, KnownContext, PortalValues, Overlay, Path, Step, Suggestion, Target, Usage, Workflow, WorkflowCatalogue } from "@/entities/workflow";
 
 import type { Draft } from "./draft";
 import type { Problem } from "./checks/problems";
@@ -13,9 +13,14 @@ export type Sources = {
   scripts: { path: string; runnable: boolean; problem: string | null }[];
   secrets: { name: string; set: boolean }[];
   channels: { name: string; readiness: string }[];
+  portal: PortalValues | null;
   automations: { id: string; title: string; event: string; enabled: boolean }[];
   eventFields: { name: string; sample: string }[];
 };
+
+export const EDITOR_MODES = ["edit", "view"] as const;
+
+export type EditorMode = (typeof EDITOR_MODES)[number];
 
 export type EditorApi = {
   draft: Draft;
@@ -27,6 +32,9 @@ export type EditorApi = {
   overlay: Overlay;
   workflowId: string | null;
   run: Run | null;
+  mode: EditorMode;
+  readOnly: boolean;
+  stale: boolean;
   selected: string | null;
   narrow: boolean;
   usedBy: Usage[];
@@ -45,6 +53,9 @@ export type EditorApi = {
   duplicate: (path: Path) => void;
   move: (from: Path, target: Target) => void;
   showRun: (id: string) => void;
+  setMode: (mode: EditorMode) => void;
+  revealed: { id: string; at: number } | null;
+  reveal: (id: string) => void;
 };
 
 export const EditorContext = createContext<EditorApi | null>(null);

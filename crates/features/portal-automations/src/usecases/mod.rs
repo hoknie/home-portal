@@ -7,6 +7,6 @@ pub use webhooks::{
     ChangeWebhook, CreateWebhook, DeleteWebhook, IssueToken, ListWebhooks, RemoveToken,
 };
 pub use workflows::{
-    ChangeWorkflow, CreateWorkflow, DeleteWorkflow, ListWorkflows, RunWorkflow, TransformValue,
-    WorkflowCatalogue,
+    ChangeWorkflow, CreateWorkflow, DeleteWorkflow, ListWorkflows, ReadPortalValues, RunWorkflow,
+    TransformValue, WorkflowCatalogue,
 };

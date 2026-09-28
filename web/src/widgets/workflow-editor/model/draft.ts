@@ -60,3 +60,7 @@ export function requestOf(draft: Draft): WorkflowRequest {
 export function sameDraft(left: Draft, right: Draft) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
+
+export function sameSteps(left: Draft, right: Draft) {
+  return JSON.stringify(left.steps) === JSON.stringify(right.steps);
+}

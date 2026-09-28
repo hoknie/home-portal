@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Skeleto
 
 import { OutcomeBadge } from "./outcome-badge";
 import { RunOutput } from "./run-output";
-import { TraceTimeline } from "./trace-timeline";
+import { TraceTimeline } from "./trace/trace-timeline";
 
 export const STOPPED_BY = "stopped by ";
 

@@ -16,6 +16,18 @@ pub struct TraceEntryResponse {
     pub detail: String,
     pub output: Option<String>,
     pub shape: Option<String>,
+    pub values: Vec<RenderedResponse>,
+    pub log: Vec<String>,
+    pub values_dropped: usize,
+    pub log_dropped: usize,
+    pub item: Option<String>,
+    pub level: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct RenderedResponse {
+    pub template: String,
+    pub value: String,
 }
 
 impl TraceEntryResponse {
@@ -32,6 +44,20 @@ impl TraceEntryResponse {
             detail: entry.detail.clone(),
             output: entry.output.clone(),
             shape: entry.shape.clone(),
+            values: entry
+                .log
+                .values
+                .iter()
+                .map(|value| RenderedResponse {
+                    template: value.template.clone(),
+                    value: value.value.clone(),
+                })
+                .collect(),
+            log: entry.log.lines.clone(),
+            values_dropped: entry.log.values_dropped,
+            log_dropped: entry.log.lines_dropped,
+            item: entry.item.clone(),
+            level: entry.level.map(|level| level.name().to_string()),
         }
     }
 }

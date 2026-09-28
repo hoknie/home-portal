@@ -82,6 +82,7 @@ export const api = {
   workflow: (id: string) => `/api/workflows/${encodeURIComponent(id)}`,
   workflowRun: (id: string) => `/api/workflows/${encodeURIComponent(id)}/run`,
   workflowCatalogue: "/api/workflows/catalogue",
+  workflowPortal: "/api/workflows/portal",
   secrets: "/api/secrets",
   notifications: "/api/notifications",
   notificationChannel: (name: string) => `/api/notifications/channels/${encodeURIComponent(name)}`,

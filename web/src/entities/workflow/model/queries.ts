@@ -2,12 +2,19 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 
 import { STATUS_REFRESH_MILLISECONDS } from "@/shared/config";
 
-import { createWorkflow, deleteWorkflow, fetchSecretNames, fetchWorkflowCatalogue, fetchWorkflows, runWorkflow, updateWorkflow } from "../api/workflows";
+import { createWorkflow, deleteWorkflow, fetchPortalValues, fetchSecretNames, fetchWorkflowCatalogue, fetchWorkflows, runWorkflow, updateWorkflow } from "../api/workflows";
 import type { WorkflowRequest } from "./schema";
 
 export const workflowsKey = ["workflows"] as const;
 export const workflowCatalogueKey = ["workflow-catalogue"] as const;
 export const secretNamesKey = ["secret-names"] as const;
+export const portalValuesKey = ["workflow-portal"] as const;
+
+export const PORTAL_REFRESH_MILLISECONDS = 30_000;
+
+export function usePortalValues() {
+  return useQuery({ queryKey: portalValuesKey, queryFn: fetchPortalValues, refetchInterval: PORTAL_REFRESH_MILLISECONDS });
+}
 
 export function useSecretNames() {
   return useQuery({ queryKey: secretNamesKey, queryFn: fetchSecretNames });

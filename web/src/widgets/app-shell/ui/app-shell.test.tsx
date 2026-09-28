@@ -120,12 +120,13 @@ it("users appear last in the modules section while their module is on", () => {
   expect(links[1]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/users\/?$/));
 });
 
-it("the menu collapses into a rail of named icons, is remembered, and expands again", async () => {
+it("the menu collapses into a rail of named icons, widens the content by the space it frees, is remembered, and expands again", async () => {
   window.localStorage.clear();
   shellWith(["workflows"]);
   const menu = screen.getByRole("complementary", { name: "Menu" });
   await userEvent.click(within(menu).getByRole("button", { name: "Collapse menu" }));
   expect(menu.closest("[data-menu]")).toHaveAttribute("data-menu", "collapsed");
+  expect(screen.getByRole("main")).toHaveClass("md:max-w-[83.5rem]");
   expect(window.localStorage.getItem("home-portal.menu-collapsed")).toBe("1");
   const workflows = within(menu).getByRole("link", { name: "Workflows" });
   expect(workflows).not.toHaveTextContent("Workflows");
@@ -135,6 +136,7 @@ it("the menu collapses into a rail of named icons, is remembered, and expands ag
   expect(within(menu).getByRole("button", { name: "admin" })).toBeInTheDocument();
   await userEvent.click(within(menu).getByRole("button", { name: "Expand menu" }));
   expect(menu.closest("[data-menu]")).toHaveAttribute("data-menu", "expanded");
+  expect(screen.getByRole("main")).not.toHaveClass("md:max-w-[83.5rem]");
   expect(window.localStorage.getItem("home-portal.menu-collapsed")).toBeNull();
 });
 

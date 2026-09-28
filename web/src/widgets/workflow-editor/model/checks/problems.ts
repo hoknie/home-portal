@@ -1,4 +1,5 @@
 import {
+  type PortalValues,
   type Step,
   type Workflow,
   type WorkflowCatalogue,
@@ -29,6 +30,7 @@ export type ProblemContext = {
   server: Problems;
   secrets: { name: string; set: boolean }[];
   lastRun: Trace | null;
+  portal?: PortalValues | null;
   workflow: Workflow | null;
 };
 
@@ -50,7 +52,7 @@ function templateProblems(context: ProblemContext): Problem[] {
     for (const { field, text } of templatesOf(step)) {
       const at = `${pathText(path)}.${field}`;
       const scope = scopeAt(context.draft.steps, path, inputs, field);
-      for (const problem of checkTemplate(text, scope)) {
+      for (const problem of checkTemplate(text, scope, context.portal ?? null)) {
         found.push({ at, severity: "error", key: `workflowHelp.reasons.${problem.reason}`, params: problem.params, text: null });
       }
       for (const name of templateNames(text).filter((entry) => entry.valid).map((entry) => entry.name.split("."))) {

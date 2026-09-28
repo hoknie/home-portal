@@ -41,7 +41,7 @@ export function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePositio
           {text ? (
             <span className={cn("rounded-full border border-glass-edge bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs", data?.taken && "border-primary text-primary")}>{text}</span>
           ) : null}
-          {slot ? (
+          {slot && !editor.readOnly ? (
             <button
               type="button"
               aria-label={t("insertHere")}

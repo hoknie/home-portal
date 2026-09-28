@@ -543,6 +543,7 @@
   ],
   "kinds": [
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -579,6 +580,13 @@
       ]
     },
     {
+      "exclusive": [
+        [
+          "repeat",
+          "for_each",
+          "while"
+        ]
+      ],
       "fields": [
         {
           "choices": [],
@@ -633,6 +641,7 @@
       ]
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -649,6 +658,7 @@
       "results": []
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -676,12 +686,14 @@
       ]
     },
     {
+      "exclusive": [],
       "fields": [],
       "group": "flow",
       "name": "nothing",
       "results": []
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [
@@ -710,6 +722,14 @@
       "results": []
     },
     {
+      "exclusive": [
+        [
+          "value",
+          "json",
+          "list",
+          "object"
+        ]
+      ],
       "fields": [
         {
           "choices": [],
@@ -764,6 +784,7 @@
       ]
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -780,6 +801,7 @@
       "results": []
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -807,6 +829,7 @@
       ]
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [
@@ -889,6 +912,7 @@
       ]
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -945,6 +969,7 @@
       ]
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -979,6 +1004,39 @@
       "results": []
     },
     {
+      "exclusive": [],
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "message",
+          "required": true,
+          "type": "template"
+        },
+        {
+          "choices": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "default": "info",
+          "maximum": null,
+          "minimum": null,
+          "name": "level",
+          "required": false,
+          "type": "choice"
+        }
+      ],
+      "group": "actions",
+      "name": "log",
+      "results": [
+        "message"
+      ]
+    },
+    {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -1016,6 +1074,7 @@
       ]
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],
@@ -1036,6 +1095,7 @@
       ]
     },
     {
+      "exclusive": [],
       "fields": [
         {
           "choices": [],

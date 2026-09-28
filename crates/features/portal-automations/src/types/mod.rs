@@ -3,6 +3,8 @@ mod catalogue;
 mod configuration;
 mod inputs;
 mod journal;
+mod logging;
+mod portal;
 mod progress;
 mod running;
 mod schedule;
@@ -25,6 +27,8 @@ pub use configuration::{
 };
 pub use inputs::{InputDeclaration, InputType, InputValue, RawInput};
 pub use journal::{Outcome, RunFilter, RunRecord, Seen, SkipReason};
+pub use logging::{EntryEnd, LogLevel, Rendered, StepLog, StepLogging};
+pub use portal::{PortalService, PortalState, RawServiceId};
 pub use progress::{
     Ending, Flow, HttpAnswer, HttpRequest, Place, ProbeResult, StatusResult, StepOutcome,
     StepReport, Trace, TraceEntry,

@@ -120,7 +120,7 @@ export function AppShell({ children, redirectGuests = true }: AppShellProps) {
           </Sheet>
           <Brand />
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">{children}</main>
+        <main className={cn("mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-10", collapsed ? "max-w-6xl md:max-w-[83.5rem]" : "max-w-6xl")}>{children}</main>
       </div>
     </div>
   );

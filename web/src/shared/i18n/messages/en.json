@@ -1152,7 +1152,20 @@
         "timed_out": "timed out",
         "unknown": "unknown"
       },
-      "shortened": "Shortened: long lists keep their first 3 items and long texts their start."
+      "shortened": "Shortened: long lists keep their first 3 items and long texts their start.",
+      "details": "Values and log",
+      "values": "Values",
+      "log": "Log",
+      "valuesDropped": "{count, plural, one {# more value is} other {# more values are}} not shown",
+      "logDropped": "{count, plural, one {# more line is} other {# more lines are}} not shown",
+      "passWithItem": "Pass {number}: {item}",
+      "pass": "Pass {number}",
+      "levels": {
+        "info": "info",
+        "warning": "warning",
+        "error": "error"
+      },
+      "branch": "Branch {number} (in parallel)"
     },
     "title": "Workflows",
     "subtitle": "Runs of several steps that automations, webhooks or you start",
@@ -1264,7 +1277,10 @@
     "choose": "Choose…",
     "choices": {
       "succeeded": "Succeeded",
-      "failed": "Failed"
+      "failed": "Failed",
+      "info": "Info",
+      "warning": "Warning",
+      "error": "Error"
     },
     "condition": {
       "left": "Value",
@@ -1359,12 +1375,17 @@
     "run": {
       "showLast": "Show the last run",
       "hideLast": "Hide the run",
-      "passes": "{count, plural, one {# pass} other {# passes}} · {milliseconds} ms",
+      "passes": "Passes of this step",
       "duration": "{milliseconds} ms",
       "title": "Run",
       "hide": "Hide run",
       "order": "Step {number} of the run",
-      "steps": "Steps of the run"
+      "steps": "Steps of the run",
+      "stale": "This run ran an earlier version of the steps; the canvas may not match it.",
+      "none": "No run to show yet: run the workflow or choose one in History.",
+      "notReached": "This step did not run in this run.",
+      "chooseStep": "Choose a step on the canvas or in the list to see its values and log.",
+      "stepDetails": "Step details"
     },
     "summaries": {
       "wait": "wait {seconds} s",
@@ -1375,7 +1396,9 @@
       "repeat": "{count, plural, one {# time} other {# times}}",
       "parallel": "{count, plural, one {# branch} other {# branches}} at once",
       "nothing": "goes on",
-      "automationWaited": "{title}, waiting"
+      "automationWaited": "{title}, waiting",
+      "setList": "{variable}: list of {count}",
+      "setObject": "{variable}: {count, plural, one {# key} other {# keys}}"
     },
     "warningCount": "{count, plural, one {# warning} other {# warnings}}",
     "palette": {
@@ -1404,9 +1427,15 @@
       "redoKeys": "Redo (Shift+Ctrl+Z)",
       "problems": "{errors, plural, one {# error} other {# errors}}, {warnings, plural, one {# warning} other {# warnings}}",
       "legend": "How it works",
-      "saveAndRun": "Save and run",
       "saveWithErrors": "Save ({count, plural, one {# error} other {# errors}})",
-      "runs": "Runs"
+      "history": "History",
+      "modes": {
+        "label": "Mode",
+        "edit": "Edit",
+        "run": "Run",
+        "view": "View",
+        "runHint": "Save if needed, run the workflow and show its results"
+      }
     },
     "runs": {
       "title": "Runs of this workflow",
@@ -1472,14 +1501,22 @@
       "valueNow": "The value now: {type}",
       "forEachElement": "{name} — for each element"
     },
-    "setForms": {
-      "label": "How the value is written",
-      "value": "Text",
-      "json": "JSON",
-      "list": "List",
-      "object": "Dictionary"
-    },
-    "moveItemUp": "Move value {number} up"
+    "moveItemUp": "Move value {number} up",
+    "exclusive": {
+      "label": {
+        "loop": "How the loop repeats",
+        "set": "How the value is written"
+      },
+      "fields": {
+        "repeat": "Times",
+        "for_each": "For each",
+        "while": "While",
+        "value": "Text",
+        "json": "JSON",
+        "list": "List",
+        "object": "Dictionary"
+      }
+    }
   },
   "templateInput": {
     "suggestions": "Values you can insert",
@@ -1575,6 +1612,11 @@
         "name": "Start automation",
         "description": "Queues one of your automations as if it was started by hand, with event fields you give; it may wait for its outcome.",
         "example": "restart-media with service.id = '{{'inputs.service'}}'"
+      },
+      "log": {
+        "name": "Log",
+        "description": "Writes a message into the run's trace, with values filled in. It never stops the run, whatever its level.",
+        "example": "checking '{{'loop.item'}}': '{{'steps.status.state'}}'"
       }
     },
     "fields": {
@@ -1769,6 +1811,16 @@
           "label": "Wait for it",
           "help": "Wait for its run to finish and fail when it did not succeed."
         }
+      },
+      "log": {
+        "message": {
+          "label": "Message",
+          "help": "The text to write; templates are filled in."
+        },
+        "level": {
+          "label": "Level",
+          "help": "Info, warning or error: only the colour in the trace differs."
+        }
       }
     },
     "results": {
@@ -1810,6 +1862,9 @@
       "automation": {
         "run_id": "The id of the run it queued",
         "outcome": "How that run ended, when waited"
+      },
+      "log": {
+        "message": "The message as it was written"
       }
     },
     "suggestions": {
@@ -1820,7 +1875,8 @@
         "loop": "Loop",
         "event": "The event that started the run",
         "secrets": "Secrets",
-        "item": "Current item"
+        "item": "Current item",
+        "portal": "Portal"
       },
       "input": "Input {name} of this workflow",
       "variable": "Variable {name}, set by step {step}",
@@ -1840,7 +1896,14 @@
         "key": "{key} of the current item"
       },
       "variableKey": "{key} of the dictionary {name}",
-      "forEachElement": "for each element"
+      "forEachElement": "for each element",
+      "portal": {
+        "services": "Every service, as a list",
+        "service": "{subject} of the service now",
+        "network": "The portal's {subject}",
+        "module": "Whether the {subject} module is on",
+        "environments": "The environment names"
+      }
     },
     "reasons": {
       "unknownInput": "{name} is not an input of this workflow",
@@ -1853,7 +1916,8 @@
       "unknownFilter": "names the filter {filter}, which does not exist",
       "filterArguments": "{filter} takes {wanted} arguments and got {got}",
       "filterArgument": "the argument {argument} of {filter} must be quoted text or a number, as its type says",
-      "filterType": "{filter} takes {takes} and got {got}"
+      "filterType": "{filter} takes {takes} and got {got}",
+      "notInPortal": "{name} is not a value the portal offers"
     },
     "edges": {
       "then": "then",
@@ -2028,6 +2092,7 @@
         "example": "'{{'steps.list.json | values'}}'"
       },
       "get": {
+        "label": "get by key",
         "description": "The value at a key or a path such as a.b.0.",
         "example": "'{{'steps.list.json | get(\"disks.0.name\")'}}'"
       },

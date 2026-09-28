@@ -35,6 +35,7 @@
         }
       },
       "started_at": "2026-09-25T03:00:00Z",
+      "steps_version": null,
       "trace": null,
       "workflow": null
     },
@@ -73,6 +74,7 @@
         }
       },
       "started_at": "2026-09-25T03:00:00Z",
+      "steps_version": null,
       "trace": null,
       "workflow": null
     },
@@ -111,6 +113,7 @@
         }
       },
       "started_at": "2026-09-25T03:00:00Z",
+      "steps_version": null,
       "trace": null,
       "workflow": null
     },
@@ -149,6 +152,7 @@
         }
       },
       "started_at": "2026-09-25T03:00:00Z",
+      "steps_version": null,
       "trace": null,
       "workflow": null
     },
@@ -187,6 +191,7 @@
         }
       },
       "started_at": "2026-09-25T03:00:00Z",
+      "steps_version": null,
       "trace": null,
       "workflow": null
     },
@@ -222,73 +227,112 @@
         }
       },
       "started_at": "2026-09-25T03:00:00Z",
+      "steps_version": null,
       "trace": {
         "dropped": 0,
         "entries": [
           {
             "detail": "nas: down",
             "duration_milliseconds": 120,
+            "item": null,
             "iteration": null,
             "kind": "probe",
             "label": "first_probe",
+            "level": null,
+            "log": [],
+            "log_dropped": 0,
             "outcome": "succeeded",
             "output": null,
             "path": "steps[0]",
             "shape": null,
             "started_at": "2026-09-25T03:00:00Z",
-            "step": "first_probe"
+            "step": "first_probe",
+            "values": [],
+            "values_dropped": 0
           },
           {
             "detail": "then",
             "duration_milliseconds": 120,
+            "item": null,
             "iteration": null,
             "kind": "if",
             "label": "down",
+            "level": null,
+            "log": [
+              "\"down\" equals \"down\": yes",
+              "took then"
+            ],
+            "log_dropped": 0,
             "outcome": "succeeded",
             "output": null,
             "path": "steps[1]",
             "shape": null,
             "started_at": "2026-09-25T03:00:00Z",
-            "step": "down"
+            "step": "down",
+            "values": [
+              {
+                "template": "{{steps.first_probe.state}}",
+                "value": "\"down\""
+              }
+            ],
+            "values_dropped": 0
           },
           {
             "detail": "1 iterations",
             "duration_milliseconds": 120,
+            "item": null,
             "iteration": null,
             "kind": "loop",
             "label": "retry",
+            "level": null,
+            "log": [],
+            "log_dropped": 0,
             "outcome": "succeeded",
             "output": null,
             "path": "steps[1].then[0]",
             "shape": null,
             "started_at": "2026-09-25T03:00:00Z",
-            "step": "retry"
+            "step": "retry",
+            "values": [],
+            "values_dropped": 0
           },
           {
             "detail": "POST http://192.168.1.10:9000/restart/nas → 202",
             "duration_milliseconds": 120,
+            "item": "\"try 1\"",
             "iteration": 0,
             "kind": "http",
             "label": "restart",
+            "level": null,
+            "log": [],
+            "log_dropped": 0,
             "outcome": "succeeded",
             "output": "{\"state\":\"down\"}",
             "path": "steps[1].then[0].body[0]",
             "shape": "{\"state\":\"down\"}",
             "started_at": "2026-09-25T03:00:00Z",
-            "step": "restart"
+            "step": "restart",
+            "values": [],
+            "values_dropped": 0
           },
           {
             "detail": "",
             "duration_milliseconds": 120,
+            "item": "\"try 1\"",
             "iteration": 0,
             "kind": "wait",
             "label": "settle",
+            "level": null,
+            "log": [],
+            "log_dropped": 0,
             "outcome": "running",
             "output": null,
             "path": "steps[1].then[0].body[1]",
             "shape": null,
             "started_at": "2026-09-25T03:00:00Z",
-            "step": "settle"
+            "step": "settle",
+            "values": [],
+            "values_dropped": 0
           }
         ]
       },

@@ -3,6 +3,7 @@ pub struct Place {
     pub path: String,
     pub iteration: Option<usize>,
     pub calls: usize,
+    pub item: Option<String>,
 }
 
 impl Place {
@@ -11,6 +12,7 @@ impl Place {
             path: "steps".to_string(),
             iteration: None,
             calls: 0,
+            item: None,
         }
     }
 
@@ -24,8 +26,13 @@ impl Place {
     pub fn repeated(&self, iteration: usize) -> Place {
         Place {
             iteration: Some(iteration),
+            item: None,
             ..self.clone()
         }
+    }
+
+    pub fn with_item(self, item: Option<String>) -> Place {
+        Place { item, ..self }
     }
 
     pub fn called(&self, workflow: &str) -> Place {
@@ -33,6 +40,7 @@ impl Place {
             path: format!("{}.{workflow}.steps", self.path),
             iteration: self.iteration,
             calls: self.calls + 1,
+            item: self.item.clone(),
         }
     }
 }

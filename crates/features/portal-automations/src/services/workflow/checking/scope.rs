@@ -6,7 +6,9 @@ use super::filter_checks::chain_problem;
 use super::templates::templates_of;
 use crate::services::workflow::evaluating::children_of;
 use crate::services::workflow::evaluating::placeholders_in;
-use crate::types::{Step, StepKind, ValueType, Workflow, result_type};
+use portal_feature::Module;
+
+use crate::types::{PortalState, Step, StepKind, ValueType, Workflow, result_type};
 
 #[derive(Debug, Clone, Default)]
 pub struct Scope {
@@ -15,6 +17,7 @@ pub struct Scope {
     pub steps: BTreeSet<String>,
     pub kinds: BTreeMap<String, &'static str>,
     pub input_types: BTreeMap<String, ValueType>,
+    pub services: Option<BTreeSet<String>>,
     pub loops: usize,
     pub items: usize,
 }
@@ -36,8 +39,11 @@ impl Scope {
         }
     }
 
-    pub fn errors(workflow: &Workflow) -> Vec<FieldError> {
-        let mut scope = Scope::of(workflow);
+    pub fn errors(workflow: &Workflow, services: Option<BTreeSet<String>>) -> Vec<FieldError> {
+        let mut scope = Scope {
+            services,
+            ..Scope::of(workflow)
+        };
         let mut errors = Vec::new();
         scope.check_steps(&workflow.steps, "steps", &mut errors);
         errors
@@ -54,6 +60,7 @@ impl Scope {
             "steps" => self.steps.contains(first),
             "loop" => self.loops > 0 && matches!(first, "item" | "index"),
             "item" | "index" => self.items > 0,
+            "portal" => return self.portal_allows(name),
             _ => false,
         };
         if fine {
@@ -118,6 +125,42 @@ impl Scope {
         }
     }
 
+    fn portal_allows(&self, name: &str) -> Result<(), String> {
+        let parts: Vec<&str> = name.split('.').skip(1).collect();
+        let fine = match parts.as_slice() {
+            ["services"] | ["environments"] | ["network"] | ["modules"] => true,
+            ["services", id, rest @ ..] => {
+                if self
+                    .services
+                    .as_ref()
+                    .is_some_and(|known| !known.contains(*id))
+                {
+                    return Err(format!("names {{{{{name}}}}}, but no service {id} exists"));
+                }
+                rest.first()
+                    .is_none_or(|field| PortalState::SERVICE_FIELDS.contains(field))
+            }
+            ["network", field] => PortalState::NETWORK_FIELDS.contains(field),
+            ["modules", module, rest @ ..] => {
+                if Module::from_name(module).is_none() {
+                    return Err(format!(
+                        "names {{{{{name}}}}}, but {module} is not a module"
+                    ));
+                }
+                rest.first()
+                    .is_none_or(|field| PortalState::MODULE_FIELDS.contains(field))
+            }
+            _ => false,
+        };
+        if fine {
+            Ok(())
+        } else {
+            Err(format!(
+                "names {{{{{name}}}}}, which is not a value the portal offers"
+            ))
+        }
+    }
+
     pub fn type_of(&self, name: &str) -> ValueType {
         let parts: Vec<&str> = name.split('.').collect();
         match parts.as_slice() {
@@ -127,6 +170,14 @@ impl Scope {
                 .copied()
                 .unwrap_or(ValueType::Text),
             ["secrets", _] => ValueType::Text,
+            ["portal", "services"] | ["portal", "environments"] => ValueType::List,
+            ["portal", "services", _, "public"] | ["portal", "modules", _, "is_enabled"] => {
+                ValueType::Boolean
+            }
+            ["portal", "services", _, "latency_milliseconds"] | ["portal", "network", "port"] => {
+                ValueType::Number
+            }
+            ["portal", "services", _, _] | ["portal", "network", _] => ValueType::Text,
             ["event", ..] => ValueType::Text,
             ["loop", "index"] | ["index"] => ValueType::Number,
             ["steps", id, field] => self

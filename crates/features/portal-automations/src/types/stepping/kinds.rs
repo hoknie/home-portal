@@ -3,7 +3,7 @@ use super::FieldType::{
     Script, Steps, Template, TemplateList, TemplateTable, Workflow,
 };
 use super::{FieldDescription as Field, KindDescription as Kind, KindGroup};
-use crate::types::MOST_OPERATIONS;
+use crate::types::{LogLevel, MOST_OPERATIONS};
 
 pub const OUTCOMES: &[&str] = &["succeeded", "failed"];
 pub const METHODS: &[&str] = &["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"];
@@ -18,6 +18,7 @@ pub const KINDS: &[Kind] = &[
             Field::of("else", Steps),
         ],
         results: &["branch"],
+        exclusive: &[],
     },
     Kind {
         name: "loop",
@@ -32,12 +33,14 @@ pub const KINDS: &[Kind] = &[
             Field::of("body", Steps).required(),
         ],
         results: &["iterations"],
+        exclusive: &[&["repeat", "for_each", "while"]],
     },
     Kind {
         name: "parallel",
         group: KindGroup::Flow,
         fields: &[Field::of("branches", Branches).required().between(2, 4)],
         results: &[],
+        exclusive: &[],
     },
     Kind {
         name: "workflow",
@@ -47,12 +50,14 @@ pub const KINDS: &[Kind] = &[
             Field::of("inputs", TemplateTable),
         ],
         results: &["vars"],
+        exclusive: &[],
     },
     Kind {
         name: "nothing",
         group: KindGroup::Flow,
         fields: &[],
         results: &[],
+        exclusive: &[],
     },
     Kind {
         name: "stop",
@@ -62,6 +67,7 @@ pub const KINDS: &[Kind] = &[
             Field::of("reason", Template),
         ],
         results: &[],
+        exclusive: &[],
     },
     Kind {
         name: "set",
@@ -74,12 +80,14 @@ pub const KINDS: &[Kind] = &[
             Field::of("object", TemplateTable),
         ],
         results: &["value"],
+        exclusive: &[&["value", "json", "list", "object"]],
     },
     Kind {
         name: "wait",
         group: KindGroup::Data,
         fields: &[Field::of("seconds", Integer).required().between(1, 3600)],
         results: &[],
+        exclusive: &[],
     },
     Kind {
         name: "transform",
@@ -91,6 +99,7 @@ pub const KINDS: &[Kind] = &[
                 .between(1, MOST_OPERATIONS as i64),
         ],
         results: &["value"],
+        exclusive: &[],
     },
     Kind {
         name: "http",
@@ -107,6 +116,7 @@ pub const KINDS: &[Kind] = &[
             Field::of("response_sample", Sample),
         ],
         results: &["status", "headers", "body", "json"],
+        exclusive: &[],
     },
     Kind {
         name: "script",
@@ -121,6 +131,7 @@ pub const KINDS: &[Kind] = &[
                 .defaulting("60"),
         ],
         results: &["exit_code", "stdout", "stderr"],
+        exclusive: &[],
     },
     Kind {
         name: "notify",
@@ -131,6 +142,17 @@ pub const KINDS: &[Kind] = &[
             Field::of("channel", Channel),
         ],
         results: &[],
+        exclusive: &[],
+    },
+    Kind {
+        name: "log",
+        group: KindGroup::Actions,
+        fields: &[
+            Field::of("message", Template).required(),
+            Field::of("level", Choice(LogLevel::NAMES)).defaulting("info"),
+        ],
+        results: &["message"],
+        exclusive: &[],
     },
     Kind {
         name: "automation",
@@ -141,18 +163,21 @@ pub const KINDS: &[Kind] = &[
             Field::of("wait", Boolean).defaulting("false"),
         ],
         results: &["run_id", "outcome"],
+        exclusive: &[],
     },
     Kind {
         name: "probe",
         group: KindGroup::Actions,
         fields: &[Field::of("service", Template).required()],
         results: &["state", "latency_milliseconds", "diagnosis"],
+        exclusive: &[],
     },
     Kind {
         name: "status",
         group: KindGroup::Actions,
         fields: &[Field::of("service", Template).required()],
         results: &["state", "since"],
+        exclusive: &[],
     },
 ];
 

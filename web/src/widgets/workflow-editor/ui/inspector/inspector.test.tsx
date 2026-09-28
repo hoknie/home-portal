@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-import { idsOf, newStep, plainInput } from "@/entities/workflow";
+import { hiddenFields, idsOf, newStep, plainInput } from "@/entities/workflow";
 import { dictionaries } from "@/shared/i18n";
 import { jsonResponse } from "@/shared/lib/testing";
 
@@ -33,7 +33,8 @@ it("every catalogue kind opens a form with a control for each of its fields", as
     const step = steps.find((entry) => entry.kind === kind.name)!;
     pressOnCanvas(await node(step.id));
     const panel = await waitFor(() => inspector());
-    for (const field of kind.fields.filter((entry) => !NESTED_TYPES.includes(entry.type) && !(kind.name === "set" && ["json", "list", "object"].includes(entry.name)))) {
+    const hidden = hiddenFields(step, kind);
+    for (const field of kind.fields.filter((entry) => !NESTED_TYPES.includes(entry.type) && !hidden.has(entry.name))) {
       const label = labels[kind.name][field.name].label;
       expect(within(panel).getAllByText(label, { exact: false }).length, `${kind.name}.${field.name}`).toBeGreaterThan(0);
     }
@@ -254,4 +255,39 @@ it("condition operators are named in words, on the form and on the node", async 
     "is not empty",
   ]);
   expect(operator).toHaveValue("!=");
+});
+
+it("no kind's inspector shows two fields of one exclusive group", async () => {
+  const taken = new Set<string>();
+  const kinds = catalogue.kinds.filter((kind) => kind.exclusive.length > 0);
+  const steps = kinds.map((kind) => {
+    const step = newStep(kind, taken);
+    taken.add(step.id);
+    return step;
+  });
+  openEditor(withSteps(steps));
+  for (const [index, kind] of kinds.entries()) {
+    pressOnCanvas(await node(steps[index].id));
+    const panel = await waitFor(() => inspector());
+    for (const group of kind.exclusive) {
+      const shown = group.filter((field) =>
+        within(panel)
+          .queryAllByText(labels[kind.name][field].label)
+          .some((element) => element.closest("[role=radio]") === null),
+      );
+      expect(shown, kind.name).toHaveLength(1);
+    }
+  }
+});
+
+it("typing {{portal.services.me offers the service's id, name and state with their current values", async () => {
+  openEditor(withSteps([{ id: "tell", kind: "notify", text: "" }]));
+  pressOnCanvas(await node("tell"));
+  await userEvent.click(within(inspector()).getByRole("combobox", { name: "Text" }));
+  await userEvent.keyboard("{{{{portal.services.me");
+  const options = within(screen.getByRole("listbox")).getAllByRole("option").map((option) => option.textContent ?? "");
+  expect(options.find((option) => option.includes("portal.services.media.id"))).toContain("media");
+  expect(options.find((option) => option.includes("portal.services.media.name"))).toContain("Media");
+  expect(options.some((option) => option.includes("portal.services.media.state"))).toBe(true);
+  expect(options.some((option) => option.includes("portal.network."))).toBe(false);
 });

@@ -8,7 +8,7 @@ use crate::types::{InputDeclaration, RawStep, Workflow};
 
 pub const WORKFLOWS: &str = Workflow::SECTION;
 pub const STEP_LISTS: [&str; 3] = ["then", "else", "body"];
-pub const KEY_ORDER: [&str; 41] = [
+pub const KEY_ORDER: [&str; 43] = [
     "id",
     "label",
     "kind",
@@ -41,6 +41,8 @@ pub const KEY_ORDER: [&str; 41] = [
     "title",
     "text",
     "channel",
+    "message",
+    "level",
     "service",
     "automation",
     "fields",

@@ -308,7 +308,11 @@ async fn the_workflows_api_needs_a_session() {
     let path = support::with_extra(&directory, "secret", "");
     let registry = registered(&support::wiring_for(&path)).unwrap();
     let portal = assemble(&registry);
-    for uri in ["/api/workflows", "/api/workflows/catalogue"] {
+    for uri in [
+        "/api/workflows",
+        "/api/workflows/catalogue",
+        "/api/workflows/portal",
+    ] {
         assert_eq!(
             status_of(portal.clone(), get_request(uri)).await,
             StatusCode::UNAUTHORIZED

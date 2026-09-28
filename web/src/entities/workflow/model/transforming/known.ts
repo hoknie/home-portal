@@ -1,6 +1,7 @@
 import type { Trace } from "@/entities/automation/@x/workflow";
 
 import type { FilterDescription, InputDeclaration, Step, WorkflowCatalogue } from "../schema";
+import { type PortalValues, portalValue } from "../portal";
 import { scopeAt } from "../scope";
 import { lastOutput } from "../suggestions/last-output";
 import { type Path, at, everyStep } from "../tree";
@@ -11,7 +12,7 @@ import { placeholderAt } from "./render";
 import { certainType, givesAfter } from "./types";
 import { type ValueType, textOf, typeOfValue, walk } from "./values";
 
-export type KnownContext = { steps: Step[]; inputs: (string | InputDeclaration)[]; path: Path; field: string; lastRun: Trace | null; catalogue: WorkflowCatalogue | undefined };
+export type KnownContext = { steps: Step[]; inputs: (string | InputDeclaration)[]; path: Path; field: string; lastRun: Trace | null; catalogue: WorkflowCatalogue | undefined; portal?: PortalValues | null };
 
 export type Sample = { value: unknown; from: "sample" | "run" };
 
@@ -58,6 +59,10 @@ export function inputSample(step: Step, context: KnownContext, depth = 0): Sampl
 
 export function sampleOf(name: string, context: KnownContext, depth = 0): Sample | null {
   const [namespace, id = "", field = "", ...path] = name.split(".");
+  if (namespace === "portal") {
+    const value = portalValue(name, context.portal);
+    return value === undefined ? null : { value, from: "sample" };
+  }
   if (namespace !== "steps" || depth > DEEPEST_SAMPLE) {
     return null;
   }

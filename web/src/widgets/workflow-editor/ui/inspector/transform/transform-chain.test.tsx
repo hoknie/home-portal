@@ -136,3 +136,19 @@ it("after split the picker offers what fits a list first, trim for each element,
   await userEvent.click(within(inspector()).getAllByRole("button", { name: "Add operation" }).at(-1)!);
   expect(within(card(2)).getByRole("figure", { name: "After operation 2" })).toHaveTextContent('["nas","router"]');
 });
+
+it("an object offers get by key among the filters for objects, with its keys as suggestions and the value in the preview", async () => {
+  openEditor(withSteps([{ id: "list", kind: "http", url: "http://nas.lan/state", response_sample: '{"state": "up", "uptime": 42}' }]));
+  await addFromSlot(await slot("|steps|1"), "Transform");
+  fireEvent.change(within(inspector()).getByRole("combobox", { name: "Input" }), { target: { value: "{{steps.list.json}}" } });
+  const picker = within(inspector()).getByRole("combobox", { name: "Operation to add" });
+  const objects = within(picker).getByRole("group", { name: "Filters for objects" });
+  expect(within(objects).getByRole("option", { name: "get by key" })).toBeInTheDocument();
+  expect(within(within(picker).getByRole("group", { name: "Filters for lists" })).getByRole("option", { name: "get by key" })).toBeInTheDocument();
+  await addOperation("get");
+  const key = within(card(1)).getByRole("combobox", { name: "key" });
+  await userEvent.click(key);
+  expect(within(screen.getByRole("listbox")).getAllByRole("option").map((option) => option.textContent ?? "")).toEqual(expect.arrayContaining([expect.stringContaining("state"), expect.stringContaining("uptime")]));
+  fireEvent.change(key, { target: { value: "state" } });
+  expect(within(card(1)).getByRole("figure", { name: "After operation 1" })).toHaveTextContent('"up"');
+});

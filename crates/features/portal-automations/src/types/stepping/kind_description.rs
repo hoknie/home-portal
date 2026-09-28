@@ -6,4 +6,5 @@ pub struct KindDescription {
     pub group: KindGroup,
     pub fields: &'static [FieldDescription],
     pub results: &'static [&'static str],
+    pub exclusive: &'static [&'static [&'static str]],
 }

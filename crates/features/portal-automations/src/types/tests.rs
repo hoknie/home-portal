@@ -251,6 +251,10 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
             service: String::new(),
         },
         StepKind::Nothing,
+        StepKind::Log {
+            message: String::new(),
+            level: crate::types::LogLevel::Info,
+        },
         StepKind::Automation {
             automation: String::new(),
             fields: Vec::new(),
@@ -264,4 +268,77 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
     for kind in KINDS {
         assert!(names.contains(&kind.name), "{}", kind.name);
     }
+}
+
+#[test]
+fn every_exclusive_group_names_fields_of_its_kind() {
+    use crate::types::{KINDS, kind_named};
+    for kind in KINDS {
+        for group in kind.exclusive {
+            assert!(group.len() > 1, "{}", kind.name);
+            for field in *group {
+                assert!(
+                    kind.fields.iter().any(|candidate| candidate.name == *field),
+                    "{}.{field}",
+                    kind.name
+                );
+            }
+        }
+    }
+    let exclusive = |name: &str| kind_named(name).map(|kind| kind.exclusive.len());
+    assert_eq!(exclusive("loop"), Some(1));
+    assert_eq!(exclusive("set"), Some(1));
+}
+
+#[test]
+fn an_old_trace_entry_loads_without_a_log_and_a_new_one_keeps_it() {
+    let old = r#"{"path":"steps[0]","step":"ping","label":"ping","kind":"http","iteration":null,"outcome":"failed","started_at":"2026-01-01T00:00:00Z","duration_milliseconds":3,"detail":"500","output":null}"#;
+    let entry = serde_json::from_str::<super::stored::StoredTraceEntry>(old)
+        .unwrap()
+        .into_entry()
+        .unwrap();
+    assert!(entry.log.is_empty());
+    assert_eq!((entry.item, entry.level), (None, None));
+    let mut log = super::StepLog::default();
+    log.push_value("{{loop.item}}", "\"Media\"");
+    log.push_line("no service Media");
+    let written = super::stored::StoredTraceEntry::of(&super::TraceEntry {
+        log,
+        item: Some("\"Media\"".into()),
+        level: Some(super::LogLevel::Warning),
+        ..entry
+    });
+    let line = serde_json::to_string(&written).unwrap();
+    let back = serde_json::from_str::<super::stored::StoredTraceEntry>(&line)
+        .unwrap()
+        .into_entry()
+        .unwrap();
+    assert_eq!(back.log.values[0].value, "\"Media\"");
+    assert_eq!(back.log.lines, vec!["no service Media"]);
+    assert_eq!(back.level, Some(super::LogLevel::Warning));
+    assert!(
+        !serde_json::to_string(&super::stored::StoredTraceEntry::of(&super::TraceEntry {
+            log: super::StepLog::default(),
+            item: None,
+            level: None,
+            ..back
+        }))
+        .unwrap()
+        .contains("values")
+    );
+}
+
+#[test]
+fn a_step_log_keeps_twenty_values_and_lines_of_bounded_length_and_counts_the_rest() {
+    let mut log = super::StepLog::default();
+    for index in 0..25 {
+        log.push_value(&format!("{{{{vars.v{index}}}}}"), &"x".repeat(400));
+        log.push_line(format!("line {index}"));
+    }
+    assert_eq!((log.values.len(), log.values_dropped), (20, 5));
+    assert_eq!((log.lines.len(), log.lines_dropped), (20, 5));
+    assert!(log.values[0].value.chars().count() <= super::StepLog::LONGEST + 1);
+    let dropped = log.dropped();
+    assert!(dropped.is_empty());
+    assert_eq!((dropped.values_dropped, dropped.lines_dropped), (25, 25));
 }

@@ -63,6 +63,7 @@ pub fn templates_of(step: &Step) -> Vec<(String, &str)> {
             found.push(("text".to_string(), text));
             found.extend(title.as_deref().map(|title| ("title".to_string(), title)));
         }
+        StepKind::Log { message, .. } => found.push(("message".to_string(), message)),
         StepKind::Probe { service } | StepKind::Status { service } => {
             found.push(("service".to_string(), service));
         }
