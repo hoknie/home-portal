@@ -24,11 +24,12 @@ pub const KINDS: &[Kind] = &[
         name: "loop",
         group: KindGroup::Flow,
         fields: &[
-            Field::of("repeat", Integer).between(1, 100),
+            Field::of("repeat", Integer).between(1, 100).templated(),
             Field::of("for_each", Template),
             Field::of("while", Condition),
             Field::of("max_iterations", Integer)
                 .between(1, 100)
+                .templated()
                 .defaulting("100"),
             Field::of("body", Steps).required(),
         ],
@@ -77,7 +78,7 @@ pub const KINDS: &[Kind] = &[
             Field::of("value", Template),
             Field::of("json", Template),
             Field::of("list", TemplateList),
-            Field::of("object", TemplateTable),
+            Field::of("object", TemplateTable).template_keys(),
         ],
         results: &["value"],
         exclusive: &[&["value", "json", "list", "object"]],
@@ -85,7 +86,10 @@ pub const KINDS: &[Kind] = &[
     Kind {
         name: "wait",
         group: KindGroup::Data,
-        fields: &[Field::of("seconds", Integer).required().between(1, 3600)],
+        fields: &[Field::of("seconds", Integer)
+            .required()
+            .between(1, 3600)
+            .templated()],
         results: &[],
         exclusive: &[],
     },
@@ -107,10 +111,11 @@ pub const KINDS: &[Kind] = &[
         fields: &[
             Field::of("method", Choice(METHODS)).defaulting("GET"),
             Field::of("url", Template).required(),
-            Field::of("headers", TemplateTable),
+            Field::of("headers", TemplateTable).template_keys(),
             Field::of("body", Template),
             Field::of("timeout_seconds", Integer)
                 .between(1, 60)
+                .templated()
                 .defaulting("10"),
             Field::of("fail_on_error", Boolean).defaulting("true"),
             Field::of("response_sample", Sample),
@@ -128,6 +133,7 @@ pub const KINDS: &[Kind] = &[
             Field::of("stdin", Template),
             Field::of("timeout_seconds", Integer)
                 .between(1, 3600)
+                .templated()
                 .defaulting("60"),
         ],
         results: &["exit_code", "stdout", "stderr"],

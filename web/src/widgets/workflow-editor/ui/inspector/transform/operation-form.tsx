@@ -4,13 +4,13 @@ import { useTranslations } from "next-intl";
 
 import { type Condition, FILTERS, type Operation, type Path, emptyRow, jsonKeys } from "@/entities/workflow";
 import { FormField } from "@/shared/ui/form-field";
-import { Input } from "@/shared/ui/primitives";
 import { TemplateInput } from "@/shared/ui/template-input";
 
 import { ConditionBuilder } from "../condition-builder";
 import { SELECT } from "../select-class";
 import type { NestedChain } from "./transform-chain";
-import { StepTemplateInput, fieldId } from "../template-field";
+import { useEditor } from "../../../model/editor-context";
+import { StepTemplateInput, fieldId, useGroupLabel, useTemplateProblems, useTranslatedSuggestions } from "../template-field";
 
 export type OperationFormProps = {
   path: Path;
@@ -24,6 +24,9 @@ export type OperationFormProps = {
 };
 
 function literalOf(text: string, type: string): unknown {
+  if (text.includes("{{")) {
+    return text;
+  }
   if (type === "number") {
     return text.trim() === "" ? undefined : Number(text);
   }
@@ -38,10 +41,26 @@ function literalOf(text: string, type: string): unknown {
   return text;
 }
 
-function KeyField({ id, label, value, keys, onChange }: { id: string; label: string; value: string; keys: string[]; onChange: (key: string) => void }) {
+type KeyFieldProps = { path: Path; field: string; id: string; label: string; value: string; keys: string[]; onChange: (key: string) => void };
+
+function KeyField({ path, field, id, label, value, keys, onChange }: KeyFieldProps) {
+  const editor = useEditor();
+  const translate = useTranslatedSuggestions();
+  const groupLabel = useGroupLabel();
+  const problemsOf = useTemplateProblems();
   return (
     <FormField id={id} label={label}>
-      <TemplateInput id={id} aria-label={label} trigger="always" value={value} suggestions={keys.map((key) => ({ value: key }))} onChange={onChange} />
+      <TemplateInput
+        id={id}
+        aria-label={label}
+        trigger="always"
+        value={value}
+        suggestions={keys.map((key) => ({ value: key }))}
+        templateSuggestions={translate(editor.suggestionsFor(path, field))}
+        problems={problemsOf(path, field, value)}
+        groupLabel={groupLabel}
+        onChange={onChange}
+      />
     </FormField>
   );
 }
@@ -70,7 +89,7 @@ export function OperationForm({ path, field, depth, operation, item, from, neste
     case "sort_by":
       return (
         <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-          <KeyField id={`${id}-key`} label={t("key")} value={operation.key ?? ""} keys={keys} onChange={(key) => onChange({ ...operation, key })} />
+          <KeyField path={path} field={`${field}.key`} id={`${id}-key`} label={t("key")} value={operation.key ?? ""} keys={keys} onChange={(key) => onChange({ ...operation, key })} />
           <FormField id={`${id}-order`} label={t("order")}>
             <select id={`${id}-order`} className={SELECT} value={operation.order ?? "asc"} onChange={(event) => onChange({ ...operation, order: event.target.value })}>
               <option value="asc">{t("orders.asc")}</option>
@@ -95,7 +114,7 @@ export function OperationForm({ path, field, depth, operation, item, from, neste
       );
     case "group_by":
     case "count_by":
-      return <KeyField id={`${id}-key`} label={t("key")} value={operation.key ?? ""} keys={keys} onChange={(key) => onChange({ ...operation, key })} />;
+      return <KeyField path={path} field={`${field}.key`} id={`${id}-key`} label={t("key")} value={operation.key ?? ""} keys={keys} onChange={(key) => onChange({ ...operation, key })} />;
     default: {
       const filter = FILTERS[operation.op];
       if (!filter || filter.arguments.length === 0) {
@@ -116,16 +135,16 @@ export function OperationForm({ path, field, depth, operation, item, from, neste
               onChange({ ...operation, args: next });
             };
             if (argument.name === "key") {
-              return <KeyField key={argument.name} id={argumentId} label={argument.name} value={typeof current === "string" ? current : ""} keys={keys} onChange={set} />;
+              return <KeyField key={argument.name} path={path} field={`${field}.args[${position}]`} id={argumentId} label={argument.name} value={typeof current === "string" ? current : ""} keys={keys} onChange={set} />;
             }
             return (
-              <FormField key={argument.name} id={argumentId} label={argument.name} optional={!argument.required}>
-                <Input
-                  id={argumentId}
-                  type={argument.type === "number" ? "number" : "text"}
-                  spellCheck={false}
+              <FormField key={argument.name} id={fieldId(path, `${field}.args[${position}]`)} label={argument.name} optional={!argument.required}>
+                <StepTemplateInput
+                  path={path}
+                  field={`${field}.args[${position}]`}
+                  label={argument.name}
                   value={current === undefined || current === null ? "" : typeof current === "string" ? current : JSON.stringify(current)}
-                  onChange={(event) => set(event.target.value)}
+                  onChange={set}
                 />
               </FormField>
             );

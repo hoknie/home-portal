@@ -11,6 +11,21 @@ fn cases() -> Vec<(&'static str, Value, Value)> {
     ]);
     vec![
         ("upper", json!("nas"), json!([{"op": "upper"}])),
+        (
+            "get with a key from the value itself",
+            json!({"which": "nas", "nas": 2, "media": 1}),
+            json!([{"op": "get", "args": ["{{vars.input.which}}"]}]),
+        ),
+        (
+            "sort_by with a templated key",
+            json!([{"k": "b", "n": 2}, {"k": "a", "n": 1}]),
+            json!([{"op": "sort_by", "key": "{{vars.input.0 | keys | first}}"}]),
+        ),
+        (
+            "map reading a key named by the item",
+            json!([{"name": "a", "a": 1}, {"name": "b", "b": 2}]),
+            json!([{"op": "map", "to": "{{item | get(item.name)}}"}]),
+        ),
         ("lower", json!("NAS"), json!([{"op": "lower"}])),
         ("trim", json!("  nas "), json!([{"op": "trim"}])),
         (

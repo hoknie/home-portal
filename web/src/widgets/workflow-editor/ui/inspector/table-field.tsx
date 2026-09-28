@@ -7,7 +7,8 @@ import type { Path } from "@/entities/workflow";
 import { Button, Label } from "@/shared/ui/primitives";
 import { TemplateInput, type TemplateSuggestion } from "@/shared/ui/template-input";
 
-import { StepTemplateInput } from "./template-field";
+import { useEditor } from "../../model/editor-context";
+import { StepTemplateInput, useGroupLabel, useTemplateProblems, useTranslatedSuggestions } from "./template-field";
 
 export type TableFieldProps = {
   path: Path;
@@ -19,10 +20,15 @@ export type TableFieldProps = {
   keySuggestions?: TemplateSuggestion[];
   onChange: (values: Record<string, string>) => void;
   keyProblem?: (key: string) => string | undefined;
+  templateKeys?: boolean;
 };
 
-export function TableField({ path, field, label, hint, values, fixedKeys, keySuggestions = [], onChange, keyProblem }: TableFieldProps) {
+export function TableField({ path, field, label, hint, values, fixedKeys, keySuggestions = [], onChange, keyProblem, templateKeys = false }: TableFieldProps) {
   const t = useTranslations("workflowEditor");
+  const editor = useEditor();
+  const translate = useTranslatedSuggestions();
+  const groupLabel = useGroupLabel();
+  const problemsOf = useTemplateProblems();
   const entries = fixedKeys ? fixedKeys.map((key) => [key, values[key] ?? ""] as const) : Object.entries(values);
   const rename = (from: string, to: string) => onChange(Object.fromEntries(Object.entries(values).map(([key, value]) => (key === from ? [to, value] : [key, value]))));
   return (
@@ -42,6 +48,9 @@ export function TableField({ path, field, label, hint, values, fixedKeys, keySug
                 trigger="always"
                 value={key}
                 suggestions={keySuggestions}
+                templateSuggestions={templateKeys ? translate(editor.suggestionsFor(path, `${field}.${key}`)) : undefined}
+                problems={templateKeys ? problemsOf(path, `${field}.${key}`, key) : []}
+                groupLabel={groupLabel}
                 onChange={(next) => rename(key, next)}
               />
               {key !== "" && keyProblem?.(key) ? (

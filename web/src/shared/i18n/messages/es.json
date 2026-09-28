@@ -1327,7 +1327,8 @@
       "unknownSampleKey": "La estructura de la respuesta de {step} no tiene la clave {key}",
       "inputDefault": "El valor por defecto no es del tipo de la entrada",
       "variableName": "Mayúsculas, dígitos y _, empezando por una letra",
-      "variableReserved": "Lo fija el portal; elija otro nombre"
+      "variableReserved": "Lo fija el portal; elija otro nombre",
+      "numberOrTemplate": "Debe ser un número entero o una plantilla como '{{'inputs.seconds'}}'"
     },
     "canvas": {
       "label": "Diagrama del flujo",
@@ -1398,7 +1399,8 @@
       "nothing": "sigue",
       "automationWaited": "{title}, esperando",
       "setList": "{variable}: lista de {count}",
-      "setObject": "{variable}: {count, plural, one {# clave} other {# claves}}"
+      "setObject": "{variable}: {count, plural, one {# clave} other {# claves}}",
+      "repeatTemplate": "{count} veces"
     },
     "warningCount": "{count, plural, one {# aviso} other {# avisos}}",
     "palette": {
@@ -1499,7 +1501,8 @@
       "nestedChain": "Operaciones internas, nivel {depth}",
       "eachHint": "Se aplica a cada elemento por turno; las vistas previas usan el primer elemento.",
       "valueNow": "El valor ahora: {type}",
-      "forEachElement": "{name} — para cada elemento"
+      "forEachElement": "{name} — para cada elemento",
+      "unknownUntilRun": "{name} solo se conoce cuando el paso se ejecuta"
     },
     "moveItemUp": "Subir el valor {number}",
     "exclusive": {
@@ -1516,7 +1519,8 @@
         "list": "Lista",
         "object": "Diccionario"
       }
-    }
+    },
+    "checkedWhenRuns": "Una plantilla: se comprueba al ejecutar el paso"
   },
   "templateInput": {
     "suggestions": "Valores que puede insertar",
@@ -1926,7 +1930,8 @@
       "repeat": "{count, plural, one {# vez} other {# veces}}",
       "forEach": "para cada elemento",
       "while": "mientras se cumpla",
-      "again": "otra vez"
+      "again": "otra vez",
+      "repeatTemplate": "{count} veces"
     },
     "legend": {
       "title": "Cómo funciona el editor",

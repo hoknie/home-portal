@@ -77,13 +77,11 @@ fn a_filter_on_the_wrong_type_fails_naming_what_it_takes_and_got() {
 #[test]
 fn every_filter_of_the_catalogue_has_an_evaluator() {
     for filter in FILTERS {
-        let call = crate::types::FilterCall {
-            name: filter.name.to_string(),
-            arguments: Vec::new(),
-        };
-        let error = crate::services::workflow::apply_chain(json!(12345), &[call])
-            .err()
-            .unwrap_or_default();
+        let call = crate::types::FilterCall::literal(filter.name, Vec::new());
+        let error =
+            crate::services::workflow::apply_chain(json!(12345), &[call], &|_| Ok(json!(null)))
+                .err()
+                .unwrap_or_default();
         assert!(
             !error.contains("is not a filter"),
             "{}: {error}",

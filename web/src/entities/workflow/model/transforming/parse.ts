@@ -1,4 +1,21 @@
-export type FilterCall = { name: string; arguments: unknown[] };
+export type NamedArgument = { position: number; name: string };
+
+export type FilterCall = { name: string; arguments: unknown[]; names?: NamedArgument[] };
+
+export const NAMESPACES = ["event", "inputs", "vars", "steps", "loop", "secrets", "item", "index", "portal"] as const;
+
+export const BARE_NAMESPACES = ["item", "index"];
+
+const PART = /^[A-Za-z0-9_-]+$/;
+
+export function validName(name: string) {
+  const parts = name.split(".");
+  return (
+    (NAMESPACES as readonly string[]).includes(parts[0]) &&
+    (parts.length > 1 || BARE_NAMESPACES.includes(parts[0])) &&
+    parts.slice(1).every((part) => PART.test(part))
+  );
+}
 
 export type ParsedChain = { filters: FilterCall[]; error: null } | { filters: null; error: string };
 
@@ -52,11 +69,14 @@ function parseCall(part: string): FilterCall | null {
   }
   const name = part.slice(0, open).trim();
   const inside = part.slice(open + 1, -1);
-  const values = inside.trim() === "" ? [] : splitOutsideQuotes(inside, ",").map((argument) => literal(argument.trim()));
+  const texts = inside.trim() === "" ? [] : splitOutsideQuotes(inside, ",").map((argument) => argument.trim());
+  const values = texts.map((text) => literal(text) ?? (validName(text) ? { name: text } : null));
   if (!FILTER_NAME.test(name) || values.some((value) => value === null)) {
     return null;
   }
-  return { name, arguments: values.map((value) => value!.value) };
+  const names = values.flatMap((value, position) => (value !== null && "name" in value ? [{ position, name: value.name }] : []));
+  const call: FilterCall = { name, arguments: values.map((value) => (value !== null && "value" in value ? value.value : null)) };
+  return names.length > 0 ? { ...call, names } : call;
 }
 
 export function parseChain(text: string): ParsedChain {

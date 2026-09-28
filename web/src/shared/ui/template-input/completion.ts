@@ -12,7 +12,7 @@ export type TemplateRange = { start: number; end: number; message: string; sever
 
 export type Trigger = "braces" | "always";
 
-export type Mode = Trigger | "filters";
+export type Mode = Trigger | "filters" | "arguments";
 
 export type Completion = { start: number; end: number; query: string; subject?: string; chain?: string };
 
@@ -64,6 +64,28 @@ export function filterCompletionAt(value: string, caret: number): Completion | n
   };
 }
 
+export function argumentCompletionAt(value: string, caret: number): Completion | null {
+  const open = value.lastIndexOf(OPEN, caret - OPEN.length);
+  if (open < 0) {
+    return null;
+  }
+  const between = value.slice(open + OPEN.length, caret);
+  const bar = between.lastIndexOf(BAR);
+  if (between.includes(CLOSE) || bar < 0) {
+    return null;
+  }
+  const call = between.slice(bar + 1);
+  const paren = call.indexOf("(");
+  if (paren < 0 || call.includes(")") || (call.split('"').length - 1) % 2 === 1 || (call.split("'").length - 1) % 2 === 1) {
+    return null;
+  }
+  const typed = /[(,]\s*([A-Za-z0-9_.-]*)$/.exec(call);
+  if (typed === null) {
+    return null;
+  }
+  return { start: caret - typed[1].length, end: caret, query: typed[1] };
+}
+
 export function matching(suggestions: TemplateSuggestion[], query: string): TemplateSuggestion[] {
   const needle = query.trim().toLowerCase();
   if (needle === "") {
@@ -78,6 +100,10 @@ export function matching(suggestions: TemplateSuggestion[], query: string): Temp
 export function applied(value: string, completion: Completion, suggestion: TemplateSuggestion, trigger: Mode): { value: string; caret: number } {
   if (trigger === "always") {
     return { value: suggestion.value, caret: suggestion.value.length };
+  }
+  if (trigger === "arguments") {
+    const next = `${value.slice(0, completion.start)}${suggestion.value}${value.slice(completion.end)}`;
+    return { value: next, caret: completion.start + suggestion.value.length };
   }
   if (trigger === "filters") {
     const before = value.slice(0, completion.start);

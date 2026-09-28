@@ -14,7 +14,7 @@ import { ListField } from "./list-field";
 import { SampleField } from "./sample-field";
 import { SELECT } from "./select-class";
 import { TableField } from "./table-field";
-import { TemplateField, fieldId } from "./template-field";
+import { StepTemplateInput, TemplateField, fieldId } from "./template-field";
 import { TransformChain } from "./transform/transform-chain";
 import { VALUE_FIELDS, ValueField, headerSuggestions } from "./value-field";
 
@@ -75,6 +75,19 @@ function Field({ path, step, field }: { path: Path; step: Step; field: KindField
         />
       );
     case "integer":
+      if (field.templated) {
+        return (
+          <FormField id={id} label={text.label} hint={typeof value === "string" ? t("checkedWhenRuns") : hint} error={error} optional={!field.required}>
+            <StepTemplateInput
+              path={path}
+              field={field.name}
+              label={text.label}
+              value={value === undefined || value === null ? "" : String(value)}
+              onChange={(next) => set(numberOrTemplate(next))}
+            />
+          </FormField>
+        );
+      }
       return (
         <FormField id={id} label={text.label} hint={hint} error={error} optional={!field.required}>
           <Input
@@ -125,6 +138,7 @@ function Field({ path, step, field }: { path: Path; step: Step; field: KindField
           values={(value as Record<string, string> | undefined) ?? {}}
           fixedKeys={step.kind === "workflow" ? (called?.inputs ?? []).map((input) => input.name) : undefined}
           keySuggestions={field.name === "headers" ? headerSuggestions() : field.name === "fields" ? eventFieldSuggestions(editor, step) : []}
+          templateKeys={field.template_keys}
           keyProblem={
             field.name === "env"
               ? (key) => {
@@ -244,4 +258,12 @@ export function StepForm({ path, step }: { path: Path; step: Step }) {
       </div>
     </div>
   );
+}
+
+export function numberOrTemplate(text: string): number | string | undefined {
+  const trimmed = text.trim();
+  if (trimmed === "") {
+    return undefined;
+  }
+  return /^-?\d+$/.test(trimmed) ? Number(trimmed) : text;
 }

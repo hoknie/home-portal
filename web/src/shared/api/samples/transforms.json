@@ -13,6 +13,81 @@
       }
     },
     {
+      "input": {
+        "media": 1,
+        "nas": 2,
+        "which": "nas"
+      },
+      "name": "get with a key from the value itself",
+      "operations": [
+        {
+          "args": [
+            "{{vars.input.which}}"
+          ],
+          "op": "get"
+        }
+      ],
+      "outcome": {
+        "value": 2
+      }
+    },
+    {
+      "input": [
+        {
+          "k": "b",
+          "n": 2
+        },
+        {
+          "k": "a",
+          "n": 1
+        }
+      ],
+      "name": "sort_by with a templated key",
+      "operations": [
+        {
+          "key": "{{vars.input.0 | keys | first}}",
+          "op": "sort_by"
+        }
+      ],
+      "outcome": {
+        "value": [
+          {
+            "k": "a",
+            "n": 1
+          },
+          {
+            "k": "b",
+            "n": 2
+          }
+        ]
+      }
+    },
+    {
+      "input": [
+        {
+          "a": 1,
+          "name": "a"
+        },
+        {
+          "b": 2,
+          "name": "b"
+        }
+      ],
+      "name": "map reading a key named by the item",
+      "operations": [
+        {
+          "op": "map",
+          "to": "{{item | get(item.name)}}"
+        }
+      ],
+      "outcome": {
+        "value": [
+          1,
+          2
+        ]
+      }
+    },
+    {
       "input": "NAS",
       "name": "lower",
       "operations": [

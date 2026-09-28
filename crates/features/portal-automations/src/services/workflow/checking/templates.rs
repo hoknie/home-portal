@@ -1,15 +1,30 @@
+use crate::helpers::OPEN;
 use crate::types::{Condition, LoopMode, Operation, SetValue, Step, StepKind};
 
 pub fn templates_of(step: &Step) -> Vec<(String, &str)> {
     let mut found: Vec<(String, &str)> = Vec::new();
     match &step.kind {
         StepKind::If { condition, .. } => condition_templates(condition, "condition", &mut found),
-        StepKind::Loop { mode, .. } => match mode {
-            LoopMode::Repeat(_) => {}
+        StepKind::Loop {
+            mode,
+            max_iterations,
+            ..
+        } => match mode {
+            LoopMode::Repeat(times) => {
+                found.extend(times.template().map(|text| ("repeat".to_string(), text)));
+                found.extend(
+                    max_iterations
+                        .template()
+                        .map(|text| ("max_iterations".to_string(), text)),
+                );
+            }
             LoopMode::ForEach(list) => found.push(("for_each".to_string(), list)),
             LoopMode::While(condition) => condition_templates(condition, "while", &mut found),
         },
-        StepKind::Parallel { .. } | StepKind::Wait { .. } | StepKind::Nothing => {}
+        StepKind::Wait { seconds } => {
+            found.extend(seconds.template().map(|text| ("seconds".to_string(), text)));
+        }
+        StepKind::Parallel { .. } | StepKind::Nothing => {}
         StepKind::Automation { fields, .. } => {
             for (name, value) in fields {
                 found.push((format!("fields.{name}"), value));
@@ -35,6 +50,9 @@ pub fn templates_of(step: &Step) -> Vec<(String, &str)> {
             }
             SetValue::Object(object) => {
                 for (key, item) in object {
+                    if key.contains(OPEN) {
+                        found.push((format!("object.{key}"), key));
+                    }
                     found.push((format!("object.{key}"), item));
                 }
             }
@@ -46,11 +64,29 @@ pub fn templates_of(step: &Step) -> Vec<(String, &str)> {
         StepKind::Http(http) => {
             found.push(("url".to_string(), &http.url));
             for (name, value) in &http.headers {
+                if name.contains(OPEN) {
+                    found.push((format!("headers.{name}"), name));
+                }
                 found.push((format!("headers.{name}"), value));
             }
             found.extend(http.body.as_deref().map(|body| ("body".to_string(), body)));
+            found.extend(
+                http.timeout_seconds
+                    .template()
+                    .map(|text| ("timeout_seconds".to_string(), text)),
+            );
         }
-        StepKind::Script { run, env, stdin } => {
+        StepKind::Script {
+            run,
+            env,
+            stdin,
+            timeout,
+        } => {
+            found.extend(
+                timeout
+                    .template()
+                    .map(|text| ("timeout_seconds".to_string(), text)),
+            );
             for (index, argument) in run.args.iter().enumerate() {
                 found.push((format!("args[{index}]"), argument));
             }
@@ -113,7 +149,16 @@ fn operation_templates<'a>(
             Operation::Each(chain) => {
                 operation_templates(chain, &format!("{here}.operations"), found)
             }
-            _ => {}
+            Operation::SortBy { key, .. } | Operation::GroupBy(key) | Operation::CountBy(key) => {
+                found.push((format!("{here}.key"), key));
+            }
+            Operation::Filter(call) => {
+                for (position, argument) in call.arguments.iter().enumerate() {
+                    if let Some(text) = argument.as_str() {
+                        found.push((format!("{here}.args[{position}]"), text));
+                    }
+                }
+            }
         }
     }
 }

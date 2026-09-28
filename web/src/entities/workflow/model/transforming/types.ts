@@ -86,9 +86,11 @@ export function chainProblem(start: ValueType, filters: FilterCall[]): FilterPro
         params: { filter: call.name, wanted: fewest === most ? String(most) : `${fewest}–${most}`, got: String(call.arguments.length) },
       };
     }
+    const variable = (index: number) => (call.names ?? []).some((named) => named.position === index) || (typeof call.arguments[index] === "string" && String(call.arguments[index]).includes("{{"));
     const wrong = filter.arguments.find(
       (argument, index) =>
         index < call.arguments.length &&
+        !variable(index) &&
         ((argument.type === "text" && typeof call.arguments[index] !== "string") || (argument.type === "number" && typeof call.arguments[index] !== "number")),
     );
     if (wrong) {

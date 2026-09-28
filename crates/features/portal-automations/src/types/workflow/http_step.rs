@@ -1,10 +1,12 @@
+use crate::types::NumberSetting;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HttpStep {
     pub method: String,
     pub url: String,
     pub headers: Vec<(String, String)>,
     pub body: Option<String>,
-    pub timeout_seconds: u64,
+    pub timeout_seconds: NumberSetting,
     pub fail_on_error: bool,
 }
 

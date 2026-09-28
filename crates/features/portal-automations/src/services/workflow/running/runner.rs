@@ -19,10 +19,12 @@ use crate::services::ScriptsDirectory;
 use portal_feature::ModuleSwitches;
 
 use crate::services::workflow::checking::templates_of;
-use crate::services::workflow::evaluating::{Frame, collected, collector, placeholders_in};
+use crate::services::workflow::evaluating::{
+    Frame, collected, collector, placeholders_in, render_number,
+};
 use crate::types::{
-    Ending, EntryEnd, Flow, Place, Step, StepKind, StepLog, StepLogging, StepOutcome, StepReport,
-    Trace, TraceEntry, Workflow,
+    Ending, EntryEnd, Flow, Place, RunSettings, Step, StepKind, StepLog, StepLogging, StepOutcome,
+    StepReport, Trace, TraceEntry, Workflow,
 };
 
 pub const PORTAL: &str = "portal";
@@ -147,7 +149,7 @@ impl WorkflowRunner {
             StepKind::Call { .. } => run_call(self, step, frame, place).await,
             StepKind::Stop { succeeded, reason } => run_stop(*succeeded, reason.as_deref(), frame),
             StepKind::Set { variable, value } => run_set(variable, value, frame),
-            StepKind::Wait { seconds } => run_wait(self, *seconds).await,
+            StepKind::Wait { seconds } => run_wait(self, seconds, frame).await,
             StepKind::Nothing => StepReport::done(Value::Null, ""),
             StepKind::Automation {
                 automation,
@@ -156,8 +158,23 @@ impl WorkflowRunner {
             } => run_automation(self, (automation, fields, *wait), frame).await,
             StepKind::Transform { input, operations } => run_transform(input, operations, frame),
             StepKind::Http(http) => run_http(self, http, frame).await,
-            StepKind::Script { run, env, stdin } => {
-                run_script(self, (run, env, stdin.as_deref()), frame).await
+            StepKind::Script {
+                run,
+                env,
+                stdin,
+                timeout,
+            } => {
+                let longest = RunSettings::LONGEST_TIMEOUT;
+                match render_number(timeout, (1, longest), "timeout_seconds", frame) {
+                    Ok(seconds) => {
+                        let run = RunSettings {
+                            timeout_seconds: seconds,
+                            ..run.clone()
+                        };
+                        run_script(self, (&run, env, stdin.as_deref()), frame).await
+                    }
+                    Err(message) => StepReport::failed(message),
+                }
             }
             _ => run_action(self, &step.kind, frame).await,
         }

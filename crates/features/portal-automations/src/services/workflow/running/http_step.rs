@@ -4,7 +4,7 @@ use serde_json::Value;
 
 use super::runner::WorkflowRunner;
 use crate::helpers::shape_of;
-use crate::services::workflow::evaluating::{Frame, render_text};
+use crate::services::workflow::evaluating::{Frame, render_keys, render_number, render_text};
 use crate::types::{HttpAnswer, HttpRequest, HttpStep, StepReport, TraceEntry};
 
 pub async fn run_http(runner: &WorkflowRunner, step: &HttpStep, frame: &Frame) -> StepReport {
@@ -48,8 +48,11 @@ pub async fn run_http(runner: &WorkflowRunner, step: &HttpStep, frame: &Frame) -
 
 fn rendered(step: &HttpStep, frame: &Frame, remaining: Duration) -> Result<HttpRequest, String> {
     let mut headers = Vec::new();
-    for (name, value) in &step.headers {
-        headers.push((name.clone(), render_text(value, frame)?));
+    for (name, value) in render_keys(&step.headers, frame)? {
+        if reqwest::header::HeaderName::from_bytes(name.as_bytes()).is_err() {
+            return Err(format!("the header name \"{name}\" is not valid"));
+        }
+        headers.push((name, render_text(value, frame)?));
     }
     Ok(HttpRequest {
         method: step.method.clone(),
@@ -60,8 +63,13 @@ fn rendered(step: &HttpStep, frame: &Frame, remaining: Duration) -> Result<HttpR
             .as_deref()
             .map(|body| render_text(body, frame))
             .transpose()?,
-        timeout: Duration::from_secs(step.timeout_seconds)
-            .min(remaining.max(Duration::from_millis(1))),
+        timeout: Duration::from_secs(render_number(
+            &step.timeout_seconds,
+            (1, HttpStep::LONGEST_TIMEOUT),
+            "timeout_seconds",
+            frame,
+        )?)
+        .min(remaining.max(Duration::from_millis(1))),
     })
 }
 

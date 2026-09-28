@@ -686,6 +686,16 @@ too.
   - nesting is cut at 8 levels.
 
   The editor reads keys, types and previews from it, and from the run it last showed.
+- **Variables in typed settings.** A filter argument may be a name without quotes
+  (`get(loop.item.id)`, `FilterCall.names`), resolved from the frame when the template renders
+  and checked by scope at load. In a `transform` step, `args` elements and `sort_by`/`group_by`/`count_by`
+  keys that hold `{{` are rendered per operation. `set.object` and `http.headers` keys may be
+  templates (`render_keys`: empty or duplicate keys and invalid header names fail the step). The
+  number fields `repeat`, `max_iterations`, `seconds` and the step `timeout_seconds` are
+  `NumberSetting`: a literal checked at load or a template resolved by `render_number` within the
+  same bounds. The catalogue marks them `templated`, and table fields whose keys take templates
+  `template_keys`. Pickers, choices, variable names, declared-name keys and the workflow timeout
+  stay literal.
 - **Step logs.** Every trace entry keeps `values`, the templates the step itself rendered and what
   each gave, and `log`, lines of what it did. `Frame.rendered` collects the values: `run_step`
   swaps in a fresh collector per step, so nested steps keep their own. `StepReport.log` carries

@@ -8,6 +8,8 @@ pub struct FieldDescription {
     pub default: Option<&'static str>,
     pub minimum: Option<i64>,
     pub maximum: Option<i64>,
+    pub templated: bool,
+    pub template_keys: bool,
 }
 
 impl FieldDescription {
@@ -19,6 +21,8 @@ impl FieldDescription {
             default: None,
             minimum: None,
             maximum: None,
+            templated: false,
+            template_keys: false,
         }
     }
 
@@ -32,6 +36,20 @@ impl FieldDescription {
     pub const fn defaulting(self, default: &'static str) -> FieldDescription {
         FieldDescription {
             default: Some(default),
+            ..self
+        }
+    }
+
+    pub const fn templated(self) -> FieldDescription {
+        FieldDescription {
+            templated: true,
+            ..self
+        }
+    }
+
+    pub const fn template_keys(self) -> FieldDescription {
+        FieldDescription {
+            template_keys: true,
             ..self
         }
     }

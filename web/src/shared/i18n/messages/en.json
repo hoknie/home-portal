@@ -1327,7 +1327,8 @@
       "unknownSampleKey": "The answer structure of {step} has no key {key}",
       "inputDefault": "The default is not of the input's type",
       "variableName": "Capital letters, digits and _, starting with a letter",
-      "variableReserved": "Set by the portal; choose another name"
+      "variableReserved": "Set by the portal; choose another name",
+      "numberOrTemplate": "Must be a whole number or a template such as '{{'inputs.seconds'}}'"
     },
     "canvas": {
       "label": "Workflow diagram",
@@ -1398,7 +1399,8 @@
       "nothing": "goes on",
       "automationWaited": "{title}, waiting",
       "setList": "{variable}: list of {count}",
-      "setObject": "{variable}: {count, plural, one {# key} other {# keys}}"
+      "setObject": "{variable}: {count, plural, one {# key} other {# keys}}",
+      "repeatTemplate": "{count} times"
     },
     "warningCount": "{count, plural, one {# warning} other {# warnings}}",
     "palette": {
@@ -1499,7 +1501,8 @@
       "nestedChain": "Operations inside, level {depth}",
       "eachHint": "Applied to every element in turn; the previews below use the first element.",
       "valueNow": "The value now: {type}",
-      "forEachElement": "{name} — for each element"
+      "forEachElement": "{name} — for each element",
+      "unknownUntilRun": "{name} is known only when the step runs"
     },
     "moveItemUp": "Move value {number} up",
     "exclusive": {
@@ -1516,7 +1519,8 @@
         "list": "List",
         "object": "Dictionary"
       }
-    }
+    },
+    "checkedWhenRuns": "A template: checked when the step runs"
   },
   "templateInput": {
     "suggestions": "Values you can insert",
@@ -1926,7 +1930,8 @@
       "repeat": "{count, plural, one {# time} other {# times}}",
       "forEach": "for each item",
       "while": "while the condition holds",
-      "again": "again"
+      "again": "again",
+      "repeatTemplate": "{count} times"
     },
     "legend": {
       "title": "How the editor works",

@@ -40,6 +40,9 @@ function fieldProblems(step: Step, field: KindField, at: string, problems: Probl
     problems[`${at}.${field.name}`] = "validation.required";
     return;
   }
+  if (field.type === "integer" && typeof value === "string" && !(field.templated && value.includes("{{"))) {
+    problems[`${at}.${field.name}`] = "workflowEditor.problems.numberOrTemplate";
+  }
   if (field.type === "integer" && typeof value === "number") {
     const low = field.minimum ?? -Infinity;
     const high = field.maximum ?? Infinity;

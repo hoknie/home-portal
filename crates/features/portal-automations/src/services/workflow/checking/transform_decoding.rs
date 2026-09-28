@@ -1,7 +1,9 @@
 use portal_feature::FieldError;
+use serde_json::Value;
 
 use super::condition_decoding::decode_condition;
 use super::filter_checks::arguments_problem;
+use crate::helpers::OPEN;
 use crate::types::{
     ArgumentType, DEEPEST_EACH, FilterCall, MOST_OPERATIONS, OPERATIONS, Operation, RawOperation,
     RawStep, StepKind, filter_named,
@@ -113,12 +115,15 @@ fn decode_operation(
         name => match filter_named(name) {
             Some(description) => {
                 let arguments = raw.args.clone().unwrap_or_default();
-                match arguments_problem(description, &arguments) {
+                let templated = |position: usize| {
+                    arguments
+                        .get(position)
+                        .and_then(Value::as_str)
+                        .is_some_and(|text| text.contains(OPEN))
+                };
+                match arguments_problem(description, &arguments, &templated) {
                     Some(problem) => Err(FieldError::new(format!("{path}.args"), problem)),
-                    None => Ok(Operation::Filter(FilterCall {
-                        name: name.to_string(),
-                        arguments,
-                    })),
+                    None => Ok(Operation::Filter(FilterCall::literal(name, arguments))),
                 }
             }
             None => {

@@ -1,5 +1,6 @@
 use serde_json::Value;
 
+use super::names_in::valid_name;
 use crate::types::FilterCall;
 
 pub fn parse_chain(text: &str) -> Result<Vec<FilterCall>, String> {
@@ -23,7 +24,7 @@ fn parse_call(part: &str) -> Option<FilterCall> {
             } else {
                 split_outside_quotes(inside, ',')
                     .into_iter()
-                    .map(|argument| literal(argument.trim()))
+                    .map(|argument| argument_of(argument.trim()))
                     .collect::<Option<Vec<_>>>()?
             };
             (part[..open].trim(), arguments)
@@ -36,8 +37,20 @@ fn parse_call(part: &str) -> Option<FilterCall> {
         && characters.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_');
     valid.then(|| FilterCall {
         name: name.to_string(),
-        arguments,
+        names: arguments
+            .iter()
+            .enumerate()
+            .filter_map(|(position, (_, name))| name.clone().map(|name| (position, name)))
+            .collect(),
+        arguments: arguments.into_iter().map(|(value, _)| value).collect(),
     })
+}
+
+fn argument_of(text: &str) -> Option<(Value, Option<String>)> {
+    match literal(text) {
+        Some(value) => Some((value, None)),
+        None => valid_name(text).then(|| (Value::Null, Some(text.to_string()))),
+    }
 }
 
 fn literal(text: &str) -> Option<Value> {

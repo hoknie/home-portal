@@ -1,26 +1,14 @@
 import type { Condition } from "../schema";
 import { applyChain } from "./filters";
-import { type FilterCall, parseChain } from "./parse";
+import { type FilterCall, parseChain, validName } from "./parse";
 import { textOf, typeOfValue, walk } from "./values";
 
-export const NAMESPACES = ["event", "inputs", "vars", "steps", "loop", "secrets", "item", "index", "portal"] as const;
-
-export const BARE_NAMESPACES = ["item", "index"];
+export { BARE_NAMESPACES, NAMESPACES, validName } from "./parse";
 
 export type Placeholder = { name: string; filters: FilterCall[] | null; filterError: string | null; length: number };
 
 export type Lookup = (name: string) => unknown;
 
-const PART = /^[A-Za-z0-9_-]+$/;
-
-export function validName(name: string) {
-  const parts = name.split(".");
-  return (
-    (NAMESPACES as readonly string[]).includes(parts[0]) &&
-    (parts.length > 1 || BARE_NAMESPACES.includes(parts[0])) &&
-    parts.slice(1).every((part) => PART.test(part))
-  );
-}
 
 export function placeholderAt(text: string): Placeholder | null {
   const end = text.indexOf("}}");
@@ -41,7 +29,7 @@ function evaluate(placeholder: Placeholder, lookup: Lookup): unknown {
   if (placeholder.filters === null) {
     throw new Error(`{{${placeholder.name}}} has a filter that cannot be read: "${placeholder.filterError ?? ""}"`);
   }
-  return applyChain(lookup(placeholder.name), placeholder.filters);
+  return applyChain(lookup(placeholder.name), placeholder.filters, lookup);
 }
 
 export function renderText(template: string, lookup: Lookup): string {
