@@ -223,6 +223,53 @@ export function applyFilter(value: unknown, call: FilterCall): unknown {
   return applyTyped(call.name, current, argument);
 }
 
-export function applyChain(value: unknown, filters: FilterCall[]): unknown {
-  return filters.reduce<unknown>((current, call) => applyFilter(current, call), value);
+export type NameLookup = (name: string) => unknown;
+
+export class UnknownValue extends Error {
+  constructor(readonly name: string) {
+    super(`${name} is known only when the step runs`);
+  }
+}
+
+export function fits(type: Argument["type"], value: unknown) {
+  if (type === "text") {
+    return ["string", "number", "boolean"].includes(typeof value);
+  }
+  if (type === "number") {
+    return typeof value === "number" || (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value)));
+  }
+  return true;
+}
+
+function filled(call: FilterCall, arguments_: unknown[], position: number, value: unknown, shown: string) {
+  const argument = FILTERS[call.name]?.arguments[position];
+  if (argument && !fits(argument.type, value)) {
+    throw new Error(`the argument ${argument.name} of ${call.name} is ${described(typeOfValue(value))} (${shown}), it takes ${argument.type}`);
+  }
+  arguments_[position] = argument?.type === "number" && typeof value === "string" ? Number(value) : value;
+}
+
+export function resolvedCall(call: FilterCall, lookup: NameLookup, render: (template: string) => unknown = () => undefined): FilterCall {
+  const arguments_ = [...call.arguments];
+  for (const { position, name } of call.names ?? []) {
+    const value = lookup(name);
+    if (value === undefined) {
+      throw new UnknownValue(name);
+    }
+    filled(call, arguments_, position, value, name);
+  }
+  call.arguments.forEach((argument, position) => {
+    if (typeof argument === "string" && argument.includes("{{")) {
+      const value = render(argument);
+      if (value === undefined) {
+        throw new UnknownValue(argument);
+      }
+      filled(call, arguments_, position, value, argument);
+    }
+  });
+  return { name: call.name, arguments: arguments_ };
+}
+
+export function applyChain(value: unknown, filters: FilterCall[], lookup: NameLookup = () => undefined): unknown {
+  return filters.reduce<unknown>((current, call) => applyFilter(current, call.names?.length ? resolvedCall(call, lookup) : call), value);
 }

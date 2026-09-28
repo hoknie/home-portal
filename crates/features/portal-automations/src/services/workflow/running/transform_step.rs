@@ -6,7 +6,8 @@ use serde_json::{Map, Value};
 use super::runner::WorkflowRunner;
 use crate::services::workflow::checking::decode_transform;
 use crate::services::workflow::evaluating::{
-    Frame, Secrets, apply_chain, at_key, holds, order_of, render_value, text_of,
+    Frame, Secrets, apply_chain, at_key, holds, order_of, render_text, render_value,
+    rendered_arguments, text_of,
 };
 use crate::types::{
     Ending, Flow, Operation, RawOperation, RawStep, StepKind, StepLog, StepReport, TraceEntry,
@@ -111,7 +112,12 @@ pub fn apply_operation(
         return list_operation(items, operation, frame)
             .map_err(|message| failure(operation, message));
     };
-    apply_chain(value, std::slice::from_ref(call)).map_err(|message| failure(operation, message))
+    let call = rendered_arguments(call, &|template| render_value(template, frame))
+        .map_err(|message| failure(operation, message))?;
+    apply_chain(value, std::slice::from_ref(&call), &|name| {
+        frame.lookup(name)
+    })
+    .map_err(|message| failure(operation, message))
 }
 
 fn each(items: Vec<Value>, chain: &[Operation], frame: &mut Frame) -> Result<Value, Failure> {
@@ -156,6 +162,7 @@ fn list_operation(
             .collect::<Result<Vec<_>, _>>()
             .map(Value::Array),
         Operation::SortBy { key, descending } => {
+            let key = &key_of(key, frame)?;
             let mut items = items;
             items.sort_by(|left, right| {
                 let order = order_of(&at_key(left.clone(), key), &at_key(right.clone(), key));
@@ -164,6 +171,7 @@ fn list_operation(
             Ok(Value::Array(items))
         }
         Operation::GroupBy(key) => {
+            let key = &key_of(key, frame)?;
             let mut groups: Map<String, Value> = Map::new();
             for item in items {
                 let name = text_of(&at_key(item.clone(), key));
@@ -177,6 +185,7 @@ fn list_operation(
             Ok(Value::Object(groups))
         }
         Operation::CountBy(key) => {
+            let key = &key_of(key, frame)?;
             let mut counts: Map<String, Value> = Map::new();
             for item in items {
                 let name = text_of(&at_key(item, key));
@@ -186,6 +195,14 @@ fn list_operation(
             Ok(Value::Object(counts))
         }
         Operation::Filter(_) | Operation::Each(_) => Ok(Value::Array(items)),
+    }
+}
+
+fn key_of(key: &str, frame: &Frame) -> Result<String, String> {
+    if key.contains(crate::helpers::OPEN) {
+        render_text(key, frame)
+    } else {
+        Ok(key.to_string())
     }
 }
 

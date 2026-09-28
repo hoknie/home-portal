@@ -38,7 +38,10 @@ pub use running::{
     ScriptEntry, StopAnswer, Tail,
 };
 pub use schedule::Schedule;
-pub use stepping::{FieldDescription, KINDS, KindDescription, METHODS, OUTCOMES, kind_named};
+pub use stepping::{
+    FieldDescription, KINDS, KindDescription, METHODS, NumberSetting, OUTCOMES, RawNumber,
+    kind_named,
+};
 pub use stored::StoredRun;
 pub use transforming::{
     ArgumentDescription, ArgumentType, DEEPEST_EACH, FILTERS, FilterCall, FilterDescription,

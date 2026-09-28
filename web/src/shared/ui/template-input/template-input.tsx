@@ -11,6 +11,7 @@ import {
   type TemplateSuggestion,
   type Trigger,
   applied,
+  argumentCompletionAt,
   completionAt,
   filterCompletionAt,
   matching,
@@ -87,7 +88,11 @@ export function TemplateInput({
   const pool =
     mode === "filters" && completion && filterSuggestions
       ? filterSuggestions(completion.subject ?? "", completion.chain ?? "")
-      : mode === trigger
+      : mode === "arguments"
+        ? trigger === "braces"
+          ? suggestions
+          : (templateSuggestions ?? [])
+        : mode === trigger
         ? suggestions
         : (templateSuggestions ?? []);
   const shown = completion ? matching(pool, completion.query) : [];
@@ -111,6 +116,13 @@ export function TemplateInput({
   };
 
   const refresh = (text: string, caret: number | null) => {
+    const argument = caret === null || !filterSuggestions ? null : argumentCompletionAt(text, caret);
+    if (argument) {
+      setMode("arguments");
+      setCompletion(argument);
+      setActive(0);
+      return;
+    }
     const filters = caret === null || !filterSuggestions ? null : filterCompletionAt(text, caret);
     if (filters) {
       setMode("filters");

@@ -1,6 +1,6 @@
 import type { Condition } from "../schema";
-import { applyFilter } from "./filters";
-import { type Lookup, holds, itemLookup, renderValue } from "./render";
+import { UnknownValue, applyFilter, resolvedCall } from "./filters";
+import { type Lookup, holds, itemLookup, renderText, renderValue } from "./render";
 import { atKey, described, orderOf, textOf, typeOfValue } from "./values";
 
 export type Operation = {
@@ -20,7 +20,7 @@ export const DEEPEST_EACH = 3;
 export const MOST_OPERATIONS = 20;
 
 function listOperation(items: unknown[], operation: Operation, lookup: Lookup): unknown {
-  const key = operation.key ?? "";
+  const key = (operation.key ?? "").includes("{{") ? renderText(operation.key ?? "", lookup) : (operation.key ?? "");
   switch (operation.op) {
     case "filter":
       return items.filter((item, index) => holds(operation.where ?? {}, itemLookup(item, index, lookup)));
@@ -53,6 +53,7 @@ export class OperationFailure extends Error {
     readonly position: string,
     readonly operation: string,
     message: string,
+    readonly unknown?: string,
   ) {
     super(message);
   }
@@ -66,9 +67,9 @@ function each(items: unknown[], chain: Operation[], lookup: Lookup): unknown[] {
         return applyOperation(value, operation, inner);
       } catch (error) {
         if (error instanceof OperationFailure) {
-          throw new OperationFailure(`.${position + 1}${error.position}`, error.operation, error.message);
+          throw new OperationFailure(`.${position + 1}${error.position}`, error.operation, error.message, error.unknown);
         }
-        throw new OperationFailure(`.${position + 1}`, operation.op, error instanceof Error ? error.message : String(error));
+        throw new OperationFailure(`.${position + 1}`, operation.op, error instanceof Error ? error.message : String(error), error instanceof UnknownValue ? error.name : undefined);
       }
     }, item);
   });
@@ -76,7 +77,7 @@ function each(items: unknown[], chain: Operation[], lookup: Lookup): unknown[] {
 
 export function applyOperation(value: unknown, operation: Operation, lookup: Lookup): unknown {
   if (!(LIST_OPERATIONS as readonly string[]).includes(operation.op)) {
-    return applyFilter(value, { name: operation.op, arguments: operation.args ?? [] });
+    return applyFilter(value, resolvedCall({ name: operation.op, arguments: operation.args ?? [] }, lookup, (template) => renderValue(template, lookup)));
   }
   if (value === null || value === undefined) {
     return null;
@@ -87,14 +88,18 @@ export function applyOperation(value: unknown, operation: Operation, lookup: Loo
   return operation.op === "each" ? each(value, operation.operations ?? [], lookup) : listOperation(value, operation, lookup);
 }
 
-export type Preview = { value: unknown; error: null } | { value: null; error: string };
+export type Preview = { value: unknown; error: null; unknown?: undefined } | { value: null; error: string; unknown?: string };
 
-export function previewOperations(input: unknown, operations: Operation[], lookup: Lookup = () => null): Preview[] {
+function unknownOf(error: unknown): string | undefined {
+  return error instanceof UnknownValue ? error.name : error instanceof OperationFailure ? error.unknown : undefined;
+}
+
+export function previewOperations(input: unknown, operations: Operation[], lookup: Lookup = () => undefined): Preview[] {
   const previews: Preview[] = [];
   let current = input;
   for (const [index, operation] of operations.entries()) {
     if (previews.at(-1)?.error) {
-      previews.push({ value: null, error: previews.at(-1)!.error! });
+      previews.push({ value: null, error: previews.at(-1)!.error!, unknown: previews.at(-1)!.unknown });
       continue;
     }
     try {
@@ -103,14 +108,17 @@ export function previewOperations(input: unknown, operations: Operation[], looku
     } catch (error) {
       const position = error instanceof OperationFailure ? error.position : "";
       const name = error instanceof OperationFailure ? error.operation : operation.op;
-      previews.push({ value: null, error: `operation ${index + 1}${position} (${name}): ${error instanceof Error ? error.message : String(error)}` });
+      previews.push({ value: null, error: `operation ${index + 1}${position} (${name}): ${error instanceof Error ? error.message : String(error)}`, unknown: unknownOf(error) });
     }
   }
   return previews;
 }
 
+export const SAMPLE_INPUT = "vars.input";
+
 export function transformSample(input: unknown, operations: Operation[]): { value: unknown } | { error: string } {
-  const previews = previewOperations(input, operations);
+  const lookup: Lookup = (name) => (name === SAMPLE_INPUT ? input : name.startsWith(`${SAMPLE_INPUT}.`) ? atKey(input, name.slice(SAMPLE_INPUT.length + 1)) : null);
+  const previews = previewOperations(input, operations, lookup);
   const failed = previews.find((preview) => preview.error !== null);
   if (failed) {
     return { error: failed.error! };

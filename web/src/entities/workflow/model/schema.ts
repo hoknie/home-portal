@@ -41,10 +41,10 @@ export type Step = {
   condition?: Condition;
   then?: Step[];
   else?: Step[];
-  repeat?: number;
+  repeat?: number | string;
   for_each?: string;
   while?: Condition;
-  max_iterations?: number;
+  max_iterations?: number | string;
   body?: Step[] | string;
   branches?: Step[][];
   workflow?: string;
@@ -56,11 +56,11 @@ export type Step = {
   json?: string;
   list?: string[];
   object?: Record<string, string>;
-  seconds?: number;
+  seconds?: number | string;
   method?: string;
   url?: string;
   headers?: Record<string, string>;
-  timeout_seconds?: number;
+  timeout_seconds?: number | string;
   fail_on_error?: boolean;
   response_sample?: string;
   script?: string;
@@ -88,10 +88,10 @@ export const stepSchema: z.ZodType<Step> = z.lazy(() =>
     condition: conditionSchema.optional(),
     then: z.array(stepSchema).optional(),
     else: z.array(stepSchema).optional(),
-    repeat: z.number().optional(),
+    repeat: z.union([z.number(), z.string()]).optional(),
     for_each: z.string().optional(),
     while: conditionSchema.optional(),
-    max_iterations: z.number().optional(),
+    max_iterations: z.union([z.number(), z.string()]).optional(),
     body: z.union([z.array(stepSchema), z.string()]).optional(),
     branches: z.array(z.array(stepSchema)).optional(),
     workflow: z.string().optional(),
@@ -103,11 +103,11 @@ export const stepSchema: z.ZodType<Step> = z.lazy(() =>
     json: z.string().optional(),
     list: z.array(z.string()).optional(),
     object: z.record(z.string(), z.string()).optional(),
-    seconds: z.number().optional(),
+    seconds: z.union([z.number(), z.string()]).optional(),
     method: z.string().optional(),
     url: z.string().optional(),
     headers: z.record(z.string(), z.string()).optional(),
-    timeout_seconds: z.number().optional(),
+    timeout_seconds: z.union([z.number(), z.string()]).optional(),
     fail_on_error: z.boolean().optional(),
     response_sample: z.string().optional(),
     script: z.string().optional(),
@@ -202,6 +202,8 @@ export const kindFieldSchema = z.object({
   minimum: z.number().nullable(),
   maximum: z.number().nullable(),
   choices: z.array(z.string()),
+  templated: z.boolean().default(false),
+  template_keys: z.boolean().default(false),
 });
 
 export type KindField = z.infer<typeof kindFieldSchema>;

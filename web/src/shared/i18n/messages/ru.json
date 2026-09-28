@@ -1327,7 +1327,8 @@
       "unknownSampleKey": "В структуре ответа шага {step} нет ключа {key}",
       "inputDefault": "Значение по умолчанию не того типа, что вход",
       "variableName": "Заглавные буквы, цифры и _, начиная с буквы",
-      "variableReserved": "Задаётся порталом; выберите другое имя"
+      "variableReserved": "Задаётся порталом; выберите другое имя",
+      "numberOrTemplate": "Нужно целое число или шаблон, например '{{'inputs.seconds'}}'"
     },
     "canvas": {
       "label": "Схема сценария",
@@ -1398,7 +1399,8 @@
       "nothing": "идёт дальше",
       "automationWaited": "{title}, с ожиданием",
       "setList": "{variable}: список из {count}",
-      "setObject": "{variable}: {count, plural, one {# ключ} few {# ключа} many {# ключей} other {# ключа}}"
+      "setObject": "{variable}: {count, plural, one {# ключ} few {# ключа} many {# ключей} other {# ключа}}",
+      "repeatTemplate": "{count} раз"
     },
     "warningCount": "{count, plural, one {# предупреждение} few {# предупреждения} many {# предупреждений} other {# предупреждения}}",
     "palette": {
@@ -1499,7 +1501,8 @@
       "nestedChain": "Вложенные операции, уровень {depth}",
       "eachHint": "Применяется к каждому элементу по очереди; предпросмотр ниже — по первому элементу.",
       "valueNow": "Сейчас значение: {type}",
-      "forEachElement": "{name} — для каждого элемента"
+      "forEachElement": "{name} — для каждого элемента",
+      "unknownUntilRun": "{name} станет известно только при запуске шага"
     },
     "moveItemUp": "Поднять значение {number}",
     "exclusive": {
@@ -1516,7 +1519,8 @@
         "list": "Список",
         "object": "Словарь"
       }
-    }
+    },
+    "checkedWhenRuns": "Шаблон: проверяется при запуске шага"
   },
   "templateInput": {
     "suggestions": "Значения для вставки",
@@ -1926,7 +1930,8 @@
       "repeat": "{count, plural, one {# раз} few {# раза} many {# раз} other {# раза'}}'",
       "forEach": "для каждого элемента",
       "while": "пока условие верно",
-      "again": "снова"
+      "again": "снова",
+      "repeatTemplate": "{count} раз"
     },
     "legend": {
       "title": "Как устроен редактор",

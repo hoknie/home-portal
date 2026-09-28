@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use super::RawCondition;
-use crate::types::RawOperation;
+use crate::types::{RawNumber, RawOperation};
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct RawStep {
@@ -20,13 +20,13 @@ pub struct RawStep {
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "else")]
     pub otherwise: Option<Vec<RawStep>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub repeat: Option<i64>,
+    pub repeat: Option<RawNumber>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub for_each: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "while")]
     pub while_condition: Option<RawCondition>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub max_iterations: Option<i64>,
+    pub max_iterations: Option<RawNumber>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub body: Option<toml::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -50,7 +50,7 @@ pub struct RawStep {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub object: Option<BTreeMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub seconds: Option<i64>,
+    pub seconds: Option<RawNumber>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub method: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -58,7 +58,7 @@ pub struct RawStep {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub headers: Option<BTreeMap<String, String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub timeout_seconds: Option<i64>,
+    pub timeout_seconds: Option<RawNumber>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fail_on_error: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

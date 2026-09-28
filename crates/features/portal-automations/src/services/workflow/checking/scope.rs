@@ -94,13 +94,30 @@ impl Scope {
                 self.loops += usize::from(own_loop);
                 self.items += usize::from(own_items);
                 for placeholder in placeholders_in(template) {
-                    let problem = self.allows(placeholder.name).err().or_else(|| {
-                        match &placeholder.filters {
-                            Ok(filters) => chain_problem(self.type_of(placeholder.name), filters),
-                            Err(message) => Some(message.clone()),
-                        }
-                        .map(|problem| format!("{{{{{}}}}}: {problem}", placeholder.name))
+                    let named = placeholder.filters.iter().flatten().flat_map(|call| {
+                        call.names
+                            .iter()
+                            .map(move |(_, name)| (call.name.as_str(), name.as_str()))
                     });
+                    let argument_problem = named.clone().find_map(|(filter, name)| {
+                        self.allows(name).err().map(|problem| {
+                            format!(
+                                "{{{{{}}}}}: the argument of {filter} {problem}",
+                                placeholder.name
+                            )
+                        })
+                    });
+                    let problem = argument_problem
+                        .or_else(|| self.allows(placeholder.name).err())
+                        .or_else(|| {
+                            match &placeholder.filters {
+                                Ok(filters) => {
+                                    chain_problem(self.type_of(placeholder.name), filters)
+                                }
+                                Err(message) => Some(message.clone()),
+                            }
+                            .map(|problem| format!("{{{{{}}}}}: {problem}", placeholder.name))
+                        });
                     if let Some(message) = problem {
                         errors.push(FieldError::new(format!("{here}.{field}"), message));
                     }

@@ -4,9 +4,9 @@ use serde_json::Value;
 
 use super::runner::WorkflowRunner;
 use crate::services::workflow::evaluating::{
-    Frame, render_json, render_text, render_value, text_of,
+    Frame, render_json, render_keys, render_number, render_text, render_value, text_of,
 };
-use crate::types::{Ending, SetValue, StepReport};
+use crate::types::{Ending, NumberSetting, SetValue, StepReport, Workflow};
 
 pub const STOPPED_BY_WORKFLOW: &str = "stopped by the workflow";
 
@@ -19,11 +19,13 @@ pub fn run_set(variable: &str, value: &SetValue, frame: &mut Frame) -> StepRepor
             .map(|item| render_value(item, frame))
             .collect::<Result<Vec<_>, _>>()
             .map(Value::Array),
-        SetValue::Object(entries) => entries
-            .iter()
-            .map(|(key, item)| render_value(item, frame).map(|value| (key.clone(), value)))
-            .collect::<Result<serde_json::Map<_, _>, _>>()
-            .map(Value::Object),
+        SetValue::Object(entries) => render_keys(entries, frame).and_then(|entries| {
+            entries
+                .into_iter()
+                .map(|(key, item)| render_value(item, frame).map(|value| (key, value)))
+                .collect::<Result<serde_json::Map<_, _>, _>>()
+                .map(Value::Object)
+        }),
     };
     match rendered {
         Ok(value) => {
@@ -36,7 +38,15 @@ pub fn run_set(variable: &str, value: &SetValue, frame: &mut Frame) -> StepRepor
     }
 }
 
-pub async fn run_wait(runner: &WorkflowRunner, seconds: u64) -> StepReport {
+pub async fn run_wait(
+    runner: &WorkflowRunner,
+    seconds: &NumberSetting,
+    frame: &Frame,
+) -> StepReport {
+    let seconds = match render_number(seconds, (1, Workflow::LONGEST_WAIT), "seconds", frame) {
+        Ok(seconds) => seconds,
+        Err(message) => return StepReport::failed(message),
+    };
     match runner.budget.pause(Duration::from_secs(seconds)).await {
         Ok(()) => StepReport::done(Value::Null, format!("{seconds} s"))
             .logged(format!("waited {seconds} s")),

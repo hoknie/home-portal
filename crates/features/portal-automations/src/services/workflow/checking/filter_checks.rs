@@ -9,10 +9,16 @@ pub fn call_problem(call: &FilterCall) -> Option<String> {
             call.name
         ));
     };
-    arguments_problem(description, &call.arguments)
+    arguments_problem(description, &call.arguments, &|position| {
+        call.is_named(position)
+    })
 }
 
-pub fn arguments_problem(description: &FilterDescription, arguments: &[Value]) -> Option<String> {
+pub fn arguments_problem(
+    description: &FilterDescription,
+    arguments: &[Value],
+    variable: &dyn Fn(usize) -> bool,
+) -> Option<String> {
     let fewest = description.fewest_arguments();
     let most = description.arguments.len();
     if arguments.len() < fewest || arguments.len() > most {
@@ -37,12 +43,14 @@ pub fn arguments_problem(description: &FilterDescription, arguments: &[Value]) -
         .arguments
         .iter()
         .zip(arguments)
-        .find_map(|(argument, value)| {
-            let fits = match argument.argument_type {
-                ArgumentType::Text => value.is_string(),
-                ArgumentType::Number => value.is_number(),
-                _ => true,
-            };
+        .enumerate()
+        .find_map(|(position, (argument, value))| {
+            let fits = variable(position)
+                || match argument.argument_type {
+                    ArgumentType::Text => value.is_string(),
+                    ArgumentType::Number => value.is_number(),
+                    _ => true,
+                };
             (!fits).then(|| {
                 format!(
                     "the argument {} of {} must be {}",

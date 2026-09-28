@@ -190,6 +190,7 @@ wait = false
 [[workflows]]
 id = "portal-report"
 title = "Portal report"
+inputs = [{ name = "pause", type = "number", default = 1, description = "Seconds to wait before the report" }]
 
 [[workflows.steps]]
 id = "each"
@@ -202,13 +203,26 @@ kind = "set"
 variable = "last"
 value = "{{loop.item.name}}: {{loop.item.state}}"
 
+# Dictionary keys, filter arguments and numbers take variables too: the key below is each
+# service's id, get(loop.item.id) reads it back without quotes, and the wait comes from an input.
+[[workflows.steps.body]]
+id = "states"
+kind = "set"
+variable = "states"
+object = { "{{loop.item.id}}" = "{{loop.item.state}}" }
+
 # log writes a message into the run's trace (info, warning or error) and never stops the run.
 # Every step's trace entry also keeps what its templates gave and what it did.
 [[workflows.steps.body]]
 id = "note"
 kind = "log"
-message = "{{loop.item.id}} is {{loop.item.state}}"
+message = "{{loop.item.id}} is {{vars.states | get(loop.item.id)}}"
 level = "info"
+
+[[workflows.steps]]
+id = "pause"
+kind = "wait"
+seconds = "{{inputs.pause}}"
 
 [[workflows.steps]]
 id = "tell"

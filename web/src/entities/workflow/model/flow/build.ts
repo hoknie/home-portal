@@ -7,7 +7,7 @@ export const NODE_TYPES = ["start", "step", "join", "frame", "empty", "end"] as 
 
 export type FlowNodeType = (typeof NODE_TYPES)[number];
 
-export type EdgeLabel = { key: "then" | "else" | "branch" | "repeat" | "forEach" | "while" | "again"; params?: Record<string, string | number> };
+export type EdgeLabel = { key: "then" | "else" | "branch" | "repeat" | "repeatTemplate" | "forEach" | "while" | "again"; params?: Record<string, string | number> };
 
 export type FlowNode = { id: string; type: FlowNodeType; box: Box; path?: Path; step?: Step; target?: Target };
 
@@ -36,7 +36,7 @@ export function loopLabel(step: Step): EdgeLabel {
   if (step.while !== undefined) {
     return { key: "while" };
   }
-  return { key: "repeat", params: { count: step.repeat ?? 1 } };
+  return typeof step.repeat === "string" ? { key: "repeatTemplate", params: { count: step.repeat } } : { key: "repeat", params: { count: step.repeat ?? 1 } };
 }
 
 function branchLabel(list: string): EdgeLabel {

@@ -38,7 +38,7 @@ pub fn placeholder_at(text: &str) -> Option<Placeholder<'_>> {
     })
 }
 
-fn valid_name(name: &str) -> bool {
+pub fn valid_name(name: &str) -> bool {
     let mut parts = name.split('.');
     let first = parts.next().unwrap_or_default();
     NAMESPACES.contains(&first)

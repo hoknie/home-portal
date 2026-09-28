@@ -70,8 +70,11 @@ fn a_valid_workflow_loads_with_its_nested_steps() {
     else {
         panic!("not a loop");
     };
-    assert_eq!(*mode, LoopMode::Repeat(3));
-    assert_eq!(*max_iterations, 100);
+    assert_eq!(
+        *mode,
+        LoopMode::Repeat(crate::types::NumberSetting::Fixed(3))
+    );
+    assert_eq!(*max_iterations, crate::types::NumberSetting::Fixed(100));
     assert_eq!(body.len(), 2);
 }
 

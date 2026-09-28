@@ -1,8 +1,11 @@
 use portal_feature::FieldError;
 
-use super::names::{between_rule, within};
+use super::names::number_setting;
 use crate::helpers::script_shape_problem;
-use crate::types::{HttpStep, Invocation, LogLevel, METHODS, RawStep, RunSettings, StepKind};
+use crate::types::{
+    HttpStep, Invocation, LogLevel, METHODS, NumberSetting, RawNumber, RawStep, RunSettings,
+    StepKind,
+};
 
 pub const URL_RULE: &str = "must be an http or https address";
 pub const LEGACY_TELEGRAM: &str = "telegram";
@@ -54,10 +57,11 @@ pub fn decode_http(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> O
                 format!("{path}.headers.{name}"),
                 HEADER_RULE,
             ));
-        } else if name.is_empty()
-            || !name
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        } else if !name.contains(crate::helpers::OPEN)
+            && (name.is_empty()
+                || !name
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'))
         {
             errors.push(FieldError::new(
                 format!("{path}.headers.{name}"),
@@ -74,11 +78,12 @@ pub fn decode_http(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> O
         }
     };
     let timeout = timeout_of(
-        raw.timeout_seconds,
+        raw.timeout_seconds.as_ref(),
         (HttpStep::DEFAULT_TIMEOUT, HttpStep::LONGEST_TIMEOUT),
         path,
         errors,
     );
+    let timeout = timeout?;
     (errors.len() == before).then(|| {
         StepKind::Http(HttpStep {
             method,
@@ -103,7 +108,7 @@ pub fn decode_script(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) ->
         errors.push(FieldError::new(format!("{path}.script"), problem));
     }
     let timeout = timeout_of(
-        raw.timeout_seconds,
+        raw.timeout_seconds.as_ref(),
         (RunSettings::DEFAULT_TIMEOUT, RunSettings::LONGEST_TIMEOUT),
         path,
         errors,
@@ -114,14 +119,19 @@ pub fn decode_script(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) ->
             errors.push(FieldError::new(format!("{path}.env.{name}"), problem));
         }
     }
+    let timeout = timeout?;
     (errors.len() == before).then(|| StepKind::Script {
         run: RunSettings {
             script,
             args: raw.args.clone().unwrap_or_default(),
-            timeout_seconds: timeout,
+            timeout_seconds: match timeout {
+                NumberSetting::Fixed(seconds) => seconds,
+                NumberSetting::Template(_) => RunSettings::DEFAULT_TIMEOUT,
+            },
         },
         env,
         stdin: raw.stdin.clone().filter(|stdin| !stdin.trim().is_empty()),
+        timeout,
     })
 }
 
@@ -169,6 +179,14 @@ pub fn decode_automation(
     path: &str,
     errors: &mut Vec<FieldError>,
 ) -> Option<StepKind> {
+    for name in raw.fields.iter().flatten().map(|(name, _)| name) {
+        if name.contains(crate::helpers::OPEN) {
+            errors.push(FieldError::new(
+                format!("{path}.fields.{name}"),
+                "must be an event field name, not a template",
+            ));
+        }
+    }
     match raw.automation.clone().filter(|id| !id.trim().is_empty()) {
         Some(automation) => Some(StepKind::Automation {
             automation,
@@ -194,20 +212,17 @@ pub fn decode_service(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -
 }
 
 fn timeout_of(
-    given: Option<i64>,
+    given: Option<&RawNumber>,
     (default, longest): (u64, u64),
     path: &str,
     errors: &mut Vec<FieldError>,
-) -> u64 {
-    let timeout = given.unwrap_or(default as i64);
-    if !within(timeout, 1, longest as i64) {
-        errors.push(FieldError::new(
-            format!("{path}.timeout_seconds"),
-            between_rule(1, longest as i64),
-        ));
-        return default;
-    }
-    timeout as u64
+) -> Option<NumberSetting> {
+    number_setting(
+        given,
+        (Some(default), 1, longest as i64),
+        format!("{path}.timeout_seconds"),
+        errors,
+    )
 }
 
 pub fn decode_log(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> Option<StepKind> {

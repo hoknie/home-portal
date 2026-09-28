@@ -4,10 +4,109 @@ use serde_json::Value;
 
 use super::frame::walk;
 use super::values::text_of;
-use crate::types::{FilterCall, ValueType, filter_named};
+use crate::types::{ArgumentType, FilterCall, ValueType, filter_named};
 
-pub fn apply_chain(value: Value, filters: &[FilterCall]) -> Result<Value, String> {
-    filters.iter().try_fold(value, apply_filter)
+pub type NameLookup<'a> = &'a dyn Fn(&str) -> Result<Value, String>;
+
+pub fn apply_chain(
+    value: Value,
+    filters: &[FilterCall],
+    lookup: NameLookup,
+) -> Result<Value, String> {
+    filters.iter().try_fold(value, |value, call| {
+        if call.names.is_empty() {
+            return apply_filter(value, call);
+        }
+        apply_filter(value, &resolved(call, lookup)?)
+    })
+}
+
+pub fn fits(argument_type: ArgumentType, value: &Value) -> bool {
+    match argument_type {
+        ArgumentType::Text => {
+            matches!(value, Value::String(_) | Value::Number(_) | Value::Bool(_))
+        }
+        ArgumentType::Number => {
+            value.is_number()
+                || text_of(value)
+                    .trim()
+                    .parse::<f64>()
+                    .is_ok_and(f64::is_finite)
+        }
+        _ => true,
+    }
+}
+
+fn filled(
+    call: &FilterCall,
+    arguments: &mut [Value],
+    position: usize,
+    (value, shown): (Value, &str),
+) -> Result<(), String> {
+    let description =
+        filter_named(&call.name).ok_or_else(|| format!("{} is not a filter", call.name))?;
+    let argument_type = description
+        .arguments
+        .get(position)
+        .map(|argument| argument.argument_type);
+    if let Some(argument) = description.arguments.get(position)
+        && !fits(argument.argument_type, &value)
+    {
+        return Err(format!(
+            "the argument {} of {} is {} ({shown}), it takes {}",
+            argument.name,
+            call.name,
+            ValueType::of(&value).described(),
+            argument.argument_type.name()
+        ));
+    }
+    let value = match (argument_type, &value) {
+        (Some(ArgumentType::Number), Value::String(text)) => text
+            .trim()
+            .parse::<f64>()
+            .map_or(value.clone(), number_value),
+        _ => value,
+    };
+    if let Some(slot) = arguments.get_mut(position) {
+        *slot = value;
+    }
+    Ok(())
+}
+
+pub fn resolved(call: &FilterCall, lookup: NameLookup) -> Result<FilterCall, String> {
+    let mut arguments = call.arguments.clone();
+    for (position, name) in &call.names {
+        filled(call, &mut arguments, *position, (lookup(name)?, name))?;
+    }
+    Ok(FilterCall {
+        arguments,
+        names: Vec::new(),
+        ..call.clone()
+    })
+}
+
+pub fn rendered_arguments(
+    call: &FilterCall,
+    render: &dyn Fn(&str) -> Result<Value, String>,
+) -> Result<FilterCall, String> {
+    let mut arguments = call.arguments.clone();
+    for (position, argument) in call.arguments.iter().enumerate() {
+        if let Some(template) = argument
+            .as_str()
+            .filter(|text| text.contains(crate::helpers::OPEN))
+        {
+            filled(
+                call,
+                &mut arguments,
+                position,
+                (render(template)?, template),
+            )?;
+        }
+    }
+    Ok(FilterCall {
+        arguments,
+        ..call.clone()
+    })
 }
 
 pub fn apply_filter(value: Value, call: &FilterCall) -> Result<Value, String> {

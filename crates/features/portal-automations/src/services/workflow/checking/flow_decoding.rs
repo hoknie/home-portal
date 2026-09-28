@@ -2,7 +2,7 @@ use portal_feature::FieldError;
 
 use super::condition_decoding::decode_condition;
 use super::decoding::decode_steps;
-use super::names::{NAME_RULE, between_rule, valid_name, within};
+use super::names::{NAME_RULE, between_rule, number_setting, valid_name};
 use crate::types::{LoopMode, OUTCOMES, RawStep, SetValue, Step, StepKind, Workflow};
 
 pub type Place<'a> = (&'a str, usize);
@@ -53,15 +53,13 @@ pub fn decode_loop(
             None
         }
     };
-    let max_iterations = raw
-        .max_iterations
-        .unwrap_or(i64::from(Workflow::MOST_ITERATIONS));
-    if !within(max_iterations, 1, i64::from(Workflow::MOST_ITERATIONS)) {
-        errors.push(FieldError::new(
-            format!("{path}.max_iterations"),
-            between_rule(1, i64::from(Workflow::MOST_ITERATIONS)),
-        ));
-    }
+    let most = i64::from(Workflow::MOST_ITERATIONS);
+    let max_iterations = number_setting(
+        raw.max_iterations.as_ref(),
+        (Some(most as u64), 1, most),
+        format!("{path}.max_iterations"),
+        errors,
+    );
     let body = match &raw.body {
         Some(value) => match value.clone().try_into::<Vec<RawStep>>() {
             Ok(steps) => required_steps(Some(&steps), &format!("{path}.body"), depth, errors),
@@ -77,21 +75,20 @@ pub fn decode_loop(
     };
     Some(StepKind::Loop {
         mode: mode?,
-        max_iterations: u32::try_from(max_iterations).ok()?,
+        max_iterations: max_iterations?,
         body: body?,
     })
 }
 
 fn loop_mode(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> Option<LoopMode> {
-    if let Some(times) = raw.repeat {
-        if !within(times, 1, i64::from(Workflow::MOST_ITERATIONS)) {
-            errors.push(FieldError::new(
-                format!("{path}.repeat"),
-                between_rule(1, i64::from(Workflow::MOST_ITERATIONS)),
-            ));
-            return None;
-        }
-        return u32::try_from(times).ok().map(LoopMode::Repeat);
+    if raw.repeat.is_some() {
+        return number_setting(
+            raw.repeat.as_ref(),
+            (None, 1, i64::from(Workflow::MOST_ITERATIONS)),
+            format!("{path}.repeat"),
+            errors,
+        )
+        .map(LoopMode::Repeat);
     }
     if let Some(list) = &raw.for_each {
         return Some(LoopMode::ForEach(list.clone()));
@@ -218,18 +215,20 @@ pub fn decode_set(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> Op
 
 pub fn decode_wait(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> Option<StepKind> {
     let longest = Workflow::LONGEST_WAIT as i64;
-    match raw.seconds {
-        Some(seconds) if within(seconds, 1, longest) => Some(StepKind::Wait {
-            seconds: seconds as u64,
-        }),
-        _ => {
-            errors.push(FieldError::new(
-                format!("{path}.seconds"),
-                between_rule(1, longest),
-            ));
-            None
-        }
+    if raw.seconds.is_none() {
+        errors.push(FieldError::new(
+            format!("{path}.seconds"),
+            between_rule(1, longest),
+        ));
+        return None;
     }
+    number_setting(
+        raw.seconds.as_ref(),
+        (None, 1, longest),
+        format!("{path}.seconds"),
+        errors,
+    )
+    .map(|seconds| StepKind::Wait { seconds })
 }
 
 fn required_steps(

@@ -19,6 +19,7 @@ import {
   pathText,
   previewOperations,
   typeOfValue,
+  sampleOf,
 } from "@/entities/workflow";
 import { Button } from "@/shared/ui/primitives";
 
@@ -65,7 +66,8 @@ export function OperationsList({ path, field, operations, input, depth, onChange
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const ids = operations.map((_, index) => `${field}-${index}`);
   const at = pathText(path);
-  const previews = input === null ? null : previewOperations(input.value, operations);
+  const known = editor.knownAt(path, field);
+  const previews = input === null ? null : previewOperations(input.value, operations, (name) => sampleOf(name, known)?.value);
   const filters = editor.catalogue.filters;
   const offered = LIST_OPERATIONS.filter((name) => name !== "each" || depth < DEEPEST_EACH);
   const labelOf = (name: string) => (filterHelp.has(`${name}.label` as "get.label") ? filterHelp(`${name}.label` as "get.label") : name);

@@ -52,7 +52,7 @@ export function summaryOf(
       if (step.while !== undefined) {
         return { key: "summaries.while", params: { condition: conditionSummary(step.while, word) } };
       }
-      return { key: "summaries.repeat", params: { count: step.repeat ?? 1 } };
+      return typeof step.repeat === "string" ? { key: "summaries.repeatTemplate", params: { count: step.repeat } } : { key: "summaries.repeat", params: { count: step.repeat ?? 1 } };
     case "nothing":
       return { key: "summaries.nothing", params: {} };
     case "parallel":

@@ -12,6 +12,8 @@ pub struct StepFieldResponse {
     pub minimum: Option<i64>,
     pub maximum: Option<i64>,
     pub choices: Vec<String>,
+    pub templated: bool,
+    pub template_keys: bool,
 }
 
 impl StepFieldResponse {
@@ -29,6 +31,8 @@ impl StepFieldResponse {
                 .iter()
                 .map(|choice| choice.to_string())
                 .collect(),
+            templated: field.templated,
+            template_keys: field.template_keys,
         }
     }
 }

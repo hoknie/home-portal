@@ -1,5 +1,5 @@
 use super::{Condition, HttpStep, LoopMode, SetValue, Step};
-use crate::types::{LogLevel, Operation, RunSettings};
+use crate::types::{LogLevel, NumberSetting, Operation, RunSettings};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StepKind {
@@ -10,7 +10,7 @@ pub enum StepKind {
     },
     Loop {
         mode: LoopMode,
-        max_iterations: u32,
+        max_iterations: NumberSetting,
         body: Vec<Step>,
     },
     Parallel {
@@ -29,7 +29,7 @@ pub enum StepKind {
         value: SetValue,
     },
     Wait {
-        seconds: u64,
+        seconds: NumberSetting,
     },
     Transform {
         input: String,
@@ -40,6 +40,7 @@ pub enum StepKind {
         run: RunSettings,
         env: Vec<(String, String)>,
         stdin: Option<String>,
+        timeout: NumberSetting,
     },
     Notify {
         channel: Option<String>,

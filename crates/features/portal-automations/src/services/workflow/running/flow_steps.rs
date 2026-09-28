@@ -3,7 +3,7 @@ use serde_json::Value;
 use super::join::{Pending, join_all};
 use super::runner::WorkflowRunner;
 use crate::services::workflow::evaluating::{
-    Frame, bind_inputs, holds, input_problem, judged, render_value,
+    Frame, bind_inputs, holds, input_problem, judged, render_number, render_value,
 };
 use crate::types::{
     Ending, Flow, LoopMode, Place, Step, StepKind, StepLog, StepReport, TraceEntry, Workflow,
@@ -53,6 +53,18 @@ pub async fn run_loop(
     else {
         return StepReport::failed("not a loop step");
     };
+    let most = u64::from(Workflow::MOST_ITERATIONS);
+    let max_iterations = match render_number(max_iterations, (1, most), "max_iterations", frame) {
+        Ok(number) => number,
+        Err(message) => return StepReport::failed(message),
+    };
+    let times = match mode {
+        LoopMode::Repeat(times) => match render_number(times, (1, most), "repeat", frame) {
+            Ok(number) => number,
+            Err(message) => return StepReport::failed(message),
+        },
+        _ => 0,
+    };
     let items = match mode {
         LoopMode::ForEach(list) => match render_value(list, frame) {
             Ok(Value::Array(items)) => Some(items),
@@ -62,7 +74,7 @@ pub async fn run_loop(
         _ => None,
     };
     let mut lines = vec![match (mode, &items) {
-        (LoopMode::Repeat(times), _) => format!("repeat {times} times"),
+        (LoopMode::Repeat(_), _) => format!("repeat {times} times"),
         (LoopMode::ForEach(_), Some(items)) => format!("for each: {} items", items.len()),
         _ => "while the condition holds".to_string(),
     }];
@@ -72,7 +84,7 @@ pub async fn run_loop(
     let mut flow = Flow::Continue;
     loop {
         let more = match mode {
-            LoopMode::Repeat(times) => count < *times as usize,
+            LoopMode::Repeat(_) => count < times as usize,
             LoopMode::ForEach(_) => count < items.as_ref().map_or(0, Vec::len),
             LoopMode::While(condition) => match holds(condition, frame) {
                 Ok(more) => more,
@@ -85,7 +97,7 @@ pub async fn run_loop(
         if !more {
             break;
         }
-        if count >= *max_iterations as usize {
+        if count >= max_iterations as usize {
             flow = Flow::End(Ending::Failed(format!(
                 "ran more than max_iterations ({max_iterations}) iterations"
             )));

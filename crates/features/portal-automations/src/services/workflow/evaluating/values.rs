@@ -5,7 +5,7 @@ use super::frame::Frame;
 use super::names_in::placeholder_at;
 use super::rendered::record;
 use crate::helpers::{CLOSE, OPEN};
-use crate::types::{Placeholder, Workflow};
+use crate::types::{NumberSetting, Placeholder, Workflow};
 
 pub fn text_of(value: &Value) -> String {
     match value {
@@ -78,11 +78,69 @@ pub fn render_json(template: &str, frame: &Frame) -> Result<Value, String> {
 fn evaluate(placeholder: &Placeholder<'_>, frame: &Frame) -> Result<Value, String> {
     let value = frame.lookup(placeholder.name)?;
     match &placeholder.filters {
-        Ok(filters) => apply_chain(value, filters),
+        Ok(filters) => apply_chain(value, filters, &|name| {
+            let found = frame.lookup(name)?;
+            record(frame, &format!("{OPEN}{name}{CLOSE}"), &found);
+            Ok(found)
+        }),
         Err(message) => Err(format!("{{{{{}}}}} {message}", placeholder.name)),
     }
 }
 
 fn too_large() -> String {
     format!("renders more than {} KiB", Workflow::LARGEST_VALUE / 1024)
+}
+
+pub fn render_keys<'a>(
+    pairs: &'a [(String, String)],
+    frame: &Frame,
+) -> Result<Vec<(String, &'a str)>, String> {
+    let mut rendered: Vec<(String, &'a str)> = Vec::with_capacity(pairs.len());
+    for (index, (key, value)) in pairs.iter().enumerate() {
+        let name = if key.contains(OPEN) {
+            render_text(key, frame)?
+        } else {
+            key.clone()
+        };
+        if name.trim().is_empty() {
+            return Err(format!("the key {key} renders empty"));
+        }
+        if let Some(earlier) = pairs[..index]
+            .iter()
+            .zip(&rendered)
+            .find(|(_, (other, _))| *other == name)
+        {
+            return Err(format!(
+                "the keys {} and {key} both render to \"{name}\"",
+                earlier.0.0
+            ));
+        }
+        rendered.push((name, value.as_str()));
+    }
+    Ok(rendered)
+}
+
+pub fn render_number(
+    setting: &NumberSetting,
+    (minimum, maximum): (u64, u64),
+    field: &str,
+    frame: &Frame,
+) -> Result<u64, String> {
+    let template = match setting {
+        NumberSetting::Fixed(number) => return Ok(*number),
+        NumberSetting::Template(template) => template,
+    };
+    let value = render_value(template, frame)?;
+    let number = match &value {
+        Value::Number(number) => number.as_f64(),
+        other => text_of(other).trim().parse::<f64>().ok(),
+    }
+    .filter(|number| number.fract() == 0.0 && *number >= 0.0);
+    match number {
+        Some(number) if (minimum as f64..=maximum as f64).contains(&number) => Ok(number as u64),
+        _ => Err(format!(
+            "{field} is {} ({template}), it must be a whole number from {minimum} to {maximum}",
+            text_of(&value)
+        )),
+    }
 }

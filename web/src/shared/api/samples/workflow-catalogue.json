@@ -552,6 +552,8 @@
           "minimum": null,
           "name": "condition",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "condition"
         },
         {
@@ -561,6 +563,8 @@
           "minimum": null,
           "name": "then",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "steps"
         },
         {
@@ -570,6 +574,8 @@
           "minimum": null,
           "name": "else",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "steps"
         }
       ],
@@ -595,6 +601,8 @@
           "minimum": 1,
           "name": "repeat",
           "required": false,
+          "template_keys": false,
+          "templated": true,
           "type": "integer"
         },
         {
@@ -604,6 +612,8 @@
           "minimum": null,
           "name": "for_each",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -613,6 +623,8 @@
           "minimum": null,
           "name": "while",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "condition"
         },
         {
@@ -622,6 +634,8 @@
           "minimum": 1,
           "name": "max_iterations",
           "required": false,
+          "template_keys": false,
+          "templated": true,
           "type": "integer"
         },
         {
@@ -631,6 +645,8 @@
           "minimum": null,
           "name": "body",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "steps"
         }
       ],
@@ -650,6 +666,8 @@
           "minimum": 2,
           "name": "branches",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "branches"
         }
       ],
@@ -667,6 +685,8 @@
           "minimum": null,
           "name": "workflow",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "workflow"
         },
         {
@@ -676,6 +696,8 @@
           "minimum": null,
           "name": "inputs",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template-table"
         }
       ],
@@ -705,6 +727,8 @@
           "minimum": null,
           "name": "outcome",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "choice"
         },
         {
@@ -714,6 +738,8 @@
           "minimum": null,
           "name": "reason",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         }
       ],
@@ -738,6 +764,8 @@
           "minimum": null,
           "name": "variable",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "name"
         },
         {
@@ -747,6 +775,8 @@
           "minimum": null,
           "name": "value",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -756,6 +786,8 @@
           "minimum": null,
           "name": "json",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -765,6 +797,8 @@
           "minimum": null,
           "name": "list",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template-list"
         },
         {
@@ -774,6 +808,8 @@
           "minimum": null,
           "name": "object",
           "required": false,
+          "template_keys": true,
+          "templated": false,
           "type": "template-table"
         }
       ],
@@ -793,6 +829,8 @@
           "minimum": 1,
           "name": "seconds",
           "required": true,
+          "template_keys": false,
+          "templated": true,
           "type": "integer"
         }
       ],
@@ -810,6 +848,8 @@
           "minimum": null,
           "name": "input",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -819,6 +859,8 @@
           "minimum": 1,
           "name": "operations",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "operations"
         }
       ],
@@ -845,6 +887,8 @@
           "minimum": null,
           "name": "method",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "choice"
         },
         {
@@ -854,6 +898,8 @@
           "minimum": null,
           "name": "url",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -863,6 +909,8 @@
           "minimum": null,
           "name": "headers",
           "required": false,
+          "template_keys": true,
+          "templated": false,
           "type": "template-table"
         },
         {
@@ -872,6 +920,8 @@
           "minimum": null,
           "name": "body",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -881,6 +931,8 @@
           "minimum": 1,
           "name": "timeout_seconds",
           "required": false,
+          "template_keys": false,
+          "templated": true,
           "type": "integer"
         },
         {
@@ -890,6 +942,8 @@
           "minimum": null,
           "name": "fail_on_error",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "boolean"
         },
         {
@@ -899,6 +953,8 @@
           "minimum": null,
           "name": "response_sample",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "sample"
         }
       ],
@@ -921,6 +977,8 @@
           "minimum": null,
           "name": "script",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "script"
         },
         {
@@ -930,6 +988,8 @@
           "minimum": null,
           "name": "args",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template-list"
         },
         {
@@ -939,6 +999,8 @@
           "minimum": null,
           "name": "env",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template-table"
         },
         {
@@ -948,6 +1010,8 @@
           "minimum": null,
           "name": "stdin",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -957,6 +1021,8 @@
           "minimum": 1,
           "name": "timeout_seconds",
           "required": false,
+          "template_keys": false,
+          "templated": true,
           "type": "integer"
         }
       ],
@@ -978,6 +1044,8 @@
           "minimum": null,
           "name": "text",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -987,6 +1055,8 @@
           "minimum": null,
           "name": "title",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -996,6 +1066,8 @@
           "minimum": null,
           "name": "channel",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "channel"
         }
       ],
@@ -1013,6 +1085,8 @@
           "minimum": null,
           "name": "message",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         },
         {
@@ -1026,6 +1100,8 @@
           "minimum": null,
           "name": "level",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "choice"
         }
       ],
@@ -1045,6 +1121,8 @@
           "minimum": null,
           "name": "automation",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "automation"
         },
         {
@@ -1054,6 +1132,8 @@
           "minimum": null,
           "name": "fields",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "template-table"
         },
         {
@@ -1063,6 +1143,8 @@
           "minimum": null,
           "name": "wait",
           "required": false,
+          "template_keys": false,
+          "templated": false,
           "type": "boolean"
         }
       ],
@@ -1083,6 +1165,8 @@
           "minimum": null,
           "name": "service",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         }
       ],
@@ -1104,6 +1188,8 @@
           "minimum": null,
           "name": "service",
           "required": true,
+          "template_keys": false,
+          "templated": false,
           "type": "template"
         }
       ],

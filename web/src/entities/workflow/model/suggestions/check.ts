@@ -84,8 +84,9 @@ function filterReason(found: TemplateName, scope: Scope): { reason: Reason; para
 
 export function checkTemplate(text: string, scope: Scope, portal: PortalValues | null = null): TemplateProblem[] {
   return templateNames(text).flatMap((found) => {
+    const argumentProblem = (found.filters ?? []).flatMap((call) => call.names ?? []).map((named) => reasonFor(named.name, scope, portal)).find((reason) => reason !== null) ?? null;
     const problem = found.valid
-      ? (reasonFor(found.name, scope, portal) ?? filterReason(found, scope))
+      ? (argumentProblem ?? reasonFor(found.name, scope, portal) ?? filterReason(found, scope))
       : found.name.includes(".")
         ? { reason: "notAValue" as const, params: { name: found.name } }
         : null;

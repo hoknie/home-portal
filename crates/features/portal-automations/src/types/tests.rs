@@ -198,8 +198,8 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
             otherwise: Vec::new(),
         },
         StepKind::Loop {
-            mode: LoopMode::Repeat(1),
-            max_iterations: 1,
+            mode: LoopMode::Repeat(crate::types::NumberSetting::Fixed(1)),
+            max_iterations: crate::types::NumberSetting::Fixed(1),
             body: Vec::new(),
         },
         StepKind::Parallel {
@@ -217,7 +217,9 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
             variable: String::new(),
             value: SetValue::Text(String::new()),
         },
-        StepKind::Wait { seconds: 1 },
+        StepKind::Wait {
+            seconds: crate::types::NumberSetting::Fixed(1),
+        },
         StepKind::Transform {
             input: String::new(),
             operations: Vec::new(),
@@ -227,7 +229,7 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
             url: String::new(),
             headers: Vec::new(),
             body: None,
-            timeout_seconds: 1,
+            timeout_seconds: crate::types::NumberSetting::Fixed(1),
             fail_on_error: true,
         }),
         StepKind::Script {
@@ -238,6 +240,7 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
             },
             env: Vec::new(),
             stdin: None,
+            timeout: crate::types::NumberSetting::Fixed(1),
         },
         StepKind::Notify {
             channel: None,

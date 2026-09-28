@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { TestIntl } from "@/shared/i18n";
 
-import { type TemplateRange, type TemplateSuggestion, type Trigger, applied, completionAt, filterCompletionAt, matching, segmentsOf } from "./completion";
+import { type TemplateRange, type TemplateSuggestion, type Trigger, applied, argumentCompletionAt, completionAt, filterCompletionAt, matching, segmentsOf } from "./completion";
 import { TemplateInput } from "./template-input";
 
 const suggestions: TemplateSuggestion[] = [
@@ -170,4 +170,13 @@ describe("filter completion", () => {
     await userEvent.keyboard("{ArrowDown}{Enter}");
     expect(field).toHaveValue('{{steps.ping.status | join(", ")');
   });
+});
+
+it("inside a filter call, after ( or a comma, the names in scope are completed without quotes", () => {
+  const text = "{{steps.x.json | get(lo";
+  expect(argumentCompletionAt(text, text.length)).toEqual({ start: text.length - 2, end: text.length, query: "lo" });
+  expect(argumentCompletionAt('{{a.b | replace("x", ', 21)).toEqual({ start: 21, end: 21, query: "" });
+  expect(argumentCompletionAt('{{a.b | get("lo', 15)).toBeNull();
+  expect(argumentCompletionAt("{{a.b | get(x) | up", 19)).toBeNull();
+  expect(argumentCompletionAt("{{steps.x", 9)).toBeNull();
 });

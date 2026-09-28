@@ -291,3 +291,49 @@ it("typing {{portal.services.me offers the service's id, name and state with the
   expect(options.some((option) => option.includes("portal.services.media.state"))).toBe(true);
   expect(options.some((option) => option.includes("portal.network."))).toBe(false);
 });
+
+it("a dictionary row keyed by a variable offers the loop's names in its key and saves the template as the key", async () => {
+  const fetch = vi.fn(async () => jsonResponse(sampleWorkflows[1]));
+  vi.stubGlobal("fetch", fetch);
+  openEditor(withSteps([{ id: "each", kind: "loop", for_each: "{{portal.services}}", body: [{ id: "states", kind: "set", variable: "states", object: { name: "x" } }] }]));
+  pressOnCanvas(await node("states"));
+  const key = within(inspector()).getByRole("combobox", { name: "Dictionary: name 1" });
+  fireEvent.change(key, { target: { value: "" } });
+  await userEvent.click(key);
+  await userEvent.keyboard("{{{{loop.it");
+  const options = within(screen.getByRole("listbox")).getAllByRole("option").map((option) => option.textContent ?? "");
+  expect(options.some((option) => option.startsWith("loop.item"))).toBe(true);
+  fireEvent.change(key, { target: { value: "{{loop.item.id}}" } });
+  await userEvent.click(screen.getByRole("button", { name: /^Save( \(|$)/ }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  expect(sentBody(fetch).steps[0].body[0].object).toEqual({ "{{loop.item.id}}": "x" });
+});
+
+it("a filter argument completed from the scope inserts the name without quotes", async () => {
+  openEditor(withSteps([{ id: "states", kind: "http", url: "http://nas.lan" }, { id: "each", kind: "loop", for_each: "{{steps.states.json}}", body: [{ id: "tell", kind: "notify", text: "" }] }]));
+  pressOnCanvas(await node("tell"));
+  const text = within(inspector()).getByRole("combobox", { name: "Text" });
+  await userEvent.click(text);
+  await userEvent.keyboard("{{{{steps.states.json | get(lo");
+  const options = within(screen.getByRole("listbox")).getAllByRole("option").map((option) => option.textContent ?? "");
+  expect(options.some((option) => option.startsWith("loop.item"))).toBe(true);
+  expect(options.some((option) => option.startsWith("loop.index"))).toBe(true);
+  await userEvent.keyboard("{Enter}");
+  expect(text).toHaveValue("{{steps.states.json | get(loop.item");
+});
+
+it("a number from an input is a template checked when the step runs, and a plain number is still bounded", async () => {
+  const fetch = vi.fn(async () => jsonResponse(sampleWorkflows[1]));
+  vi.stubGlobal("fetch", fetch);
+  openEditor(withSteps([{ id: "nap", kind: "wait", seconds: 5 }], { inputs: [plainInput("pause")] }));
+  pressOnCanvas(await node("nap"));
+  const seconds = within(inspector()).getByRole("combobox", { name: "Seconds" });
+  fireEvent.change(seconds, { target: { value: "5000" } });
+  expect(await within(inspector()).findByText("Outside the allowed range")).toBeInTheDocument();
+  expect(seconds).toHaveAttribute("aria-invalid", "true");
+  fireEvent.change(seconds, { target: { value: "{{inputs.pause}}" } });
+  expect(within(inspector()).getByText("A template: checked when the step runs")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: /^Save( \(|$)/ }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  expect(sentBody(fetch).steps[0].seconds).toBe("{{inputs.pause}}");
+});
