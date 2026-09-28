@@ -4,18 +4,20 @@ import { useTranslations } from "next-intl";
 
 import { useModules } from "@/entities/module";
 import { ErrorNotice } from "@/shared/ui/error-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Skeleton } from "@/shared/ui/primitives";
 
 import { ModuleCard } from "./module-card";
 
 export function ModulesScreen() {
+  const trail = useTrail();
   const t = useTranslations("modules");
   const modules = useModules();
   const data = modules.data?.data;
   return (
     <div className="grid gap-8">
-      <PageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader breadcrumbs={trail.of(trail.section("modules"))} title={t("title")} description={t("subtitle")} />
       {modules.error && !data ? (
         <ErrorNotice title={t("loadFailed")} description={modules.error.message} onRetry={() => void modules.refetch()} />
       ) : null}

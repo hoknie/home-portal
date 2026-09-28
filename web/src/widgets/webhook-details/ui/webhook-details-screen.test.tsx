@@ -42,3 +42,9 @@ it("an unknown webhook says so", () => {
   search = `id=${DEPLOY}`;
   expect(screen.getByText("Webhook not found")).toBeInTheDocument();
 });
+
+it("the breadcrumbs name the webhook under webhooks", () => {
+  search = `id=${DEPLOY}`;
+  renderPage();
+  expect(screen.getByRole("navigation", { name: "Breadcrumbs" })).toHaveTextContent("HomeWebhooksDeploy from CI");
+});

@@ -8,17 +8,19 @@ import { RestartPortalButton } from "@/features/restart-portal";
 import { useNetwork } from "@/entities/network";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { KvList, KvRow } from "@/shared/ui/kv-list";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 
 export function NetworkScreen() {
+  const trail = useTrail();
   const t = useTranslations();
   const network = useNetwork();
   const data = network.data?.data;
   return (
     <div className="grid gap-8">
-      <PageHeader title={t("network.title")} description={t("network.subtitle")} />
+      <PageHeader breadcrumbs={trail.of(trail.section("network"))} title={t("network.title")} description={t("network.subtitle")} />
       {network.error && !data ? (
         <ErrorNotice title={t("errors.loadFailed")} description={network.error.message} onRetry={() => void network.refetch()} />
       ) : null}

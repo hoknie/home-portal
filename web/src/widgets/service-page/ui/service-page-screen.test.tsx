@@ -131,3 +131,10 @@ it("says a service that is unknown here was not found", async () => {
   expect(await screen.findByText("Service not found")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Back to home" }).getAttribute("href")).toBe("/");
 });
+
+it("the breadcrumbs lead from home to the service by its name", async () => {
+  serve();
+  const trail = await screen.findByRole("navigation", { name: "Breadcrumbs" });
+  expect(within(trail).getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
+  expect(await within(trail).findByText("Media")).toHaveAttribute("aria-current", "page");
+});

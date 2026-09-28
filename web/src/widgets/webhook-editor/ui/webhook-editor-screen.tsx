@@ -11,6 +11,7 @@ import { useWebhooks } from "@/entities/webhook";
 import { routes } from "@/shared/config";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 
@@ -20,12 +21,18 @@ export type WebhookEditorScreenProps = { mode: "new" | "edit" };
 
 export function WebhookEditorScreen({ mode }: WebhookEditorScreenProps) {
   const t = useTranslations();
+  const trail = useTrail();
   const router = useRouter();
   const id = useSearchParams().get(ID_PARAMETER) ?? "";
   const webhooks = useWebhooks();
   const catalogue = useCatalogue();
   const scripts = useScripts();
-  const header = <PageHeader title={t(mode === "new" ? "webhooks.addTitle" : "webhooks.editTitle")} description={t("webhooks.formDescription")} />;
+  const named = webhooks.data?.data.webhooks.find((candidate) => candidate.id === id)?.title ?? id;
+  const crumbs =
+    mode === "new"
+      ? trail.of(trail.section("webhooks"), { label: t("breadcrumbs.new.webhook") })
+      : trail.of(trail.section("webhooks"), { label: named, href: routes.webhookDetails(id) }, { label: t("breadcrumbs.edit") });
+  const header = <PageHeader breadcrumbs={crumbs} title={t(mode === "new" ? "webhooks.addTitle" : "webhooks.editTitle")} description={t("webhooks.formDescription")} />;
   const failure = webhooks.error ?? catalogue.error ?? scripts.error;
   if (!webhooks.data || !catalogue.data || !scripts.data) {
     return (

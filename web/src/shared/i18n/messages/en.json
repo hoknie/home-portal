@@ -2125,5 +2125,17 @@
     "removeRow": "Remove row {number}",
     "addItem": "Add a value",
     "addKey": "Add a key"
+  },
+  "breadcrumbs": {
+    "label": "Breadcrumbs",
+    "more": "Show the whole path",
+    "ellipsis": "…",
+    "edit": "Edit",
+    "new": {
+      "service": "New service",
+      "automation": "New automation",
+      "webhook": "New webhook",
+      "workflow": "New workflow"
+    }
   }
 }

@@ -12,6 +12,7 @@ import { routes } from "@/shared/config";
 import { slugOf, uniqueId } from "@/shared/lib/slug";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 
@@ -49,6 +50,7 @@ export function eventFieldsFor(workflow: Workflow | null, automations: Automatio
 export function WorkflowEditorScreen({ mode }: { mode: "new" | "edit" }) {
   const t = useTranslations();
   const help = useTranslations("workflowHelp");
+  const trail = useTrail();
   const router = useRouter();
   const parameters = useSearchParams();
   const id = parameters.get(ID_PARAMETER) ?? "";
@@ -62,7 +64,8 @@ export function WorkflowEditorScreen({ mode }: { mode: "new" | "edit" }) {
   const notifications = useNotifications();
   const all = workflows.data?.data.workflows ?? [];
   const workflow = mode === "edit" ? (all.find((candidate) => candidate.id === id) ?? null) : null;
-  const header = <PageHeader title={t(mode === "new" ? "workflowEditor.addTitle" : "workflowEditor.editTitle")} description={t("workflowEditor.pageDescription")} />;
+  const last = mode === "new" ? t("breadcrumbs.new.workflow") : (workflow?.title ?? id);
+  const header = <PageHeader breadcrumbs={trail.of(trail.section("workflows"), { label: last })} title={t(mode === "new" ? "workflowEditor.addTitle" : "workflowEditor.editTitle")} description={t("workflowEditor.pageDescription")} />;
   const failure = workflows.error ?? catalogue.error;
   if (!workflows.data || !catalogue.data) {
     return (

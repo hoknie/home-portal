@@ -9,8 +9,8 @@ it("marks a management section on its own page and its subpages only", () => {
   expect(isActive("/admin/network/", "/admin/layout/")).toBe(false);
 });
 
-it("the management section always offers services, layout, network and modules", () => {
-  expect(MANAGEMENT.map((item) => item.href)).toEqual(["/admin/services/", "/admin/layout/", "/admin/network/", "/admin/modules/"]);
+it("the management section always offers home, services, layout, network and modules", () => {
+  expect(MANAGEMENT.map((item) => item.href)).toEqual(["/", "/admin/services/", "/admin/layout/", "/admin/network/", "/admin/modules/"]);
 });
 
 it("the modules section lists proxy, dns, automations, webhooks, users, workflows and notifications in that order", () => {

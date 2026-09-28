@@ -41,7 +41,7 @@ function shellWith(on: string[] | null) {
 
 it("shows the navigation, marks the current section and names the signed-in user", () => {
   shellWith(["proxy", "automations"]);
-  expect(screen.getAllByRole("link", { name: "Back to home" })[0]).toHaveAttribute("href", "/");
+  expect(screen.getAllByRole("link", { name: "Home" })[0]).toHaveAttribute("href", "/");
   expect(screen.getAllByRole("link", { name: "Services" })[0]).toHaveAttribute("aria-current", "page");
   expect(screen.getAllByRole("link", { name: "Layout" })[0]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/layout\/?$/));
   expect(screen.getAllByRole("link", { name: "Network" }).length).toBeGreaterThan(0);

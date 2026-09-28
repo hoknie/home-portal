@@ -1,12 +1,11 @@
 "use client";
 
-import { House, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { enabledModules, useModules } from "@/entities/module";
-import { routes } from "@/shared/config";
 import { cn } from "@/shared/lib/cn";
 import { Separator, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/primitives";
 
@@ -52,9 +51,6 @@ export function NavLinks({ onNavigate, compact = false }: NavLinksProps) {
   const links = modules.data ? moduleLinks(enabledModules(modules.data.data)) : [];
   return (
     <nav className="grid gap-1">
-      <div className="mb-2 grid">
-        <NavItem href={routes.home} label={t("backHome")} icon={House} pathname="" onNavigate={onNavigate} compact={compact} />
-      </div>
       {MANAGEMENT.map(({ href, label, icon }) => (
         <NavItem key={href} href={href} label={t(label)} icon={icon} pathname={pathname} onNavigate={onNavigate} compact={compact} />
       ))}

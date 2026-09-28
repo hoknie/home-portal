@@ -13,6 +13,7 @@ import { DataTable } from "@/shared/ui/data-table";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { KvList, KvRow } from "@/shared/ui/kv-list";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
@@ -109,12 +110,13 @@ function RootCertificate() {
 }
 
 export function ProxyScreen() {
+  const trail = useTrail();
   const t = useTranslations();
   const proxy = useProxy();
   const data = proxy.data?.data;
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PageHeader breadcrumbs={trail.of(trail.section("proxy"))}
         title={t("proxy.title")}
         description={t("proxy.subtitle")}
         actions={

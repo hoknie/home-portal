@@ -6,6 +6,7 @@ import { type User, useUsers } from "@/entities/user";
 import { type Column, DataTable } from "@/shared/ui/data-table";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Badge, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -15,6 +16,7 @@ import { DeleteUserButton } from "./delete-user-button";
 import { PasswordDialog } from "./password-dialog";
 
 export function UsersScreen() {
+  const trail = useTrail();
   const t = useTranslations();
   const users = useUsers();
   const data = users.data?.data;
@@ -46,7 +48,7 @@ export function UsersScreen() {
     : [];
   return (
     <div className="grid gap-8">
-      <PageHeader
+      <PageHeader breadcrumbs={trail.of(trail.section("users"))}
         title={t("users.title")}
         description={t("users.subtitle")}
         actions={<AddUserDialog revision={revision} disabled={!data?.editable} />}

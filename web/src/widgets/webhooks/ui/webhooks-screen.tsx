@@ -13,6 +13,7 @@ import { type Column, DataTable } from "@/shared/ui/data-table";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Badge, Button, Skeleton, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
@@ -95,6 +96,7 @@ function useColumns(revision: string | null): Column<Webhook>[] {
 }
 
 export function WebhooksScreen() {
+  const trail = useTrail();
   const t = useTranslations();
   const loadedModules = useModules().data?.data;
   const webhooks = useWebhooks();
@@ -113,7 +115,7 @@ export function WebhooksScreen() {
   );
   return (
     <div className="grid gap-8">
-      <PageHeader title={t("webhooks.title")} description={t("webhooks.subtitle")} actions={add} />
+      <PageHeader breadcrumbs={trail.of(trail.section("webhooks"))} title={t("webhooks.title")} description={t("webhooks.subtitle")} actions={add} />
       {loadedModules && !enabledModules(loadedModules).has("webhooks") ? <ModuleOffNotice name={t("modules.names.webhooks")} /> : null}
       {webhooks.error && !webhooks.data ? (
         <ErrorNotice title={t("errors.loadFailed")} description={webhooks.error.message} onRetry={() => void webhooks.refetch()} />

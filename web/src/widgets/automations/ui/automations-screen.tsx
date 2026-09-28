@@ -13,6 +13,7 @@ import { DataTable } from "@/shared/ui/data-table";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -22,6 +23,7 @@ import { useAutomationColumns } from "./automation-columns";
 import { RunJournal } from "./run-journal";
 
 export function AutomationsScreen() {
+  const trail = useTrail();
   const t = useTranslations();
   const loadedModules = useModules().data?.data;
   const automations = useAutomations();
@@ -43,7 +45,7 @@ export function AutomationsScreen() {
   const shown = list.filter((automation) => tagsMatch(automation.tags, chosen));
   return (
     <div className="grid gap-8">
-      <PageHeader title={t("automations.title")} description={t("automations.subtitle")} actions={add} />
+      <PageHeader breadcrumbs={trail.of(trail.section("automations"))} title={t("automations.title")} description={t("automations.subtitle")} actions={add} />
       {loadedModules && !enabledModules(loadedModules).has("automations") ? <ModuleOffNotice name={t("modules.names.automations")} /> : null}
       {automations.error && !automations.data ? (
         <ErrorNotice title={t("errors.loadFailed")} description={automations.error.message} onRetry={() => void automations.refetch()} />

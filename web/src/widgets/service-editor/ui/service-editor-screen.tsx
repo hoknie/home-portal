@@ -10,6 +10,7 @@ import { groupsOf, useServices } from "@/entities/service";
 import { routes } from "@/shared/config";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 
@@ -19,12 +20,14 @@ export type ServiceEditorScreenProps = { mode: "new" | "edit" };
 
 export function ServiceEditorScreen({ mode }: ServiceEditorScreenProps) {
   const t = useTranslations();
+  const trail = useTrail();
   const locale = useLocale();
   const router = useRouter();
   const id = useSearchParams().get(ID_PARAMETER) ?? "";
   const services = useServices();
   const title = t(mode === "new" ? "serviceForm.addTitle" : "serviceForm.editTitle");
-  const header = <PageHeader title={title} description={t("serviceForm.description")} />;
+  const serviceName = services.data?.data.services.find((candidate) => candidate.id === id)?.name ?? id;
+  const header = <PageHeader breadcrumbs={trail.of(trail.section("services"), { label: mode === "new" ? t("breadcrumbs.new.service") : serviceName })} title={title} description={t("serviceForm.description")} />;
   if (!services.data) {
     return (
       <div className="grid gap-8">

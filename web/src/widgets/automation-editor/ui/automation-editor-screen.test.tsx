@@ -51,3 +51,18 @@ it("a new automation starts empty", () => {
   expect(screen.getByLabelText("Title")).toHaveValue("");
   expect(screen.queryByRole("button", { name: "Run now" })).not.toBeInTheDocument();
 });
+
+it("the breadcrumbs name the automation, a new one, or the unknown id", () => {
+  search = "id=restart-media";
+  const { unmount } = renderScreen("edit");
+  const named = screen.getByRole("navigation", { name: "Breadcrumbs" });
+  expect(named).toHaveTextContent("HomeAutomationsRestart Jellyfin when it goes down");
+  expect(screen.getByRole("link", { name: "Automations" }).getAttribute("href")).toMatch(/^\/admin\/automations\/?$/);
+  unmount();
+  search = "id=nope";
+  const second = renderScreen("edit");
+  expect(screen.getByRole("navigation", { name: "Breadcrumbs" })).toHaveTextContent("HomeAutomationsnope");
+  second.unmount();
+  renderScreen("new");
+  expect(screen.getByRole("navigation", { name: "Breadcrumbs" })).toHaveTextContent("HomeAutomationsNew automation");
+});

@@ -11,6 +11,7 @@ import { routes } from "@/shared/config";
 import { DataTable } from "@/shared/ui/data-table";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -20,6 +21,7 @@ import { useServiceColumns } from "./service-columns";
 export const LEGACY_EDIT_PARAMETER = "edit";
 
 export function ServicesScreen() {
+  const trail = useTrail();
   const t = useTranslations();
   const router = useRouter();
   const services = useServices();
@@ -41,7 +43,7 @@ export function ServicesScreen() {
   );
   return (
     <div className="grid gap-8">
-      <PageHeader title={t("services.title")} description={t("services.subtitle")} actions={add} />
+      <PageHeader breadcrumbs={trail.of(trail.section("services"))} title={t("services.title")} description={t("services.subtitle")} actions={add} />
       {services.error && !services.data ? (
         <ErrorNotice title={t("errors.loadFailed")} description={services.error.message} onRetry={() => void services.refetch()} />
       ) : null}

@@ -1,9 +1,10 @@
-import { Bell, Blocks, Globe, LayoutDashboard, Network, Route, Server, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
+import { Bell, Blocks, Globe, House, LayoutDashboard, Network, Route, Server, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
 
 import type { ModuleName } from "@/entities/module";
 import { routes } from "@/shared/config";
 
 export const MANAGEMENT = [
+  { href: routes.home, label: "home", icon: House },
   { href: routes.adminServices, label: "services", icon: Server },
   { href: routes.adminLayout, label: "layout", icon: LayoutDashboard },
   { href: routes.adminNetwork, label: "network", icon: Network },

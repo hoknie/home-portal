@@ -2125,5 +2125,17 @@
     "removeRow": "Quitar la fila {number}",
     "addItem": "Añadir un valor",
     "addKey": "Añadir una clave"
+  },
+  "breadcrumbs": {
+    "label": "Ruta de navegación",
+    "more": "Mostrar la ruta completa",
+    "ellipsis": "…",
+    "edit": "Edición",
+    "new": {
+      "service": "Nuevo servicio",
+      "automation": "Nueva automatización",
+      "webhook": "Nuevo webhook",
+      "workflow": "Nuevo flujo"
+    }
   }
 }

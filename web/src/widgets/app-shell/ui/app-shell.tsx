@@ -19,9 +19,9 @@ import { Brand } from "./brand";
 import { NavLinks } from "./nav-links";
 import { UserMenu } from "./user-menu";
 
-export type AppShellProps = { children: ReactNode };
+export type AppShellProps = { children: ReactNode; redirectGuests?: boolean };
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, redirectGuests = true }: AppShellProps) {
   const t = useTranslations();
   const router = useRouter();
   const session = useSession();
@@ -32,7 +32,7 @@ export function AppShell({ children }: AppShellProps) {
     writeCollapsed(!collapsed);
     setCollapsed(!collapsed);
   };
-  const signedOut = session.error instanceof UnauthorizedError;
+  const signedOut = redirectGuests && session.error instanceof UnauthorizedError;
 
   useEffect(() => {
     if (signedOut) {

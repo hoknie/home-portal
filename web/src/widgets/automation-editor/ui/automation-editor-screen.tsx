@@ -11,6 +11,7 @@ import { useAutomations, useCatalogue, useScripts } from "@/entities/automation"
 import { routes } from "@/shared/config";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 
@@ -20,6 +21,7 @@ export type AutomationEditorScreenProps = { mode: "new" | "edit" };
 
 export function AutomationEditorScreen({ mode }: AutomationEditorScreenProps) {
   const t = useTranslations();
+  const trail = useTrail();
   const router = useRouter();
   const id = useSearchParams().get(ID_PARAMETER) ?? "";
   const automations = useAutomations();
@@ -29,7 +31,7 @@ export function AutomationEditorScreen({ mode }: AutomationEditorScreenProps) {
   const automation = mode === "edit" ? (all.find((candidate) => candidate.id === id) ?? null) : null;
   const title = t(mode === "new" ? "automationBuilder.addTitle" : "automationBuilder.editTitle");
   const actions = automation ? <RunAutomationButton automation={automation} labelled /> : undefined;
-  const header = <PageHeader title={title} description={t("automationBuilder.description")} actions={actions} />;
+  const header = <PageHeader breadcrumbs={trail.of(trail.section("automations"), { label: mode === "new" ? t("breadcrumbs.new.automation") : (automation?.title ?? id) })} title={title} description={t("automationBuilder.description")} actions={actions} />;
   const failure = automations.error ?? catalogue.error ?? scripts.error;
   if (!automations.data || !catalogue.data || !scripts.data) {
     return (

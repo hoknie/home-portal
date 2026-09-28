@@ -12,6 +12,7 @@ import { DataTable } from "@/shared/ui/data-table";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -21,6 +22,7 @@ import { useWorkflowColumns } from "./workflow-columns";
 import { WorkflowRunsSheet } from "./workflow-runs-sheet";
 
 export function WorkflowsScreen() {
+  const trail = useTrail();
   const t = useTranslations();
   const loadedModules = useModules().data?.data;
   const moduleOff = loadedModules !== undefined && !enabledModules(loadedModules).has("workflows");
@@ -41,7 +43,7 @@ export function WorkflowsScreen() {
   );
   return (
     <div className="grid gap-8">
-      <PageHeader title={t("workflows.title")} description={t("workflows.subtitle")} actions={add} />
+      <PageHeader breadcrumbs={trail.of(trail.section("workflows"))} title={t("workflows.title")} description={t("workflows.subtitle")} actions={add} />
       {moduleOff ? <ModuleOffNotice name={t("modules.names.workflows")} /> : null}
       {workflows.error && !workflows.data ? (
         <ErrorNotice title={t("errors.loadFailed")} description={workflows.error.message} onRetry={() => void workflows.refetch()} />

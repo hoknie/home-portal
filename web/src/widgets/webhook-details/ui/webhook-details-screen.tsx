@@ -13,6 +13,8 @@ import { routes } from "@/shared/config";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { KvList, KvRow } from "@/shared/ui/kv-list";
+import { useTrail } from "@/shared/lib/breadcrumbs";
+import { Breadcrumbs } from "@/shared/ui/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Badge, Button, Skeleton } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
@@ -29,17 +31,27 @@ export function WebhookDetailsScreen() {
   const webhooks = useWebhooks();
   const automations = useAutomations();
   const runs = useRuns({ webhook: id }, true, id !== "");
+  const trail = useTrail();
+  const named = webhooks.data?.data.webhooks.find((candidate) => candidate.id === id)?.title ?? id;
+  const crumbs = trail.of(trail.section("webhooks"), { label: named });
   if (!webhooks.data) {
-    return webhooks.error ? (
-      <ErrorNotice title={t("errors.loadFailed")} description={webhooks.error.message} onRetry={() => void webhooks.refetch()} />
-    ) : (
-      <Skeleton className="h-96 w-full" aria-busy="true" />
+    return (
+      <div className="grid gap-6">
+        <Breadcrumbs items={crumbs} />
+        {webhooks.error ? (
+          <ErrorNotice title={t("errors.loadFailed")} description={webhooks.error.message} onRetry={() => void webhooks.refetch()} />
+        ) : (
+          <Skeleton className="h-96 w-full" aria-busy="true" />
+        )}
+      </div>
     );
   }
   const webhook = webhooks.data.data.webhooks.find((candidate) => candidate.id === id);
   if (!webhook) {
     return (
-      <EmptyState
+      <div className="grid gap-6">
+        <Breadcrumbs items={crumbs} />
+        <EmptyState
         icon={SearchX}
         title={t("webhooks.notFound")}
         description={t("webhooks.notFoundHint")}
@@ -48,7 +60,8 @@ export function WebhookDetailsScreen() {
             <Link href={routes.adminWebhooks}>{t("webhooks.backToWebhooks")}</Link>
           </Button>
         }
-      />
+        />
+      </div>
     );
   }
   const url = typeof window === "undefined" ? webhook.address : absoluteAddress(webhook.address, window.location.origin);
@@ -66,7 +79,7 @@ export function WebhookDetailsScreen() {
   );
   return (
     <div className="grid gap-8">
-      <PageHeader title={webhook.title} description={t("webhooks.detailsDescription")} actions={edit} />
+      <PageHeader breadcrumbs={crumbs} title={webhook.title} description={t("webhooks.detailsDescription")} actions={edit} />
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <SectionCard title={t("webhooks.identity")}>
           <KvList>

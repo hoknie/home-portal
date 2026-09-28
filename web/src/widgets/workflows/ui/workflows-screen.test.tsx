@@ -121,3 +121,8 @@ it("run now builds its form from the input types and sends a list", async () => 
     expect.objectContaining({ method: "POST", body: JSON.stringify({ inputs: { hosts: ["nas", "router"], deep: true } }) }),
   );
 });
+
+it("the list page's breadcrumbs lead from home to workflows", () => {
+  render(true);
+  expect(screen.getByRole("navigation", { name: "Breadcrumbs" })).toHaveTextContent("HomeWorkflows");
+});

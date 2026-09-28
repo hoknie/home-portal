@@ -7,6 +7,7 @@ import { useEnvironment } from "@/entities/environment";
 import { groupsOf, useServices } from "@/entities/service";
 import { LayoutEditor, type SettingsEditorProps, type WidgetKind } from "@/features/layout-editor";
 import { BoardGrid, SETTINGS, SIZE_SPANS, SettingsForm, WIDGETS } from "@/features/widget-board";
+import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
 
 import { previewServices, previewWidgets } from "../model/preview";
@@ -14,6 +15,7 @@ import { previewServices, previewWidgets } from "../model/preview";
 export const INTERNET = "internet";
 
 export function LayoutEditorScreen() {
+  const trail = useTrail();
   const t = useTranslations();
   const locale = useLocale();
   const environment = useEnvironment();
@@ -37,7 +39,7 @@ export function LayoutEditorScreen() {
   const environments = known.includes(INTERNET) ? known : [...known, INTERNET];
   return (
     <div className="grid gap-8">
-      <PageHeader title={t("layoutEditor.title")} description={t("layoutEditor.subtitle")} />
+      <PageHeader breadcrumbs={trail.of(trail.section("layout"))} title={t("layoutEditor.title")} description={t("layoutEditor.subtitle")} />
       <p className="-mt-4 text-sm text-muted-foreground">{t("layoutEditor.examples")}</p>
       <LayoutEditor
         kinds={kinds}
