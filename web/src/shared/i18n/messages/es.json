@@ -36,7 +36,12 @@
     "modules": "Módulos",
     "modulesSection": "Módulos",
     "dns": "DNS",
-    "users": "Usuarios"
+    "users": "Usuarios",
+    "workflows": "Flujos",
+    "notifications": "Notificaciones",
+    "collapseMenu": "Contraer el menú",
+    "expandMenu": "Expandir el menú",
+    "menu": "Menú"
   },
   "theme": {
     "label": "Tema",
@@ -293,7 +298,8 @@
     "tags": "Como máximo 20 etiquetas de hasta 40 caracteres",
     "userName": "Un nombre de 1 a 64 caracteres, sin caracteres de control",
     "userPassword": "Usa de 8 a 1024 caracteres",
-    "userPasswordsDiffer": "Las contraseñas no coinciden"
+    "userPasswordsDiffer": "Las contraseñas no coinciden",
+    "automationWorkflow": "Elija un flujo"
   },
   "conditions": {
     "clear": "despejado",
@@ -812,7 +818,19 @@
     "preview": "Cómo se llamará al script",
     "previewDescription": "Con valores de ejemplo; el script también recibe variables PORTAL_* y el evento en JSON por la entrada estándar",
     "noScript": "script.sh",
-    "variables": "Variables de entorno ({count})"
+    "variables": "Variables de entorno ({count})",
+    "action": "Qué ejecutar",
+    "actions": {
+      "script": "Script",
+      "workflow": "Flujo"
+    },
+    "runWorkflowDescription": "Un flujo de Gestión → Flujos; cada entrada recibe un valor que puede usar los campos del evento",
+    "workflow": "Flujo",
+    "workflowHint": "Sus pasos se ejecutan con las entradas de abajo",
+    "chooseWorkflow": "Elija un flujo",
+    "workflowInput": "Entrada {name}",
+    "noWorkflowInputs": "Este flujo no tiene entradas.",
+    "typedInput": "{type}: escríbalo como JSON, por ejemplo [\"nas\", \"router\"], o con un marcador que lo dé."
   },
   "automationEvents": {
     "schedule": {
@@ -1053,14 +1071,18 @@
       "dns": "DNS",
       "automations": "Automatizaciones",
       "webhooks": "Webhooks",
-      "users": "Usuarios"
+      "users": "Usuarios",
+      "workflows": "Flujos",
+      "notifications": "Notificaciones"
     },
     "descriptions": {
       "proxy": "Publica los servicios con sus propios nombres a través de Caddy, con certificados e inicio de sesión mediante el portal.",
       "dns": "Responde DNS para los nombres que publica el proxy, con la dirección correcta en cada una de tus redes.",
       "automations": "Ejecuta tus scripts según un horario o cuando ocurre algo en el portal.",
       "webhooks": "Direcciones que otros sistemas llaman para iniciar tus scripts o automatizaciones.",
-      "users": "Quién puede iniciar sesión: añadir personas, cambiar contraseñas y eliminarlas desde la interfaz. Mientras está apagado, los usuarios se editan solo en el archivo de configuración."
+      "users": "Quién puede iniciar sesión: añadir personas, cambiar contraseñas y eliminarlas desde la interfaz. Mientras está apagado, los usuarios se editan solo en el archivo de configuración.",
+      "workflows": "Escenarios de varios pasos — condiciones, bucles, ramas paralelas, peticiones HTTP, scripts, notificaciones y comprobaciones de servicios — que inician las automatizaciones y los webhooks.",
+      "notifications": "Mensajes cuando un servicio falla o se recupera, y el paso de notificación de los flujos, enviados por canales como Telegram."
     },
     "switchLabel": "{name}: encender o apagar",
     "on": "Encendido",
@@ -1110,5 +1132,998 @@
       "name": "Nombre",
       "actions": "Acciones"
     }
+  },
+  "workflows": {
+    "trace": {
+      "title": "Pasos",
+      "empty": "Aún no ha empezado ningún paso",
+      "workflow": "Flujo",
+      "iteration": "pasada {number}",
+      "duration": "{value} ms",
+      "answer": "Respuesta",
+      "output": "Salida",
+      "dropped": "{count, plural, one {# paso más no se muestra} other {# pasos más no se muestran}}",
+      "outcomes": {
+        "running": "en curso",
+        "succeeded": "correcto",
+        "failed": "fallido",
+        "skipped": "omitido",
+        "stopped": "detenido",
+        "timed_out": "tiempo agotado",
+        "unknown": "desconocido"
+      },
+      "shortened": "Abreviado: las listas largas conservan sus 3 primeros elementos y los textos largos su comienzo."
+    },
+    "title": "Flujos",
+    "subtitle": "Series de pasos que inician las automatizaciones, los webhooks o usted",
+    "add": "Añadir flujo",
+    "empty": "Aún no hay flujos",
+    "emptyHint": "Un flujo encadena pasos: condiciones, bucles, peticiones HTTP, scripts, notificaciones y comprobaciones de servicios.",
+    "columns": {
+      "title": "Flujo",
+      "state": "Estado",
+      "inputs": "Entradas",
+      "usedBy": "Lo inician",
+      "lastRun": "Última ejecución",
+      "actions": "Acciones"
+    },
+    "enabled": "Activado",
+    "disabled": "Desactivado",
+    "noInputs": "ninguna",
+    "notUsed": "solo a mano",
+    "neverRan": "Aún no se ha ejecutado",
+    "usage": {
+      "automation": "automatización",
+      "webhook": "webhook",
+      "workflow": "flujo"
+    },
+    "deleteTitle": "¿Eliminar el flujo «{title}»?",
+    "deleteDescription": "Desaparece de la configuración. Sus ejecuciones pasadas siguen en el registro.",
+    "deleteBlocked": "Lo usan {users}; cámbielos primero",
+    "deleted": "Flujo eliminado",
+    "runNow": "Ejecutar ahora",
+    "runNowTitle": "¿Ejecutar «{title}» ahora?",
+    "runNowDescription": "Sus pasos se ejecutan de verdad: scripts en el host del portal, peticiones HTTP y mensajes salen.",
+    "runDisabled": "El flujo está desactivado",
+    "runRefused": "El flujo no puede ejecutarse ahora",
+    "runThrottled": "Espere {seconds, plural, one {# segundo} other {# segundos}} antes de la siguiente ejecución",
+    "runFailed": "La ejecución no empezó",
+    "explained": "Un flujo es una cadena de pasos —comprobaciones, condiciones, bucles, peticiones, scripts y mensajes— dibujada como un diagrama. Lo inicia una automatización con un horario o un evento, un webhook desde fuera, o usted a mano.",
+    "chooseStart": "Añadir un flujo",
+    "chooseStartHint": "Empiece con una plantilla y adáptela, o con un flujo vacío.",
+    "runsOf": "Ejecuciones de {title}",
+    "runsTitle": "Ejecuciones de «{title}»",
+    "runsHint": "Las últimas ejecuciones de este flujo, desde automatizaciones, webhooks y a mano",
+    "byHand": "A mano"
+  },
+  "workflowEditor": {
+    "addTitle": "Nuevo flujo",
+    "editTitle": "Flujo",
+    "pageDescription": "Pasos que se ejecutan uno tras otro: condiciones, bucles, ramas paralelas y acciones.",
+    "notFound": "Flujo no encontrado",
+    "notFoundHint": "Puede que se haya eliminado o renombrado.",
+    "backToWorkflows": "Volver a los flujos",
+    "leave": "Los cambios no están guardados. ¿Salir de la página?",
+    "fixProblems": "Corrija primero los campos marcados",
+    "saved": "Flujo guardado",
+    "created": "Flujo añadido",
+    "conflictKept": "Alguien cambió la configuración mientras tanto. Sus pasos se conservan; guarde de nuevo para escribirlos sobre la versión nueva.",
+    "identity": "Flujo",
+    "title": "Título",
+    "id": "Id",
+    "idHint": "Letras, dígitos y guiones; las automatizaciones nombran el flujo con él",
+    "enabled": "Activado",
+    "description": "Descripción",
+    "timeout": "Límite de tiempo, segundos",
+    "timeoutHint": "De 1 a 3600; al agotarse se detiene toda la ejecución",
+    "inputs": "Entradas",
+    "inputsHint": "Valores que pasa quien lo llama, disponibles como '{{'inputs.nombre'}}'",
+    "inputName": "Entrada {number}",
+    "removeInput": "Quitar la entrada {name}",
+    "addInput": "Añadir entrada",
+    "steps": "Pasos",
+    "stepsDescription": "De arriba abajo; los bloques con ramas tienen sus propias listas",
+    "addStep": "Añadir paso",
+    "groups": {
+      "flow": "Flujo",
+      "data": "Datos",
+      "actions": "Acciones"
+    },
+    "lists": {
+      "then": "Entonces",
+      "else": "Si no",
+      "body": "Repetir",
+      "branch": "Rama {number}",
+      "top": "Nivel superior"
+    },
+    "blockMenu": "Acciones de {id}",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "moveInto": "Mover a…",
+    "moveTarget": "{step} → {list}",
+    "duplicate": "Duplicar",
+    "delete": "Eliminar",
+    "addBranch": "Añadir rama",
+    "removeBranch": "Quitar la rama {number}",
+    "drag": "Arrastrar {id}",
+    "expand": "Expandir {id}",
+    "collapse": "Contraer {id}",
+    "problemCount": "{count, plural, one {# problema} other {# problemas}}",
+    "label": "Etiqueta",
+    "stepId": "Id del paso",
+    "stepIdHint": "Los pasos siguientes leen sus resultados como '{{'steps.id.campo'}}'",
+    "insertValue": "Insertar un valor en {field}",
+    "insertValueTitle": "Valores disponibles aquí",
+    "item": "{label} {number}",
+    "removeItem": "Quitar",
+    "addItem": "Añadir",
+    "noInputs": "El flujo elegido no tiene entradas",
+    "key": "{label}: nombre {number}",
+    "valueOf": "Valor de {key}",
+    "between": "De {minimum} a {maximum}",
+    "choose": "Elija…",
+    "choices": {
+      "succeeded": "Correcto",
+      "failed": "Fallido"
+    },
+    "condition": {
+      "left": "Valor",
+      "operator": "Operador",
+      "right": "Comparado con",
+      "match": "Se cumple si",
+      "join": "Cómo se combinan las filas",
+      "joins": {
+        "all": "todas las filas",
+        "any": "cualquier fila"
+      },
+      "group": "Grupo",
+      "removeRow": "Quitar fila",
+      "addRow": "Añadir fila",
+      "addGroup": "Añadir grupo",
+      "add": "Añadir una condición",
+      "knownValues": "Valores conocidos:",
+      "operators": {
+        "equals": "es igual a",
+        "not-equals": "no es igual a",
+        "less": "es menor que",
+        "at-most": "es como mucho",
+        "greater": "es mayor que",
+        "at-least": "es al menos",
+        "contains": "contiene",
+        "is-empty": "está vacío",
+        "is-not-empty": "no está vacío"
+      }
+    },
+    "problems": {
+      "between": "Fuera del rango permitido",
+      "branches": "De 2 a 4 ramas",
+      "stepId": "Minúsculas, dígitos y _, empezando por una letra",
+      "kind": "Tipo de paso desconocido",
+      "loopMode": "Elija exactamente uno: veces, para cada, mientras",
+      "scheme": "La dirección debe empezar por http:// o https://",
+      "takenId": "Este id ya está en uso",
+      "input": "Minúsculas, dígitos y _, empezando por una letra; sin repetir",
+      "noSteps": "Añada al menos un paso",
+      "duplicateId": "Otro paso tiene este id",
+      "secretUnset": "El secreto {name} aún no está definido",
+      "unseenKey": "La respuesta de {step} en la última ejecución no tenía la clave {key}",
+      "notStarted": "Ninguna automatización ni webhook inicia este flujo todavía",
+      "unknownSampleKey": "La estructura de la respuesta de {step} no tiene la clave {key}",
+      "inputDefault": "El valor por defecto no es del tipo de la entrada",
+      "variableName": "Mayúsculas, dígitos y _, empezando por una letra",
+      "variableReserved": "Lo fija el portal; elija otro nombre"
+    },
+    "canvas": {
+      "label": "Diagrama del flujo",
+      "nodeHelp": "Enter abre, las flechas recorren el flujo, Supr elimina",
+      "edgeHelp": "Una flecha entre pasos",
+      "controls": "Controles del diagrama",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "fit": "Ver todo el flujo",
+      "minimap": "Vista general"
+    },
+    "insertHere": "Añadir un paso aquí",
+    "settings": "Ajustes del flujo",
+    "settingsHint": "Título, entradas, límite de tiempo y etiquetas",
+    "closeInspector": "Cerrar el panel",
+    "produces": {
+      "title": "Qué da este paso",
+      "hint": "Los pasos siguientes pueden usar estos valores; pulse para copiar",
+      "copy": "Copiar {reference}"
+    },
+    "branchCount": "{count, plural, one {# rama} other {# ramas}}",
+    "values": {
+      "groups": {
+        "service": "Servicios",
+        "script": "Scripts",
+        "workflow": "Flujos",
+        "variable": "Variables asignadas antes",
+        "channel": "Canales de notificación",
+        "automation": "Automatizaciones"
+      },
+      "inputsOf": "Entradas: {inputs}",
+      "noInputs": "Sin entradas",
+      "readiness": {
+        "disabled": "Desactivado",
+        "missing": "Sin configurar"
+      },
+      "event": "Evento: {event}"
+    },
+    "startNode": "Inicio",
+    "endNode": "Fin",
+    "untitled": "Nuevo flujo",
+    "onlyByHand": "Solo se inicia a mano",
+    "startedBy": "Lo inicia: {names}",
+    "noWorkflowInputs": "Sin entradas",
+    "run": {
+      "showLast": "Mostrar la última ejecución",
+      "hideLast": "Ocultar la ejecución",
+      "passes": "{count, plural, one {# pasada} other {# pasadas}} · {milliseconds} ms",
+      "duration": "{milliseconds} ms",
+      "title": "Ejecución",
+      "hide": "Ocultar ejecución",
+      "order": "Paso {number} de la ejecución",
+      "steps": "Pasos de la ejecución"
+    },
+    "summaries": {
+      "wait": "esperar {seconds} s",
+      "stopSucceeded": "correcto {reason}",
+      "stopFailed": "fallido {reason}",
+      "forEach": "para cada elemento de {list}",
+      "while": "mientras {condition}",
+      "repeat": "{count, plural, one {# vez} other {# veces}}",
+      "parallel": "{count, plural, one {# rama} other {# ramas}} a la vez",
+      "nothing": "sigue",
+      "automationWaited": "{title}, esperando"
+    },
+    "warningCount": "{count, plural, one {# aviso} other {# avisos}}",
+    "palette": {
+      "title": "Añadir un paso",
+      "description": "Elija qué debe pasar en este punto",
+      "search": "Buscar un paso",
+      "noMatches": "Ningún paso coincide"
+    },
+    "destinations": {
+      "top": "Al final del flujo",
+      "body": "Dentro del bucle «{step}»",
+      "then": "En «{step}»: entonces",
+      "else": "En «{step}»: si no",
+      "branch": "En «{step}»: rama {number}"
+    },
+    "problemsPanel": {
+      "title": "Problemas",
+      "none": "No hay problemas",
+      "workflow": "Flujo"
+    },
+    "toolbar": {
+      "label": "Acciones del editor",
+      "undo": "Deshacer",
+      "undoKeys": "Deshacer (Ctrl+Z)",
+      "redo": "Rehacer",
+      "redoKeys": "Rehacer (Mayús+Ctrl+Z)",
+      "problems": "{errors, plural, one {# error} other {# errores}}, {warnings, plural, one {# aviso} other {# avisos}}",
+      "legend": "Cómo funciona",
+      "saveAndRun": "Guardar y ejecutar",
+      "saveWithErrors": "Guardar ({count, plural, one {# error} other {# errores}})",
+      "runs": "Ejecuciones"
+    },
+    "runs": {
+      "title": "Ejecuciones de este flujo",
+      "none": "Este flujo aún no se ha ejecutado",
+      "notSaved": "Guarde el flujo para ver sus ejecuciones",
+      "byHand": "A mano",
+      "byPerson": "A mano, {name}",
+      "duration": "{milliseconds} ms"
+    },
+    "sample": {
+      "fromRun": "Tomar de la última ejecución",
+      "noRun": "Este paso no tuvo respuesta JSON en la última ejecución",
+      "format": "Formatear",
+      "placeholder": "'{'\"state\": \"up\", \"disks\": ['{'\"name\": \"sda\"'}']'}'",
+      "invalid": "Esto no es JSON",
+      "large": "Como máximo 16 KiB",
+      "keys": "{count, plural, one {# clave} other {# claves}} para sugerencias:"
+    },
+    "transform": {
+      "empty": "Aún no hay operaciones; añada la primera abajo.",
+      "chain": "Operaciones",
+      "choose": "Operación que añadir",
+      "add": "Añadir operación",
+      "groups": {
+        "operations": "Operaciones de lista",
+        "list": "Filtros para listas",
+        "text": "Filtros para texto",
+        "number": "Filtros para números",
+        "object": "Filtros para objetos",
+        "any": "Filtros para cualquier valor",
+        "fitting": "Sirve para el valor actual ({type})"
+      },
+      "operationTitle": "{number}. {name}",
+      "drag": "Arrastrar la operación {number}",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "remove": "Quitar la operación {number}",
+      "after": "Después de la operación {number}",
+      "fromSample": "según la estructura de la respuesta",
+      "fromRun": "según la última ejecución",
+      "noSample": "Sin vista previa: tome la entrada de un paso con estructura de respuesta o última ejecución conocida.",
+      "cannot": "No acepta este valor: {error}",
+      "where": "Conservar los elementos donde",
+      "to": "Convertir cada elemento en",
+      "toHint": "'{{'item'}}' es el elemento actual, '{{'index'}}' su posición.",
+      "key": "Clave",
+      "order": "Orden",
+      "orders": {
+        "asc": "Ascendente",
+        "desc": "Descendente"
+      },
+      "types": {
+        "text": "texto",
+        "number": "número",
+        "boolean": "booleano",
+        "list": "lista",
+        "object": "objeto",
+        "null": "nada",
+        "any": "cualquiera"
+      },
+      "nestedChain": "Operaciones internas, nivel {depth}",
+      "eachHint": "Se aplica a cada elemento por turno; las vistas previas usan el primer elemento.",
+      "valueNow": "El valor ahora: {type}",
+      "forEachElement": "{name} — para cada elemento"
+    },
+    "setForms": {
+      "label": "Cómo se escribe el valor",
+      "value": "Texto",
+      "json": "JSON",
+      "list": "Lista",
+      "object": "Diccionario"
+    },
+    "moveItemUp": "Subir el valor {number}"
+  },
+  "templateInput": {
+    "suggestions": "Valores que puede insertar",
+    "noMatches": "Ningún valor coincide; siga escribiendo o pulse Escape"
+  },
+  "workflowHelp": {
+    "groups": {
+      "flow": {
+        "name": "Flujo",
+        "description": "Decidir, repetir, ramificar y llamar a otros flujos"
+      },
+      "data": {
+        "name": "Datos",
+        "description": "Recordar valores y hacer pausas"
+      },
+      "actions": {
+        "name": "Acciones",
+        "description": "Hablar con la red, el portal y usted"
+      }
+    },
+    "kinds": {
+      "if": {
+        "name": "Si",
+        "description": "Comprueba una condición y ejecuta una de dos ramas.",
+        "example": "Si '{{'steps.ping.status'}}' es 200, terminar; si no, esperar y volver a intentar."
+      },
+      "loop": {
+        "name": "Bucle",
+        "description": "Repite sus pasos varias veces, para cada elemento de una lista o mientras se cumpla una condición.",
+        "example": "Tres veces: llamar a la API de reinicio y esperar 20 segundos."
+      },
+      "parallel": {
+        "name": "En paralelo",
+        "description": "Ejecuta de 2 a 4 ramas a la vez y espera a todas.",
+        "example": "Comprobar el NAS y el router a la vez."
+      },
+      "workflow": {
+        "name": "Llamar a un flujo",
+        "description": "Ejecuta otro flujo con entradas y recibe sus variables.",
+        "example": "Llamar a «Reanimar un servicio» con service = '{{'inputs.service'}}'."
+      },
+      "stop": {
+        "name": "Terminar",
+        "description": "Termina toda la ejecución como correcta o fallida, con un motivo.",
+        "example": "Terminar como correcta: «el NAS respondió»."
+      },
+      "set": {
+        "name": "Asignar variable",
+        "description": "Guarda un valor con un nombre que los pasos siguientes leen como '{{'vars.nombre'}}'.",
+        "example": "Asignar report = «Buenos días»."
+      },
+      "wait": {
+        "name": "Esperar",
+        "description": "Pausa la ejecución unos segundos. Detener termina la pausa al instante.",
+        "example": "Esperar 20 segundos."
+      },
+      "http": {
+        "name": "Petición HTTP",
+        "description": "Envía una petición y guarda el estado, las cabeceras, el cuerpo y el JSON de la respuesta.",
+        "example": "GET http://nas.lan/api/ping"
+      },
+      "script": {
+        "name": "Script",
+        "description": "Ejecuta un script de la carpeta de scripts, sin shell, y guarda su código de salida y su salida.",
+        "example": "backup.sh --target nas"
+      },
+      "notify": {
+        "name": "Notificación",
+        "description": "Envía un mensaje por el módulo de notificaciones: a un canal, o a todos los canales listos si no se elige ninguno. Los pasos telegram antiguos se abren como este paso con el canal telegram.",
+        "example": "'{{'inputs.service'}}' no responde"
+      },
+      "probe": {
+        "name": "Comprobar servicio",
+        "description": "Comprueba un servicio ahora, como su comprobación habitual, y guarda el resultado.",
+        "example": "Comprobar nas y leer '{{'steps.probe.state'}}'."
+      },
+      "status": {
+        "name": "Estado del servicio",
+        "description": "Lee el estado actual de un servicio sin volver a comprobarlo.",
+        "example": "Leer el estado del router."
+      },
+      "nothing": {
+        "name": "No hacer nada",
+        "description": "Deja una rama vacía a propósito: la ejecución simplemente sigue.",
+        "example": "Si el NAS funciona, no hacer nada; si no, reiniciarlo."
+      },
+      "transform": {
+        "name": "Transformación",
+        "description": "Cambia la forma de un valor paso a paso: conserva los elementos que cumplen, convierte cada uno, ordena, agrupa, cuenta o aplica cualquier filtro. El resultado es value del paso.",
+        "example": "discos → los que fallan → nombres → una línea"
+      },
+      "automation": {
+        "name": "Iniciar automatización",
+        "description": "Pone en cola una de sus automatizaciones como si se iniciara a mano, con los campos de evento que indique; puede esperar su resultado.",
+        "example": "restart-media con service.id = '{{'inputs.service'}}'"
+      }
+    },
+    "fields": {
+      "if": {
+        "condition": {
+          "label": "Condición",
+          "help": "Filas con un valor, un operador y otro valor; se combinan con todas o cualquiera."
+        },
+        "then": {
+          "label": "Entonces",
+          "help": "Se ejecuta si la condición se cumple."
+        },
+        "else": {
+          "label": "Si no",
+          "help": "Se ejecuta si no; puede quedar vacía."
+        }
+      },
+      "loop": {
+        "repeat": {
+          "label": "Veces",
+          "help": "Cuántas veces repetir, de 1 a 100."
+        },
+        "for_each": {
+          "label": "Para cada elemento de",
+          "help": "Una lista, normalmente una respuesta JSON como '{{'steps.list.json'}}'; cada elemento es '{{'loop.item'}}'."
+        },
+        "while": {
+          "label": "Mientras",
+          "help": "Repetir mientras se cumpla; se comprueba antes de cada pasada."
+        },
+        "max_iterations": {
+          "label": "Como máximo, pasadas",
+          "help": "Un límite de seguridad para «para cada» y «mientras», 100 como máximo."
+        },
+        "body": {
+          "label": "Repetir",
+          "help": "Los pasos de una pasada."
+        }
+      },
+      "parallel": {
+        "branches": {
+          "label": "Ramas",
+          "help": "De 2 a 4 listas de pasos que van a la vez; sus variables se unen en el orden de las ramas."
+        }
+      },
+      "workflow": {
+        "workflow": {
+          "label": "Flujo",
+          "help": "El flujo que se ejecuta; no puede volver a llamar a este."
+        },
+        "inputs": {
+          "label": "Entradas",
+          "help": "Un valor para cada entrada que declara el flujo llamado."
+        }
+      },
+      "stop": {
+        "outcome": {
+          "label": "Resultado",
+          "help": "Cómo termina la ejecución en el registro."
+        },
+        "reason": {
+          "label": "Motivo",
+          "help": "Se muestra en el registro junto al resultado."
+        }
+      },
+      "set": {
+        "variable": {
+          "label": "Variable",
+          "help": "Minúsculas, dígitos y _; los pasos siguientes la leen como '{{'vars.nombre'}}'."
+        },
+        "value": {
+          "label": "Valor",
+          "help": "Texto; las plantillas se rellenan."
+        },
+        "json": {
+          "label": "Valor JSON",
+          "help": "En lugar de Valor, para guardar un número, una lista o un objeto, por ejemplo '{{'steps.ping.json.items'}}'."
+        },
+        "list": {
+          "label": "Lista",
+          "help": "Cada fila es una plantilla; una fila que solo tiene un marcador conserva su tipo."
+        },
+        "object": {
+          "label": "Diccionario",
+          "help": "Cada fila es una clave y una plantilla; los pasos siguientes leen '{{'vars.name.key'}}'."
+        }
+      },
+      "wait": {
+        "seconds": {
+          "label": "Segundos",
+          "help": "De 1 a 3600."
+        }
+      },
+      "http": {
+        "method": {
+          "label": "Método",
+          "help": "GET lee, POST y PUT envían, DELETE elimina."
+        },
+        "url": {
+          "label": "URL",
+          "help": "Una dirección http:// o https://; las plantillas se rellenan."
+        },
+        "headers": {
+          "label": "Cabeceras",
+          "help": "Pares nombre y valor, por ejemplo Authorization = Bearer '{{'secrets.token'}}'."
+        },
+        "body": {
+          "label": "Cuerpo",
+          "help": "Texto de la petición; el JSON se envía como application/json."
+        },
+        "timeout_seconds": {
+          "label": "Límite de tiempo, segundos",
+          "help": "De 1 a 60; 10 si está vacío."
+        },
+        "fail_on_error": {
+          "label": "Fallar con estado 400 o superior",
+          "help": "Desactivado, la ejecución sigue y puede leer el estado ella misma."
+        },
+        "response_sample": {
+          "label": "Estructura de la respuesta",
+          "help": "Un ejemplo de la respuesta JSON. Los pasos siguientes reciben sus claves como sugerencias, como steps.ping.json.state. La ejecución no la comprueba."
+        }
+      },
+      "script": {
+        "script": {
+          "label": "Script",
+          "help": "Un archivo de la carpeta de scripts con permisos 0755 o más estrictos."
+        },
+        "args": {
+          "label": "Argumentos",
+          "help": "Cada argumento se pasa por separado, sin shell."
+        },
+        "timeout_seconds": {
+          "label": "Límite de tiempo, segundos",
+          "help": "De 1 a 3600; después se detienen el script y todo lo que inició."
+        },
+        "env": {
+          "label": "Entorno",
+          "help": "Variables que el script lee de su entorno, como $TARGET; cada valor es una plantilla."
+        },
+        "stdin": {
+          "label": "Entrada estándar",
+          "help": "Un valor que el script recibe por su entrada estándar como JSON, en lugar de los campos del evento; por ejemplo '{{'vars.report'}}'."
+        }
+      },
+      "notify": {
+        "text": {
+          "label": "Texto",
+          "help": "El mensaje; se rellenan las plantillas."
+        },
+        "title": {
+          "label": "Título",
+          "help": "Una primera línea opcional en negrita; se rellenan las plantillas."
+        },
+        "channel": {
+          "label": "Canal",
+          "help": "Un canal de la página de notificaciones; vacío envía a todos los canales listos."
+        }
+      },
+      "probe": {
+        "service": {
+          "label": "Servicio",
+          "help": "El id de un servicio o una plantilla como '{{'inputs.service'}}'."
+        }
+      },
+      "status": {
+        "service": {
+          "label": "Servicio",
+          "help": "El id de un servicio o una plantilla como '{{'inputs.service'}}'."
+        }
+      },
+      "transform": {
+        "input": {
+          "label": "Entrada",
+          "help": "Una plantilla con el valor a transformar, como '{{'steps.list.json.disks'}}'."
+        },
+        "operations": {
+          "label": "Operaciones",
+          "help": "Se aplican en orden, de arriba abajo; cada tarjeta muestra el valor después de ella."
+        }
+      },
+      "automation": {
+        "automation": {
+          "label": "Automatización",
+          "help": "La automatización que iniciar; un flujo no puede iniciar la automatización que lo inició."
+        },
+        "fields": {
+          "label": "Campos del evento",
+          "help": "Valores que la automatización ve como campos del evento: '{{'service.id'}}', PORTAL_SERVICE_ID y en su entrada estándar."
+        },
+        "wait": {
+          "label": "Esperarla",
+          "help": "Esperar a que termine su ejecución y fallar si no tuvo éxito."
+        }
+      }
+    },
+    "results": {
+      "if": {
+        "branch": "La rama que tomó: then o else"
+      },
+      "loop": {
+        "iterations": "Cuántas pasadas hubo"
+      },
+      "workflow": {
+        "vars": "Las variables que asignó el flujo llamado"
+      },
+      "set": {
+        "value": "El valor asignado"
+      },
+      "http": {
+        "status": "El código de estado HTTP, como 200 o 404",
+        "headers": "Las cabeceras de la respuesta",
+        "body": "El texto de la respuesta, los primeros 64 KiB",
+        "json": "La respuesta como JSON, si lo es; añada claves detrás"
+      },
+      "script": {
+        "exit_code": "El código de salida; 0 es éxito",
+        "stdout": "El final de la salida",
+        "stderr": "El final de los errores"
+      },
+      "probe": {
+        "state": "up, degraded, down o unreadable",
+        "latency_milliseconds": "Cuánto tardó la comprobación",
+        "diagnosis": "Por qué falló, si falló"
+      },
+      "status": {
+        "state": "up, degraded, down o unreadable",
+        "since": "Desde cuándo el servicio está en ese estado"
+      },
+      "transform": {
+        "value": "El valor después de la última operación."
+      },
+      "automation": {
+        "run_id": "El id de la ejecución puesta en cola",
+        "outcome": "Cómo terminó esa ejecución, si se esperó"
+      }
+    },
+    "suggestions": {
+      "groups": {
+        "inputs": "Entradas",
+        "vars": "Variables",
+        "steps": "Resultados de pasos anteriores",
+        "loop": "Bucle",
+        "event": "El evento que inició la ejecución",
+        "secrets": "Secretos",
+        "item": "Elemento actual"
+      },
+      "input": "Entrada {name} de este flujo",
+      "variable": "Variable {name}, la asigna el paso {step}",
+      "calledVariable": "Variable {name} del flujo llamado {workflow}",
+      "jsonKey": "Clave {key} de la respuesta de {step}, vista en la última ejecución",
+      "event": "Campo {name} del evento",
+      "secret": "Secreto {name}: se envía tal cual y se muestra como *** en el registro",
+      "secretUnset": "Este secreto aún no está definido; el paso fallará",
+      "loop": {
+        "item": "El elemento actual del bucle",
+        "index": "El número de la pasada actual, desde 0"
+      },
+      "sampleKey": "Clave {key} de la respuesta de {step}, de su estructura de respuesta",
+      "item": {
+        "value": "El elemento actual de la lista",
+        "index": "Su posición, desde 0",
+        "key": "{key} del elemento actual"
+      },
+      "variableKey": "{key} del diccionario {name}",
+      "forEachElement": "para cada elemento"
+    },
+    "reasons": {
+      "unknownInput": "{name} no es una entrada de este flujo",
+      "unknownVariable": "ningún paso anterior asigna la variable {name}",
+      "unknownStep": "no hay un paso {name} antes",
+      "outsideLoop": "loop.{name} solo existe dentro de un bucle, como loop.item y loop.index",
+      "notAValue": "{name} no es un valor que conozca un flujo",
+      "outsideTransform": "{name} existe solo dentro de filter y map de una transformación",
+      "unreadableFilter": "hay un filtro que no se puede leer: {filter}",
+      "unknownFilter": "el filtro {filter} no existe",
+      "filterArguments": "{filter} recibe {wanted} argumentos y obtuvo {got}",
+      "filterArgument": "el argumento {argument} de {filter} debe ser texto entre comillas o un número, según su tipo",
+      "filterType": "{filter} recibe {takes} y obtuvo {got}"
+    },
+    "edges": {
+      "then": "entonces",
+      "else": "si no",
+      "branch": "rama {number}",
+      "repeat": "{count, plural, one {# vez} other {# veces}}",
+      "forEach": "para cada elemento",
+      "while": "mientras se cumpla",
+      "again": "otra vez"
+    },
+    "legend": {
+      "title": "Cómo funciona el editor",
+      "start": "El nodo superior guarda las entradas y muestra qué inicia el flujo.",
+      "arrows": "Las flechas muestran el orden de los pasos; las condiciones se bifurcan y vuelven a unirse.",
+      "plus": "Pulse + en una flecha para añadir un paso ahí, o arrastre un paso a otro +.",
+      "palette": "La paleta describe cada tipo de paso con un ejemplo.",
+      "completion": "Escriba '{{' en cualquier campo para insertar entradas, variables y resultados de pasos anteriores.",
+      "dismiss": "Entendido"
+    },
+    "templates": {
+      "retry": {
+        "title": "Reintentar una petición hasta que responda",
+        "description": "Pregunta a una dirección hasta tres veces, con pausas entre intentos.",
+        "labels": {
+          "retry": "Tres intentos",
+          "ping": "Preguntar a la dirección",
+          "answered": "¿Respondió?",
+          "pause": "Esperar un poco",
+          "give_up": "Rendirse"
+        }
+      },
+      "notify-down": {
+        "title": "Avisarme cuando un servicio cae",
+        "description": "Comprueba un servicio y envía una notificación si no está activo.",
+        "labels": {
+          "check": "Comprobar el servicio",
+          "down": "¿Está caído?",
+          "tell": "Enviar un mensaje"
+        }
+      },
+      "parallel-check": {
+        "title": "Comprobar varios servicios a la vez",
+        "description": "Lee dos estados a la vez e informa de ambos.",
+        "labels": {
+          "together": "Comprobar juntos",
+          "report": "Informar"
+        }
+      },
+      "daily-report": {
+        "title": "Informe diario",
+        "description": "Crea un texto corto con estados y lo envía; inícielo con un horario.",
+        "labels": {
+          "greeting": "Empezar el texto",
+          "nas": "Estado del NAS",
+          "send": "Enviar el informe"
+        }
+      },
+      "empty": {
+        "title": "Flujo vacío",
+        "description": "Empiece desde cero y añada pasos con +.",
+        "labels": {}
+      },
+      "gallery": "Plantillas de inicio"
+    },
+    "filters": {
+      "upper": {
+        "description": "En mayúsculas.",
+        "example": "'{{'inputs.service | upper'}}' → NAS"
+      },
+      "lower": {
+        "description": "En minúsculas.",
+        "example": "'{{'inputs.service | lower'}}' → nas"
+      },
+      "trim": {
+        "description": "Quita los espacios de los extremos.",
+        "example": "'{{'steps.run.stdout | trim'}}'"
+      },
+      "replace": {
+        "description": "Sustituye cada from por to.",
+        "example": "'{{'inputs.service | replace(\"-\", \" \")'}}'"
+      },
+      "split": {
+        "description": "Corta el texto en una lista en cada separador.",
+        "example": "'{{'steps.run.stdout | split(\",\")'}}'"
+      },
+      "slice": {
+        "description": "Parte de un texto o lista, de start a end; los números negativos cuentan desde el final.",
+        "example": "'{{'steps.list.json.disks | slice(0, 2)'}}'"
+      },
+      "starts_with": {
+        "description": "Verdadero si el texto empieza por el dado.",
+        "example": "'{{'inputs.service | starts_with(\"nas\")'}}'"
+      },
+      "contains": {
+        "description": "Verdadero si el texto contiene el texto dado o la lista el valor.",
+        "example": "'{{'steps.list.json.tags | contains(\"backup\")'}}'"
+      },
+      "length": {
+        "description": "Cuántos caracteres, elementos o claves.",
+        "example": "'{{'steps.list.json.disks | length'}}' → 3"
+      },
+      "default": {
+        "description": "El valor dado si este está vacío o falta.",
+        "example": "'{{'vars.note | default(\"none\")'}}'"
+      },
+      "number": {
+        "description": "Lee el texto como número.",
+        "example": "'{{'steps.run.stdout | number'}}'"
+      },
+      "round": {
+        "description": "Redondea al número de decimales dado.",
+        "example": "'{{'steps.list.json.load | round(1)'}}'"
+      },
+      "floor": {
+        "description": "Redondea hacia abajo.",
+        "example": "'{{'steps.list.json.load | floor'}}'"
+      },
+      "ceil": {
+        "description": "Redondea hacia arriba.",
+        "example": "'{{'steps.list.json.load | ceil'}}'"
+      },
+      "abs": {
+        "description": "Quita el signo.",
+        "example": "'{{'vars.delta | abs'}}'"
+      },
+      "first": {
+        "description": "El primer elemento de una lista.",
+        "example": "'{{'steps.list.json.disks | first'}}'"
+      },
+      "last": {
+        "description": "El último elemento de una lista.",
+        "example": "'{{'steps.list.json.disks | last'}}'"
+      },
+      "join": {
+        "description": "Une los elementos de una lista en un texto.",
+        "example": "'{{'steps.list.json.names | join(\", \")'}}'"
+      },
+      "sort": {
+        "description": "Ordena una lista: números por valor, texto alfabéticamente.",
+        "example": "'{{'steps.list.json.names | sort'}}'"
+      },
+      "reverse": {
+        "description": "Invierte una lista.",
+        "example": "'{{'steps.list.json.names | reverse'}}'"
+      },
+      "unique": {
+        "description": "Deja el primero de cada elemento repetido.",
+        "example": "'{{'steps.list.json.tags | unique'}}'"
+      },
+      "pluck": {
+        "description": "Toma una clave de cada objeto de una lista.",
+        "example": "'{{'steps.list.json.disks | pluck(\"name\")'}}'"
+      },
+      "sum": {
+        "description": "Suma los números de una lista.",
+        "example": "'{{'steps.list.json.sizes | sum'}}'"
+      },
+      "min": {
+        "description": "El número menor de una lista.",
+        "example": "'{{'steps.list.json.sizes | min'}}'"
+      },
+      "max": {
+        "description": "El número mayor de una lista.",
+        "example": "'{{'steps.list.json.sizes | max'}}'"
+      },
+      "keys": {
+        "description": "Las claves de un objeto, en orden.",
+        "example": "'{{'steps.list.json | keys'}}'"
+      },
+      "values": {
+        "description": "Los valores de un objeto, en el orden de sus claves.",
+        "example": "'{{'steps.list.json | values'}}'"
+      },
+      "get": {
+        "description": "El valor en una clave o ruta como a.b.0.",
+        "example": "'{{'steps.list.json | get(\"disks.0.name\")'}}'"
+      },
+      "json": {
+        "description": "Escribe cualquier valor como texto JSON.",
+        "example": "'{{'steps.list.json.disks | json'}}'"
+      },
+      "parse": {
+        "description": "Lee texto JSON como un valor.",
+        "example": "'{{'steps.run.stdout | parse'}}'"
+      }
+    },
+    "operations": {
+      "filter": {
+        "name": "Conservar los que cumplen",
+        "description": "Conserva los elementos que cumplen la condición; '{{'item'}}' es el elemento actual."
+      },
+      "map": {
+        "name": "Convertir cada uno en",
+        "description": "Crea una lista nueva con una plantilla; '{{'item'}}' y '{{'index'}}' son el elemento actual y su posición."
+      },
+      "sort_by": {
+        "name": "Ordenar por una clave",
+        "description": "Ordena una lista de objetos por el valor de una clave, ascendente o descendente."
+      },
+      "group_by": {
+        "name": "Agrupar por una clave",
+        "description": "Crea un objeto de listas, una por cada valor de la clave."
+      },
+      "count_by": {
+        "name": "Contar por una clave",
+        "description": "Crea un objeto de recuentos, uno por cada valor de la clave."
+      },
+      "each": {
+        "name": "Para cada elemento",
+        "description": "Aplica su propia cadena de operaciones a cada elemento y da la lista de resultados; dentro, '{{'item'}}' es el elemento."
+      }
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "subtitle": "Adónde van los mensajes sobre los servicios y de los flujos, y qué cambios se anuncian.",
+    "saved": "Guardado",
+    "refused": "La configuración no se guardó",
+    "channels": {
+      "telegram": "Telegram"
+    },
+    "readiness": {
+      "ready": "Listo",
+      "disabled": "Apagado",
+      "missing": "Sin configurar"
+    },
+    "missing": "{field}: {message}",
+    "lastDelivery": "Última entrega",
+    "never": "Aún no se ha enviado nada",
+    "lastError": "Último error",
+    "queue": "Cola",
+    "queueCounts": "{queued} en espera · {dropped} descartados",
+    "test": {
+      "send": "Enviar prueba",
+      "sent": "El mensaje de prueba se entregó.",
+      "failed": "El mensaje de prueba no se entregó: {error}",
+      "unavailable": "Configure el canal y active el módulo para enviar una prueba."
+    },
+    "settings": {
+      "title": "Configuración del canal",
+      "enabled": "Activado",
+      "secret": "Secreto con el token",
+      "chat_id": "Id del chat",
+      "noSecret": "Ningún secreto elegido",
+      "save": "Guardar canal"
+    },
+    "rules": {
+      "title": "Qué se anuncia",
+      "description": "Cada canal listo recibe estos anuncios.",
+      "states": "Un servicio pasa a",
+      "recovered": "Anunciar cuando un servicio vuelve a funcionar",
+      "save": "Guardar reglas"
+    }
+  },
+  "workflowInputs": {
+    "types": {
+      "text": "Texto",
+      "number": "Número",
+      "boolean": "Sí o no",
+      "list": "Lista",
+      "object": "Diccionario"
+    },
+    "type": "Tipo de la entrada {number}",
+    "default": "Valor por defecto de la entrada {number}",
+    "description": "Descripción de la entrada {number}",
+    "descriptionPlaceholder": "Para qué sirve esta entrada (opcional)",
+    "key": "Clave {number}",
+    "item": "Valor {number}",
+    "removeRow": "Quitar la fila {number}",
+    "addItem": "Añadir un valor",
+    "addKey": "Añadir una clave"
   }
 }

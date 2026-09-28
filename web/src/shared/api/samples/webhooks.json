@@ -26,7 +26,8 @@
       "variables": [
         "branch",
         "commit"
-      ]
+      ],
+      "workflow": null
     },
     {
       "action": "event",
@@ -42,7 +43,8 @@
       "title": "Motion at the door",
       "variables": [
         "camera"
-      ]
+      ],
+      "workflow": null
     }
   ]
 }

@@ -1,8 +1,10 @@
+use std::collections::BTreeMap;
+
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
 use super::RunRequest;
-use crate::types::{RawAutomation, RawRun};
+use crate::types::{InputValue, RawAutomation, RawRun};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AutomationRequest {
@@ -19,7 +21,11 @@ pub struct AutomationRequest {
     #[serde(default)]
     pub when: Map<String, Value>,
     #[serde(default)]
-    pub run: RunRequest,
+    pub run: Option<RunRequest>,
+    #[serde(default)]
+    pub workflow: Option<String>,
+    #[serde(default)]
+    pub inputs: Option<BTreeMap<String, InputValue>>,
 }
 
 impl AutomationRequest {
@@ -35,11 +41,13 @@ impl AutomationRequest {
                 .into_iter()
                 .filter_map(|(key, value)| Self::toml_of(value).map(|value| (key, value)))
                 .collect(),
-            run: RawRun {
-                script: self.run.script,
-                args: self.run.args,
-                timeout_seconds: self.run.timeout_seconds,
-            },
+            run: self.run.map(|run| RawRun {
+                script: run.script,
+                args: run.args,
+                timeout_seconds: run.timeout_seconds,
+            }),
+            workflow: self.workflow.filter(|id| !id.trim().is_empty()),
+            inputs: self.inputs,
         }
     }
 

@@ -3,7 +3,7 @@ use serde::Deserialize;
 use toml_edit::DocumentMut;
 
 use super::{AutomationSettings, RawAutomation};
-use crate::types::RawWebhook;
+use crate::types::{RawWebhook, RawWorkflow};
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct AutomationsSection {
@@ -13,6 +13,8 @@ pub struct AutomationsSection {
     pub automation_settings: AutomationSettings,
     #[serde(default)]
     pub webhooks: Vec<RawWebhook>,
+    #[serde(default)]
+    pub workflows: Vec<RawWorkflow>,
 }
 
 impl AutomationsSection {

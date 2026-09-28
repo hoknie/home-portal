@@ -115,6 +115,7 @@ run = { script = "restart.sh", args = ["--", "{{service.id}}", "{{run.manual}}"]
         automation,
         event,
         by: None,
+        origin: Vec::new(),
     };
     let invocation = Invocation::for_run(
         &pending,
@@ -178,4 +179,89 @@ fn every_outcome_reads_back_by_its_name_and_stopped_is_one_of_them() {
         assert_eq!(Outcome::of(outcome.name()), Some(outcome));
     }
     assert_eq!(Outcome::of("stopped"), Some(Outcome::Stopped));
+}
+
+#[test]
+fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
+    use super::{
+        Condition, HttpStep, KINDS, LoopMode, Operator, RunSettings, SetValue, StepKind, kind_named,
+    };
+    let condition = Condition::Compare {
+        left: String::new(),
+        operator: Operator::IsEmpty,
+        right: None,
+    };
+    let every = [
+        StepKind::If {
+            condition: condition.clone(),
+            then: Vec::new(),
+            otherwise: Vec::new(),
+        },
+        StepKind::Loop {
+            mode: LoopMode::Repeat(1),
+            max_iterations: 1,
+            body: Vec::new(),
+        },
+        StepKind::Parallel {
+            branches: Vec::new(),
+        },
+        StepKind::Call {
+            workflow: String::new(),
+            inputs: Vec::new(),
+        },
+        StepKind::Stop {
+            succeeded: true,
+            reason: None,
+        },
+        StepKind::Set {
+            variable: String::new(),
+            value: SetValue::Text(String::new()),
+        },
+        StepKind::Wait { seconds: 1 },
+        StepKind::Transform {
+            input: String::new(),
+            operations: Vec::new(),
+        },
+        StepKind::Http(HttpStep {
+            method: "GET".into(),
+            url: String::new(),
+            headers: Vec::new(),
+            body: None,
+            timeout_seconds: 1,
+            fail_on_error: true,
+        }),
+        StepKind::Script {
+            run: RunSettings {
+                script: String::new(),
+                args: Vec::new(),
+                timeout_seconds: 1,
+            },
+            env: Vec::new(),
+            stdin: None,
+        },
+        StepKind::Notify {
+            channel: None,
+            title: None,
+            text: String::new(),
+        },
+        StepKind::Probe {
+            service: String::new(),
+        },
+        StepKind::Status {
+            service: String::new(),
+        },
+        StepKind::Nothing,
+        StepKind::Automation {
+            automation: String::new(),
+            fields: Vec::new(),
+            wait: false,
+        },
+    ];
+    for kind in &every {
+        assert!(kind_named(kind.name()).is_some(), "{}", kind.name());
+    }
+    let names: Vec<&str> = every.iter().map(StepKind::name).collect();
+    for kind in KINDS {
+        assert!(names.contains(&kind.name), "{}", kind.name);
+    }
 }

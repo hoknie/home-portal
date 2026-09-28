@@ -39,7 +39,9 @@
             "truncated": false
           }
         },
-        "started_at": "2026-09-25T03:00:00Z"
+        "started_at": "2026-09-25T03:00:00Z",
+        "trace": null,
+        "workflow": null
       },
       "run": {
         "args": [
@@ -63,7 +65,8 @@
           "down",
           "unreadable"
         ]
-      }
+      },
+      "workflow": null
     },
     {
       "active_run": {
@@ -100,7 +103,9 @@
             "truncated": false
           }
         },
-        "started_at": "2026-09-25T03:00:00Z"
+        "started_at": "2026-09-25T03:00:00Z",
+        "trace": null,
+        "workflow": null
       },
       "cooldown_seconds": 0,
       "enabled": false,
@@ -139,7 +144,9 @@
             "truncated": false
           }
         },
-        "started_at": "2026-09-25T03:00:00Z"
+        "started_at": "2026-09-25T03:00:00Z",
+        "trace": null,
+        "workflow": null
       },
       "run": {
         "args": [],
@@ -153,7 +160,8 @@
       "when": {
         "cron": "0 3 * * *",
         "event": "schedule"
-      }
+      },
+      "workflow": null
     }
   ]
 }

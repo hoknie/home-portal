@@ -11,17 +11,26 @@ use crate::controllers::{
     catalogue, create, create_webhook, delete_webhook, issue_token, list, list_webhooks, receive,
     remove, remove_token, run, run_now, runs, schedule, scripts, stop, update, update_webhook,
 };
-use crate::loops::{JournalWriter, dispatch_forever, schedule_forever, watch_forever};
-use crate::ports::{Clock, Directory};
+use crate::controllers::{
+    create_workflow, delete_workflow, list_workflows, run_workflow, update_workflow,
+    workflow_catalogue,
+};
+use crate::loops::{
+    JournalWriter, dispatch_children_forever, dispatch_forever, schedule_forever, watch_forever,
+};
+use crate::ports::{Clock, Directory, PortalActions};
 use crate::repositories::RunFile;
 use crate::services::{
     AutomationCache, AutomationSink, Journal, ScriptsDirectory, StatusRelay, SystemClock, Views,
-    WebhookBook, WebhookWriter, validate_automations,
+    WebhookBook, WebhookWriter, WorkflowTools, validate_automations,
 };
-use crate::types::AutomationsState;
+use crate::types::{AutomationsState, WorkflowCases};
 use crate::usecases::{
     ChangeAutomation, ChangeWebhook, CreateAutomation, CreateWebhook, DeleteAutomation,
     DeleteWebhook, IssueToken, ListAutomations, ListWebhooks, RemoveToken,
+};
+use crate::usecases::{
+    ChangeWorkflow, CreateWorkflow, DeleteWorkflow, ListWorkflows, RunWorkflow, WorkflowCatalogue,
 };
 
 pub struct AutomationsFeature {
@@ -29,6 +38,7 @@ pub struct AutomationsFeature {
     pub(crate) configuration: Arc<ConfigStore>,
     clock: Arc<dyn Clock>,
     writer: Arc<JournalWriter>,
+    tools: WorkflowTools,
 }
 
 impl AutomationsFeature {
@@ -46,12 +56,18 @@ impl AutomationsFeature {
     pub const WEBHOOK: &'static str = "/api/webhooks/{id}";
     pub const WEBHOOK_TOKEN: &'static str = "/api/webhooks/{id}/token";
     pub const RECEIVE: &'static str = "/webhook/{id}";
+    pub const WORKFLOWS: &'static str = "/api/workflows";
+    pub const WORKFLOW: &'static str = "/api/workflows/{id}";
+    pub const WORKFLOW_RUN: &'static str = "/api/workflows/{id}/run";
+    pub const WORKFLOW_CATALOGUE: &'static str = "/api/workflows/catalogue";
     pub const LARGEST_BODY: usize = 64 * 1024;
 
     pub fn new(
         configuration: Arc<ConfigStore>,
         directory: Arc<dyn Directory>,
-    ) -> AutomationsFeature {
+        actions: Arc<dyn PortalActions>,
+    ) -> Result<AutomationsFeature, String> {
+        let tools = WorkflowTools::of(configuration.clone(), actions)?;
         let cache = Arc::new(AutomationCache::of(&configuration.read().document));
         let scripts = ScriptsDirectory::at(configuration.storage(Storage::Scripts));
         let file = Arc::new(RunFile::at(&configuration.storage(Storage::Automations)));
@@ -62,11 +78,20 @@ impl AutomationsFeature {
             sink: sink.clone(),
             webhooks: webhooks.clone(),
         };
+        let manual_runs = Arc::new(Mutex::new(HashMap::new()));
+        let workflows = WorkflowCases {
+            list: ListWorkflows::new(configuration.clone(), views.clone()),
+            create: CreateWorkflow::new(configuration.clone(), views.clone()),
+            change: ChangeWorkflow::new(configuration.clone(), views.clone()),
+            delete: DeleteWorkflow::new(configuration.clone(), views.clone()),
+            run: RunWorkflow::new(sink.clone(), manual_runs.clone()),
+            catalogue: WorkflowCatalogue,
+        };
         let webhook_writer = WebhookWriter {
             configuration: configuration.clone(),
             sink: sink.clone(),
         };
-        AutomationsFeature {
+        Ok(AutomationsFeature {
             state: AutomationsState {
                 list: ListAutomations::new(configuration.clone(), views.clone()),
                 create: CreateAutomation::new(configuration.clone(), sink.clone()),
@@ -85,13 +110,15 @@ impl AutomationsFeature {
                 sink,
                 directory,
                 scripts,
-                manual_runs: Arc::new(Mutex::new(HashMap::new())),
+                manual_runs,
                 webhooks,
+                workflows,
             },
             configuration,
             clock: Arc::new(SystemClock),
             writer,
-        }
+            tools,
+        })
     }
 
     pub fn events(&self) -> Arc<dyn EventSink> {
@@ -124,6 +151,10 @@ impl Feature for AutomationsFeature {
             .route(Self::WEBHOOKS, get(list_webhooks).post(create_webhook))
             .route(Self::WEBHOOK, put(update_webhook).delete(delete_webhook))
             .route(Self::WEBHOOK_TOKEN, post(issue_token).delete(remove_token))
+            .route(Self::WORKFLOWS, get(list_workflows).post(create_workflow))
+            .route(Self::WORKFLOW, put(update_workflow).delete(delete_workflow))
+            .route(Self::WORKFLOW_RUN, post(run_workflow))
+            .route(Self::WORKFLOW_CATALOGUE, get(workflow_catalogue))
             .with_state(self.state.clone())
     }
 
@@ -143,6 +174,12 @@ impl Feature for AutomationsFeature {
             Box::pin(dispatch_forever(
                 self.state.sink.clone(),
                 self.state.scripts.clone(),
+                self.tools.clone(),
+            )),
+            Box::pin(dispatch_children_forever(
+                self.state.sink.clone(),
+                self.state.scripts.clone(),
+                self.tools.clone(),
             )),
             Box::pin(schedule_forever(
                 self.state.sink.clone(),

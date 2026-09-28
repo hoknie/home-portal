@@ -6,13 +6,13 @@ use crate::types::FieldError;
 pub const SECTION: &str = "modules";
 pub const LEGACY_KEY: &str = "enabled";
 pub const NOT_A_MODULE: &str =
-    "is not a module; the modules are proxy, dns, automations, webhooks and users";
+    "is not a module; the modules are proxy, dns, automations, webhooks, users and workflows";
 pub const NOT_A_SWITCH: &str = "must be true or false";
 pub const NOT_A_TABLE: &str = "must be a table of module names to true or false";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ModuleSwitches {
-    on: [bool; 5],
+    on: [bool; 7],
 }
 
 impl Default for ModuleSwitches {

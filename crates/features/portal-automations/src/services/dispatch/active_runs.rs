@@ -36,6 +36,13 @@ impl ActiveRuns {
         self.lock().get(&run_id).map(|run| run.control.clone())
     }
 
+    pub fn trace(
+        &self,
+        run_id: u64,
+    ) -> Option<std::sync::Arc<std::sync::Mutex<crate::types::Trace>>> {
+        self.find(run_id).map(|run| run.trace)
+    }
+
     pub fn stopped_by(&self, run_id: u64) -> Option<String> {
         self.lock()
             .get(&run_id)
@@ -64,6 +71,14 @@ impl ActiveRuns {
             .values()
             .rev()
             .find(|run| run.automation == automation)
+            .cloned()
+    }
+
+    pub fn of_workflow(&self, workflow: &str) -> Option<ActiveRun> {
+        self.lock()
+            .values()
+            .rev()
+            .find(|run| run.workflow.as_deref() == Some(workflow))
             .cloned()
     }
 

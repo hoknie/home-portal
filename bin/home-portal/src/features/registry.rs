@@ -11,19 +11,20 @@ use portal_icons::IconsFeature;
 use portal_metrics::MetricsFeature;
 use portal_modules::ModulesFeature;
 use portal_network::{CurrentEnvironments, CurrentNetwork, NetworkFeature, host_environment};
+use portal_notification::NotificationFeature;
 use portal_proxy::{
     CheckPublication, CurrentProxySettings, PrepareProxy, ProxyFeature, ProxyPorts,
 };
 use portal_public::PublicFeature;
 use portal_secrets::SecretsFeature;
 use portal_services::{ServiceEntries, ServicesFeature, ServicesPorts};
-use portal_telegram::TelegramFeature;
 use portal_weather::WeatherFeature;
 use portal_widget::WidgetRegistry;
 
+use super::channels::channels;
 use crate::adapters::{
     AutomationDirectory, DnsDirectory, NetworkConnection, ProxyPublishing, ServiceCatalogue,
-    ServicePublications, WidgetLayout,
+    ServicePublications, WidgetLayout, WorkflowActions,
 };
 use crate::types::{BootError, Registry, Restart, Wiring};
 
@@ -34,14 +35,22 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         network: CurrentNetwork::new(configuration.clone()),
         proxy: CurrentProxySettings::new(configuration.clone()),
     });
-    let automations = Arc::new(AutomationsFeature::new(
-        configuration.clone(),
-        Arc::new(AutomationDirectory {
-            users: UserNames::new(configuration.clone()),
-            services: ServiceEntries::new(configuration.clone()),
-            environments: CurrentEnvironments::new(configuration.clone()),
-        }),
-    ));
+    let actions = Arc::new(WorkflowActions::default());
+    let automations = Arc::new(
+        AutomationsFeature::new(
+            configuration.clone(),
+            Arc::new(AutomationDirectory {
+                users: UserNames::new(configuration.clone()),
+                services: ServiceEntries::new(configuration.clone()),
+                environments: CurrentEnvironments::new(configuration.clone()),
+            }),
+            actions.clone(),
+        )
+        .map_err(|message| BootError::Feature {
+            name: AutomationsFeature::NAME,
+            message,
+        })?,
+    );
     let events = automations.events();
     let auth = Arc::new(AuthFeature::new(
         configuration.clone(),
@@ -53,12 +62,12 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
             .run()
             .unwrap_or_default(),
     );
-    let telegram = TelegramFeature::new(configuration.clone(), portal_telegram::ENDPOINT).map_err(
-        |message| BootError::Feature {
-            name: TelegramFeature::NAME,
-            message,
-        },
-    )?;
+    let notifications =
+        NotificationFeature::new(configuration.clone(), channels(portal_telegram::ENDPOINT)?)
+            .map_err(|message| BootError::Feature {
+                name: NotificationFeature::NAME,
+                message,
+            })?;
     let icons = Arc::new(
         IconsFeature::new(configuration.clone(), portal_icons::CATALOG).map_err(|message| {
             BootError::Feature {
@@ -83,7 +92,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
             configuration.clone(),
             host,
             ServicesPorts {
-                observers: vec![telegram.observer(), automations.observer()],
+                observers: vec![notifications.observer(), automations.observer()],
                 publishing: Arc::new(ProxyPublishing::new(
                     CurrentProxySettings::new(configuration.clone()),
                     CheckPublication::new(configuration.clone()),
@@ -96,6 +105,9 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
             message,
         })?,
     );
+    let _ = actions.probe.set(services.probe_service());
+    let _ = actions.status.set(services.current_status());
+    let _ = actions.notify.set(notifications.send_notification());
     let mut features: Vec<Arc<dyn Feature>> = vec![
         Arc::new(HealthFeature),
         auth.clone(),
@@ -105,7 +117,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         Arc::new(weather),
         Arc::new(calendar),
         icons.clone(),
-        Arc::new(telegram),
+        Arc::new(notifications),
         Arc::new(SecretsFeature::new(configuration.clone())),
         Arc::new(DashboardFeature::new(configuration.clone())),
         Arc::new(ModulesFeature::new(

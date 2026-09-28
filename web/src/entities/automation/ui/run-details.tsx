@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Skeleto
 
 import { OutcomeBadge } from "./outcome-badge";
 import { RunOutput } from "./run-output";
+import { TraceTimeline } from "./trace-timeline";
 
 export const STOPPED_BY = "stopped by ";
 
@@ -36,6 +37,7 @@ function Body({ run, actions }: { run: Run; actions?: (run: Run) => ReactNode })
       <div className="grid gap-5 px-4 pb-6">
         {actions ? <div className="flex gap-2">{actions(run)}</div> : null}
         <KvList>
+          {run.workflow ? <KvRow label={t("workflows.trace.workflow")}>{run.workflow}</KvRow> : null}
           <KvRow label={t("automations.runOutcome")}>
             <OutcomeBadge outcome={run.outcome.result} />
           </KvRow>
@@ -70,8 +72,14 @@ function Body({ run, actions }: { run: Run; actions?: (run: Run) => ReactNode })
             ))}
           </dl>
         </div>
-        <RunOutput label={t("automations.runOutput")} output={run.outcome.stdout} />
-        <RunOutput label={t("automations.runErrors")} output={run.outcome.stderr} />
+        {run.trace ? (
+          <TraceTimeline trace={run.trace} />
+        ) : (
+          <>
+            <RunOutput label={t("automations.runOutput")} output={run.outcome.stdout} />
+            <RunOutput label={t("automations.runErrors")} output={run.outcome.stderr} />
+          </>
+        )}
       </div>
     </>
   );

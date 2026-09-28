@@ -10,6 +10,8 @@ mod scripts_response;
 mod states_response;
 mod webhooks;
 mod when_response;
+mod workflow_call_response;
+mod workflows;
 
 pub use automation_response::AutomationResponse;
 pub use automations_response::AutomationsResponse;
@@ -18,7 +20,10 @@ pub use catalogue::{
 };
 pub use marks_response::MarksResponse;
 pub use run_settings_response::RunSettingsResponse;
-pub use runs::{OutcomeResponse, OutputResponse, QueuedResponse, RunResponse, RunsResponse};
+pub use runs::{
+    OutcomeResponse, OutputResponse, QueuedResponse, RunResponse, RunsResponse, TraceEntryResponse,
+    TraceResponse,
+};
 pub use schedule_response::ScheduleResponse;
 pub use script_response::ScriptResponse;
 pub use scripts_response::ScriptsResponse;
@@ -28,3 +33,8 @@ pub use webhooks::{
     WebhooksResponse,
 };
 pub use when_response::WhenResponse;
+pub use workflow_call_response::WorkflowCallResponse;
+pub use workflows::{
+    InputResponse, WorkflowCatalogueResponse, WorkflowResponse, WorkflowUsageResponse,
+    WorkflowsResponse,
+};

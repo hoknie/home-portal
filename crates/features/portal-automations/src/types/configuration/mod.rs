@@ -8,6 +8,7 @@ mod raw_run;
 mod run_settings;
 mod state_filter;
 mod trigger;
+mod workflow_call;
 
 pub use automation::Automation;
 pub use automation_settings::AutomationSettings;
@@ -19,3 +20,4 @@ pub use raw_run::RawRun;
 pub use run_settings::RunSettings;
 pub use state_filter::StateFilter;
 pub use trigger::Trigger;
+pub use workflow_call::WorkflowCall;

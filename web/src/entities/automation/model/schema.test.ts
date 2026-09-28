@@ -28,8 +28,8 @@ describe("automation", () => {
 
   it("the runs sample parses with its outputs", () => {
     const parsed = runsSchema.parse(apiSamples.automationRuns);
-    expect(parsed.runs.map((run) => run.outcome.result)).toEqual(["running", "stopped", "failed", "skipped", "succeeded"]);
-    expect(parsed.runs.map(isActive)).toEqual([true, false, false, false, false]);
+    expect(parsed.runs.map((run) => run.outcome.result)).toEqual(["running", "stopped", "failed", "skipped", "succeeded", "succeeded"]);
+    expect(parsed.runs.map(isActive)).toEqual([true, false, false, false, false, false]);
     expect(parsed.runs[1].outcome.reason).toBe("stopped by admin");
     expect(parsed.runs[2].outcome.stderr.tail).toBe("disk full\n");
     expect(parsed.runs[4].outcome.stdout.truncated).toBe(true);

@@ -8,6 +8,8 @@ import { Controller, type Path, type UseFormReturn, useForm, useWatch } from "re
 import { toast } from "sonner";
 
 import { type Automation, type Catalogue, type Scripts, useSaveAutomation } from "@/entities/automation";
+import { enabledModules, useModules } from "@/entities/module";
+import { useWorkflows } from "@/entities/workflow";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { routes } from "@/shared/config";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
@@ -52,6 +54,9 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
   useLeaveGuard(form.formState.isDirty && !saved, t("automationBuilder.leave"));
   const values = useWatch({ control: form.control }) as AutomationForm;
   const event = withVariables(catalogue, values.event, values.webhooks);
+  const loadedModules = useModules().data?.data;
+  const workflowsOn = loadedModules !== undefined && enabledModules(loadedModules).has("workflows");
+  const workflows = useWorkflows().data?.data.workflows ?? [];
 
   const submit = form.handleSubmit(async (current) => {
     setConflict(false);
@@ -130,8 +135,16 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
         <WhenCard form={form} catalogue={catalogue} />
         <FiltersCard form={form} catalogue={catalogue} />
       </div>
-      <RunCard form={form as unknown as UseFormReturn<RunFields>} event={event} scripts={scripts} />
-      <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={chosen} />
+      <RunCard
+        form={form as unknown as UseFormReturn<RunFields>}
+        event={event}
+        scripts={scripts}
+        workflows={workflows}
+        offerWorkflow={workflowsOn || automation?.workflow != null}
+      />
+      {values.action === "workflow" ? null : (
+        <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={chosen} />
+      )}
       <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
         <Button asChild variant="outline">
           <Link href={routes.adminAutomations}>{t("common.cancel")}</Link>

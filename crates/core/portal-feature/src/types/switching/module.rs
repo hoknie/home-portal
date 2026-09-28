@@ -5,15 +5,19 @@ pub enum Module {
     Automations,
     Webhooks,
     Users,
+    Workflows,
+    Notifications,
 }
 
 impl Module {
-    pub const ALL: [Module; 5] = [
+    pub const ALL: [Module; 7] = [
         Module::Proxy,
         Module::Dns,
         Module::Automations,
         Module::Webhooks,
         Module::Users,
+        Module::Workflows,
+        Module::Notifications,
     ];
 
     pub fn name(self) -> &'static str {
@@ -23,6 +27,8 @@ impl Module {
             Module::Automations => "automations",
             Module::Webhooks => "webhooks",
             Module::Users => "users",
+            Module::Workflows => "workflows",
+            Module::Notifications => "notifications",
         }
     }
 
@@ -33,20 +39,27 @@ impl Module {
     pub fn requires(self) -> &'static [Module] {
         match self {
             Module::Dns => &[Module::Proxy],
-            Module::Webhooks => &[Module::Automations],
-            Module::Proxy | Module::Automations | Module::Users => &[],
+            Module::Webhooks | Module::Workflows => &[Module::Automations],
+            Module::Proxy | Module::Automations | Module::Users | Module::Notifications => &[],
         }
     }
 
     pub fn default_on(self) -> bool {
-        matches!(self, Module::Automations | Module::Webhooks)
+        matches!(
+            self,
+            Module::Automations | Module::Webhooks | Module::Notifications
+        )
     }
 
     pub fn legacy_section(self) -> Option<&'static str> {
         match self {
             Module::Proxy => Some("proxy"),
             Module::Dns => Some("dns"),
-            Module::Automations | Module::Webhooks | Module::Users => None,
+            Module::Automations
+            | Module::Webhooks
+            | Module::Users
+            | Module::Workflows
+            | Module::Notifications => None,
         }
     }
 
@@ -57,6 +70,8 @@ impl Module {
             Module::Automations => 2,
             Module::Webhooks => 3,
             Module::Users => 4,
+            Module::Workflows => 5,
+            Module::Notifications => 6,
         }
     }
 }

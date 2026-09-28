@@ -10,7 +10,9 @@ export type AutomationRequest = {
   tags: string[];
   cooldown_seconds: number;
   when: Record<string, unknown>;
-  run: { script: string; args: string[]; timeout_seconds: number };
+  run?: { script: string; args: string[]; timeout_seconds: number };
+  workflow?: string;
+  inputs?: Record<string, string>;
 };
 
 export function fetchAutomations() {
@@ -33,7 +35,7 @@ export async function runAutomation(id: string) {
   return (await request(api.automationRun(id), { method: "POST", body: {}, schema: queuedSchema })).data;
 }
 
-export type RunsFilter = { automation?: string | null; webhook?: string | null; text?: string | null };
+export type RunsFilter = { automation?: string | null; webhook?: string | null; workflow?: string | null; text?: string | null };
 
 export async function fetchRuns(filter: RunsFilter) {
   return (await request(api.automationRuns(filter), { schema: runsSchema })).data;

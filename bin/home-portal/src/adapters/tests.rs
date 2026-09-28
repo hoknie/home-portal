@@ -174,3 +174,69 @@ fn the_automation_directory_lists_services_users_and_environments_with_internet(
     assert_eq!(directory.users(), vec!["admin", "guest"]);
     assert_eq!(directory.environments(), vec!["local", "internet"]);
 }
+
+fn answering_http() -> u16 {
+    use std::io::{Read, Write};
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    std::thread::spawn(move || {
+        for stream in listener.incoming() {
+            let Ok(mut stream) = stream else { continue };
+            let mut buffer = [0u8; 1024];
+            let _ = stream.read(&mut buffer);
+            let _ = stream
+                .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nok");
+        }
+    });
+    port
+}
+
+#[tokio::test]
+async fn workflow_actions_wait_for_their_features_then_probe_read_and_refuse_telegram() {
+    use portal_automations::PortalActions;
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("home-portal.toml");
+    fs::write(
+        &path,
+        format!(
+            "[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"http://127.0.0.1:{}\"\n",
+            answering_http()
+        ),
+    )
+    .unwrap();
+    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let actions = super::WorkflowActions::default();
+    assert_eq!(
+        actions.probe("nas").await.unwrap_err(),
+        super::WorkflowActions::NOT_READY
+    );
+    let services = ServicesFeature::new(
+        store.clone(),
+        Environment::internet(),
+        ServicesPorts {
+            observers: Vec::new(),
+            publishing: Arc::new(publishing_of(&store)),
+            events: Arc::new(Silent),
+        },
+    )
+    .unwrap();
+    let notifications = portal_notification::NotificationFeature::new(
+        store,
+        vec![Arc::new(
+            portal_telegram::TelegramChannel::new("http://127.0.0.1:9").unwrap(),
+        )],
+    )
+    .unwrap();
+    let _ = actions.probe.set(services.probe_service());
+    let _ = actions.status.set(services.current_status());
+    let _ = actions.notify.set(notifications.send_notification());
+    let probed = actions.probe("nas").await.unwrap();
+    assert_eq!(probed.state, "up");
+    assert_eq!(actions.status("nas").await.unwrap().state, "up");
+    assert!(actions.status("ghost").await.is_err());
+    let refused = actions
+        .notify(Some("telegram"), "", "hello")
+        .await
+        .unwrap_err();
+    assert!(refused.contains("not configured"), "{refused}");
+}

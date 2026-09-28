@@ -34,7 +34,9 @@
           "truncated": false
         }
       },
-      "started_at": "2026-09-25T03:00:00Z"
+      "started_at": "2026-09-25T03:00:00Z",
+      "trace": null,
+      "workflow": null
     },
     {
       "arguments": [
@@ -70,7 +72,9 @@
           "truncated": false
         }
       },
-      "started_at": "2026-09-25T03:00:00Z"
+      "started_at": "2026-09-25T03:00:00Z",
+      "trace": null,
+      "workflow": null
     },
     {
       "arguments": [
@@ -106,7 +110,9 @@
           "truncated": false
         }
       },
-      "started_at": "2026-09-25T03:00:00Z"
+      "started_at": "2026-09-25T03:00:00Z",
+      "trace": null,
+      "workflow": null
     },
     {
       "arguments": [
@@ -142,7 +148,9 @@
           "truncated": false
         }
       },
-      "started_at": "2026-09-25T03:00:00Z"
+      "started_at": "2026-09-25T03:00:00Z",
+      "trace": null,
+      "workflow": null
     },
     {
       "arguments": [
@@ -178,7 +186,113 @@
           "truncated": true
         }
       },
-      "started_at": "2026-09-25T03:00:00Z"
+      "started_at": "2026-09-25T03:00:00Z",
+      "trace": null,
+      "workflow": null
+    },
+    {
+      "arguments": [],
+      "automation": "nas-down",
+      "event": "service.status-changed",
+      "fields": {
+        "automation.id": "nas-down",
+        "event.at": "2026-09-25T03:00:00Z",
+        "event.name": "service.status-changed",
+        "run.by": "",
+        "run.id": "0",
+        "run.manual": "false"
+      },
+      "id": "0",
+      "outcome": {
+        "count": 1,
+        "duration_milliseconds": 1840,
+        "exit_code": null,
+        "last_at": "2026-09-25T03:00:00Z",
+        "reason": "nas is back",
+        "result": "succeeded",
+        "stderr": {
+          "bytes": 0,
+          "tail": "",
+          "truncated": false
+        },
+        "stdout": {
+          "bytes": 0,
+          "tail": "",
+          "truncated": false
+        }
+      },
+      "started_at": "2026-09-25T03:00:00Z",
+      "trace": {
+        "dropped": 0,
+        "entries": [
+          {
+            "detail": "nas: down",
+            "duration_milliseconds": 120,
+            "iteration": null,
+            "kind": "probe",
+            "label": "first_probe",
+            "outcome": "succeeded",
+            "output": null,
+            "path": "steps[0]",
+            "shape": null,
+            "started_at": "2026-09-25T03:00:00Z",
+            "step": "first_probe"
+          },
+          {
+            "detail": "then",
+            "duration_milliseconds": 120,
+            "iteration": null,
+            "kind": "if",
+            "label": "down",
+            "outcome": "succeeded",
+            "output": null,
+            "path": "steps[1]",
+            "shape": null,
+            "started_at": "2026-09-25T03:00:00Z",
+            "step": "down"
+          },
+          {
+            "detail": "1 iterations",
+            "duration_milliseconds": 120,
+            "iteration": null,
+            "kind": "loop",
+            "label": "retry",
+            "outcome": "succeeded",
+            "output": null,
+            "path": "steps[1].then[0]",
+            "shape": null,
+            "started_at": "2026-09-25T03:00:00Z",
+            "step": "retry"
+          },
+          {
+            "detail": "POST http://192.168.1.10:9000/restart/nas → 202",
+            "duration_milliseconds": 120,
+            "iteration": 0,
+            "kind": "http",
+            "label": "restart",
+            "outcome": "succeeded",
+            "output": "{\"state\":\"down\"}",
+            "path": "steps[1].then[0].body[0]",
+            "shape": "{\"state\":\"down\"}",
+            "started_at": "2026-09-25T03:00:00Z",
+            "step": "restart"
+          },
+          {
+            "detail": "",
+            "duration_milliseconds": 120,
+            "iteration": 0,
+            "kind": "wait",
+            "label": "settle",
+            "outcome": "running",
+            "output": null,
+            "path": "steps[1].then[0].body[1]",
+            "shape": null,
+            "started_at": "2026-09-25T03:00:00Z",
+            "step": "settle"
+          }
+        ]
+      },
+      "workflow": "revive"
     }
   ]
 }

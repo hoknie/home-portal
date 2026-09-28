@@ -35,6 +35,20 @@
       "name": "users",
       "required_by": [],
       "requires": []
+    },
+    {
+      "enabled": false,
+      "name": "workflows",
+      "required_by": [],
+      "requires": [
+        "automations"
+      ]
+    },
+    {
+      "enabled": true,
+      "name": "notifications",
+      "required_by": [],
+      "requires": []
     }
   ]
 }

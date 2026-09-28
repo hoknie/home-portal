@@ -1,7 +1,9 @@
+use std::collections::BTreeMap;
+
 use serde::Deserialize;
 
 use super::RunRequest;
-use crate::types::{RawMarks, RawRun, RawWebhook};
+use crate::types::{InputValue, RawMarks, RawRun, RawWebhook};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct WebhookRequest {
@@ -17,6 +19,10 @@ pub struct WebhookRequest {
     pub action: String,
     #[serde(default)]
     pub run: Option<RunRequest>,
+    #[serde(default)]
+    pub workflow: Option<String>,
+    #[serde(default)]
+    pub inputs: Option<BTreeMap<String, InputValue>>,
     #[serde(default)]
     pub with_token: bool,
 }
@@ -37,6 +43,8 @@ impl WebhookRequest {
                 args: run.args,
                 timeout_seconds: run.timeout_seconds,
             }),
+            workflow: self.workflow.filter(|id| !id.trim().is_empty()),
+            inputs: self.inputs,
             token_sha256,
         }
     }

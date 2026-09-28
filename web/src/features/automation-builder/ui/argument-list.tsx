@@ -3,13 +3,14 @@
 import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
-import { type UseFormReturn, useFieldArray } from "react-hook-form";
+import { Controller, type UseFormReturn, useFieldArray } from "react-hook-form";
 
 import { type CatalogueEvent, messageKeyOf } from "@/entities/automation";
-import { Button, Input, Label } from "@/shared/ui/primitives";
+import { Button, Label } from "@/shared/ui/primitives";
+import { TemplateInput } from "@/shared/ui/template-input";
 
 import type { RunFields } from "../model/run-fields";
-import { insertAt, tokenOf, unknownPlaceholders } from "../model/placeholders";
+import { insertAt, tokenOf, unknownPlaceholders, unknownRanges } from "../model/placeholders";
 
 export type ArgumentListProps = { form: UseFormReturn<RunFields>; event: CatalogueEvent };
 
@@ -23,6 +24,9 @@ export function ArgumentList({ form, event }: ArgumentListProps) {
     return t.has(key as Parameters<typeof t.has>[0]) ? t(key) : name;
   };
   const allowed = event.fields.map((field) => field.name);
+  const suggestions = event.fields.map((field) => ({ value: field.name, description: label(field.name), example: field.sample }));
+  const problemsOf = (text: string) =>
+    unknownRanges(text, allowed).map((range) => ({ ...range, message: t("validation.automationPlaceholder", { field: range.name }) }));
   const explain = (index: number, message: string) => {
     if (message === "validation.automationPlaceholder") {
       const [field] = unknownPlaceholders(form.getValues(`args.${index}.value`), allowed);
@@ -43,9 +47,6 @@ export function ArgumentList({ form, event }: ArgumentListProps) {
     form.setValue(`args.${target.index}.value`, next.text, { shouldDirty: true, shouldValidate: true });
     focus.current = { index: target.index, cursor: next.cursor };
   };
-  const remember = (index: number) => (element: { currentTarget: HTMLInputElement }) => {
-    focus.current = { index, cursor: element.currentTarget.selectionStart };
-  };
   return (
     <div className="grid gap-3">
       <div className="grid gap-1">
@@ -61,17 +62,23 @@ export function ArgumentList({ form, event }: ArgumentListProps) {
             <li key={item.id} className="grid gap-1">
               <div className="flex items-center gap-1">
                 <span className="w-6 shrink-0 text-right font-mono text-xs text-muted-foreground">{index + 1}</span>
-                <Input
-                  aria-label={t("automationBuilder.argumentLabel", { number: index + 1 })}
-                  aria-invalid={message ? true : undefined}
-                  className="font-mono"
-                  spellCheck={false}
-                  autoComplete="off"
-                  {...form.register(`args.${index}.value`)}
-                  onFocus={remember(index)}
-                  onSelect={remember(index)}
-                  onKeyUp={remember(index)}
-                  onClick={remember(index)}
+                <Controller
+                  control={form.control}
+                  name={`args.${index}.value`}
+                  render={({ field }) => (
+                    <TemplateInput
+                      aria-label={t("automationBuilder.argumentLabel", { number: index + 1 })}
+                      aria-invalid={message ? true : undefined}
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      suggestions={suggestions}
+                      problems={problemsOf(field.value)}
+                      onCaret={(cursor) => {
+                        focus.current = { index, cursor };
+                      }}
+                    />
+                  )}
                 />
                 <Button type="button" variant="ghost" size="icon" aria-label={t("automationBuilder.moveUp")} disabled={index === 0} onClick={() => list.move(index, index - 1)}>
                   <ArrowUp aria-hidden />

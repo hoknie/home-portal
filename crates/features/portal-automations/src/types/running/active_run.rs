@@ -1,10 +1,11 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use time::OffsetDateTime;
 use tokio::sync::watch;
 
 use super::{Invocation, Pending, RunControl};
+use crate::types::Trace;
 
 #[derive(Debug, Clone)]
 pub struct ActiveRun {
@@ -16,6 +17,8 @@ pub struct ActiveRun {
     pub started: Option<(OffsetDateTime, Instant)>,
     pub stopped_by: Option<String>,
     pub control: RunControl,
+    pub workflow: Option<String>,
+    pub trace: Arc<Mutex<Trace>>,
     stop: Arc<watch::Sender<bool>>,
 }
 
@@ -31,6 +34,12 @@ impl ActiveRun {
             started: None,
             stopped_by: None,
             control,
+            workflow: pending
+                .automation
+                .workflow
+                .as_ref()
+                .map(|call| call.id.clone()),
+            trace: Arc::new(Mutex::new(Trace::default())),
             stop: Arc::new(stop),
         }
     }

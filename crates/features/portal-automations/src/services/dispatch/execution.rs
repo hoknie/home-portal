@@ -4,13 +4,22 @@ use std::time::Duration;
 use time::OffsetDateTime;
 
 use super::AutomationSink;
+use super::execute_workflow;
 use crate::clients::Runner;
-use crate::services::ScriptsDirectory;
+use crate::services::{ScriptsDirectory, WorkflowTools};
 use crate::types::{Finished, Invocation, Outcome, Pending, RunControl, RunRecord, Tail};
 
-pub async fn execute(sink: Arc<AutomationSink>, scripts: &ScriptsDirectory, pending: Pending) {
+pub async fn execute(
+    sink: Arc<AutomationSink>,
+    (scripts, tools): (&ScriptsDirectory, &WorkflowTools),
+    pending: Pending,
+) {
     if sink.closed() {
         sink.active.remove(pending.run_id);
+        return;
+    }
+    if let Some(call) = pending.automation.workflow.clone() {
+        execute_workflow(sink, (scripts, tools), pending, &call).await;
         return;
     }
     let started_at = OffsetDateTime::now_utc();

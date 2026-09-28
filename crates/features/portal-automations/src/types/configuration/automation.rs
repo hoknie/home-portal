@@ -1,8 +1,8 @@
 use portal_feature::FieldError;
 
-use super::{RawAutomation, RunSettings, Trigger};
+use super::{RawAutomation, RawRun, RunSettings, Trigger, WorkflowCall};
 use crate::helpers::{check_tags, unknown_placeholders};
-use crate::types::Catalogue;
+use crate::types::{Catalogue, InputValue};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Automation {
@@ -13,6 +13,7 @@ pub struct Automation {
     pub cooldown_seconds: u64,
     pub trigger: Trigger,
     pub run: RunSettings,
+    pub workflow: Option<WorkflowCall>,
 }
 
 impl Automation {
@@ -20,6 +21,9 @@ impl Automation {
     pub const TAKEN_ID: &'static str = "is used by another automation";
     pub const LONGEST_ID: usize = 63;
     pub const RESERVED_IDS: [&'static str; 4] = ["runs", "catalogue", "scripts", "schedule"];
+    pub const BOTH_ACTIONS: &'static str =
+        "an automation runs either a script (run) or a workflow, not both";
+    pub const NO_ACTION: &'static str = "is required: a script to run, or a workflow";
 
     pub fn decode(raw: &RawAutomation) -> Result<Automation, Vec<FieldError>> {
         let mut errors = Vec::new();
@@ -49,12 +53,12 @@ impl Automation {
             errors.push(FieldError::new("cooldown_seconds", "must not be negative"));
         }
         let trigger = Trigger::decode(&raw.when).map_err(|found| errors.extend(found));
-        let run = RunSettings::decode(&raw.run).map_err(|found| errors.extend(found));
+        let (run, workflow) = Self::decode_action(raw, &mut errors);
         if let Ok(trigger) = &trigger {
             let allowed = Catalogue::fields_of(trigger.event);
             let webhook = trigger.event == portal_feature::EventName::WebhookReceived;
-            for (index, argument) in raw.run.args.iter().enumerate() {
-                let unknown: Vec<String> = unknown_placeholders(argument, &allowed)
+            for (field, template) in Self::templates_of(&run, workflow.as_ref()) {
+                let unknown: Vec<String> = unknown_placeholders(template, &allowed)
                     .into_iter()
                     .filter(|name| {
                         !(webhook && name.starts_with(portal_feature::PortalEvent::VARIABLE_PREFIX))
@@ -62,7 +66,7 @@ impl Automation {
                     .collect();
                 if let Some(name) = unknown.first() {
                     errors.push(FieldError::new(
-                        format!("run.args[{index}]"),
+                        field,
                         format!(
                             "names {{{{{name}}}}}, which is not a field of {}; its fields are {}",
                             trigger.event.name(),
@@ -73,7 +77,7 @@ impl Automation {
             }
         }
         match (trigger, run) {
-            (Ok(trigger), Ok(run)) if errors.is_empty() => Ok(Automation {
+            (Ok(trigger), Some(run)) if errors.is_empty() => Ok(Automation {
                 id: raw.id.clone(),
                 title: raw.title.clone(),
                 enabled: raw.enabled.unwrap_or(true),
@@ -81,8 +85,75 @@ impl Automation {
                 cooldown_seconds: cooldown as u64,
                 trigger,
                 run,
+                workflow,
             }),
             _ => Err(errors),
+        }
+    }
+
+    pub fn decode_action(
+        raw: &RawAutomation,
+        errors: &mut Vec<FieldError>,
+    ) -> (Option<RunSettings>, Option<WorkflowCall>) {
+        Self::decode_either(
+            raw.run.as_ref(),
+            (raw.workflow.as_ref(), raw.inputs.as_ref()),
+            errors,
+        )
+    }
+
+    pub fn decode_either(
+        run: Option<&RawRun>,
+        (workflow, inputs): (
+            Option<&String>,
+            Option<&std::collections::BTreeMap<String, InputValue>>,
+        ),
+        errors: &mut Vec<FieldError>,
+    ) -> (Option<RunSettings>, Option<WorkflowCall>) {
+        match (run, workflow) {
+            (Some(_), Some(_)) => {
+                errors.push(FieldError::new("workflow", Self::BOTH_ACTIONS));
+                (None, None)
+            }
+            (None, None) => {
+                errors.push(FieldError::new("run", Self::NO_ACTION));
+                (None, None)
+            }
+            (Some(run), None) => (
+                RunSettings::decode(run)
+                    .map_err(|found| errors.extend(found))
+                    .ok(),
+                None,
+            ),
+            (None, Some(id)) => {
+                if id.trim().is_empty() {
+                    errors.push(FieldError::new("workflow", "must name a workflow"));
+                }
+                let call = WorkflowCall {
+                    id: id.clone(),
+                    inputs: inputs.cloned().unwrap_or_default().into_iter().collect(),
+                };
+                (Some(RunSettings::default()), Some(call))
+            }
+        }
+    }
+
+    pub fn templates_of<'a>(
+        run: &'a Option<RunSettings>,
+        workflow: Option<&'a WorkflowCall>,
+    ) -> Vec<(String, &'a str)> {
+        match workflow {
+            Some(call) => call.templates().collect(),
+            None => run
+                .as_ref()
+                .map(|run| {
+                    run.args
+                        .iter()
+                        .enumerate()
+                        .map(|(index, argument)| (format!("run.args[{index}]"), argument.as_str()))
+                        .collect()
+                })
+                .unwrap_or_default(),
         }
     }
 

@@ -36,7 +36,12 @@
     "modules": "Modules",
     "modulesSection": "Modules",
     "dns": "DNS",
-    "users": "Users"
+    "users": "Users",
+    "workflows": "Workflows",
+    "notifications": "Notifications",
+    "collapseMenu": "Collapse menu",
+    "expandMenu": "Expand menu",
+    "menu": "Menu"
   },
   "theme": {
     "label": "Theme",
@@ -293,7 +298,8 @@
     "tags": "At most 20 tags of up to 40 characters",
     "userName": "Give a name of 1 to 64 characters, without control characters",
     "userPassword": "Use 8 to 1024 characters",
-    "userPasswordsDiffer": "The passwords do not match"
+    "userPasswordsDiffer": "The passwords do not match",
+    "automationWorkflow": "Choose a workflow"
   },
   "conditions": {
     "clear": "clear",
@@ -812,7 +818,19 @@
     "preview": "How the script will be called",
     "previewDescription": "With sample field values; the script also gets PORTAL_* variables and the event as JSON on standard input",
     "noScript": "script.sh",
-    "variables": "Environment variables ({count})"
+    "variables": "Environment variables ({count})",
+    "action": "What to run",
+    "actions": {
+      "script": "Script",
+      "workflow": "Workflow"
+    },
+    "runWorkflowDescription": "A workflow from Management → Workflows; each input gets a value that may use the event's fields",
+    "workflow": "Workflow",
+    "workflowHint": "Its steps run with the inputs below",
+    "chooseWorkflow": "Choose a workflow",
+    "workflowInput": "Input {name}",
+    "noWorkflowInputs": "This workflow takes no inputs.",
+    "typedInput": "A {type}: write it as JSON, such as [\"nas\", \"router\"], or a placeholder that gives one."
   },
   "automationEvents": {
     "schedule": {
@@ -1053,14 +1071,18 @@
       "dns": "DNS",
       "automations": "Automations",
       "webhooks": "Webhooks",
-      "users": "Users"
+      "users": "Users",
+      "workflows": "Workflows",
+      "notifications": "Notifications"
     },
     "descriptions": {
       "proxy": "Publishes services under their own names through Caddy, with certificates and signing in through the portal.",
       "dns": "Answers DNS for the names the proxy publishes, with the right address in each of your networks.",
       "automations": "Runs your scripts on a schedule or when something happens in the portal.",
       "webhooks": "Addresses other systems call to start your scripts or automations.",
-      "users": "Who may sign in: add people, change passwords and remove them from the interface. While it is off, users are edited only in the configuration file."
+      "users": "Who may sign in: add people, change passwords and remove them from the interface. While it is off, users are edited only in the configuration file.",
+      "workflows": "Scenarios of several steps — conditions, loops, parallel branches, HTTP requests, scripts, notifications and service checks — that automations and webhooks start.",
+      "notifications": "Messages when a service fails or recovers, and the notify step of workflows, delivered through channels such as Telegram."
     },
     "switchLabel": "{name}: on or off",
     "on": "On",
@@ -1110,5 +1132,998 @@
       "name": "Name",
       "actions": "Actions"
     }
+  },
+  "workflows": {
+    "trace": {
+      "title": "Steps",
+      "empty": "No step has started yet",
+      "workflow": "Workflow",
+      "iteration": "pass {number}",
+      "duration": "{value} ms",
+      "answer": "Answer",
+      "output": "Output",
+      "dropped": "{count, plural, one {# more step is} other {# more steps are}} not shown",
+      "outcomes": {
+        "running": "running",
+        "succeeded": "succeeded",
+        "failed": "failed",
+        "skipped": "skipped",
+        "stopped": "stopped",
+        "timed_out": "timed out",
+        "unknown": "unknown"
+      },
+      "shortened": "Shortened: long lists keep their first 3 items and long texts their start."
+    },
+    "title": "Workflows",
+    "subtitle": "Runs of several steps that automations, webhooks or you start",
+    "add": "Add workflow",
+    "empty": "No workflows yet",
+    "emptyHint": "A workflow chains steps: conditions, loops, HTTP requests, scripts, notifications and service checks.",
+    "columns": {
+      "title": "Workflow",
+      "state": "State",
+      "inputs": "Inputs",
+      "usedBy": "Started by",
+      "lastRun": "Last run",
+      "actions": "Actions"
+    },
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "noInputs": "none",
+    "notUsed": "only by hand",
+    "neverRan": "Has not run yet",
+    "usage": {
+      "automation": "automation",
+      "webhook": "webhook",
+      "workflow": "workflow"
+    },
+    "deleteTitle": "Delete the workflow “{title}”?",
+    "deleteDescription": "It disappears from the configuration. Its past runs stay in the journal.",
+    "deleteBlocked": "Used by {users}; change them first",
+    "deleted": "Workflow deleted",
+    "runNow": "Run now",
+    "runNowTitle": "Run “{title}” now?",
+    "runNowDescription": "Its steps really run: scripts on the portal's host, HTTP requests and messages go out.",
+    "runDisabled": "The workflow is disabled",
+    "runRefused": "The workflow cannot run now",
+    "runThrottled": "Wait {seconds, plural, one {# second} other {# seconds}} before the next run",
+    "runFailed": "The run did not start",
+    "explained": "A workflow is a chain of steps — checks, conditions, loops, requests, scripts and messages — drawn as a diagram. An automation starts it on a schedule or an event, a webhook starts it from outside, and you can run it by hand.",
+    "chooseStart": "Add a workflow",
+    "chooseStartHint": "Start from a template and adapt it, or begin with an empty workflow.",
+    "runsOf": "Runs of {title}",
+    "runsTitle": "Runs of “{title}”",
+    "runsHint": "The last runs of this workflow, from automations, webhooks and by hand",
+    "byHand": "By hand"
+  },
+  "workflowEditor": {
+    "addTitle": "New workflow",
+    "editTitle": "Workflow",
+    "pageDescription": "Steps that run one after another: conditions, loops, parallel branches and actions.",
+    "notFound": "Workflow not found",
+    "notFoundHint": "It may have been deleted or renamed.",
+    "backToWorkflows": "Back to workflows",
+    "leave": "Your changes are not saved. Leave the page?",
+    "fixProblems": "Fix the marked fields first",
+    "saved": "Workflow saved",
+    "created": "Workflow added",
+    "conflictKept": "Someone changed the configuration meanwhile. Your steps are kept; save again to write them over the new version.",
+    "identity": "Workflow",
+    "title": "Title",
+    "id": "Id",
+    "idHint": "Letters, digits and dashes; automations name the workflow by it",
+    "enabled": "Enabled",
+    "description": "Description",
+    "timeout": "Time limit, seconds",
+    "timeoutHint": "From 1 to 3600; the whole run stops after it",
+    "inputs": "Inputs",
+    "inputsHint": "Values the caller passes in, used as '{{'inputs.name'}}'",
+    "inputName": "Input {number}",
+    "removeInput": "Remove the input {name}",
+    "addInput": "Add input",
+    "steps": "Steps",
+    "stepsDescription": "Top to bottom; blocks with branches hold their own lists",
+    "addStep": "Add step",
+    "groups": {
+      "flow": "Flow",
+      "data": "Data",
+      "actions": "Actions"
+    },
+    "lists": {
+      "then": "Then",
+      "else": "Otherwise",
+      "body": "Repeat",
+      "branch": "Branch {number}",
+      "top": "Top level"
+    },
+    "blockMenu": "Actions for {id}",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "moveInto": "Move into…",
+    "moveTarget": "{step} → {list}",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "addBranch": "Add branch",
+    "removeBranch": "Remove branch {number}",
+    "drag": "Drag {id}",
+    "expand": "Expand {id}",
+    "collapse": "Collapse {id}",
+    "problemCount": "{count, plural, one {# problem} other {# problems}}",
+    "label": "Label",
+    "stepId": "Step id",
+    "stepIdHint": "Later steps read its results as '{{'steps.id.field'}}'",
+    "insertValue": "Insert a value into {field}",
+    "insertValueTitle": "Values available here",
+    "item": "{label} {number}",
+    "removeItem": "Remove",
+    "addItem": "Add",
+    "noInputs": "The chosen workflow has no inputs",
+    "key": "{label}: name {number}",
+    "valueOf": "Value of {key}",
+    "between": "From {minimum} to {maximum}",
+    "choose": "Choose…",
+    "choices": {
+      "succeeded": "Succeeded",
+      "failed": "Failed"
+    },
+    "condition": {
+      "left": "Value",
+      "operator": "Operator",
+      "right": "Compared with",
+      "match": "Match",
+      "join": "How rows combine",
+      "joins": {
+        "all": "all rows",
+        "any": "any row"
+      },
+      "group": "Group",
+      "removeRow": "Remove row",
+      "addRow": "Add row",
+      "addGroup": "Add group",
+      "add": "Add a condition",
+      "knownValues": "Known values:",
+      "operators": {
+        "equals": "equals",
+        "not-equals": "does not equal",
+        "less": "is less than",
+        "at-most": "is at most",
+        "greater": "is greater than",
+        "at-least": "is at least",
+        "contains": "contains",
+        "is-empty": "is empty",
+        "is-not-empty": "is not empty"
+      }
+    },
+    "problems": {
+      "between": "Outside the allowed range",
+      "branches": "From 2 to 4 branches",
+      "stepId": "Lowercase letters, digits and _, starting with a letter",
+      "kind": "Unknown step kind",
+      "loopMode": "Choose exactly one of: times, for each, while",
+      "scheme": "The address must start with http:// or https://",
+      "takenId": "This id is taken",
+      "input": "Lowercase letters, digits and _, starting with a letter; each once",
+      "noSteps": "Add at least one step",
+      "duplicateId": "Another step has this id",
+      "secretUnset": "The secret {name} is not set yet",
+      "unseenKey": "The last run's answer of {step} had no key {key}",
+      "notStarted": "No automation or webhook starts this workflow yet",
+      "unknownSampleKey": "The answer structure of {step} has no key {key}",
+      "inputDefault": "The default is not of the input's type",
+      "variableName": "Capital letters, digits and _, starting with a letter",
+      "variableReserved": "Set by the portal; choose another name"
+    },
+    "canvas": {
+      "label": "Workflow diagram",
+      "nodeHelp": "Press Enter to open, arrows to move along the flow, Delete to remove",
+      "edgeHelp": "An arrow between steps",
+      "controls": "Diagram controls",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fit": "Fit the whole workflow",
+      "minimap": "Overview"
+    },
+    "insertHere": "Add a step here",
+    "settings": "Workflow settings",
+    "settingsHint": "Title, inputs, time limit and tags",
+    "closeInspector": "Close the panel",
+    "produces": {
+      "title": "What this step gives",
+      "hint": "Later steps can use these values; press to copy",
+      "copy": "Copy {reference}"
+    },
+    "branchCount": "{count, plural, one {# branch} other {# branches}}",
+    "values": {
+      "groups": {
+        "service": "Services",
+        "script": "Scripts",
+        "workflow": "Workflows",
+        "variable": "Variables set earlier",
+        "channel": "Notification channels",
+        "automation": "Automations"
+      },
+      "inputsOf": "Inputs: {inputs}",
+      "noInputs": "No inputs",
+      "readiness": {
+        "disabled": "Turned off",
+        "missing": "Not set up"
+      },
+      "event": "Event: {event}"
+    },
+    "startNode": "Start",
+    "endNode": "End",
+    "untitled": "New workflow",
+    "onlyByHand": "Started only by hand",
+    "startedBy": "Started by {names}",
+    "noWorkflowInputs": "No inputs",
+    "run": {
+      "showLast": "Show the last run",
+      "hideLast": "Hide the run",
+      "passes": "{count, plural, one {# pass} other {# passes}} · {milliseconds} ms",
+      "duration": "{milliseconds} ms",
+      "title": "Run",
+      "hide": "Hide run",
+      "order": "Step {number} of the run",
+      "steps": "Steps of the run"
+    },
+    "summaries": {
+      "wait": "wait {seconds} s",
+      "stopSucceeded": "succeed {reason}",
+      "stopFailed": "fail {reason}",
+      "forEach": "for each item of {list}",
+      "while": "while {condition}",
+      "repeat": "{count, plural, one {# time} other {# times}}",
+      "parallel": "{count, plural, one {# branch} other {# branches}} at once",
+      "nothing": "goes on",
+      "automationWaited": "{title}, waiting"
+    },
+    "warningCount": "{count, plural, one {# warning} other {# warnings}}",
+    "palette": {
+      "title": "Add a step",
+      "description": "Choose what should happen at this point",
+      "search": "Find a step",
+      "noMatches": "No step matches"
+    },
+    "destinations": {
+      "top": "At the end of the workflow",
+      "body": "Inside loop “{step}”",
+      "then": "In “{step}”: then",
+      "else": "In “{step}”: otherwise",
+      "branch": "In “{step}”: branch {number}"
+    },
+    "problemsPanel": {
+      "title": "Problems",
+      "none": "No problems found",
+      "workflow": "Workflow"
+    },
+    "toolbar": {
+      "label": "Editor actions",
+      "undo": "Undo",
+      "undoKeys": "Undo (Ctrl+Z)",
+      "redo": "Redo",
+      "redoKeys": "Redo (Shift+Ctrl+Z)",
+      "problems": "{errors, plural, one {# error} other {# errors}}, {warnings, plural, one {# warning} other {# warnings}}",
+      "legend": "How it works",
+      "saveAndRun": "Save and run",
+      "saveWithErrors": "Save ({count, plural, one {# error} other {# errors}})",
+      "runs": "Runs"
+    },
+    "runs": {
+      "title": "Runs of this workflow",
+      "none": "This workflow has not run yet",
+      "notSaved": "Save the workflow to see its runs",
+      "byHand": "By hand",
+      "byPerson": "By hand, {name}",
+      "duration": "{milliseconds} ms"
+    },
+    "sample": {
+      "fromRun": "Take from the last run",
+      "noRun": "No JSON answer of this step in the last run",
+      "format": "Format",
+      "placeholder": "'{'\"state\": \"up\", \"disks\": ['{'\"name\": \"sda\"'}']'}'",
+      "invalid": "This is not JSON",
+      "large": "At most 16 KiB",
+      "keys": "{count, plural, one {# key} other {# keys}} for suggestions:"
+    },
+    "transform": {
+      "empty": "No operations yet; add the first below.",
+      "chain": "Operations",
+      "choose": "Operation to add",
+      "add": "Add operation",
+      "groups": {
+        "operations": "List operations",
+        "list": "Filters for lists",
+        "text": "Filters for text",
+        "number": "Filters for numbers",
+        "object": "Filters for objects",
+        "any": "Filters for any value",
+        "fitting": "Fits the value now ({type})"
+      },
+      "operationTitle": "{number}. {name}",
+      "drag": "Drag operation {number}",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove operation {number}",
+      "after": "After operation {number}",
+      "fromSample": "from the answer structure",
+      "fromRun": "from the last run",
+      "noSample": "No preview: set the input from a step whose answer structure or last run is known.",
+      "cannot": "Cannot take this value: {error}",
+      "where": "Keep items where",
+      "to": "Turn each item into",
+      "toHint": "'{{'item'}}' is the current item, '{{'index'}}' its position.",
+      "key": "Key",
+      "order": "Order",
+      "orders": {
+        "asc": "Ascending",
+        "desc": "Descending"
+      },
+      "types": {
+        "text": "text",
+        "number": "number",
+        "boolean": "boolean",
+        "list": "list",
+        "object": "object",
+        "null": "nothing",
+        "any": "any"
+      },
+      "nestedChain": "Operations inside, level {depth}",
+      "eachHint": "Applied to every element in turn; the previews below use the first element.",
+      "valueNow": "The value now: {type}",
+      "forEachElement": "{name} — for each element"
+    },
+    "setForms": {
+      "label": "How the value is written",
+      "value": "Text",
+      "json": "JSON",
+      "list": "List",
+      "object": "Dictionary"
+    },
+    "moveItemUp": "Move value {number} up"
+  },
+  "templateInput": {
+    "suggestions": "Values you can insert",
+    "noMatches": "No value matches; keep typing or press Escape"
+  },
+  "workflowHelp": {
+    "groups": {
+      "flow": {
+        "name": "Flow",
+        "description": "Decide, repeat, branch and call other workflows"
+      },
+      "data": {
+        "name": "Data",
+        "description": "Remember values and pause"
+      },
+      "actions": {
+        "name": "Actions",
+        "description": "Talk to the network, the portal and you"
+      }
+    },
+    "kinds": {
+      "if": {
+        "name": "If",
+        "description": "Checks a condition and runs one of two branches.",
+        "example": "If '{{'steps.ping.status'}}' is 200, stop; otherwise wait and try again."
+      },
+      "loop": {
+        "name": "Loop",
+        "description": "Repeats its steps a number of times, for each item of a list, or while a condition holds.",
+        "example": "Three times: call the restart API and wait 20 seconds."
+      },
+      "parallel": {
+        "name": "Parallel",
+        "description": "Runs 2 to 4 branches at the same time and waits for all of them.",
+        "example": "Check the NAS and the router together."
+      },
+      "workflow": {
+        "name": "Call workflow",
+        "description": "Runs another workflow with inputs and gets its variables back.",
+        "example": "Call “Revive a service” with service = '{{'inputs.service'}}'."
+      },
+      "stop": {
+        "name": "Stop",
+        "description": "Ends the whole run as succeeded or failed, with a reason.",
+        "example": "Stop as succeeded: “the NAS answered”."
+      },
+      "set": {
+        "name": "Set variable",
+        "description": "Remembers a value under a name that later steps read as '{{'vars.name'}}'.",
+        "example": "Set report to “Good morning”."
+      },
+      "wait": {
+        "name": "Wait",
+        "description": "Pauses the run for a number of seconds. Stop ends the pause at once.",
+        "example": "Wait 20 seconds."
+      },
+      "http": {
+        "name": "HTTP request",
+        "description": "Sends a request and keeps the status, the headers, the body and the JSON of the answer.",
+        "example": "GET http://nas.lan/api/ping"
+      },
+      "script": {
+        "name": "Script",
+        "description": "Runs a script from the scripts folder, without a shell, and keeps its exit code and output.",
+        "example": "backup.sh --target nas"
+      },
+      "notify": {
+        "name": "Notification",
+        "description": "Sends a message through the notifications module: to one channel, or to every ready channel when none is chosen. Old telegram steps load as this step with the telegram channel.",
+        "example": "'{{'inputs.service'}}' is down"
+      },
+      "probe": {
+        "name": "Probe service",
+        "description": "Checks a service now, as its regular check would, and records the result.",
+        "example": "Probe nas and read '{{'steps.probe.state'}}'."
+      },
+      "status": {
+        "name": "Service status",
+        "description": "Reads a service's current status without checking it again.",
+        "example": "Read the router's state."
+      },
+      "nothing": {
+        "name": "Do nothing",
+        "description": "Leaves a branch empty on purpose: the run simply goes on.",
+        "example": "If the NAS is up, do nothing; otherwise restart it."
+      },
+      "transform": {
+        "name": "Transform",
+        "description": "Reshapes a value step by step: keeps matching items, turns each into something, sorts, groups, counts, or applies any filter. The result is the step's value.",
+        "example": "disks → failing ones → names → one line"
+      },
+      "automation": {
+        "name": "Start automation",
+        "description": "Queues one of your automations as if it was started by hand, with event fields you give; it may wait for its outcome.",
+        "example": "restart-media with service.id = '{{'inputs.service'}}'"
+      }
+    },
+    "fields": {
+      "if": {
+        "condition": {
+          "label": "Condition",
+          "help": "Rows of a value, an operator and another value; combine them with all or any."
+        },
+        "then": {
+          "label": "Then",
+          "help": "Runs when the condition holds."
+        },
+        "else": {
+          "label": "Otherwise",
+          "help": "Runs when it does not; may stay empty."
+        }
+      },
+      "loop": {
+        "repeat": {
+          "label": "Times",
+          "help": "Repeat the body this many times, from 1 to 100."
+        },
+        "for_each": {
+          "label": "For each item of",
+          "help": "A list, usually a JSON answer such as '{{'steps.list.json'}}'; each item is '{{'loop.item'}}'."
+        },
+        "while": {
+          "label": "While",
+          "help": "Repeat as long as this condition holds; it is checked before every pass."
+        },
+        "max_iterations": {
+          "label": "At most, passes",
+          "help": "A safety limit for “for each” and “while”, 100 at most."
+        },
+        "body": {
+          "label": "Repeat",
+          "help": "The steps of one pass."
+        }
+      },
+      "parallel": {
+        "branches": {
+          "label": "Branches",
+          "help": "2 to 4 lists of steps that run together; their variables are merged in branch order."
+        }
+      },
+      "workflow": {
+        "workflow": {
+          "label": "Workflow",
+          "help": "The workflow to run; it may not call this one back."
+        },
+        "inputs": {
+          "label": "Inputs",
+          "help": "A value for each input the called workflow declares."
+        }
+      },
+      "stop": {
+        "outcome": {
+          "label": "Outcome",
+          "help": "How the run ends in the journal."
+        },
+        "reason": {
+          "label": "Reason",
+          "help": "Shown in the journal next to the outcome."
+        }
+      },
+      "set": {
+        "variable": {
+          "label": "Variable",
+          "help": "Lowercase letters, digits and _; later steps read it as '{{'vars.name'}}'."
+        },
+        "value": {
+          "label": "Value",
+          "help": "Text; templates are filled in."
+        },
+        "json": {
+          "label": "JSON value",
+          "help": "Use instead of Value to keep a number, a list or an object, for example '{{'steps.ping.json.items'}}'."
+        },
+        "list": {
+          "label": "List",
+          "help": "Each row is a template; a row that is only '{{'name'}}' keeps its type."
+        },
+        "object": {
+          "label": "Dictionary",
+          "help": "Each row is a key and a template; later steps read '{{'vars.name.key'}}'."
+        }
+      },
+      "wait": {
+        "seconds": {
+          "label": "Seconds",
+          "help": "From 1 to 3600."
+        }
+      },
+      "http": {
+        "method": {
+          "label": "Method",
+          "help": "GET reads, POST and PUT send, DELETE removes."
+        },
+        "url": {
+          "label": "URL",
+          "help": "An http:// or https:// address; templates are filled in."
+        },
+        "headers": {
+          "label": "Headers",
+          "help": "Name and value pairs, for example Authorization = Bearer '{{'secrets.token'}}'."
+        },
+        "body": {
+          "label": "Body",
+          "help": "Text sent with the request; JSON is sent as application/json."
+        },
+        "timeout_seconds": {
+          "label": "Time limit, seconds",
+          "help": "From 1 to 60; 10 when empty."
+        },
+        "fail_on_error": {
+          "label": "Fail on status 400 and above",
+          "help": "Off lets the run go on and read the status itself."
+        },
+        "response_sample": {
+          "label": "Answer structure",
+          "help": "An example of the JSON answer. Later steps get its keys as suggestions, such as steps.ping.json.state. The run does not check it."
+        }
+      },
+      "script": {
+        "script": {
+          "label": "Script",
+          "help": "A file in the scripts folder with mode 0755 or stricter."
+        },
+        "args": {
+          "label": "Arguments",
+          "help": "Each argument is passed on its own, without a shell."
+        },
+        "timeout_seconds": {
+          "label": "Time limit, seconds",
+          "help": "From 1 to 3600; the script and everything it started are stopped after it."
+        },
+        "env": {
+          "label": "Environment",
+          "help": "Variables the script reads from its environment, such as $TARGET; each value is a template."
+        },
+        "stdin": {
+          "label": "Standard input",
+          "help": "A value written to the script's standard input as JSON, instead of the event fields; for example '{{'vars.report'}}'."
+        }
+      },
+      "notify": {
+        "text": {
+          "label": "Text",
+          "help": "The message; templates are filled in."
+        },
+        "title": {
+          "label": "Title",
+          "help": "An optional first line in bold; templates are filled in."
+        },
+        "channel": {
+          "label": "Channel",
+          "help": "A channel from the notifications page; empty sends to every ready channel."
+        }
+      },
+      "probe": {
+        "service": {
+          "label": "Service",
+          "help": "A service id, or a template such as '{{'inputs.service'}}'."
+        }
+      },
+      "status": {
+        "service": {
+          "label": "Service",
+          "help": "A service id, or a template such as '{{'inputs.service'}}'."
+        }
+      },
+      "transform": {
+        "input": {
+          "label": "Input",
+          "help": "A template giving the value to reshape, such as '{{'steps.list.json.disks'}}'."
+        },
+        "operations": {
+          "label": "Operations",
+          "help": "Applied in order, top to bottom; each card shows the value after it."
+        }
+      },
+      "automation": {
+        "automation": {
+          "label": "Automation",
+          "help": "The automation to start; a workflow cannot start the automation that started it."
+        },
+        "fields": {
+          "label": "Event fields",
+          "help": "Values the automation sees as its event fields, as '{{'service.id'}}', PORTAL_SERVICE_ID and on its standard input."
+        },
+        "wait": {
+          "label": "Wait for it",
+          "help": "Wait for its run to finish and fail when it did not succeed."
+        }
+      }
+    },
+    "results": {
+      "if": {
+        "branch": "The branch it took: then or else"
+      },
+      "loop": {
+        "iterations": "How many passes ran"
+      },
+      "workflow": {
+        "vars": "The variables the called workflow set"
+      },
+      "set": {
+        "value": "The value that was set"
+      },
+      "http": {
+        "status": "The HTTP status code, such as 200 or 404",
+        "headers": "The answer's headers",
+        "body": "The answer's text, the first 64 KiB",
+        "json": "The answer as JSON, when it is JSON; add keys after it"
+      },
+      "script": {
+        "exit_code": "The exit code; 0 means success",
+        "stdout": "The end of the output",
+        "stderr": "The end of the errors"
+      },
+      "probe": {
+        "state": "up, degraded, down or unreadable",
+        "latency_milliseconds": "How long the check took",
+        "diagnosis": "Why it failed, when it did"
+      },
+      "status": {
+        "state": "up, degraded, down or unreadable",
+        "since": "When the service entered that state"
+      },
+      "transform": {
+        "value": "The value after the last operation."
+      },
+      "automation": {
+        "run_id": "The id of the run it queued",
+        "outcome": "How that run ended, when waited"
+      }
+    },
+    "suggestions": {
+      "groups": {
+        "inputs": "Inputs",
+        "vars": "Variables",
+        "steps": "Results of earlier steps",
+        "loop": "Loop",
+        "event": "The event that started the run",
+        "secrets": "Secrets",
+        "item": "Current item"
+      },
+      "input": "Input {name} of this workflow",
+      "variable": "Variable {name}, set by step {step}",
+      "calledVariable": "Variable {name} of the called workflow {workflow}",
+      "jsonKey": "Key {key} of the answer of {step}, as seen in the last run",
+      "event": "Field {name} of the event",
+      "secret": "Secret {name}, sent as it is and shown as *** in the journal",
+      "secretUnset": "This secret is not set yet; the step will fail",
+      "loop": {
+        "item": "The current item of the loop",
+        "index": "The number of the current pass, from 0"
+      },
+      "sampleKey": "Key {key} of the answer of {step}, from its answer structure",
+      "item": {
+        "value": "The current item of the list",
+        "index": "Its position, from 0",
+        "key": "{key} of the current item"
+      },
+      "variableKey": "{key} of the dictionary {name}",
+      "forEachElement": "for each element"
+    },
+    "reasons": {
+      "unknownInput": "{name} is not an input of this workflow",
+      "unknownVariable": "no earlier step sets the variable {name}",
+      "unknownStep": "no step {name} comes earlier",
+      "outsideLoop": "loop.{name} exists only inside a loop as loop.item and loop.index",
+      "notAValue": "{name} is not a value a workflow knows",
+      "outsideTransform": "{name} exists only inside a transform's filter and map",
+      "unreadableFilter": "has a filter that cannot be read: {filter}",
+      "unknownFilter": "names the filter {filter}, which does not exist",
+      "filterArguments": "{filter} takes {wanted} arguments and got {got}",
+      "filterArgument": "the argument {argument} of {filter} must be quoted text or a number, as its type says",
+      "filterType": "{filter} takes {takes} and got {got}"
+    },
+    "edges": {
+      "then": "then",
+      "else": "otherwise",
+      "branch": "branch {number}",
+      "repeat": "{count, plural, one {# time} other {# times}}",
+      "forEach": "for each item",
+      "while": "while the condition holds",
+      "again": "again"
+    },
+    "legend": {
+      "title": "How the editor works",
+      "start": "The top node holds the inputs and shows what starts the workflow.",
+      "arrows": "Arrows show the order steps run in; conditions fork and join again.",
+      "plus": "Press + on an arrow to add a step there, or drag a step onto another +.",
+      "palette": "The palette describes every kind of step with an example.",
+      "completion": "Type '{{' in any field to insert inputs, variables and results of earlier steps.",
+      "dismiss": "Got it"
+    },
+    "templates": {
+      "retry": {
+        "title": "Retry a request until it answers",
+        "description": "Asks an address up to three times, pausing between tries.",
+        "labels": {
+          "retry": "Try three times",
+          "ping": "Ask the address",
+          "answered": "Did it answer?",
+          "pause": "Wait a little",
+          "give_up": "Give up"
+        }
+      },
+      "notify-down": {
+        "title": "Tell me when a service is down",
+        "description": "Probes a service and sends a notification when it is not up.",
+        "labels": {
+          "check": "Check the service",
+          "down": "Is it down?",
+          "tell": "Send a message"
+        }
+      },
+      "parallel-check": {
+        "title": "Check several services at once",
+        "description": "Reads two statuses together and reports both.",
+        "labels": {
+          "together": "Check together",
+          "report": "Report"
+        }
+      },
+      "daily-report": {
+        "title": "Daily report",
+        "description": "Builds a short text from statuses and sends it; start it from a schedule.",
+        "labels": {
+          "greeting": "Start the text",
+          "nas": "NAS status",
+          "send": "Send the report"
+        }
+      },
+      "empty": {
+        "title": "Empty workflow",
+        "description": "Start from nothing and add steps with +.",
+        "labels": {}
+      },
+      "gallery": "Starter templates"
+    },
+    "filters": {
+      "upper": {
+        "description": "Capital letters.",
+        "example": "'{{'inputs.service | upper'}}' → NAS"
+      },
+      "lower": {
+        "description": "Small letters.",
+        "example": "'{{'inputs.service | lower'}}' → nas"
+      },
+      "trim": {
+        "description": "Removes spaces at both ends.",
+        "example": "'{{'steps.run.stdout | trim'}}'"
+      },
+      "replace": {
+        "description": "Replaces every from with to.",
+        "example": "'{{'inputs.service | replace(\"-\", \" \")'}}'"
+      },
+      "split": {
+        "description": "Cuts text into a list at each separator.",
+        "example": "'{{'steps.run.stdout | split(\",\")'}}'"
+      },
+      "slice": {
+        "description": "Part of a text or list, from start up to end; negative numbers count from the end.",
+        "example": "'{{'steps.list.json.disks | slice(0, 2)'}}'"
+      },
+      "starts_with": {
+        "description": "True when the text begins with the given text.",
+        "example": "'{{'inputs.service | starts_with(\"nas\")'}}'"
+      },
+      "contains": {
+        "description": "True when the text holds the given text, or the list holds the value.",
+        "example": "'{{'steps.list.json.tags | contains(\"backup\")'}}'"
+      },
+      "length": {
+        "description": "How many characters, items or keys.",
+        "example": "'{{'steps.list.json.disks | length'}}' → 3"
+      },
+      "default": {
+        "description": "The given value when this one is empty or missing.",
+        "example": "'{{'vars.note | default(\"none\")'}}'"
+      },
+      "number": {
+        "description": "Reads text as a number.",
+        "example": "'{{'steps.run.stdout | number'}}'"
+      },
+      "round": {
+        "description": "Rounds to the given number of digits after the point.",
+        "example": "'{{'steps.list.json.load | round(1)'}}'"
+      },
+      "floor": {
+        "description": "Rounds down.",
+        "example": "'{{'steps.list.json.load | floor'}}'"
+      },
+      "ceil": {
+        "description": "Rounds up.",
+        "example": "'{{'steps.list.json.load | ceil'}}'"
+      },
+      "abs": {
+        "description": "Drops the sign.",
+        "example": "'{{'vars.delta | abs'}}'"
+      },
+      "first": {
+        "description": "The first item of a list.",
+        "example": "'{{'steps.list.json.disks | first'}}'"
+      },
+      "last": {
+        "description": "The last item of a list.",
+        "example": "'{{'steps.list.json.disks | last'}}'"
+      },
+      "join": {
+        "description": "Joins the items of a list into one text.",
+        "example": "'{{'steps.list.json.names | join(\", \")'}}'"
+      },
+      "sort": {
+        "description": "Sorts a list: numbers by value, text alphabetically.",
+        "example": "'{{'steps.list.json.names | sort'}}'"
+      },
+      "reverse": {
+        "description": "Reverses a list.",
+        "example": "'{{'steps.list.json.names | reverse'}}'"
+      },
+      "unique": {
+        "description": "Keeps the first of each repeated item.",
+        "example": "'{{'steps.list.json.tags | unique'}}'"
+      },
+      "pluck": {
+        "description": "Takes one key from every object of a list.",
+        "example": "'{{'steps.list.json.disks | pluck(\"name\")'}}'"
+      },
+      "sum": {
+        "description": "Adds the numbers of a list.",
+        "example": "'{{'steps.list.json.sizes | sum'}}'"
+      },
+      "min": {
+        "description": "The smallest number of a list.",
+        "example": "'{{'steps.list.json.sizes | min'}}'"
+      },
+      "max": {
+        "description": "The largest number of a list.",
+        "example": "'{{'steps.list.json.sizes | max'}}'"
+      },
+      "keys": {
+        "description": "The keys of an object, in order.",
+        "example": "'{{'steps.list.json | keys'}}'"
+      },
+      "values": {
+        "description": "The values of an object, in the order of its keys.",
+        "example": "'{{'steps.list.json | values'}}'"
+      },
+      "get": {
+        "description": "The value at a key or a path such as a.b.0.",
+        "example": "'{{'steps.list.json | get(\"disks.0.name\")'}}'"
+      },
+      "json": {
+        "description": "Writes any value as JSON text.",
+        "example": "'{{'steps.list.json.disks | json'}}'"
+      },
+      "parse": {
+        "description": "Reads JSON text into a value.",
+        "example": "'{{'steps.run.stdout | parse'}}'"
+      }
+    },
+    "operations": {
+      "filter": {
+        "name": "Keep the matching",
+        "description": "Keeps the items for which the condition holds; '{{'item'}}' is the current item."
+      },
+      "map": {
+        "name": "Turn each into",
+        "description": "Makes a new list from a template; '{{'item'}}' and '{{'index'}}' are the current item and its position."
+      },
+      "sort_by": {
+        "name": "Sort by a key",
+        "description": "Sorts a list of objects by the value at a key, ascending or descending."
+      },
+      "group_by": {
+        "name": "Group by a key",
+        "description": "Makes an object of lists, one per value of the key."
+      },
+      "count_by": {
+        "name": "Count by a key",
+        "description": "Makes an object of counts, one per value of the key."
+      },
+      "each": {
+        "name": "For each element",
+        "description": "Runs its own chain of operations on every element and gives the list of results; inside it, '{{'item'}}' is the element."
+      }
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Where messages about services and from workflows go, and which changes are announced.",
+    "saved": "Saved",
+    "refused": "The settings were not saved",
+    "channels": {
+      "telegram": "Telegram"
+    },
+    "readiness": {
+      "ready": "Ready",
+      "disabled": "Off",
+      "missing": "Not set up"
+    },
+    "missing": "{field}: {message}",
+    "lastDelivery": "Last delivery",
+    "never": "Nothing sent yet",
+    "lastError": "Last error",
+    "queue": "Queue",
+    "queueCounts": "{queued} waiting · {dropped} dropped",
+    "test": {
+      "send": "Send test",
+      "sent": "The test message was delivered.",
+      "failed": "The test message was not delivered: {error}",
+      "unavailable": "Set the channel up and switch the module on to send a test."
+    },
+    "settings": {
+      "title": "Channel settings",
+      "enabled": "On",
+      "secret": "Token secret",
+      "chat_id": "Chat id",
+      "noSecret": "No secret chosen",
+      "save": "Save channel"
+    },
+    "rules": {
+      "title": "What is announced",
+      "description": "Every ready channel receives these announcements.",
+      "states": "A service enters",
+      "recovered": "Announce when a service is up again",
+      "save": "Save rules"
+    }
+  },
+  "workflowInputs": {
+    "types": {
+      "text": "Text",
+      "number": "Number",
+      "boolean": "Yes or no",
+      "list": "List",
+      "object": "Dictionary"
+    },
+    "type": "Type of input {number}",
+    "default": "Default of input {number}",
+    "description": "Description of input {number}",
+    "descriptionPlaceholder": "What this input is for (optional)",
+    "key": "Key {number}",
+    "item": "Value {number}",
+    "removeRow": "Remove row {number}",
+    "addItem": "Add a value",
+    "addKey": "Add a key"
   }
 }

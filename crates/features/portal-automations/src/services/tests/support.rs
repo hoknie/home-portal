@@ -33,6 +33,7 @@ pub fn pending(id: &str, run_id: u64, by: Option<&str>) -> Pending {
         automation: automation(id, "{ event = \"portal.started\" }", ""),
         event: PortalEvent::portal(EventName::PortalStarted, "", OffsetDateTime::UNIX_EPOCH),
         by: by.map(str::to_string),
+        origin: Vec::new(),
     }
 }
 

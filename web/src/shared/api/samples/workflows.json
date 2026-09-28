@@ -1,0 +1,193 @@
+{
+  "workflows": [
+    {
+      "active_run": null,
+      "description": "Probe, retry the restart API three times, then report",
+      "enabled": true,
+      "id": "revive",
+      "inputs": [
+        {
+          "default": null,
+          "description": null,
+          "name": "service",
+          "type": "text"
+        },
+        {
+          "default": 3,
+          "description": "How many restarts to try",
+          "name": "tries",
+          "type": "number"
+        }
+      ],
+      "last_run": {
+        "arguments": [
+          "--",
+          "jellyfin"
+        ],
+        "automation": "nas-down",
+        "event": "service.status-changed",
+        "fields": {
+          "automation.id": "nas-down",
+          "event.at": "2026-09-25T03:00:00Z",
+          "event.name": "service.status-changed",
+          "run.by": "",
+          "run.id": "12",
+          "run.manual": "false"
+        },
+        "id": "12",
+        "outcome": {
+          "count": 1,
+          "duration_milliseconds": 1840,
+          "exit_code": null,
+          "last_at": "2026-09-25T03:00:00Z",
+          "reason": "nas is back",
+          "result": "succeeded",
+          "stderr": {
+            "bytes": 0,
+            "tail": "",
+            "truncated": false
+          },
+          "stdout": {
+            "bytes": 0,
+            "tail": "",
+            "truncated": false
+          }
+        },
+        "started_at": "2026-09-25T03:00:00Z",
+        "trace": {
+          "dropped": 0,
+          "entries": [
+            {
+              "detail": "down",
+              "duration_milliseconds": 120,
+              "iteration": null,
+              "kind": "probe",
+              "label": "first_probe",
+              "outcome": "succeeded",
+              "output": null,
+              "path": "steps[0]",
+              "shape": null,
+              "started_at": "2026-09-25T03:00:00Z",
+              "step": "first_probe"
+            },
+            {
+              "detail": "then",
+              "duration_milliseconds": 120,
+              "iteration": null,
+              "kind": "if",
+              "label": "down",
+              "outcome": "succeeded",
+              "output": null,
+              "path": "steps[1]",
+              "shape": null,
+              "started_at": "2026-09-25T03:00:00Z",
+              "step": "down"
+            }
+          ]
+        },
+        "workflow": "revive"
+      },
+      "steps": [
+        {
+          "id": "first_probe",
+          "kind": "probe",
+          "label": "Probe it now",
+          "service": "{{inputs.service}}"
+        },
+        {
+          "condition": {
+            "left": "{{steps.first_probe.state}}",
+            "op": "!=",
+            "right": "up"
+          },
+          "id": "down",
+          "kind": "if",
+          "then": [
+            {
+              "body": [
+                {
+                  "fail_on_error": false,
+                  "id": "restart",
+                  "kind": "http",
+                  "method": "POST",
+                  "url": "http://192.168.1.10:9000/restart/{{inputs.service}}"
+                },
+                {
+                  "id": "settle",
+                  "kind": "wait",
+                  "seconds": 20
+                }
+              ],
+              "id": "retry",
+              "kind": "loop",
+              "repeat": 3
+            }
+          ]
+        },
+        {
+          "branches": [
+            [
+              {
+                "id": "nas_state",
+                "kind": "status",
+                "service": "nas"
+              }
+            ],
+            [
+              {
+                "id": "router_state",
+                "kind": "status",
+                "service": "router"
+              }
+            ]
+          ],
+          "id": "both",
+          "kind": "parallel"
+        },
+        {
+          "id": "tell",
+          "kind": "telegram",
+          "text": "{{inputs.service}} is {{steps.nas_state.state}}"
+        }
+      ],
+      "tags": [
+        "media"
+      ],
+      "timeout_seconds": 600,
+      "title": "Revive a service",
+      "used_by": [
+        {
+          "id": "nas-down",
+          "kind": "automation",
+          "title": "NAS down"
+        }
+      ]
+    },
+    {
+      "active_run": null,
+      "description": null,
+      "enabled": false,
+      "id": "note",
+      "inputs": [],
+      "last_run": null,
+      "steps": [
+        {
+          "id": "remember",
+          "kind": "set",
+          "value": "hello",
+          "variable": "note"
+        },
+        {
+          "id": "done",
+          "kind": "stop",
+          "outcome": "succeeded",
+          "reason": "{{vars.note}}"
+        }
+      ],
+      "tags": [],
+      "timeout_seconds": 300,
+      "title": "Note",
+      "used_by": []
+    }
+  ]
+}

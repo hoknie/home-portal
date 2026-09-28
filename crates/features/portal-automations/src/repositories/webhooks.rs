@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use portal_config::Snapshot;
 use toml_edit::{Array, DocumentMut, Table, Value};
 
-use super::{push, remove_at, run_table, set, set_nested, table_at, tags_value};
-use crate::types::{AutomationsSection, Webhook, WebhookAction};
+use super::{push, remove_at, set, table_at, tags_value, write_action};
+use crate::types::{AutomationsSection, RunSettings, Webhook, WebhookAction};
 
 pub const SECTION: &str = AutomationsSection::WEBHOOKS;
 pub const TOKEN_KEY: &str = "token_sha256";
@@ -59,7 +59,10 @@ fn write_fields(table: &mut Table, webhook: &Webhook) {
     match &webhook.action {
         WebhookAction::Event => {
             table.remove("run");
+            table.remove("workflow");
+            table.remove("inputs");
         }
-        WebhookAction::Script(run) => set_nested(table, "run", run_table(run)),
+        WebhookAction::Script(run) => write_action(table, run, None),
+        WebhookAction::Workflow(call) => write_action(table, &RunSettings::default(), Some(call)),
     }
 }

@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
-use super::{StoredResult, StoredSeen, StoredTail};
+use super::{StoredResult, StoredSeen, StoredTail, StoredTrace};
 use crate::types::{Finished, Outcome, RunRecord, Seen};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -13,6 +13,10 @@ pub struct StoredRun {
     pub arguments: Vec<String>,
     pub seen: StoredSeen,
     pub result: StoredResult,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workflow: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trace: Option<StoredTrace>,
 }
 
 impl StoredRun {
@@ -35,6 +39,8 @@ impl StoredRun {
                 stdout: StoredTail::of(&record.result.stdout),
                 stderr: StoredTail::of(&record.result.stderr),
             },
+            workflow: record.workflow.clone(),
+            trace: record.trace.as_ref().map(StoredTrace::of),
         }
     }
 
@@ -57,6 +63,8 @@ impl StoredRun {
                 stdout: self.result.stdout.into_tail(),
                 stderr: self.result.stderr.into_tail(),
             },
+            workflow: self.workflow,
+            trace: self.trace.map(StoredTrace::into_trace),
         })
     }
 }

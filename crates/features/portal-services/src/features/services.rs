@@ -14,8 +14,8 @@ use crate::repositories::HistoryFiles;
 use crate::services::{Showcase, StatusBoard, Supervisor, validate_services};
 use crate::types::{ServiceEntry, ServicesPorts, ServicesSection, ServicesState};
 use crate::usecases::{
-    ChangeService, CreateService, DeleteService, ListServices, ServiceEntries, ShowHistory,
-    WakeProbe,
+    ChangeService, CreateService, CurrentStatus, DeleteService, ListServices, ProbeService,
+    ServiceEntries, ShowHistory, WakeProbe,
 };
 
 pub struct ServicesFeature {
@@ -23,6 +23,8 @@ pub struct ServicesFeature {
     showcase: Showcase,
     entries: ServiceEntries,
     history: Arc<HistoryWriter>,
+    probe: ProbeService,
+    current: CurrentStatus,
 }
 
 impl ServicesFeature {
@@ -72,6 +74,8 @@ impl ServicesFeature {
                 wake: WakeProbe::new(configuration.clone(), supervisor),
                 history: ShowHistory::new(configuration.clone(), board),
             },
+            probe: ProbeService::new(configuration.clone(), showcase.clone()),
+            current: CurrentStatus::new(configuration.clone(), showcase.clone()),
             showcase,
             entries: ServiceEntries::new(configuration),
             history,
@@ -90,6 +94,14 @@ impl ServicesFeature {
 
     pub fn publishing(&self) -> Option<u16> {
         self.showcase.publishing.https_port()
+    }
+
+    pub fn probe_service(&self) -> ProbeService {
+        self.probe.clone()
+    }
+
+    pub fn current_status(&self) -> CurrentStatus {
+        self.current.clone()
     }
 
     pub fn status_of(&self, id: &str) -> ServiceStatus {

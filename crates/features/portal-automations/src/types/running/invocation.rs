@@ -63,6 +63,39 @@ impl Invocation {
         }
     }
 
+    pub fn for_step(
+        (program, directory): (PathBuf, PathBuf),
+        arguments: Vec<String>,
+        fields: &[(String, String)],
+        timeout: Duration,
+    ) -> Invocation {
+        let mut environment: Vec<(String, String)> = Self::PASSED_THROUGH
+            .iter()
+            .filter_map(|name| {
+                std::env::var(name)
+                    .ok()
+                    .map(|value| (name.to_string(), value))
+            })
+            .collect();
+        environment.extend(
+            fields
+                .iter()
+                .map(|(key, value)| (Self::variable_of(key), value.clone())),
+        );
+        let input: Map<String, Value> = fields
+            .iter()
+            .map(|(key, value)| (key.clone(), Value::String(value.clone())))
+            .collect();
+        Invocation {
+            program,
+            directory,
+            arguments,
+            environment,
+            input: Value::Object(input).to_string(),
+            timeout,
+        }
+    }
+
     pub fn fields_of(pending: &Pending) -> Vec<(String, String)> {
         let mut fields: Vec<(String, String)> = pending
             .event

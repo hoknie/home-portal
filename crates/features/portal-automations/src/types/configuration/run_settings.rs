@@ -3,7 +3,7 @@ use portal_feature::FieldError;
 use super::RawRun;
 use crate::helpers::script_shape_problem;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RunSettings {
     pub script: String,
     pub args: Vec<String>,

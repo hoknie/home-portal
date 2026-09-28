@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, type LucideIcon, Settings2, Users, Waypoints, Webhook, Workflow } from "lucide-react";
+import { Bell, Globe, Route, Settings2, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -17,6 +17,8 @@ const ICONS: Record<ModuleName, LucideIcon> = {
   automations: Workflow,
   webhooks: Webhook,
   users: Users,
+  workflows: Route,
+  notifications: Bell,
 };
 
 export type ModuleCardProps = { module: Module; modules: Modules; revision: string | null };

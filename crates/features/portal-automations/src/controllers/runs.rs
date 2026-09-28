@@ -64,6 +64,7 @@ pub async fn runs(
     let filter = RunFilter {
         automation: query.automation,
         webhook: query.webhook,
+        workflow: query.workflow,
         text: query.text,
     };
     let finished = state.sink.journal.matching(&filter);
@@ -120,7 +121,7 @@ fn run_id(id: &str) -> Result<u64, ApiError> {
     id.parse().map_err(|_| ApiError::NotFound(UNKNOWN_RUN))
 }
 
-fn name_of(principal: Option<Extension<Principal>>) -> String {
+pub fn name_of(principal: Option<Extension<Principal>>) -> String {
     principal
         .map(|Extension(principal)| principal.name)
         .unwrap_or_default()

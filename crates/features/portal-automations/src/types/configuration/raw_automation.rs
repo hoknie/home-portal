@@ -1,6 +1,9 @@
+use std::collections::BTreeMap;
+
 use serde::Deserialize;
 
 use super::RawRun;
+use crate::types::InputValue;
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct RawAutomation {
@@ -17,5 +20,9 @@ pub struct RawAutomation {
     #[serde(default)]
     pub when: toml::Table,
     #[serde(default)]
-    pub run: RawRun,
+    pub run: Option<RawRun>,
+    #[serde(default)]
+    pub workflow: Option<String>,
+    #[serde(default)]
+    pub inputs: Option<BTreeMap<String, InputValue>>,
 }

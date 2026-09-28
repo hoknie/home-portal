@@ -1,4 +1,5 @@
 mod allows;
+mod channels;
 mod comments;
 mod folders;
 mod layers;

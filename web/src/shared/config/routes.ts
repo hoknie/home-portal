@@ -13,6 +13,10 @@ export const routes = {
   editAutomation: (id: string) => `/admin/automations/edit/?id=${encodeURIComponent(id)}`,
   adminWebhooks: "/admin/webhooks/",
   adminUsers: "/admin/users/",
+  adminWorkflows: "/admin/workflows/",
+  newWorkflow: "/admin/workflows/new/",
+  editWorkflow: (id: string) => `/admin/workflows/edit/?id=${encodeURIComponent(id)}`,
+  adminNotifications: "/admin/notifications/",
   newWebhook: "/admin/webhooks/new/",
   editWebhook: (id: string) => `/admin/webhooks/edit/?id=${encodeURIComponent(id)}`,
   webhookDetails: (id: string) => `/admin/webhooks/details/?id=${encodeURIComponent(id)}`,
@@ -56,7 +60,7 @@ export const api = {
   automations: "/api/automations",
   automation: (id: string) => `/api/automations/${encodeURIComponent(id)}`,
   automationRun: (id: string) => `/api/automations/${encodeURIComponent(id)}/run`,
-  automationRuns: (filter: { automation?: string | null; webhook?: string | null; text?: string | null }) => {
+  automationRuns: (filter: { automation?: string | null; webhook?: string | null; workflow?: string | null; text?: string | null }) => {
     const query = new URLSearchParams();
     for (const [name, value] of Object.entries(filter)) {
       if (value) {
@@ -74,6 +78,14 @@ export const api = {
   webhooks: "/api/webhooks",
   webhook: (id: string) => `/api/webhooks/${encodeURIComponent(id)}`,
   webhookToken: (id: string) => `/api/webhooks/${encodeURIComponent(id)}/token`,
+  workflows: "/api/workflows",
+  workflow: (id: string) => `/api/workflows/${encodeURIComponent(id)}`,
+  workflowRun: (id: string) => `/api/workflows/${encodeURIComponent(id)}/run`,
+  workflowCatalogue: "/api/workflows/catalogue",
+  secrets: "/api/secrets",
+  notifications: "/api/notifications",
+  notificationChannel: (name: string) => `/api/notifications/channels/${encodeURIComponent(name)}`,
+  notificationTest: "/api/notifications/test",
 } as const;
 
 export const MODULE_PAGES = {
@@ -82,6 +94,8 @@ export const MODULE_PAGES = {
   automations: routes.adminAutomations,
   webhooks: routes.adminWebhooks,
   users: routes.adminUsers,
+  workflows: routes.adminWorkflows,
+  notifications: routes.adminNotifications,
 } as const;
 
 export const STATUS_REFRESH_MILLISECONDS = 10_000;

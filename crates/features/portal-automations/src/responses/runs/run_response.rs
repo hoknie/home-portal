@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use portal_feature::PortalEvent;
 use serde::Serialize;
 
-use super::{OutcomeResponse, OutputResponse};
+use super::{OutcomeResponse, OutputResponse, TraceResponse};
 use crate::types::{ActiveRun, RunRecord};
 
 #[derive(Debug, Clone, Serialize)]
@@ -15,6 +15,8 @@ pub struct RunResponse {
     pub arguments: Vec<String>,
     pub started_at: String,
     pub outcome: OutcomeResponse,
+    pub workflow: Option<String>,
+    pub trace: Option<TraceResponse>,
 }
 
 impl RunResponse {
@@ -40,6 +42,8 @@ impl RunResponse {
                 stdout: OutputResponse::of(&record.result.stdout),
                 stderr: OutputResponse::of(&record.result.stderr),
             },
+            workflow: record.workflow.clone(),
+            trace: record.trace.as_ref().map(TraceResponse::of),
         }
     }
 
@@ -77,6 +81,14 @@ impl RunResponse {
                 stdout: OutputResponse::of(&stdout),
                 stderr: OutputResponse::of(&stderr),
             },
+            workflow: run.workflow.clone(),
+            trace: run.workflow.as_ref().map(|_| {
+                TraceResponse::of(
+                    &run.trace
+                        .lock()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner),
+                )
+            }),
         }
     }
 }

@@ -36,6 +36,32 @@ export type FilterName = (typeof FILTER_NAMES)[number];
 
 const outputSchema = z.object({ tail: z.string(), bytes: z.number(), truncated: z.boolean() });
 
+export const STEP_OUTCOMES = ["running", "succeeded", "failed", "skipped", "stopped", "timed-out"] as const;
+
+export const stepOutcomeSchema = z.enum([...STEP_OUTCOMES, UNKNOWN]).catch(UNKNOWN);
+
+export type StepOutcome = z.infer<typeof stepOutcomeSchema>;
+
+export const traceEntrySchema = z.object({
+  path: z.string(),
+  step: z.string(),
+  label: z.string(),
+  kind: z.string(),
+  iteration: z.number().nullable(),
+  outcome: stepOutcomeSchema,
+  started_at: z.string(),
+  duration_milliseconds: z.number(),
+  detail: z.string(),
+  output: z.string().nullable(),
+  shape: z.string().nullable().default(null),
+});
+
+export type TraceEntry = z.infer<typeof traceEntrySchema>;
+
+export const traceSchema = z.object({ entries: z.array(traceEntrySchema), dropped: z.number() });
+
+export type Trace = z.infer<typeof traceSchema>;
+
 export const runSchema = z.object({
   id: z.string(),
   automation: z.string(),
@@ -53,6 +79,8 @@ export const runSchema = z.object({
     stdout: outputSchema,
     stderr: outputSchema,
   }),
+  workflow: z.string().nullable().default(null),
+  trace: traceSchema.nullable().default(null),
 });
 
 export type Run = z.infer<typeof runSchema>;
@@ -85,6 +113,7 @@ export const automationSchema = z.object({
   cooldown_seconds: z.number(),
   when: whenSchema,
   run: z.object({ script: z.string(), args: z.array(z.string()), timeout_seconds: z.number() }),
+  workflow: z.object({ id: z.string(), inputs: z.record(z.string(), z.unknown()) }).nullable().default(null),
   last_run: runSchema.nullable().default(null),
   active_run: runSchema.nullable().default(null),
 });

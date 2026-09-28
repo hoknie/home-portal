@@ -258,6 +258,29 @@ impl portal_feature::EventSink for Silent {
 }
 
 #[tokio::test]
+async fn the_notifications_api_needs_a_session() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = support::with_extra(&directory, "secret", "");
+    let registry = registered(&support::wiring_for(&path)).unwrap();
+    let portal = assemble(&registry);
+    assert_eq!(
+        status_of(portal.clone(), get_request("/api/notifications")).await,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        status_of(
+            portal,
+            Request::post("/api/notifications/test")
+                .header(CONTENT_TYPE, "application/json")
+                .body(Body::from(r#"{"channel":"telegram"}"#))
+                .unwrap()
+        )
+        .await,
+        StatusCode::UNAUTHORIZED
+    );
+}
+
+#[tokio::test]
 async fn following_and_stopping_a_run_need_a_session() {
     let directory = tempfile::tempdir().unwrap();
     let path = support::with_extra(&directory, "secret", "");
@@ -271,6 +294,30 @@ async fn following_and_stopping_a_run_need_a_session() {
         status_of(
             portal,
             Request::post("/api/automations/runs/1/stop")
+                .body(Body::empty())
+                .unwrap()
+        )
+        .await,
+        StatusCode::UNAUTHORIZED
+    );
+}
+
+#[tokio::test]
+async fn the_workflows_api_needs_a_session() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = support::with_extra(&directory, "secret", "");
+    let registry = registered(&support::wiring_for(&path)).unwrap();
+    let portal = assemble(&registry);
+    for uri in ["/api/workflows", "/api/workflows/catalogue"] {
+        assert_eq!(
+            status_of(portal.clone(), get_request(uri)).await,
+            StatusCode::UNAUTHORIZED
+        );
+    }
+    assert_eq!(
+        status_of(
+            portal,
+            Request::post("/api/workflows/revive/run")
                 .body(Body::empty())
                 .unwrap()
         )

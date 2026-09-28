@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use super::{MarksResponse, RunResponse, RunSettingsResponse, WhenResponse};
+use super::{MarksResponse, RunResponse, RunSettingsResponse, WhenResponse, WorkflowCallResponse};
 use crate::types::{ActiveRun, Automation, RunRecord};
 
 #[derive(Debug, Clone, Serialize)]
@@ -12,6 +12,7 @@ pub struct AutomationResponse {
     pub cooldown_seconds: u64,
     pub when: WhenResponse,
     pub run: RunSettingsResponse,
+    pub workflow: Option<WorkflowCallResponse>,
     pub last_run: Option<RunResponse>,
     pub active_run: Option<RunResponse>,
 }
@@ -32,6 +33,7 @@ impl AutomationResponse {
             cooldown_seconds: automation.cooldown_seconds,
             when: WhenResponse::of(&automation.trigger),
             run: RunSettingsResponse::of(&automation.run),
+            workflow: automation.workflow.as_ref().map(WorkflowCallResponse::of),
             last_run: last_run.map(RunResponse::of),
             active_run: active_run.map(RunResponse::active),
         }

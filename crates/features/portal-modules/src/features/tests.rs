@@ -143,8 +143,17 @@ async fn every_module_is_listed_in_order_with_its_requirements() {
         .collect();
     assert_eq!(
         names,
-        vec!["proxy", "dns", "automations", "webhooks", "users"]
+        vec![
+            "proxy",
+            "dns",
+            "automations",
+            "webhooks",
+            "users",
+            "workflows",
+            "notifications"
+        ]
     );
+    assert_eq!(entry(&body, "notifications")["enabled"], true);
     assert_eq!(entry(&body, "users")["enabled"], false);
     assert_eq!(entry(&body, "users")["requires"], serde_json::json!([]));
     assert_eq!(entry(&body, "proxy")["enabled"], false);

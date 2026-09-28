@@ -25,6 +25,8 @@ fn the_modules_sample_matches_its_serializer() {
             module("automations", true, vec![], vec![]),
             module("webhooks", false, vec!["automations"], vec![]),
             module("users", true, vec![], vec![]),
+            module("workflows", false, vec!["automations"], vec![]),
+            module("notifications", true, vec![], vec![]),
         ],
     };
     check("modules", serde_json::to_value(modules).unwrap());

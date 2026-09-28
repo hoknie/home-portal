@@ -5,7 +5,9 @@ mod gatekeeper;
 mod queue;
 mod running_groups;
 mod sink;
+mod starter;
 mod status_relay;
+mod workflow_execution;
 
 pub use active_runs::ActiveRuns;
 pub use execution::execute;
@@ -15,3 +17,4 @@ pub use queue::RunQueue;
 pub use running_groups::RunningGroups;
 pub use sink::AutomationSink;
 pub use status_relay::StatusRelay;
+pub use workflow_execution::execute_workflow;

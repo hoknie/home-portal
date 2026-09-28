@@ -1,7 +1,9 @@
+use std::collections::BTreeMap;
+
 use serde::Deserialize;
 
 use super::RawMarks;
-use crate::types::RawRun;
+use crate::types::{InputValue, RawRun};
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct RawWebhook {
@@ -17,6 +19,10 @@ pub struct RawWebhook {
     pub action: String,
     #[serde(default)]
     pub run: Option<RawRun>,
+    #[serde(default)]
+    pub workflow: Option<String>,
+    #[serde(default)]
+    pub inputs: Option<BTreeMap<String, InputValue>>,
     #[serde(default)]
     pub token_sha256: Option<String>,
 }

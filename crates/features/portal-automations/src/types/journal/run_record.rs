@@ -1,7 +1,7 @@
 use time::OffsetDateTime;
 
 use super::{Outcome, Seen, SkipReason};
-use crate::types::{Finished, Invocation, Pending, Tail};
+use crate::types::{Finished, Invocation, Pending, Tail, Trace};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RunRecord {
@@ -11,6 +11,8 @@ pub struct RunRecord {
     pub arguments: Vec<String>,
     pub seen: Seen,
     pub result: Finished,
+    pub workflow: Option<String>,
+    pub trace: Option<Trace>,
 }
 
 impl RunRecord {
@@ -29,6 +31,12 @@ impl RunRecord {
             arguments,
             seen: Seen::once(started_at),
             result,
+            workflow: pending
+                .automation
+                .workflow
+                .as_ref()
+                .map(|call| call.id.clone()),
+            trace: None,
         }
     }
 

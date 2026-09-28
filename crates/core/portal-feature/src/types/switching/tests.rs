@@ -42,6 +42,16 @@ fn without_any_switch_automations_and_webhooks_are_on_and_the_rest_off() {
 }
 
 #[test]
+fn workflows_require_automations_and_are_off_by_default() {
+    assert_eq!(Module::Workflows.requires(), &[Module::Automations]);
+    assert!(!switches("").is_on(Module::Workflows));
+    assert_eq!(
+        fields("[modules]\nworkflows = true\nautomations = false\nwebhooks = false\n"),
+        vec!["modules.workflows"]
+    );
+}
+
+#[test]
 fn users_require_nothing_and_are_switched_on_by_the_modules_section() {
     assert!(Module::Users.requires().is_empty());
     assert!(switches("[modules]\nusers = true\n").is_on(Module::Users));
@@ -107,5 +117,25 @@ fn required_by_lists_only_enabled_modules() {
     assert_eq!(
         resolved.required_by(Module::Automations),
         vec![Module::Webhooks]
+    );
+}
+
+#[test]
+fn notifications_need_nothing_and_are_on_by_default() {
+    use super::{Module, ModuleSwitches};
+    assert!(Module::Notifications.requires().is_empty());
+    assert!(
+        ModuleSwitches::resolve(&"".parse().unwrap())
+            .unwrap()
+            .is_on(Module::Notifications)
+    );
+    assert!(
+        !ModuleSwitches::resolve(&"[modules]\nnotifications = false\n".parse().unwrap())
+            .unwrap()
+            .is_on(Module::Notifications)
+    );
+    assert_eq!(
+        Module::from_name("notifications"),
+        Some(Module::Notifications)
     );
 }

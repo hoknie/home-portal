@@ -282,3 +282,28 @@ fn an_admitted_run_is_active_and_a_dropped_one_is_not() {
     sink.forget(&pending);
     assert!(sink.active.find(id).is_none());
 }
+
+#[test]
+fn starting_from_a_workflow_refuses_a_chain_longer_than_four_and_a_disabled_automation() {
+    use crate::ports::AutomationStarter;
+    let sink = super::support::sink(
+        "[[automations]]\nid = \"a\"\ntitle = \"A\"\nwhen = { event = \"manual\" }\nrun = { script = \"x.sh\" }\n[[automations]]\nid = \"off\"\ntitle = \"Off\"\nenabled = false\nwhen = { event = \"manual\" }\nrun = { script = \"x.sh\" }\n",
+    );
+    let chain: Vec<String> = ["b", "c", "d", "e", "f"]
+        .iter()
+        .map(|id| id.to_string())
+        .collect();
+    let refused = sink.start("a", &[], &chain).unwrap_err();
+    assert!(refused.contains("more than 4 deep"), "{refused}");
+    assert!(sink.start("a", &[], &chain[..4]).is_ok());
+    assert!(
+        sink.start("off", &[], &[])
+            .unwrap_err()
+            .contains("disabled")
+    );
+    assert!(
+        sink.start("nowhere", &[], &[])
+            .unwrap_err()
+            .contains("no automation")
+    );
+}

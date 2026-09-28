@@ -239,3 +239,19 @@ fn an_unsupported_default_language_refuses_to_start_and_names_the_key() {
         .to_string();
     assert!(message.contains("interface.default_language"), "{message}");
 }
+
+#[test]
+fn telegram_enabled_without_its_token_refuses_to_start_naming_the_secret() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = support::with_extra(
+        &directory,
+        "secret",
+        "\n[notifications.telegram]\nenabled = true\nsecret = \"telegram_token\"\nchat_id = \"42\"\n",
+    );
+    let error = match registered(&support::wiring_for(&path)) {
+        Err(error) => error.to_string(),
+        Ok(_) => panic!("telegram without its token must refuse to start"),
+    };
+    assert!(error.contains("notifications.telegram.secret"), "{error}");
+    assert!(error.contains("telegram_token"), "{error}");
+}

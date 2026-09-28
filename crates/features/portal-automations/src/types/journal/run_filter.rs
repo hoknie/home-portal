@@ -4,6 +4,7 @@ use crate::types::{ActiveRun, RunRecord};
 pub struct RunFilter {
     pub automation: Option<String>,
     pub webhook: Option<String>,
+    pub workflow: Option<String>,
     pub text: Option<String>,
 }
 
@@ -11,16 +12,24 @@ impl RunFilter {
     pub const WEBHOOK_FIELD: &'static str = "webhook.id";
 
     pub fn keeps(&self, record: &RunRecord) -> bool {
-        self.keeps_parts(&record.automation, &record.fields, &record.arguments)
+        self.keeps_parts(
+            (&record.automation, record.workflow.as_deref()),
+            &record.fields,
+            &record.arguments,
+        )
     }
 
     pub fn keeps_active(&self, run: &ActiveRun) -> bool {
-        self.keeps_parts(&run.automation, &run.fields, &run.arguments)
+        self.keeps_parts(
+            (&run.automation, run.workflow.as_deref()),
+            &run.fields,
+            &run.arguments,
+        )
     }
 
     fn keeps_parts(
         &self,
-        automation: &str,
+        (automation, workflow): (&str, Option<&str>),
         fields: &[(String, String)],
         arguments: &[String],
     ) -> bool {
@@ -31,6 +40,10 @@ impl RunFilter {
                     .iter()
                     .any(|(key, value)| key == Self::WEBHOOK_FIELD && value == id)
         });
+        let by_workflow = self
+            .workflow
+            .as_deref()
+            .is_none_or(|id| workflow == Some(id));
         let by_text = self
             .text
             .as_deref()
@@ -44,6 +57,6 @@ impl RunFilter {
                     .chain(arguments.iter())
                     .any(|value| value.to_lowercase().contains(&wanted))
             });
-        by_automation && by_webhook && by_text
+        by_automation && by_webhook && by_workflow && by_text
     }
 }

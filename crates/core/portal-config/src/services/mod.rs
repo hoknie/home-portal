@@ -1,4 +1,5 @@
 mod loading;
+mod secret_source;
 mod store;
 
 #[cfg(test)]

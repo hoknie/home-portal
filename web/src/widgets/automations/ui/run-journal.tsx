@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { StopRunButton } from "@/features/stop-run";
 import { type Automation, RunTable, useRuns } from "@/entities/automation";
 import { useWebhooks } from "@/entities/webhook";
+import { useWorkflows } from "@/entities/workflow";
 import { Button, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Skeleton, Switch } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 
@@ -14,6 +15,7 @@ export const EVERYTHING = "all";
 export const TEXT_DEBOUNCE_MILLISECONDS = 300;
 const AUTOMATION = "automation:";
 const WEBHOOK = "webhook:";
+const WORKFLOW = "workflow:";
 
 function useSettled(value: string) {
   const [settled, setSettled] = useState(value);
@@ -32,9 +34,11 @@ export function RunJournal({ automations, onOpen }: { automations: Automation[];
   const settled = useSettled(text.trim());
   const webhooks = useWebhooks();
   const hooks = webhooks.data?.data.webhooks ?? [];
+  const flows = useWorkflows().data?.data.workflows ?? [];
   const runs = useRuns({
     automation: source.startsWith(AUTOMATION) ? source.slice(AUTOMATION.length) : null,
     webhook: source.startsWith(WEBHOOK) ? source.slice(WEBHOOK.length) : null,
+    workflow: source.startsWith(WORKFLOW) ? source.slice(WORKFLOW.length) : null,
     text: settled || null,
   }, live);
   const format = useFormatter();
@@ -50,7 +54,10 @@ export function RunJournal({ automations, onOpen }: { automations: Automation[];
     setRefreshing(false);
   };
   const titleOf = (id: string) =>
-    automations.find((automation) => automation.id === id)?.title ?? hooks.find((webhook) => webhook.id === id)?.title ?? id;
+    automations.find((automation) => automation.id === id)?.title ??
+    hooks.find((webhook) => webhook.id === id)?.title ??
+    (id.startsWith(WORKFLOW) ? flows.find((workflow) => `${WORKFLOW}${workflow.id}` === id)?.title : undefined) ??
+    id;
   const filters = (
     <div className="flex flex-wrap gap-2">
       <Select value={source} onValueChange={setSource}>
@@ -75,6 +82,16 @@ export function RunJournal({ automations, onOpen }: { automations: Automation[];
               {hooks.map((webhook) => (
                 <SelectItem key={webhook.id} value={`${WEBHOOK}${webhook.id}`}>
                   {webhook.title}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          ) : null}
+          {flows.length > 0 ? (
+            <SelectGroup>
+              <SelectLabel>{t("workflows.title")}</SelectLabel>
+              {flows.map((workflow) => (
+                <SelectItem key={workflow.id} value={`${WORKFLOW}${workflow.id}`}>
+                  {workflow.title}
                 </SelectItem>
               ))}
             </SelectGroup>

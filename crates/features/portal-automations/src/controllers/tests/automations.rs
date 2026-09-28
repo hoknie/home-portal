@@ -211,7 +211,12 @@ async fn an_automation_in_an_included_file_is_edited_in_that_file() {
         fs::set_permissions(path, fs::Permissions::from_mode(0o600)).unwrap();
     }
     let store = Arc::new(portal_config::ConfigStore::open(&main).unwrap());
-    let feature = AutomationsFeature::new(store, Arc::new(crate::features::tests::FakeDirectory));
+    let feature = AutomationsFeature::new(
+        store,
+        Arc::new(crate::features::tests::FakeDirectory),
+        Arc::new(crate::fakes::FakeActions::default()),
+    )
+    .unwrap();
     let api = Api {
         router: feature.router(),
         feature,

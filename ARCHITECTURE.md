@@ -28,8 +28,9 @@ rationale; a violation missing from §10 is a defect.
 ```
 crates/core/              LAYER 1 — vocabulary and ports; knows no feature
   portal-model/           service identity, status and environment vocabulary; pure
-  portal-feature/         Feature, Gate, StatusObserver, EventSink, WidgetProvider and ModulePreparer ports,
-                          PortalEvent, ApiError, FieldError, Module and ModuleSwitches
+  portal-feature/         Feature, Gate, StatusObserver, EventSink, WidgetProvider, ModulePreparer, Channel
+                          and SecretSource ports, PortalEvent, Notification, ApiError, FieldError, Module
+                          and ModuleSwitches
   portal-config/          the configuration files: sources, merge, secrets, revision, atomic 0600 write
   portal-widget/          the widget registry, its cache and the widget data endpoint
   portal-web/             serves the built interface from its folder beside the binary, as a fallback
@@ -43,13 +44,15 @@ crates/features/          LAYER 2 — one crate per subject the portal shows or 
   portal-weather/         Open-Meteo, as a widget
   portal-calendar/        an ICS calendar, as a widget
   portal-icons/           service icons: grabbed, fetched from the catalogue, cached on disk
-  portal-telegram/        Telegram messages when a service changes state
+  portal-notification/    the notifications module: rules, per-channel queues, the delivery journal, its API
   portal-secrets/         which secrets are named and whether each one is set
   portal-public/          the portal page shown without a session
   portal-proxy/           publishing services through Caddy: its configuration, forward-auth, TLS
   portal-automations/     the owner's scripts, run on a schedule or on the portal's events
   portal-dns/             an authoritative DNS server for the names the proxy publishes
   portal-modules/         the modules page's API: which optional parts are on, and their requirements
+crates/notification/      LAYER 2 — one crate per notification channel; depends on core crates only
+  portal-telegram/        the Telegram channel: its settings and the Bot API client
 bin/home-portal/          COMPOSITION ROOT — boot/, features/registry.rs, adapters/, middlewares/, cli/
 web/                      the interface: Next.js static export, built into web/out (§12)
 ```
@@ -595,6 +598,127 @@ too.
 - The wire format is `hickory-proto` (numbers in §7); `hickory-server` was rejected, because its
   zone-file authorities do not fit per-environment answers.
 
+### 6.11. Workflows
+
+- **A workflow is a tree of steps that an automation, a webhook or "Run now" starts.** A
+  `[[workflows]]` entry has `inputs` and `steps`; `if`, `loop` and `parallel` steps hold nested lists
+  (`then`/`else`, `body`, `branches`). The engine lives in `portal-automations`
+  (`types/workflow/`, `services/workflow/{checking,evaluating,running}/`), because a workflow run is
+  an automation run: the same queue, gatekeeper (cooldown, 60 starts an hour), 4 parallel runs,
+  journal and stop. An automation or a script webhook names `run` or `workflow` with `inputs`,
+  never both. A manual run uses the gatekeeper key `workflow:<id>`, which no automation id can take.
+- **One catalogue** (`types/stepping/kinds.rs`) describes every step kind: its group, its fields with
+  their types, defaults and bounds, and its result fields. Validation reads it, and
+  `GET /api/workflows/catalogue` serves it to the editor's forms; a test ties it to `StepKind`.
+- **Validation is structural and static.** Every error names its full path
+  (`workflows[1].steps[2].then[0].url`). `checking/scope.rs` walks the tree in order and refuses a
+  template that names an input the workflow does not declare, a variable no earlier step sets, a step
+  that does not come earlier, or `loop.*` outside a loop. `checking/calls.rs` refuses unknown
+  workflows, undeclared inputs, cycles and calls deeper than 4. Automations and webhooks are checked
+  against the section whether the module is on or off.
+- **A run is bounded.** `running/budget.rs` holds the deadline (`timeout_seconds`, 300 by default,
+  3600 at most), 1000 executed steps, 100 iterations per loop, 8 levels of nesting and the run's stop
+  `watch`; every wait, HTTP request and probe races the stop and the deadline. `parallel` runs 2–4
+  branches with `join_all` and merges their results in branch order. Values are capped at 64 KiB.
+- **Templates** `{{event.*}}`, `{{inputs.*}}`, `{{vars.*}}`, `{{steps.<id>.<path>}}`, `{{loop.*}}`
+  and `{{secrets.<key>}}` are rendered by `evaluating/values.rs`. A secret is sent as it is, but every
+  rendered secret is replaced by `***` in the trace and the journal.
+- **Actions leave the crate through ports.** `http` uses one rustls `reqwest` client
+  (`clients/http.rs`: 5 redirects, a per-request timeout of 1–60 s, 10 MiB read, 64 KiB kept);
+  `script` reuses the process-group runner and the `scripts/` rules of §6.9; `notify`, `probe`
+  and `status` call the `PortalActions` port, which `bin/home-portal/src/adapters/portal_actions.rs`
+  implements with the public use cases `SendNotification` (§6.12), `ProbeService` and
+  `CurrentStatus`. The old `telegram` kind is read as `notify` to the `telegram` channel, and the
+  repository writes it back as `notify`. The adapter
+  is filled after those features are built, so it answers "the portal is still starting" before.
+- **Filters and the transform step.** A template name may carry filters, `{{name | f(a) | g}}`,
+  from one closed catalogue (`types/transforming/filters.rs`: text, numbers, lists, objects, JSON
+  and `default`, each with the types it takes and gives). `evaluating/chains.rs` parses the chain,
+  `evaluating/filters.rs` applies it, and `checking/filter_checks.rs` refuses at load an unknown
+  filter, a wrong argument and a type mismatch that is certain from the name. The `transform` step
+  (`running/transform_step.rs`, at most 20 operations) applies filters and the list operations
+  `filter`, `map`, `sort_by`, `group_by` and `count_by`, where `{{item}}` and `{{index}}` are in
+  scope; the trace keeps the value after each operation. `GET /api/workflows/catalogue` serves
+  `filters` and `operations`.
+- **One evaluator, mirrored.** `entities/workflow/model/transforming/` repeats the evaluator in
+  TypeScript for the editor's previews and `|` completion by type. The Rust test
+  `bin/home-portal/tests/samples/transforms.rs` writes `transforms.json` through the
+  `TransformValue` use case, and the web test runs the same cases, so the two cannot drift.
+- **Values in and out.**
+  - Inputs are plain names or tables with a `type` (`text`, `number`, `boolean`, `list`,
+    `object`), a `default` and a `description` (`types/inputs/`).
+  - `evaluating/inputs.rs` binds them when a run or a call starts: it reads a text as its type and
+    refuses the run naming the input. Callers pass templates or literals (`InputValue`).
+  - A `set` step builds a `list` or an `object` from templates, each keeping the type it renders.
+  - A `script` step adds `env` variables (names checked; `PORTAL_*` and the passed-through ones are
+    reserved) and replaces its stdin with the JSON of `stdin`.
+  - An `automation` step queues an automation through the `AutomationStarter` port
+    (`services/dispatch/starter.rs`), with its `fields` overriding the manual event.
+    - A run it queues carries the chain of automations that led to it (`Pending.origin`). An
+      automation in its own chain, or a chain longer than 4, is refused.
+    - Chained runs go to a second queue that `dispatch_children_forever` runs without a dispatcher
+      permit, so parents that wait on them never deadlock.
+    - `wait = true` polls the journal for the outcome within the step's budget.
+- **Filters over lists and `each`.** The element filters (`FilterDescription.element`) map over a
+  list. `Operation::Each` runs a nested chain on every element, nests at most 3 deep, and names a
+  failure by its path, such as `operation 2.1`.
+- **The answer's shape.** An `http` entry keeps, beside the body cut at 4 KiB, a `shape`
+  (`helpers/shape.rs`):
+  - it is valid JSON of at most 16 KiB;
+  - lists keep 3 elements and texts keep 200 characters;
+  - nesting is cut at 8 levels.
+
+  The editor reads keys, types and previews from it, and from the run it last showed.
+- **The trace rides on the run.** `ActiveRun` holds a live `Trace` the runner appends to; `RunRecord`
+  and `StoredRun` gain optional `workflow` and `trace` (200 entries, the rest counted), so old
+  journal lines still load. The run journal and the workflow pages draw it as a timeline.
+- **The interface rewrites `steps` as a whole.** `repositories/workflows.rs` sets the entry's own keys
+  keeping their decor, as for automations, and replaces `steps` with freshly built arrays of tables
+  (`[[workflows.steps.then]]`, …); `branches` stay inline. Comments inside `steps` are lost, comments
+  above and on the entry's keys stay. A workflow in use cannot be deleted (409 naming its users).
+- **Web:** `entities/workflow` holds the recursive zod schema, the pure tree functions (`at`,
+  `insert`, `remove`, `move`, `duplicate`) on paths equal to the server's error paths, and:
+  - `model/flow/`: `flowOf` builds the diagram (start, one node per step, joins, loop frames, end,
+    arrows and the "+" slots) from the tree, and `layoutOf` places it deterministically, so nothing
+    about positions is stored;
+  - `model/suggestions/`: `suggestionsAt` mirrors `checking/scope.rs` for the `{{` completion, with
+    JSON keys from the last run, and `checkTemplate` gives the same reasons as the server;
+  - `model/templates.ts` and `ui/templates-gallery.tsx`: the starter templates.
+
+  `widgets/workflow-editor` draws the diagram with `@xyflow/react` (loaded by `next/dynamic` on the
+  editor pages only), with an inspector (a side panel, or a bottom sheet on a phone), a palette, a
+  problems panel, undo and redo, a runs panel (`GET /api/automations/runs?workflow=<id>`), and the run drawn as a live path: highlighted flowing arrows, order numbers, dimmed unreached nodes and a steps strip. `shared/ui/template-input` is the field with
+  highlighting and completion, also used by the automation builder. `widgets/workflows` is the list,
+  and the trace timeline sits in `entities/automation` beside the run details.
+
+### 6.12. Notifications
+
+- **A module with pluggable channels.** `crates/features/portal-notification` is the feature
+  `notification` behind the module switch `notifications` (on by default, needs nothing). It owns
+  the rules, one bounded `Outbox` (100 messages, the oldest dropped and counted) and one sender loop
+  per channel, and the `DeliveryBook` of each channel's last delivery and last error.
+- **A channel only delivers.** A channel is a crate under `crates/notification/` that implements the
+  `Channel` port of `portal-feature`: its name, the problems of its table, its readiness (ready, off,
+  or the missing key), its settings as JSON without secret values, applying new settings to its table,
+  and `deliver`. Secrets come through the `SecretSource` port, which `ConfigStore` implements.
+  `bin/home-portal/src/features/channels.rs` is the only channel list; `tests/architecture/channels.rs`
+  compares it with the folder and refuses a channel that depends on a feature.
+- **The rules** are `[notifications]` `states` and `recovered`; each key falls back to the legacy
+  `[notifications.telegram]` and then to the default. Saving the rules writes them to
+  `[notifications]` and removes the legacy keys in the same write, keeping comments. A channel table
+  (`[notifications.<channel>]`) is written only by `ChangeChannel`.
+- **Delivery.** The `StatusObserver` pushes each announced change to every ready channel's outbox
+  while the module is on. `SendNotification` delivers at once, to one channel or to every ready one,
+  and is what the workflow `notify` step calls; it fails while the module is off or when no channel
+  is ready. Telegram keeps its 10 s timeout and three attempts.
+- **API:** `GET/PUT /api/notifications` (the rules, with `If-Match`),
+  `PUT /api/notifications/channels/{name}` (422 by field, 404 for an unknown channel) and
+  `POST /api/notifications/test` (409 while off or not ready). No answer carries a secret value.
+- **Web:** `entities/notification` holds the schemas and queries; the page
+  `/admin/notifications` lives in `widgets/modules` (`ui/notifications/`), because `widgets/` is at
+  steiger's slice limit. Channel settings are drawn from their JSON: a switch for a boolean, the
+  secret picker for `secret`, a text field otherwise.
+
 ## 7. Async and cost
 
 - The portal is async (`tokio`, `axum`). vigil's "no async runtime" was a measured decision for a
@@ -605,44 +729,6 @@ too.
   ceiling on how much it reads.
 - **Measure first.** A new dependency comes with its transitive crate count, clean build time and
   binary size.
-
-  Most of the second step is `reqwest` with rustls and its aws-lc crypto provider. The last step
-  adds 15 crates: `sysinfo`, `ical`, `ipnet`, `if-addrs`, `mime_guess` and what they pull in.
-
-  ICMP probes send the echo themselves over `socket2`, already in the graph, so probe kinds add
-  no crate. `surge-ping` was measured and refused: it takes the graph from 206 to 223 crates
-  (`pnet_packet` and its macros, `parking_lot`, a second `rand`) for about 60 lines of code.
-
-  Automations add `jiff` with only the system zone and the zoneinfo database (`jiff` and
-  `jiff-core`): cron needs IANA zones and daylight saving, which `time` cannot give safely in a
-  threaded process. `cron` and `croner` were refused because they bring `chrono` and a zone
-  database of their own; the cron parser is ours and tested by tables. `libc` was in the graph
-  already. The rest of the last step is the automation pages in three languages.
-
-  The command line adds `clap` (derive, with `color`, `help`, `usage`, `error-context` and
-  `suggestions`, default features off) and uses its `anstream` for styled output: 289 → 303
-  packages, the clean release build unchanged at about 66 s on 8 cores, and the binary 14.99 →
-  15.38 MB (+382 KiB). `wrap_help` was left out because it brings `terminal_size` and the help fits
-  80 columns. `argh` and `pico-args` were refused because they have no styled help, suggestions or
-  value lists, and `owo-colors`/`console` because they are a second terminal-detection stack next to
-  clap's.
-
-  The interface counts its cost in gzipped JavaScript a page loads. `react-markdown` renders service
-  notes and costs the service page 35 KiB (445 → 481 KiB); `@dnd-kit` drags widgets in the layout
-  editor and costs `/admin/layout` about 9 KiB over `/admin/services`. Neither reaches the home page.
-
-  Every interface language is a build of its own (§12.3). The three builds share one `_next/`
-  byte for byte, because the messages travel in each page's RSC payload and not in the scripts, so a
-  language costs only its HTML: 1.95 MB on disk, 0.8 MB for the two added languages in the binary.
-  `just web` runs three `next build`s, about 45 s in all against 15–25 s for one.
-
-- Measured on the same host with the release binary running:
-
-  | What | Measured |
-  |---|---|
-  | One host-metrics refresh (a full `sysinfo` pass, end to end over HTTP) | 15–26 ms |
-  | The same reading from the cache | 0.6–0.7 ms |
-  | The icon cache after ten catalogue icons | 279 KiB in `icons/`, one file each |
 
 ---
 
@@ -685,6 +771,7 @@ too.
 | File / function / folder size | 400 / 300 lines, 12 files — `tests/architecture/sizes.rs` | ✅ |
 | Folder names | no catch-alls — `tests/architecture/folders.rs` | ✅ |
 | Feature registry | matches `crates/features/` — `tests/architecture/registry.rs` | ✅ |
+| Channel registry | matches `crates/notification/`, core dependencies only — `tests/architecture/channels.rs` | ✅ |
 | Entry points and storage | only through use cases — `tests/architecture/layers.rs` | ✅ |
 | `main.rs` is a shim, the root is `boot/` | `bin/home-portal` | ✅ |
 | API samples match the frontend schemas | `bin/home-portal/tests/samples/` + entity schema tests; `just samples` rewrites | ✅ |
@@ -797,7 +884,7 @@ the management area, service pages, the layout editor and probe diagnosis are in
 - `shared/ui/primitives/` holds the shadcn/Radix primitives as owned code; `shared/ui/<component>/`
   holds the application kit (`PageHeader`, `SectionCard`, `KvList`, `StatusBadge`, `EmptyState`,
   `DataTable`, `FormField`, `ConfirmDialog`, `ErrorNotice`, `LatencyChart`, `UptimeStrip`, `TimeAxis`,
-  `TagInput`, `TagFilter`, `Redirect`). Hooks without a look (`useLeaveGuard`, `useElementWidth`) live in
+  `TagInput`, `TagFilter`, `Redirect`, `JsonView`, `TemplateInput`). Hooks without a look (`useLeaveGuard`, `useElementWidth`) live in
   `shared/lib/`.
   Screens compose them and do not restyle
   them: a variation is a prop, never a class passed in.
@@ -811,6 +898,10 @@ the management area, service pages, the layout editor and probe diagnosis are in
   `bg-glass-tint` tint and does not blur again. The fallbacks for no `backdrop-filter`, reduced
   transparency and more contrast make the surfaces opaque. `shared/lib/contrast` tests that text on
   glass keeps AA contrast over every backdrop colour in both themes.
+- The management menu collapses on a wide screen into a rail of icons with tooltips
+  (`widgets/app-shell`). The choice is kept in `localStorage` under `home-portal.menu-collapsed`
+  and read by the lazy state initializer. The shell renders only after the session loads, so the
+  menu never jumps.
 
 ### 12.3. Data, forms and text
 

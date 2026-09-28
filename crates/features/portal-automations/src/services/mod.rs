@@ -10,6 +10,7 @@ mod views;
 mod webhook_book;
 mod webhook_checks;
 mod webhook_writer;
+mod workflow;
 
 #[cfg(test)]
 pub mod tests;
@@ -26,3 +27,7 @@ pub use views::Views;
 pub use webhook_book::WebhookBook;
 pub use webhook_checks::webhook_placeholder_errors;
 pub use webhook_writer::WebhookWriter;
+pub use workflow::{
+    Budget, Frame, Secrets, WorkflowRunner, WorkflowTools, bind_inputs, decode_workflow,
+    decoded_workflows, entry_errors, input_problem, transform_sample, users_of, workflow_errors,
+};

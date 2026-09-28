@@ -8,10 +8,21 @@ pub struct Pending {
     pub automation: Automation,
     pub event: PortalEvent,
     pub by: Option<String>,
+    pub origin: Vec<String>,
 }
 
 impl Pending {
     pub fn manual(&self) -> bool {
         self.by.is_some()
+    }
+
+    pub fn child(&self) -> bool {
+        !self.origin.is_empty()
+    }
+
+    pub fn chain(&self) -> Vec<String> {
+        let mut chain = self.origin.clone();
+        chain.push(self.automation.id.clone());
+        chain
     }
 }

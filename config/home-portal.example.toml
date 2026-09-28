@@ -49,15 +49,48 @@ port = 8080
 trusted_proxies = []
 
 # The optional parts of the portal, switched on and off here or under Management → Modules.
-# DNS needs the proxy and webhooks need automations. Unset, automations and webhooks are
-# on, and the proxy, DNS and users are off. A part that is off keeps its settings below.
-# users lets Management → Users add people, change passwords and remove them.
+# DNS needs the proxy, and webhooks and workflows need automations. Unset, automations and
+# webhooks are on, and the proxy, DNS, users and workflows are off. A part that is off keeps
+# its settings below. users lets Management → Users add people, change passwords and remove
+# them; workflows lets automations, webhooks and "Run now" start [[workflows]]. notifications
+# (on unless switched off) sends the announcements below and the notify steps of workflows.
 # [modules]
 # proxy = true
 # dns = true
 # automations = true
 # webhooks = true
 # users = true
+# workflows = true
+# notifications = true
+
+# Workflows: steps with conditions, loops, parallel branches, HTTP requests, scripts, notifications
+# and service checks (../examples/split/workflows.toml shows every kind). Management →
+# Workflows edits them in a block editor, which rewrites an entry's steps as a whole: comments
+# inside steps are lost, comments like these above an entry stay. An automation runs one with
+# workflow = "ping-nas" and inputs = { service = "{{service.id}}" } in place of run.
+# An input is a name, or a table with type (text, number, boolean, list, object), default and
+# description; a set step builds a list or a dictionary from rows (list = [...], object = {...});
+# a script step passes env = { NAME = "..." } and stdin; an automation step starts an automation.
+# [[workflows]]
+# id = "ping-nas"
+# title = "Ping the NAS"
+# inputs = ["service", { name = "tries", type = "number", default = 3 }]
+#
+# [[workflows.steps]]
+# id = "ping"
+# kind = "http"
+# url = "http://nas.lan/api/ping"
+# fail_on_error = false
+#
+# [[workflows.steps]]
+# id = "down"
+# kind = "if"
+# condition = { left = "{{steps.ping.status}}", op = "!=", right = "200" }
+#
+# [[workflows.steps.then]]
+# id = "tell"
+# kind = "notify"
+# text = "{{inputs.service}} does not answer"
 
 # Publishing services under their own names through Caddy, which the portal manages.
 # examples/README.md ("Publishing through Caddy") and examples/split/ show a whole setup;
@@ -195,15 +228,20 @@ description = "Home router admin page"
 # environments = ["local", "vpn"]
 # settings = { url = "https://calendar.example.com/home.ics", days = 7, limit = 10 }
 
-# Telegram messages when a service changes state. The token is a secret: name the
-# key here and keep its value in the secrets file (see secrets.example.toml).
-# A service with notify = false stays silent.
+# Notifications: which state changes are announced, to every ready channel. A service with
+# notify = false stays silent. Management → Notifications edits these and sends a test message.
+# Older files kept states and recovered under [notifications.telegram]; they are still read
+# there, and the first save from the interface moves them here.
+# [notifications]
+# states = ["down", "unreadable"]
+# recovered = true
+#
+# One table per channel. Telegram's token is a secret: name the key here and keep its value in
+# the secrets file (see secrets.example.toml).
 # [notifications.telegram]
 # enabled = true
 # secret = "telegram_token"
 # chat_id = "123456789"
-# states = ["down", "unreadable"]
-# recovered = true
 
 # Which file the interface writes to. The main file by default; it must be one of
 # the files above.

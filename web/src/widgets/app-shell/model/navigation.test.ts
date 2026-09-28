@@ -13,8 +13,8 @@ it("the management section always offers services, layout, network and modules",
   expect(MANAGEMENT.map((item) => item.href)).toEqual(["/admin/services/", "/admin/layout/", "/admin/network/", "/admin/modules/"]);
 });
 
-it("the modules section lists proxy, dns, automations, webhooks and users in that order", () => {
-  expect(MODULE_LINKS.map((item) => item.href)).toEqual(["/admin/proxy/", "/admin/dns/", "/admin/automations/", "/admin/webhooks/", "/admin/users/"]);
+it("the modules section lists proxy, dns, automations, webhooks, users, workflows and notifications in that order", () => {
+  expect(MODULE_LINKS.map((item) => item.href)).toEqual(["/admin/proxy/", "/admin/dns/", "/admin/automations/", "/admin/webhooks/", "/admin/users/", "/admin/workflows/", "/admin/notifications/"]);
 });
 
 it("only enabled modules are listed", () => {

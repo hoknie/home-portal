@@ -21,7 +21,7 @@ import { type Run, isActive } from "./schema";
 
 export const automationsKey = ["automations"] as const;
 export const runsKey = (filter: RunsFilter = {}) =>
-  ["automation-runs", filter.automation ?? null, filter.webhook ?? null, filter.text ?? null] as const;
+  ["automation-runs", filter.automation ?? null, filter.webhook ?? null, filter.workflow ?? null, filter.text ?? null] as const;
 export const runKey = (id: string | null) => ["automation-run", id] as const;
 export const catalogueKey = ["automation-catalogue"] as const;
 export const scriptsKey = ["automation-scripts"] as const;

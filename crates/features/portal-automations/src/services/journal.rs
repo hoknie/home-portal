@@ -116,4 +116,13 @@ impl Journal {
             .find(|record| record.automation == automation)
             .cloned()
     }
+
+    pub fn last_of_workflow(&self, workflow: &str) -> Option<RunRecord> {
+        self.records
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .iter()
+            .find(|record| record.workflow.as_deref() == Some(workflow))
+            .cloned()
+    }
 }

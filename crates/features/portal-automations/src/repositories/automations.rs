@@ -3,8 +3,11 @@ use std::path::PathBuf;
 use portal_config::Snapshot;
 use toml_edit::{Array, DocumentMut, InlineTable, Table, Value};
 
-use super::{push, remove_at, set, set_nested, table_at, tags_value};
-use crate::types::{Automation, AutomationsSection, Filters, RunSettings, StateFilter, Trigger};
+use super::{json_value, push, remove_at, set, set_nested, table_at, tags_value};
+use crate::types::{
+    Automation, AutomationsSection, Filters, InputValue, RunSettings, StateFilter, Trigger,
+    WorkflowCall,
+};
 
 pub const SECTION: &str = AutomationsSection::SECTION;
 
@@ -47,7 +50,36 @@ fn write_fields(table: &mut Table, automation: &Automation) {
         (automation.cooldown_seconds != 0).then(|| (automation.cooldown_seconds as i64).into()),
     );
     set_nested(table, "when", when_table(&automation.trigger));
-    set_nested(table, "run", run_table(&automation.run));
+    write_action(table, &automation.run, automation.workflow.as_ref());
+}
+
+pub fn write_action(table: &mut Table, run: &RunSettings, workflow: Option<&WorkflowCall>) {
+    match workflow {
+        Some(call) => {
+            table.remove("run");
+            set(table, "workflow", Some(call.id.as_str().into()));
+            let mut inputs = InlineTable::new();
+            for (name, value) in &call.inputs {
+                let written = match value {
+                    InputValue::Template(template) => Some(template.as_str().into()),
+                    InputValue::Literal(literal) => json_value(literal),
+                };
+                if let Some(written) = written {
+                    inputs.insert(name, written);
+                }
+            }
+            set(
+                table,
+                "inputs",
+                (!inputs.is_empty()).then_some(Value::InlineTable(inputs)),
+            );
+        }
+        None => {
+            table.remove("workflow");
+            table.remove("inputs");
+            set_nested(table, "run", run_table(run));
+        }
+    }
 }
 
 fn when_table(trigger: &Trigger) -> InlineTable {
@@ -88,7 +120,7 @@ fn when_table(trigger: &Trigger) -> InlineTable {
     table
 }
 
-pub fn run_table(run: &RunSettings) -> InlineTable {
+fn run_table(run: &RunSettings) -> InlineTable {
     let mut table = InlineTable::new();
     table.insert("script", run.script.as_str().into());
     if !run.args.is_empty() {

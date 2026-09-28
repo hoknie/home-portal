@@ -1,0 +1,70 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { type Rules, useChangeRules } from "@/entities/notification";
+import { ConflictError, ValidationError } from "@/shared/api";
+import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Button, Label, Switch } from "@/shared/ui/primitives";
+import { SectionCard } from "@/shared/ui/section-card";
+
+export const ANNOUNCED_STATES = ["down", "unreadable", "degraded", "up"] as const;
+
+export function RulesForm({ rules, revision }: { rules: Rules; revision: string | null }) {
+  const t = useTranslations();
+  const change = useChangeRules();
+  const [draft, setDraft] = useState(rules);
+  const [problem, setProblem] = useState<string | null>(null);
+  const toggle = (state: string, on: boolean) =>
+    setDraft((current) => ({ ...current, states: on ? [...current.states, state] : current.states.filter((name) => name !== state) }));
+  const save = async () => {
+    setProblem(null);
+    try {
+      const saved = await change.mutateAsync({ rules: draft, revision });
+      setDraft(saved.data.rules);
+      toast.success(t("notifications.saved"));
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        setProblem(error.fields.map((field) => field.message).join("; "));
+      } else if (error instanceof ConflictError) {
+        setProblem(t("errors.conflict"));
+      } else {
+        toast.error(t("errors.generic"));
+      }
+    }
+  };
+  return (
+    <SectionCard title={t("notifications.rules.title")} description={t("notifications.rules.description")}>
+      <div className="grid gap-5">
+        {problem ? <ErrorNotice title={t("notifications.refused")} description={problem} /> : null}
+        <fieldset className="grid gap-2">
+          <legend className="mb-2 text-sm font-medium">{t("notifications.rules.states")}</legend>
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            {ANNOUNCED_STATES.map((state) => (
+              <label key={state} className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-primary"
+                  checked={draft.states.includes(state)}
+                  onChange={(event) => toggle(state, event.target.checked)}
+                />
+                {t(`status.${state}`)}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="notifications-recovered">{t("notifications.rules.recovered")}</Label>
+          <Switch id="notifications-recovered" checked={draft.recovered} onCheckedChange={(recovered) => setDraft((current) => ({ ...current, recovered }))} />
+        </div>
+        <div>
+          <Button type="button" onClick={() => void save()} disabled={change.isPending}>
+            {t("notifications.rules.save")}
+          </Button>
+        </div>
+      </div>
+    </SectionCard>
+  );
+}

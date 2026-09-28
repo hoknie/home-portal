@@ -77,41 +77,42 @@ impl Webhook {
     }
 
     fn decode_action(raw: &RawWebhook, errors: &mut Vec<FieldError>) -> Option<WebhookAction> {
-        match (raw.action.as_str(), &raw.run) {
-            (WebhookAction::EVENT, None) => Some(WebhookAction::Event),
-            (WebhookAction::EVENT, Some(_)) => {
-                errors.push(FieldError::new("run", "is only for action = \"script\""));
-                None
+        match raw.action.as_str() {
+            WebhookAction::EVENT => {
+                if raw.run.is_some() || raw.workflow.is_some() {
+                    errors.push(FieldError::new(
+                        if raw.run.is_some() { "run" } else { "workflow" },
+                        "is only for action = \"script\"",
+                    ));
+                    return None;
+                }
+                Some(WebhookAction::Event)
             }
-            (WebhookAction::SCRIPT, None) => {
-                errors.push(FieldError::new(
-                    "run",
-                    "is required for action = \"script\"",
-                ));
-                None
-            }
-            (WebhookAction::SCRIPT, Some(run)) => match RunSettings::decode(run) {
-                Ok(settings) => {
-                    let allowed = Self::fields_of(&raw.variables);
-                    let allowed: Vec<&str> = allowed.iter().map(String::as_str).collect();
-                    for (index, argument) in settings.args.iter().enumerate() {
-                        if let Some(name) = unknown_placeholders(argument, &allowed).first() {
-                            errors.push(FieldError::new(
-                                format!("run.args[{index}]"),
-                                format!(
-                                    "names {{{{{name}}}}}, which is not a field of this webhook; its fields are {}",
-                                    allowed.join(", ")
-                                ),
-                            ));
-                        }
+            WebhookAction::SCRIPT => {
+                let (run, workflow) = Automation::decode_either(
+                    raw.run.as_ref(),
+                    (raw.workflow.as_ref(), raw.inputs.as_ref()),
+                    errors,
+                );
+                let allowed = Self::fields_of(&raw.variables);
+                let allowed: Vec<&str> = allowed.iter().map(String::as_str).collect();
+                for (field, template) in Automation::templates_of(&run, workflow.as_ref()) {
+                    if let Some(name) = unknown_placeholders(template, &allowed).first() {
+                        errors.push(FieldError::new(
+                            field,
+                            format!(
+                                "names {{{{{name}}}}}, which is not a field of this webhook; its fields are {}",
+                                allowed.join(", ")
+                            ),
+                        ));
                     }
-                    Some(WebhookAction::Script(settings))
                 }
-                Err(found) => {
-                    errors.extend(found);
-                    None
+                match (run, workflow) {
+                    (_, Some(call)) => Some(WebhookAction::Workflow(call)),
+                    (Some(run), None) => Some(WebhookAction::Script(run)),
+                    (None, None) => None,
                 }
-            },
+            }
             _ => {
                 errors.push(FieldError::new("action", "must be event or script"));
                 None
@@ -136,8 +137,10 @@ impl Webhook {
     }
 
     pub fn as_automation(&self) -> Option<Automation> {
-        let WebhookAction::Script(run) = &self.action else {
-            return None;
+        let (run, workflow) = match &self.action {
+            WebhookAction::Event => return None,
+            WebhookAction::Script(run) => (run.clone(), None),
+            WebhookAction::Workflow(call) => (RunSettings::default(), Some(call.clone())),
         };
         Some(Automation {
             id: self.id.clone(),
@@ -149,7 +152,8 @@ impl Webhook {
                 event: EventName::WebhookReceived,
                 filters: Filters::default(),
             },
-            run: run.clone(),
+            run,
+            workflow,
         })
     }
 

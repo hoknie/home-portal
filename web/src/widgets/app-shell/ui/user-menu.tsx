@@ -15,19 +15,19 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/primitives";
 
-export type UserMenuProps = { name: string };
+export type UserMenuProps = { name: string; compact?: boolean };
 
-export function UserMenu({ name }: UserMenuProps) {
+export function UserMenu({ name, compact = false }: UserMenuProps) {
   const t = useTranslations("nav");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start gap-2 px-3">
-          <span className="flex size-7 items-center justify-center rounded-full border border-glass-edge bg-glass-tint">
+        <Button variant="ghost" className={compact ? "mx-auto size-9 p-0" : "w-full justify-start gap-2 px-3"} aria-label={compact ? name : undefined}>
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-glass-edge bg-glass-tint">
             <UserRound className="size-4" aria-hidden />
           </span>
-          <span className="truncate">{name}</span>
-          <ChevronsUpDown className="ml-auto size-4 opacity-60" aria-hidden />
+          {compact ? null : <span className="truncate">{name}</span>}
+          {compact ? null : <ChevronsUpDown className="ml-auto size-4 opacity-60" aria-hidden />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">

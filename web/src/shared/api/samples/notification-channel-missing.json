@@ -1,0 +1,17 @@
+{
+  "dropped": 0,
+  "last_delivery": null,
+  "last_error": null,
+  "missing": {
+    "field": "notifications.telegram.secret",
+    "message": "names telegram_token, which is not set"
+  },
+  "name": "telegram",
+  "queued": 3,
+  "readiness": "missing",
+  "settings": {
+    "chat_id": "123456789",
+    "enabled": true,
+    "secret": "telegram_token"
+  }
+}

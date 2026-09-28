@@ -44,7 +44,12 @@ pub fn portal(configuration: &str, scripts: &[(&str, &str)]) -> (TempDir, Automa
         write_script(&root, name, body);
     }
     let store = Arc::new(ConfigStore::open(&path).unwrap());
-    let feature = AutomationsFeature::new(store, Arc::new(FakeDirectory));
+    let feature = AutomationsFeature::new(
+        store,
+        Arc::new(FakeDirectory),
+        Arc::new(crate::fakes::FakeActions::default()),
+    )
+    .unwrap();
     (folder, feature)
 }
 
@@ -206,7 +211,12 @@ async fn the_run_journal_is_kept_across_a_restart_and_numbering_goes_on() {
     feature.stop();
     let first = runs(&feature)[0].id;
     let store = Arc::new(ConfigStore::open(folder.path().join("home-portal.toml")).unwrap());
-    let again = AutomationsFeature::new(store, Arc::new(FakeDirectory));
+    let again = AutomationsFeature::new(
+        store,
+        Arc::new(FakeDirectory),
+        Arc::new(crate::fakes::FakeActions::default()),
+    )
+    .unwrap();
     let restored = again.state.sink.journal.runs(None);
     assert_eq!(restored.len(), 1);
     assert_eq!(restored[0].id, first);

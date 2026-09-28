@@ -25,4 +25,4 @@ pub use types::{
     HistoryRange, ProbeKind, ProbeReport, ProbeSettings, ServiceEntry, ServiceLink, ServicesPorts,
     Viewpoint,
 };
-pub use usecases::ServiceEntries;
+pub use usecases::{CurrentStatus, ProbeService, ServiceEntries};

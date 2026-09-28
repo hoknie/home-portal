@@ -39,8 +39,9 @@ export {
   runsSchema,
   scheduleSchema,
   scriptsSchema,
+  traceSchema,
 } from "./model/schema";
-export type { Automation, Catalogue, CatalogueEvent, EventName, FilterName, Outcome, Run, Schedule, Scripts, When } from "./model/schema";
+export type { Automation, Catalogue, CatalogueEvent, EventName, FilterName, Outcome, Run, Schedule, Scripts, StepOutcome, Trace, TraceEntry, When } from "./model/schema";
 export { SCRIPT_PROBLEMS, fixOf, problemOf } from "./model/script-help";
 export { terminalText } from "./model/terminal-text";
 export type { ScriptProblem } from "./model/script-help";
@@ -50,4 +51,5 @@ export { RunDetails } from "./ui/run-details";
 export type { RunDetailsProps } from "./ui/run-details";
 export { RunOutput } from "./ui/run-output";
 export { RunTable } from "./ui/run-table";
+export { TraceTimeline } from "./ui/trace-timeline";
 export type { RunTableProps } from "./ui/run-table";

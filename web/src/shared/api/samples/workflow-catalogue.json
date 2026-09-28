@@ -1,0 +1,1203 @@
+{
+  "events": [
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "schedule.cron",
+        "schedule.at",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "schedule"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "portal.address",
+        "portal.version",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "portal.started"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "portal.address",
+        "portal.version",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "portal.stopping"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "service.id",
+        "service.name",
+        "status.from",
+        "status.to",
+        "status.error",
+        "status.diagnosis",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "service.status-changed"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "service.id",
+        "service.name",
+        "user.name",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "service.created"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "service.id",
+        "service.name",
+        "service.previous_id",
+        "user.name",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "service.updated"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "service.id",
+        "service.name",
+        "user.name",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "service.deleted"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "user.name",
+        "client.address",
+        "client.environment",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "user.signed-in"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "user.name",
+        "client.address",
+        "client.environment",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "user.signed-out"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "user.name",
+        "client.address",
+        "client.environment",
+        "sign_in.reason",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "user.sign-in-failed"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "configuration.revision",
+        "configuration.previous_revision",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "configuration.changed"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "webhook.id",
+        "webhook.title",
+        "client.address",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "webhook.received"
+    },
+    {
+      "fields": [
+        "event.name",
+        "event.at",
+        "automation.id",
+        "run.id",
+        "run.manual",
+        "run.by"
+      ],
+      "name": "manual"
+    }
+  ],
+  "filters": [
+    {
+      "accepts": [
+        "text"
+      ],
+      "arguments": [],
+      "element": true,
+      "gives": "text",
+      "name": "upper"
+    },
+    {
+      "accepts": [
+        "text"
+      ],
+      "arguments": [],
+      "element": true,
+      "gives": "text",
+      "name": "lower"
+    },
+    {
+      "accepts": [
+        "text"
+      ],
+      "arguments": [],
+      "element": true,
+      "gives": "text",
+      "name": "trim"
+    },
+    {
+      "accepts": [
+        "text"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "from",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "choices": [],
+          "name": "to",
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "element": true,
+      "gives": "text",
+      "name": "replace"
+    },
+    {
+      "accepts": [
+        "text"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "separator",
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "element": false,
+      "gives": "list",
+      "name": "split"
+    },
+    {
+      "accepts": [
+        "text",
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "start",
+          "required": true,
+          "type": "number"
+        },
+        {
+          "choices": [],
+          "name": "end",
+          "required": false,
+          "type": "number"
+        }
+      ],
+      "element": false,
+      "gives": "any",
+      "name": "slice"
+    },
+    {
+      "accepts": [
+        "text"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "text",
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "element": true,
+      "gives": "boolean",
+      "name": "starts_with"
+    },
+    {
+      "accepts": [
+        "text",
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "value",
+          "required": true,
+          "type": "any"
+        }
+      ],
+      "element": false,
+      "gives": "boolean",
+      "name": "contains"
+    },
+    {
+      "accepts": [
+        "text",
+        "list",
+        "object"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "number",
+      "name": "length"
+    },
+    {
+      "accepts": [
+        "any"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "value",
+          "required": true,
+          "type": "any"
+        }
+      ],
+      "element": false,
+      "gives": "any",
+      "name": "default"
+    },
+    {
+      "accepts": [
+        "text",
+        "number"
+      ],
+      "arguments": [],
+      "element": true,
+      "gives": "number",
+      "name": "number"
+    },
+    {
+      "accepts": [
+        "number"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "digits",
+          "required": false,
+          "type": "number"
+        }
+      ],
+      "element": true,
+      "gives": "number",
+      "name": "round"
+    },
+    {
+      "accepts": [
+        "number"
+      ],
+      "arguments": [],
+      "element": true,
+      "gives": "number",
+      "name": "floor"
+    },
+    {
+      "accepts": [
+        "number"
+      ],
+      "arguments": [],
+      "element": true,
+      "gives": "number",
+      "name": "ceil"
+    },
+    {
+      "accepts": [
+        "number"
+      ],
+      "arguments": [],
+      "element": true,
+      "gives": "number",
+      "name": "abs"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "any",
+      "name": "first"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "any",
+      "name": "last"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "separator",
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "element": false,
+      "gives": "text",
+      "name": "join"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "list",
+      "name": "sort"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "list",
+      "name": "reverse"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "list",
+      "name": "unique"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "key",
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "element": false,
+      "gives": "list",
+      "name": "pluck"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "number",
+      "name": "sum"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "number",
+      "name": "min"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "number",
+      "name": "max"
+    },
+    {
+      "accepts": [
+        "object"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "list",
+      "name": "keys"
+    },
+    {
+      "accepts": [
+        "object"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "list",
+      "name": "values"
+    },
+    {
+      "accepts": [
+        "object",
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "key",
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "element": false,
+      "gives": "any",
+      "name": "get"
+    },
+    {
+      "accepts": [
+        "any"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "text",
+      "name": "json"
+    },
+    {
+      "accepts": [
+        "text"
+      ],
+      "arguments": [],
+      "element": false,
+      "gives": "any",
+      "name": "parse"
+    }
+  ],
+  "kinds": [
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "condition",
+          "required": true,
+          "type": "condition"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "then",
+          "required": true,
+          "type": "steps"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "else",
+          "required": false,
+          "type": "steps"
+        }
+      ],
+      "group": "flow",
+      "name": "if",
+      "results": [
+        "branch"
+      ]
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": 100,
+          "minimum": 1,
+          "name": "repeat",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "for_each",
+          "required": false,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "while",
+          "required": false,
+          "type": "condition"
+        },
+        {
+          "choices": [],
+          "default": "100",
+          "maximum": 100,
+          "minimum": 1,
+          "name": "max_iterations",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "body",
+          "required": true,
+          "type": "steps"
+        }
+      ],
+      "group": "flow",
+      "name": "loop",
+      "results": [
+        "iterations"
+      ]
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": 4,
+          "minimum": 2,
+          "name": "branches",
+          "required": true,
+          "type": "branches"
+        }
+      ],
+      "group": "flow",
+      "name": "parallel",
+      "results": []
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "workflow",
+          "required": true,
+          "type": "workflow"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "inputs",
+          "required": false,
+          "type": "template-table"
+        }
+      ],
+      "group": "flow",
+      "name": "workflow",
+      "results": [
+        "vars"
+      ]
+    },
+    {
+      "fields": [],
+      "group": "flow",
+      "name": "nothing",
+      "results": []
+    },
+    {
+      "fields": [
+        {
+          "choices": [
+            "succeeded",
+            "failed"
+          ],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "outcome",
+          "required": true,
+          "type": "choice"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "reason",
+          "required": false,
+          "type": "template"
+        }
+      ],
+      "group": "flow",
+      "name": "stop",
+      "results": []
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "variable",
+          "required": true,
+          "type": "name"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "value",
+          "required": false,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "json",
+          "required": false,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "list",
+          "required": false,
+          "type": "template-list"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "object",
+          "required": false,
+          "type": "template-table"
+        }
+      ],
+      "group": "data",
+      "name": "set",
+      "results": [
+        "value"
+      ]
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": 3600,
+          "minimum": 1,
+          "name": "seconds",
+          "required": true,
+          "type": "integer"
+        }
+      ],
+      "group": "data",
+      "name": "wait",
+      "results": []
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "input",
+          "required": true,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": 20,
+          "minimum": 1,
+          "name": "operations",
+          "required": true,
+          "type": "operations"
+        }
+      ],
+      "group": "data",
+      "name": "transform",
+      "results": [
+        "value"
+      ]
+    },
+    {
+      "fields": [
+        {
+          "choices": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD"
+          ],
+          "default": "GET",
+          "maximum": null,
+          "minimum": null,
+          "name": "method",
+          "required": false,
+          "type": "choice"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "url",
+          "required": true,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "headers",
+          "required": false,
+          "type": "template-table"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "body",
+          "required": false,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": "10",
+          "maximum": 60,
+          "minimum": 1,
+          "name": "timeout_seconds",
+          "required": false,
+          "type": "integer"
+        },
+        {
+          "choices": [],
+          "default": "true",
+          "maximum": null,
+          "minimum": null,
+          "name": "fail_on_error",
+          "required": false,
+          "type": "boolean"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "response_sample",
+          "required": false,
+          "type": "sample"
+        }
+      ],
+      "group": "actions",
+      "name": "http",
+      "results": [
+        "status",
+        "headers",
+        "body",
+        "json"
+      ]
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "script",
+          "required": true,
+          "type": "script"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "args",
+          "required": false,
+          "type": "template-list"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "env",
+          "required": false,
+          "type": "template-table"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "stdin",
+          "required": false,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": "60",
+          "maximum": 3600,
+          "minimum": 1,
+          "name": "timeout_seconds",
+          "required": false,
+          "type": "integer"
+        }
+      ],
+      "group": "actions",
+      "name": "script",
+      "results": [
+        "exit_code",
+        "stdout",
+        "stderr"
+      ]
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "text",
+          "required": true,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "title",
+          "required": false,
+          "type": "template"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "channel",
+          "required": false,
+          "type": "channel"
+        }
+      ],
+      "group": "actions",
+      "name": "notify",
+      "results": []
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "automation",
+          "required": true,
+          "type": "automation"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "fields",
+          "required": false,
+          "type": "template-table"
+        },
+        {
+          "choices": [],
+          "default": "false",
+          "maximum": null,
+          "minimum": null,
+          "name": "wait",
+          "required": false,
+          "type": "boolean"
+        }
+      ],
+      "group": "actions",
+      "name": "automation",
+      "results": [
+        "run_id",
+        "outcome"
+      ]
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "service",
+          "required": true,
+          "type": "template"
+        }
+      ],
+      "group": "actions",
+      "name": "probe",
+      "results": [
+        "state",
+        "latency_milliseconds",
+        "diagnosis"
+      ]
+    },
+    {
+      "fields": [
+        {
+          "choices": [],
+          "default": null,
+          "maximum": null,
+          "minimum": null,
+          "name": "service",
+          "required": true,
+          "type": "template"
+        }
+      ],
+      "group": "actions",
+      "name": "status",
+      "results": [
+        "state",
+        "since"
+      ]
+    }
+  ],
+  "operations": [
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "where",
+          "required": true,
+          "type": "condition"
+        }
+      ],
+      "element": false,
+      "gives": "list",
+      "name": "filter"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "to",
+          "required": true,
+          "type": "template"
+        }
+      ],
+      "element": false,
+      "gives": "list",
+      "name": "map"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "key",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "choices": [
+            "asc",
+            "desc"
+          ],
+          "name": "order",
+          "required": false,
+          "type": "order"
+        }
+      ],
+      "element": false,
+      "gives": "list",
+      "name": "sort_by"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "key",
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "element": false,
+      "gives": "object",
+      "name": "group_by"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "key",
+          "required": true,
+          "type": "text"
+        }
+      ],
+      "element": false,
+      "gives": "object",
+      "name": "count_by"
+    },
+    {
+      "accepts": [
+        "list"
+      ],
+      "arguments": [
+        {
+          "choices": [],
+          "name": "operations",
+          "required": true,
+          "type": "operations"
+        }
+      ],
+      "element": false,
+      "gives": "list",
+      "name": "each"
+    }
+  ],
+  "operators": [
+    {
+      "name": "==",
+      "takes_right": true
+    },
+    {
+      "name": "!=",
+      "takes_right": true
+    },
+    {
+      "name": "<",
+      "takes_right": true
+    },
+    {
+      "name": "<=",
+      "takes_right": true
+    },
+    {
+      "name": ">",
+      "takes_right": true
+    },
+    {
+      "name": ">=",
+      "takes_right": true
+    },
+    {
+      "name": "contains",
+      "takes_right": true
+    },
+    {
+      "name": "is-empty",
+      "takes_right": false
+    },
+    {
+      "name": "is-not-empty",
+      "takes_right": false
+    }
+  ]
+}

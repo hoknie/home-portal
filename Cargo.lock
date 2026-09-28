@@ -665,7 +665,7 @@ dependencies = [
 
 [[package]]
 name = "home-portal"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "anstream",
  "async-trait",
@@ -685,6 +685,7 @@ dependencies = [
  "portal-model",
  "portal-modules",
  "portal-network",
+ "portal-notification",
  "portal-proxy",
  "portal-public",
  "portal-secrets",
@@ -1276,7 +1277,7 @@ dependencies = [
 
 [[package]]
 name = "portal-auth"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "argon2",
  "async-trait",
@@ -1299,7 +1300,7 @@ dependencies = [
 
 [[package]]
 name = "portal-automations"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",
@@ -1310,6 +1311,7 @@ dependencies = [
  "portal-feature",
  "portal-model",
  "rand 0.10.3",
+ "reqwest",
  "serde",
  "serde_json",
  "sha2",
@@ -1324,7 +1326,7 @@ dependencies = [
 
 [[package]]
 name = "portal-calendar"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",
@@ -1342,7 +1344,7 @@ dependencies = [
 
 [[package]]
 name = "portal-config"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "portal-feature",
@@ -1357,7 +1359,7 @@ dependencies = [
 
 [[package]]
 name = "portal-dashboard"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "http-body-util",
@@ -1375,7 +1377,7 @@ dependencies = [
 
 [[package]]
 name = "portal-dns"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -1398,7 +1400,7 @@ dependencies = [
 
 [[package]]
 name = "portal-feature"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",
@@ -1413,7 +1415,7 @@ dependencies = [
 
 [[package]]
 name = "portal-health"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "http-body-util",
@@ -1424,7 +1426,7 @@ dependencies = [
 
 [[package]]
 name = "portal-icons"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "http-body-util",
@@ -1447,7 +1449,7 @@ dependencies = [
 
 [[package]]
 name = "portal-metrics"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",
@@ -1461,7 +1463,7 @@ dependencies = [
 
 [[package]]
 name = "portal-model"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "ipnet",
  "serde",
@@ -1471,7 +1473,7 @@ dependencies = [
 
 [[package]]
 name = "portal-modules"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "http-body-util",
@@ -1487,7 +1489,7 @@ dependencies = [
 
 [[package]]
 name = "portal-network"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "http-body-util",
@@ -1506,8 +1508,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "portal-notification"
+version = "0.1.8"
+dependencies = [
+ "async-trait",
+ "axum",
+ "http-body-util",
+ "portal-config",
+ "portal-feature",
+ "portal-model",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "time",
+ "tokio",
+ "toml_edit",
+ "tower",
+ "tracing",
+]
+
+[[package]]
 name = "portal-proxy"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",
@@ -1531,7 +1553,7 @@ dependencies = [
 
 [[package]]
 name = "portal-public"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",
@@ -1548,7 +1570,7 @@ dependencies = [
 
 [[package]]
 name = "portal-secrets"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "http-body-util",
@@ -1564,7 +1586,7 @@ dependencies = [
 
 [[package]]
 name = "portal-services"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",
@@ -1592,9 +1614,9 @@ dependencies = [
 
 [[package]]
 name = "portal-telegram"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
- "axum",
+ "async-trait",
  "portal-config",
  "portal-feature",
  "reqwest",
@@ -1603,12 +1625,11 @@ dependencies = [
  "tempfile",
  "tokio",
  "toml_edit",
- "tracing",
 ]
 
 [[package]]
 name = "portal-weather"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",
@@ -1622,7 +1643,7 @@ dependencies = [
 
 [[package]]
 name = "portal-web"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "http-body-util",
@@ -1637,7 +1658,7 @@ dependencies = [
 
 [[package]]
 name = "portal-widget"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "async-trait",
  "axum",

@@ -1,6 +1,7 @@
 mod automation_directory;
 mod dns_directory;
 mod network_connection;
+mod portal_actions;
 mod proxy_publishing;
 mod public_layout;
 mod public_services;
@@ -12,6 +13,7 @@ mod tests;
 pub use automation_directory::AutomationDirectory;
 pub use dns_directory::DnsDirectory;
 pub use network_connection::NetworkConnection;
+pub use portal_actions::WorkflowActions;
 pub use proxy_publishing::ProxyPublishing;
 pub use public_layout::WidgetLayout;
 pub use public_services::ServiceCatalogue;

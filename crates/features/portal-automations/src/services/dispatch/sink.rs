@@ -14,6 +14,7 @@ use crate::types::{Automation, Pending, RunRecord, SkipReason, StopAnswer, Webho
 pub struct AutomationSink {
     pub cache: Arc<AutomationCache>,
     pub queue: Arc<RunQueue>,
+    pub children: Arc<RunQueue>,
     pub gatekeeper: Arc<Gatekeeper>,
     pub journal: Arc<Journal>,
     pub groups: Arc<RunningGroups>,
@@ -47,6 +48,7 @@ impl AutomationSink {
         AutomationSink {
             cache,
             queue: Arc::new(RunQueue::default()),
+            children: Arc::new(RunQueue::default()),
             gatekeeper: Arc::new(Gatekeeper::default()),
             journal: Arc::new(journal),
             groups: Arc::new(RunningGroups::default()),
@@ -58,12 +60,16 @@ impl AutomationSink {
 
     pub fn run_now(&self, automation: &Automation, by: &str) -> u64 {
         let event = manual_event(automation, OffsetDateTime::now_utc());
-        self.admit(automation, event, Some(by.to_string()))
+        self.admit(automation, event, (Some(by.to_string()), Vec::new()))
     }
 
     pub fn run_webhook(&self, webhook: &Webhook, event: PortalEvent) -> Option<u64> {
         let automation = webhook.as_automation()?;
-        Some(self.admit(&automation, event.aimed_at(webhook.id.clone()), None))
+        Some(self.admit(
+            &automation,
+            event.aimed_at(webhook.id.clone()),
+            (None, Vec::new()),
+        ))
     }
 
     pub fn stopping(&self) -> bool {
@@ -74,13 +80,19 @@ impl AutomationSink {
         self.phase.closed.load(Ordering::SeqCst)
     }
 
-    fn admit(&self, automation: &Automation, event: PortalEvent, by: Option<String>) -> u64 {
+    pub fn admit(
+        &self,
+        automation: &Automation,
+        event: PortalEvent,
+        (by, origin): (Option<String>, Vec<String>),
+    ) -> u64 {
         let run_id = self.next_run.fetch_add(1, Ordering::SeqCst);
         let pending = Pending {
             run_id,
             automation: automation.clone(),
             event,
             by,
+            origin,
         };
         let now = OffsetDateTime::now_utc();
         if self.stopping() && pending.event.name != EventName::PortalStopping {
@@ -94,7 +106,12 @@ impl AutomationSink {
                 .record(RunRecord::skipped(&pending, reason, now)),
             Ok(()) => {
                 self.active.queued(&pending, now);
-                if let Some(dropped) = self.queue.push(pending) {
+                let queue = if pending.child() {
+                    &self.children
+                } else {
+                    &self.queue
+                };
+                if let Some(dropped) = queue.push(pending) {
                     self.active.remove(dropped.run_id);
                     self.gatekeeper.dequeued(&dropped.automation.id);
                     self.journal
@@ -111,7 +128,11 @@ impl AutomationSink {
             None => StopAnswer::Unknown,
             Some(false) => StopAnswer::AlreadyStopping,
             Some(true) => {
-                if let Some(pending) = self.queue.remove(run_id) {
+                if let Some(pending) = self
+                    .queue
+                    .remove(run_id)
+                    .or_else(|| self.children.remove(run_id))
+                {
                     self.gatekeeper.dequeued(&pending.automation.id);
                     self.journal.record(RunRecord::stopped(
                         &pending,
@@ -127,7 +148,7 @@ impl AutomationSink {
 
     pub fn drain_as_removed(&self) {
         let now = OffsetDateTime::now_utc();
-        while let Some(pending) = self.queue.take() {
+        while let Some(pending) = self.queue.take().or_else(|| self.children.take()) {
             self.forget(&pending);
             self.journal
                 .record(RunRecord::skipped(&pending, SkipReason::Removed, now));
@@ -140,7 +161,10 @@ impl AutomationSink {
     }
 
     fn busy(&self) -> bool {
-        !self.queue.is_empty() || self.gatekeeper.busy() || self.groups.count() > 0
+        !self.queue.is_empty()
+            || !self.children.is_empty()
+            || self.gatekeeper.busy()
+            || self.groups.count() > 0
     }
 }
 
@@ -154,7 +178,7 @@ impl EventSink for AutomationSink {
         if self.cache.automations_on() {
             let automations = self.cache.automations();
             for automation in matching(&automations, &event) {
-                self.admit(automation, event.clone(), None);
+                self.admit(automation, event.clone(), (None, Vec::new()));
             }
         }
         if stopping {
@@ -170,7 +194,7 @@ impl EventSink for AutomationSink {
         }
         self.phase.closed.store(true, Ordering::SeqCst);
         let now = OffsetDateTime::now_utc();
-        while let Some(dropped) = self.queue.take() {
+        while let Some(dropped) = self.queue.take().or_else(|| self.children.take()) {
             self.forget(&dropped);
             self.journal
                 .record(RunRecord::skipped(&dropped, SkipReason::Dropped, now));

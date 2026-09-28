@@ -1,0 +1,34 @@
+{
+  "channels": [
+    {
+      "dropped": 0,
+      "last_delivery": {
+        "at": "2026-09-28T09:30:00Z",
+        "channel": "telegram",
+        "delivered": true,
+        "error": null
+      },
+      "last_error": {
+        "at": "2026-09-27T22:10:00Z",
+        "message": "telegram answered 502 Bad Gateway"
+      },
+      "missing": null,
+      "name": "telegram",
+      "queued": 0,
+      "readiness": "ready",
+      "settings": {
+        "chat_id": "123456789",
+        "enabled": true,
+        "secret": "telegram_token"
+      }
+    }
+  ],
+  "enabled": true,
+  "rules": {
+    "recovered": true,
+    "states": [
+      "down",
+      "unreadable"
+    ]
+  }
+}

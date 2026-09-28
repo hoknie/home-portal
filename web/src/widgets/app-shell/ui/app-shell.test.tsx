@@ -119,3 +119,28 @@ it("users appear last in the modules section while their module is on", () => {
   expect(links.map((link) => link.textContent)).toEqual(["Automations", "Users"]);
   expect(links[1]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/users\/?$/));
 });
+
+it("the menu collapses into a rail of named icons, is remembered, and expands again", async () => {
+  window.localStorage.clear();
+  shellWith(["workflows"]);
+  const menu = screen.getByRole("complementary", { name: "Menu" });
+  await userEvent.click(within(menu).getByRole("button", { name: "Collapse menu" }));
+  expect(menu.closest("[data-menu]")).toHaveAttribute("data-menu", "collapsed");
+  expect(window.localStorage.getItem("home-portal.menu-collapsed")).toBe("1");
+  const workflows = within(menu).getByRole("link", { name: "Workflows" });
+  expect(workflows).not.toHaveTextContent("Workflows");
+  expect(within(menu).getByRole("link", { name: "Services" })).toHaveAttribute("aria-current", "page");
+  await userEvent.hover(workflows);
+  expect((await screen.findAllByText("Workflows")).length).toBeGreaterThan(0);
+  expect(within(menu).getByRole("button", { name: "admin" })).toBeInTheDocument();
+  await userEvent.click(within(menu).getByRole("button", { name: "Expand menu" }));
+  expect(menu.closest("[data-menu]")).toHaveAttribute("data-menu", "expanded");
+  expect(window.localStorage.getItem("home-portal.menu-collapsed")).toBeNull();
+});
+
+it("a collapsed menu stays collapsed after a reload", () => {
+  window.localStorage.setItem("home-portal.menu-collapsed", "1");
+  shellWith(["workflows"]);
+  expect(screen.getByRole("complementary", { name: "Menu" }).closest("[data-menu]")).toHaveAttribute("data-menu", "collapsed");
+  window.localStorage.clear();
+});

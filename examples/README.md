@@ -7,7 +7,7 @@ validator of the portal, so an example that stops working fails the build.
 
 | Path | What it shows |
 |---|---|
-| `split/` | A complete setup in five files: the main file with the network, environments, `[modules]`, the `[proxy]` section, Telegram and `include`; `services.toml`, with services published in every TLS mode and one behind the portal's sign-in; `widgets.toml` with a sectioned layout using every widget type and every size; `automations.toml` with a nightly schedule, a restart when a service goes down, an audit of sign-ins from outside and a script on start-up; `secrets.example.toml` |
+| `split/` | A complete setup in six files: the main file with the network, environments, `[modules]`, the `[proxy]` section, Telegram and `include`; `services.toml`, with services published in every TLS mode and one behind the portal's sign-in; `widgets.toml` with a sectioned layout using every widget type and every size; `automations.toml` with a nightly schedule, a restart when a service goes down, an audit of sign-ins from outside and a script on start-up; `workflows.toml` with a retry loop around a restart API, parallel status checks, a script and a call; `secrets.example.toml` |
 | `split/scripts/echo-event.sh` | A POSIX `sh` script that prints the arguments and the `PORTAL_*` variables it received and the event from standard input — a starting point for your own |
 | `services/media.toml` | Jellyfin, Plex, qBittorrent, Transmission, Immich |
 | `services/home.toml` | Home Assistant, Nextcloud, Grafana |

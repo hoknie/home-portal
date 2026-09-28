@@ -20,3 +20,9 @@ export function insertAt(text: string, cursor: number | null, token: string) {
   const at = cursor === null ? text.length : Math.max(0, Math.min(cursor, text.length));
   return { text: `${text.slice(0, at)}${token}${text.slice(at)}`, cursor: at + token.length };
 }
+
+export function unknownRanges(template: string, allowed: readonly string[]) {
+  return [...template.matchAll(PLACEHOLDER)]
+    .filter((match) => !allowed.includes(match[1]))
+    .map((match) => ({ start: match.index, end: match.index + match[0].length, name: match[1] }));
+}

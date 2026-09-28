@@ -3,6 +3,7 @@ import { z } from "zod";
 import { type Automation, type AutomationRequest, EVENT_NAMES, type FilterName } from "@/entities/automation";
 
 import { unknownPlaceholders } from "./placeholders";
+import { ACTIONS } from "./run-fields";
 
 export const ID_PATTERN = /^[a-z0-9-]{1,63}$/;
 export const RESERVED_IDS = ["runs", "catalogue", "scripts", "schedule"] as const;
@@ -37,7 +38,10 @@ const baseSchema = z.object({
   users: z.array(z.string()),
   environments: z.array(z.string()),
   webhooks: z.array(z.string()),
-  script: z.string().trim().refine(scriptAccepted, "validation.automationScript"),
+  action: z.enum(ACTIONS),
+  script: z.string().trim(),
+  workflow: z.string().trim(),
+  inputs: z.record(z.string(), z.string().optional()),
   args: z.array(z.object({ value: z.string() })),
   timeout_seconds: z
     .number({ error: "validation.automationTimeout" })
@@ -57,6 +61,20 @@ export function automationFormSchema(fieldsOf: (event: string, webhooks: string[
       context.addIssue({ code: "custom", path: ["from"], message: "validation.automationFromUnknown" });
     }
     const allowed = fieldsOf(form.event, form.webhooks);
+    if (form.action === "workflow") {
+      if (form.workflow === "") {
+        context.addIssue({ code: "custom", path: ["workflow"], message: "validation.automationWorkflow" });
+      }
+      for (const [name, value] of Object.entries(form.inputs)) {
+        if (unknownPlaceholders(value ?? "", allowed).length > 0) {
+          context.addIssue({ code: "custom", path: ["inputs", name], message: "validation.automationPlaceholder" });
+        }
+      }
+      return;
+    }
+    if (!scriptAccepted(form.script)) {
+      context.addIssue({ code: "custom", path: ["script"], message: "validation.automationScript" });
+    }
     form.args.forEach((argument, index) => {
       if (unknownPlaceholders(argument.value, allowed).length > 0) {
         context.addIssue({ code: "custom", path: ["args", index, "value"], message: "validation.automationPlaceholder" });
@@ -80,9 +98,12 @@ export const emptyAutomationForm: AutomationForm = {
   users: [],
   environments: [],
   webhooks: [],
+  action: "script",
   script: "",
   args: [],
   timeout_seconds: DEFAULT_TIMEOUT,
+  workflow: "",
+  inputs: {},
 };
 
 export function formOf(automation: Automation): AutomationForm {
@@ -102,9 +123,12 @@ export function formOf(automation: Automation): AutomationForm {
     users: [...when.users],
     environments: [...when.environments],
     webhooks: [...when.webhooks],
+    action: automation.workflow ? "workflow" : "script",
     script: run.script,
     args: run.args.map((value) => ({ value })),
     timeout_seconds: run.timeout_seconds,
+    workflow: automation.workflow?.id ?? "",
+    inputs: Object.fromEntries(Object.entries(automation.workflow?.inputs ?? {}).map(([name, value]) => [name, typeof value === "string" ? value : JSON.stringify(value)])),
   };
 }
 
@@ -136,7 +160,9 @@ export function requestOf(form: AutomationForm, filters: readonly string[]): Aut
     tags: form.tags,
     cooldown_seconds: form.cooldown_seconds,
     when,
-    run: { script: form.script.trim(), args: form.args.map((argument) => argument.value), timeout_seconds: form.timeout_seconds },
+    ...(form.action === "workflow"
+      ? { workflow: form.workflow, inputs: Object.fromEntries(Object.entries(form.inputs).flatMap(([name, value]) => (value === undefined || value === "" ? [] : [[name, value] as const]))) }
+      : { run: { script: form.script.trim(), args: form.args.map((argument) => argument.value), timeout_seconds: form.timeout_seconds } }),
   };
 }
 

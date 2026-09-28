@@ -12,7 +12,6 @@ members = [
     "crates/features/portal-public",
     "crates/features/portal-secrets",
     "crates/features/portal-services",
-    "crates/features/portal-telegram",
     "crates/features/portal-weather",
     "crates/features/portal-calendar",
     "crates/features/portal-metrics",
@@ -22,12 +21,14 @@ members = [
     "crates/features/portal-automations",
     "crates/features/portal-dns",
     "crates/features/portal-modules",
+    "crates/features/portal-notification",
+    "crates/notification/portal-telegram",
     "bin/home-portal",
 ]
 
 [workspace.package]
 edition = "2024"
-version = "0.1.7"
+version = "0.1.8"
 
 [workspace.dependencies]
 async-trait = "0.1"
@@ -77,7 +78,8 @@ portal-auth = { path = "crates/features/portal-auth" }
 portal-public = { path = "crates/features/portal-public" }
 portal-secrets = { path = "crates/features/portal-secrets" }
 portal-services = { path = "crates/features/portal-services" }
-portal-telegram = { path = "crates/features/portal-telegram" }
+portal-telegram = { path = "crates/notification/portal-telegram" }
+portal-notification = { path = "crates/features/portal-notification" }
 portal-weather = { path = "crates/features/portal-weather" }
 portal-calendar = { path = "crates/features/portal-calendar" }
 portal-metrics = { path = "crates/features/portal-metrics" }

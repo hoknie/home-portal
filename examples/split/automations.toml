@@ -54,6 +54,14 @@ title = "Clean the downloads folder"
 when = { event = "manual" }
 run = { script = "echo-event.sh", args = ["clean", "--", "{{run.by}}"] }
 
+# A workflow's typed inputs take literals of their type: here a list.
+[[automations]]
+id = "check-hosts-by-hand"
+title = "Check the hosts"
+when = { event = "manual" }
+workflow = "check-hosts"
+inputs = { hosts = ["nas", "router", "nvr"], note = "by hand" }
+
 # Webhooks: POST /webhook/<id>. Create them under Management → Webhooks so the portal
 # generates the id and the token; it shows the token once and keeps only its SHA-256.
 # A caller sends the token as "Authorization: Bearer <token>" or "X-Webhook-Token: <token>",

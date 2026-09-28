@@ -1,16 +1,23 @@
-# A complete home-portal setup, split over five files and a scripts directory:
+# A complete home-portal setup, split over six files and a scripts directory:
 #
 #   home-portal.toml   this file: network, environments, notifications, where edits go
 #   services.toml      the services and how they are probed
 #   widgets.toml       the home page: its sections and widgets
 #   automations.toml   scripts run on a schedule or on the portal's events
+#   workflows.toml     runs of several steps: conditions, loops, HTTP, scripts, Telegram
 #   secrets.toml       tokens and passwords, mode 0600 (copy secrets.example.toml)
 #   scripts/           the scripts automations may run, 0755 or stricter
 #
 # Copy the directory, add a user (see below) and start the portal with
 #   HOME_PORTAL_CONFIG=/path/to/split/home-portal.toml home-portal
 
-include = ["services.toml", "widgets.toml", "automations.toml", "secrets.toml"]
+include = [
+  "services.toml",
+  "widgets.toml",
+  "automations.toml",
+  "workflows.toml",
+  "secrets.toml",
+]
 
 # Russian for visitors whose browser asks for none of en, ru, es; each visitor can still
 # switch in the header.
@@ -36,6 +43,7 @@ networks = ["10.8.0.0/24"]
 # stays off. Management → Modules switches them.
 [modules]
 proxy = true
+workflows = true
 
 # Caddy publishes the portal and the services that carry a proxy table (see
 # services.toml). The portal writes Caddy's whole configuration through its admin API,
@@ -62,13 +70,16 @@ email = "owner@example.com"
 # name = "admin"
 # password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
 
-# Telegram messages when a service goes down and when it recovers.
+# Announce when a service goes down and when it recovers, on every ready channel.
+[notifications]
+states = ["down", "unreadable"]
+recovered = true
+
+# The Telegram channel.
 [notifications.telegram]
 enabled = true
 secret = "telegram_token"
 chat_id = "123456789"
-states = ["down", "unreadable"]
-recovered = true
 
 # The interface adds new services to services.toml. Services and the layout are
 # edited in the file they already live in.

@@ -41,7 +41,14 @@ pub fn manual_event(automation: &Automation, at: OffsetDateTime) -> PortalEvent 
         .run
         .args
         .iter()
-        .flat_map(|argument| super::placeholders_of(argument))
+        .map(String::as_str)
+        .chain(
+            automation
+                .workflow
+                .iter()
+                .flat_map(|call| call.inputs.iter().filter_map(|(_, value)| value.template())),
+        )
+        .flat_map(super::placeholders_of)
         .filter_map(|name| name.strip_prefix(PortalEvent::VARIABLE_PREFIX))
         .filter(|name| !["id", "title"].contains(name))
         .map(|name| (name.to_string(), name.to_string()))

@@ -195,6 +195,28 @@ mod run_file {
     }
 
     #[test]
+    fn a_line_written_before_workflows_loads_without_a_workflow_or_trace() {
+        let (folder, file) = file();
+        let path = folder.path().join("automations/runs.ndjson");
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let old = r#"{"id":7,"automation":"backup","fields":[],"arguments":["--target"],"seen":{"started_at":"2026-01-01T00:00:00Z","last_at":"2026-01-01T00:00:00Z","count":1},"result":{"outcome":"succeeded","exit_code":0,"reason":null,"duration_milliseconds":12,"stdout":{"tail":"","bytes":0},"stderr":{"tail":"","bytes":0}}}"#;
+        fs::write(&path, format!("{old}\n")).unwrap();
+        let mut record =
+            RunRecord::skipped(&pending("revive", 8, None), SkipReason::Cooldown, at(8));
+        record.workflow = Some("revive".into());
+        record.trace = Some(crate::types::Trace::default());
+        file.append(&[record]).unwrap();
+        let (loaded, highest) = file.load(Journal::KEPT);
+        assert_eq!(highest, 8);
+        let old = loaded.iter().find(|run| run.id == 7).unwrap();
+        assert_eq!(old.workflow, None);
+        assert_eq!(old.trace, None);
+        let new = loaded.iter().find(|run| run.id == 8).unwrap();
+        assert_eq!(new.workflow.as_deref(), Some("revive"));
+        assert!(new.trace.is_some());
+    }
+
+    #[test]
     fn compacting_keeps_the_newest_runs_only() {
         let (_folder, file) = file();
         let records: Vec<RunRecord> = (1..=250)

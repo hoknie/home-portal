@@ -6,10 +6,13 @@ mod catalogue;
 mod dns;
 mod history;
 mod modules;
+mod notifications;
 mod proxy;
 mod public;
+mod transforms;
 mod users;
 mod widgets;
+mod workflows;
 
 use std::env;
 use std::fs;

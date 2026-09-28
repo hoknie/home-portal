@@ -186,3 +186,27 @@ fn webhook_variables_are_named_under_webhook_and_cleaned() {
     assert_eq!(EventName::from("manual"), EventName::Manual);
     assert!(EventName::Manual.fields().is_empty());
 }
+
+#[test]
+fn a_notification_joins_its_title_and_text_and_skips_an_empty_part() {
+    use super::Notification;
+    assert_eq!(
+        Notification::new("NAS", "is down").message(),
+        "NAS\nis down"
+    );
+    assert_eq!(Notification::new("", "is down").message(), "is down");
+    assert_eq!(Notification::new("NAS", " ").message(), "NAS");
+}
+
+#[test]
+fn only_a_ready_channel_is_ready() {
+    use super::ChannelReadiness;
+    assert!(ChannelReadiness::Ready.is_ready());
+    assert!(!ChannelReadiness::Disabled.is_ready());
+    let missing = ChannelReadiness::Missing {
+        field: "notifications.telegram.chat_id".into(),
+        message: "is required".into(),
+    };
+    assert!(!missing.is_ready());
+    assert_eq!(missing.name(), "missing");
+}

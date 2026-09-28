@@ -137,3 +137,16 @@ it("a manual automation has no filters and no fields of its own", async () => {
   expect(screen.getByText("This event has no filters.")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "service.id" })).not.toBeInTheDocument();
 });
+
+it("an argument completes event fields after {{ with their samples", async () => {
+  network();
+  open();
+  await userEvent.click(screen.getByRole("button", { name: "Add argument" }));
+  await userEvent.click(screen.getByLabelText("Argument 1"));
+  await userEvent.keyboard("{{{{ser");
+  const options = screen.getAllByRole("option").map((option) => option.textContent ?? "");
+  expect(options.some((text) => text.includes("service.id") && text.includes("nas"))).toBe(true);
+  expect(options.some((text) => text.includes("service.name"))).toBe(true);
+  await userEvent.keyboard("{Enter}");
+  expect(screen.getByLabelText("Argument 1")).toHaveValue("{{service.id}}");
+});

@@ -35,6 +35,7 @@ portal-metrics.workspace = true
 portal-modules.workspace = true
 portal-model.workspace = true
 portal-network.workspace = true
+portal-notification.workspace = true
 portal-proxy.workspace = true
 portal-dns.workspace = true
 portal-public.workspace = true

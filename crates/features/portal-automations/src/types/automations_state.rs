@@ -5,8 +5,9 @@ use std::time::Instant;
 use crate::ports::Directory;
 use crate::services::{AutomationSink, ScriptsDirectory, WebhookBook};
 use crate::usecases::{
-    ChangeAutomation, ChangeWebhook, CreateAutomation, CreateWebhook, DeleteAutomation,
-    DeleteWebhook, IssueToken, ListAutomations, ListWebhooks, RemoveToken,
+    ChangeAutomation, ChangeWebhook, ChangeWorkflow, CreateAutomation, CreateWebhook,
+    CreateWorkflow, DeleteAutomation, DeleteWebhook, DeleteWorkflow, IssueToken, ListAutomations,
+    ListWebhooks, ListWorkflows, RemoveToken, RunWorkflow, WorkflowCatalogue,
 };
 
 #[derive(Clone)]
@@ -26,4 +27,15 @@ pub struct AutomationsState {
     pub scripts: ScriptsDirectory,
     pub manual_runs: Arc<Mutex<HashMap<String, Instant>>>,
     pub webhooks: Arc<WebhookBook>,
+    pub workflows: WorkflowCases,
+}
+
+#[derive(Clone)]
+pub struct WorkflowCases {
+    pub list: ListWorkflows,
+    pub create: CreateWorkflow,
+    pub change: ChangeWorkflow,
+    pub delete: DeleteWorkflow,
+    pub run: RunWorkflow,
+    pub catalogue: WorkflowCatalogue,
 }

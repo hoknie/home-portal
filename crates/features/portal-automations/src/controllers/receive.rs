@@ -86,7 +86,9 @@ fn accept(
             state.sink.emit(event);
             None
         }
-        WebhookAction::Script(_) => state.sink.run_webhook(webhook, event),
+        WebhookAction::Script(_) | WebhookAction::Workflow(_) => {
+            state.sink.run_webhook(webhook, event)
+        }
     };
     Ok((
         StatusCode::ACCEPTED,

@@ -7,5 +7,7 @@ pub struct RunsQuery {
     #[serde(default)]
     pub webhook: Option<String>,
     #[serde(default)]
+    pub workflow: Option<String>,
+    #[serde(default)]
     pub text: Option<String>,
 }

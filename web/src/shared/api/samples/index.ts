@@ -12,6 +12,9 @@ import history from "./history.json";
 import icons from "./icons.json";
 import modules from "./modules.json";
 import network from "./network.json";
+import notificationChannelMissing from "./notification-channel-missing.json";
+import notificationTest from "./notification-test.json";
+import notifications from "./notifications.json";
 import proxy from "./proxy.json";
 import publicPortal from "./public-portal.json";
 import secrets from "./secrets.json";
@@ -26,6 +29,10 @@ import webhookCreated from "./webhook-created.json";
 import webhookToken from "./webhook-token.json";
 import webhooks from "./webhooks.json";
 import widgetWeather from "./widget-weather.json";
+import transforms from "./transforms.json";
+import workflowCatalogue from "./workflow-catalogue.json";
+import workflowRun from "./workflow-run.json";
+import workflows from "./workflows.json";
 
 export const apiSamples = {
   automationCatalogue,
@@ -42,6 +49,9 @@ export const apiSamples = {
   icons,
   modules,
   network,
+  notificationChannelMissing,
+  notificationTest,
+  notifications,
   proxy,
   publicPortal,
   secrets,
@@ -56,4 +66,8 @@ export const apiSamples = {
   webhookToken,
   webhooks,
   widgetWeather,
+  transforms,
+  workflowCatalogue,
+  workflowRun,
+  workflows,
 };

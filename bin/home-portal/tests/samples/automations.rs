@@ -5,7 +5,8 @@ use portal_automations::{
     CreatedWebhookResponse, Directory, MarksResponse, OutcomeResponse, OutputResponse,
     QueuedResponse, RawMarks, RawRun, RawWebhook, ReceptionResponse, RunResponse,
     RunSettingsResponse, RunsResponse, ScheduleResponse, ScriptResponse, ScriptsResponse,
-    StatesResponse, TokenResponse, Webhook, WebhookResponse, WebhooksResponse, WhenResponse,
+    StatesResponse, TokenResponse, TraceEntryResponse, TraceResponse, Webhook, WebhookResponse,
+    WebhooksResponse, WhenResponse,
 };
 
 use crate::check;
@@ -43,7 +44,7 @@ fn output(tail: &str, bytes: u64) -> OutputResponse {
     }
 }
 
-fn run(id: &str, automation: &str, event: &str, outcome: OutcomeResponse) -> RunResponse {
+pub fn run(id: &str, automation: &str, event: &str, outcome: OutcomeResponse) -> RunResponse {
     let fields: BTreeMap<String, String> = [
         ("event.name", event),
         ("event.at", "2026-09-25T03:00:00Z"),
@@ -63,10 +64,38 @@ fn run(id: &str, automation: &str, event: &str, outcome: OutcomeResponse) -> Run
         arguments: vec!["--".into(), "jellyfin".into()],
         started_at: "2026-09-25T03:00:00Z".into(),
         outcome,
+        workflow: None,
+        trace: None,
     }
 }
 
-fn outcome(result: &str, exit_code: Option<i32>, reason: Option<&str>) -> OutcomeResponse {
+pub type Entry<'a> = (&'a str, &'a str, &'a str, Option<usize>, &'a str, &'a str);
+
+pub fn traced(entries: &[Entry]) -> TraceResponse {
+    TraceResponse {
+        entries: entries
+            .iter()
+            .map(
+                |(path, step, kind, iteration, outcome, detail)| TraceEntryResponse {
+                    path: path.to_string(),
+                    step: step.to_string(),
+                    label: step.to_string(),
+                    kind: kind.to_string(),
+                    iteration: *iteration,
+                    outcome: outcome.to_string(),
+                    started_at: "2026-09-25T03:00:00Z".into(),
+                    duration_milliseconds: 120,
+                    detail: detail.to_string(),
+                    output: (*kind == "http").then(|| "{\"state\":\"down\"}".to_string()),
+                    shape: (*kind == "http").then(|| "{\"state\":\"down\"}".to_string()),
+                },
+            )
+            .collect(),
+        dropped: 0,
+    }
+}
+
+pub fn outcome(result: &str, exit_code: Option<i32>, reason: Option<&str>) -> OutcomeResponse {
     OutcomeResponse {
         result: result.into(),
         exit_code,
@@ -94,12 +123,56 @@ fn runs() -> Vec<RunResponse> {
     running.stderr = output("  % Total\r 10  1.2M\r 55  6.6M", 28);
     let mut stopped = outcome("stopped", None, Some("stopped by admin"));
     stopped.stdout = output("syncing\n", 8);
+    let mut revived = run(
+        "0",
+        "nas-down",
+        "service.status-changed",
+        outcome("succeeded", None, Some("nas is back")),
+    );
+    revived.arguments = Vec::new();
+    revived.workflow = Some("revive".into());
+    revived.trace = Some(traced(&[
+        (
+            "steps[0]",
+            "first_probe",
+            "probe",
+            None,
+            "succeeded",
+            "nas: down",
+        ),
+        ("steps[1]", "down", "if", None, "succeeded", "then"),
+        (
+            "steps[1].then[0]",
+            "retry",
+            "loop",
+            None,
+            "succeeded",
+            "1 iterations",
+        ),
+        (
+            "steps[1].then[0].body[0]",
+            "restart",
+            "http",
+            Some(0),
+            "succeeded",
+            "POST http://192.168.1.10:9000/restart/nas → 202",
+        ),
+        (
+            "steps[1].then[0].body[1]",
+            "settle",
+            "wait",
+            Some(0),
+            "running",
+            "",
+        ),
+    ]));
     vec![
         run("5", "backup", "manual", running),
         run("4", "backup", "manual", stopped),
         run("3", "backup", "schedule", failed),
         run("2", "restart-media", "service.status-changed", skipped),
         run("1", "restart-media", "service.status-changed", succeeded),
+        revived,
     ]
 }
 
@@ -134,6 +207,7 @@ fn the_automation_samples_match_their_serializers() {
                     args: vec!["--".into(), "{{service.id}}".into()],
                     timeout_seconds: 120,
                 },
+                workflow: None,
                 last_run: Some(history[3].clone()),
                 active_run: None,
             },
@@ -163,6 +237,7 @@ fn the_automation_samples_match_their_serializers() {
                     args: Vec::new(),
                     timeout_seconds: 60,
                 },
+                workflow: None,
                 last_run: Some(history[1].clone()),
                 active_run: Some(history[0].clone()),
             },
@@ -258,6 +333,8 @@ fn webhooks() -> Vec<Webhook> {
             args: vec!["--".into(), "{{webhook.branch}}".into()],
             timeout_seconds: Some(300),
         }),
+        workflow: None,
+        inputs: None,
         token_sha256: Some("0".repeat(64)),
     };
     let motion = RawWebhook {
@@ -270,6 +347,8 @@ fn webhooks() -> Vec<Webhook> {
         variables: vec!["camera".into()],
         action: "event".into(),
         run: None,
+        workflow: None,
+        inputs: None,
         token_sha256: None,
     };
     [deploy, motion]

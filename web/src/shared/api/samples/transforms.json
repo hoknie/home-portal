@@ -1,0 +1,1112 @@
+{
+  "cases": [
+    {
+      "input": "nas",
+      "name": "upper",
+      "operations": [
+        {
+          "op": "upper"
+        }
+      ],
+      "outcome": {
+        "value": "NAS"
+      }
+    },
+    {
+      "input": "NAS",
+      "name": "lower",
+      "operations": [
+        {
+          "op": "lower"
+        }
+      ],
+      "outcome": {
+        "value": "nas"
+      }
+    },
+    {
+      "input": "  nas ",
+      "name": "trim",
+      "operations": [
+        {
+          "op": "trim"
+        }
+      ],
+      "outcome": {
+        "value": "nas"
+      }
+    },
+    {
+      "input": "a-b-c",
+      "name": "replace",
+      "operations": [
+        {
+          "args": [
+            "-",
+            "+"
+          ],
+          "op": "replace"
+        }
+      ],
+      "outcome": {
+        "value": "a+b+c"
+      }
+    },
+    {
+      "input": "a,b,,c",
+      "name": "split",
+      "operations": [
+        {
+          "args": [
+            ","
+          ],
+          "op": "split"
+        }
+      ],
+      "outcome": {
+        "value": [
+          "a",
+          "b",
+          "",
+          "c"
+        ]
+      }
+    },
+    {
+      "input": "homeportal",
+      "name": "slice text",
+      "operations": [
+        {
+          "args": [
+            4
+          ],
+          "op": "slice"
+        }
+      ],
+      "outcome": {
+        "value": "portal"
+      }
+    },
+    {
+      "input": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "name": "slice from the end",
+      "operations": [
+        {
+          "args": [
+            -3,
+            -1
+          ],
+          "op": "slice"
+        }
+      ],
+      "outcome": {
+        "value": [
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "input": "portal",
+      "name": "starts_with",
+      "operations": [
+        {
+          "args": [
+            "por"
+          ],
+          "op": "starts_with"
+        }
+      ],
+      "outcome": {
+        "value": true
+      }
+    },
+    {
+      "input": "portal",
+      "name": "contains text",
+      "operations": [
+        {
+          "args": [
+            "tal"
+          ],
+          "op": "contains"
+        }
+      ],
+      "outcome": {
+        "value": true
+      }
+    },
+    {
+      "input": [
+        1,
+        "2",
+        3
+      ],
+      "name": "contains in a list",
+      "operations": [
+        {
+          "args": [
+            2
+          ],
+          "op": "contains"
+        }
+      ],
+      "outcome": {
+        "value": true
+      }
+    },
+    {
+      "input": "héllo",
+      "name": "length of text",
+      "operations": [
+        {
+          "op": "length"
+        }
+      ],
+      "outcome": {
+        "value": 5
+      }
+    },
+    {
+      "input": {
+        "a": 1,
+        "b": 2
+      },
+      "name": "length of an object",
+      "operations": [
+        {
+          "op": "length"
+        }
+      ],
+      "outcome": {
+        "value": 2
+      }
+    },
+    {
+      "input": "",
+      "name": "default of empty text",
+      "operations": [
+        {
+          "args": [
+            "none"
+          ],
+          "op": "default"
+        }
+      ],
+      "outcome": {
+        "value": "none"
+      }
+    },
+    {
+      "input": 0,
+      "name": "default keeps a value",
+      "operations": [
+        {
+          "args": [
+            "none"
+          ],
+          "op": "default"
+        }
+      ],
+      "outcome": {
+        "value": 0
+      }
+    },
+    {
+      "input": " 42.50 ",
+      "name": "number",
+      "operations": [
+        {
+          "op": "number"
+        }
+      ],
+      "outcome": {
+        "value": 42.5
+      }
+    },
+    {
+      "input": "abc",
+      "name": "number refuses text",
+      "operations": [
+        {
+          "op": "number"
+        }
+      ],
+      "outcome": {
+        "error": "operation 1 (number): number cannot read \"abc\" as a number"
+      }
+    },
+    {
+      "input": 7.12645,
+      "name": "round",
+      "operations": [
+        {
+          "args": [
+            2
+          ],
+          "op": "round"
+        }
+      ],
+      "outcome": {
+        "value": 7.13
+      }
+    },
+    {
+      "input": 2.5,
+      "name": "round to whole",
+      "operations": [
+        {
+          "op": "round"
+        }
+      ],
+      "outcome": {
+        "value": 3
+      }
+    },
+    {
+      "input": -2.5,
+      "name": "floor, ceil and abs",
+      "operations": [
+        {
+          "op": "floor"
+        },
+        {
+          "op": "abs"
+        },
+        {
+          "op": "ceil"
+        }
+      ],
+      "outcome": {
+        "value": 3
+      }
+    },
+    {
+      "input": [
+        [
+          1,
+          2
+        ],
+        [
+          3
+        ]
+      ],
+      "name": "first and last",
+      "operations": [
+        {
+          "op": "last"
+        },
+        {
+          "op": "first"
+        }
+      ],
+      "outcome": {
+        "value": 3
+      }
+    },
+    {
+      "input": [],
+      "name": "first of nothing",
+      "operations": [
+        {
+          "op": "first"
+        }
+      ],
+      "outcome": {
+        "value": null
+      }
+    },
+    {
+      "input": [
+        "a",
+        1,
+        true,
+        null
+      ],
+      "name": "join",
+      "operations": [
+        {
+          "args": [
+            "-"
+          ],
+          "op": "join"
+        }
+      ],
+      "outcome": {
+        "value": "a-1-true-"
+      }
+    },
+    {
+      "input": [
+        3,
+        "b",
+        1,
+        "a",
+        null,
+        2.5
+      ],
+      "name": "sort mixed",
+      "operations": [
+        {
+          "op": "sort"
+        }
+      ],
+      "outcome": {
+        "value": [
+          null,
+          1,
+          2.5,
+          3,
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "input": [
+        1,
+        2,
+        3
+      ],
+      "name": "reverse",
+      "operations": [
+        {
+          "op": "reverse"
+        }
+      ],
+      "outcome": {
+        "value": [
+          3,
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "input": [
+        1,
+        2,
+        1,
+        "1",
+        2
+      ],
+      "name": "unique",
+      "operations": [
+        {
+          "op": "unique"
+        }
+      ],
+      "outcome": {
+        "value": [
+          1,
+          2,
+          "1"
+        ]
+      }
+    },
+    {
+      "input": [
+        {
+          "a": {
+            "b": 1
+          }
+        },
+        {
+          "a": {}
+        }
+      ],
+      "name": "pluck with a path",
+      "operations": [
+        {
+          "args": [
+            "a.b"
+          ],
+          "op": "pluck"
+        }
+      ],
+      "outcome": {
+        "value": [
+          1,
+          null
+        ]
+      }
+    },
+    {
+      "input": [
+        4,
+        1.5,
+        9
+      ],
+      "name": "sum, min and max",
+      "operations": [
+        {
+          "op": "sum"
+        }
+      ],
+      "outcome": {
+        "value": 14.5
+      }
+    },
+    {
+      "input": [
+        4,
+        1.5,
+        9
+      ],
+      "name": "min",
+      "operations": [
+        {
+          "op": "min"
+        }
+      ],
+      "outcome": {
+        "value": 1.5
+      }
+    },
+    {
+      "input": [],
+      "name": "max of nothing",
+      "operations": [
+        {
+          "op": "max"
+        }
+      ],
+      "outcome": {
+        "value": null
+      }
+    },
+    {
+      "input": [
+        1,
+        "2"
+      ],
+      "name": "sum refuses text",
+      "operations": [
+        {
+          "op": "sum"
+        }
+      ],
+      "outcome": {
+        "error": "operation 1 (sum): sum takes a list of numbers and got text at position 1"
+      }
+    },
+    {
+      "input": {
+        "a": 2,
+        "b": 1
+      },
+      "name": "keys and values",
+      "operations": [
+        {
+          "op": "keys"
+        }
+      ],
+      "outcome": {
+        "value": [
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "input": {
+        "a": 2,
+        "b": 1
+      },
+      "name": "values",
+      "operations": [
+        {
+          "op": "values"
+        }
+      ],
+      "outcome": {
+        "value": [
+          2,
+          1
+        ]
+      }
+    },
+    {
+      "input": {
+        "a": [
+          10,
+          20
+        ]
+      },
+      "name": "get",
+      "operations": [
+        {
+          "args": [
+            "a.1"
+          ],
+          "op": "get"
+        }
+      ],
+      "outcome": {
+        "value": 20
+      }
+    },
+    {
+      "input": {
+        "a": [
+          1,
+          "x"
+        ]
+      },
+      "name": "json",
+      "operations": [
+        {
+          "op": "json"
+        }
+      ],
+      "outcome": {
+        "value": "{\"a\":[1,\"x\"]}"
+      }
+    },
+    {
+      "input": "{\"a\": [1, 2]}",
+      "name": "parse",
+      "operations": [
+        {
+          "op": "parse"
+        },
+        {
+          "args": [
+            "a"
+          ],
+          "op": "get"
+        }
+      ],
+      "outcome": {
+        "value": [
+          1,
+          2
+        ]
+      }
+    },
+    {
+      "input": "{nope",
+      "name": "parse refuses",
+      "operations": [
+        {
+          "op": "parse"
+        }
+      ],
+      "outcome": {
+        "error": "operation 1 (parse): parse cannot read the text as JSON"
+      }
+    },
+    {
+      "input": 200,
+      "name": "a filter on the wrong type",
+      "operations": [
+        {
+          "args": [
+            ", "
+          ],
+          "op": "join"
+        }
+      ],
+      "outcome": {
+        "error": "operation 1 (join): join takes a list and got a number"
+      }
+    },
+    {
+      "input": null,
+      "name": "nothing passes through",
+      "operations": [
+        {
+          "op": "upper"
+        },
+        {
+          "op": "length"
+        }
+      ],
+      "outcome": {
+        "value": null
+      }
+    },
+    {
+      "input": [
+        {
+          "health": "ok",
+          "name": "sda",
+          "size": 2
+        },
+        {
+          "health": "failing",
+          "name": "sdb",
+          "size": 3.5
+        },
+        {
+          "health": "failing",
+          "name": "sdc",
+          "size": 1
+        }
+      ],
+      "name": "unhealthy disks",
+      "operations": [
+        {
+          "op": "filter",
+          "where": {
+            "left": "{{item.health}}",
+            "op": "!=",
+            "right": "ok"
+          }
+        },
+        {
+          "args": [
+            "name"
+          ],
+          "op": "pluck"
+        },
+        {
+          "args": [
+            ", "
+          ],
+          "op": "join"
+        }
+      ],
+      "outcome": {
+        "value": "sdb, sdc"
+      }
+    },
+    {
+      "input": [
+        {
+          "health": "ok",
+          "name": "sda",
+          "size": 2
+        },
+        {
+          "health": "failing",
+          "name": "sdb",
+          "size": 3.5
+        },
+        {
+          "health": "failing",
+          "name": "sdc",
+          "size": 1
+        }
+      ],
+      "name": "filter with a group",
+      "operations": [
+        {
+          "op": "filter",
+          "where": {
+            "any": [
+              {
+                "left": "{{item.size}}",
+                "op": ">",
+                "right": "3"
+              },
+              {
+                "left": "{{index}}",
+                "op": "==",
+                "right": "0"
+              }
+            ]
+          }
+        },
+        {
+          "args": [
+            "name"
+          ],
+          "op": "pluck"
+        }
+      ],
+      "outcome": {
+        "value": [
+          "sda",
+          "sdb"
+        ]
+      }
+    },
+    {
+      "input": [
+        {
+          "health": "ok",
+          "name": "sda",
+          "size": 2
+        },
+        {
+          "health": "failing",
+          "name": "sdb",
+          "size": 3.5
+        },
+        {
+          "health": "failing",
+          "name": "sdc",
+          "size": 1
+        }
+      ],
+      "name": "map with filters",
+      "operations": [
+        {
+          "op": "map",
+          "to": "{{index}}. {{item.name | upper}} ({{item.size | round}})"
+        }
+      ],
+      "outcome": {
+        "value": [
+          "0. SDA (2)",
+          "1. SDB (4)",
+          "2. SDC (1)"
+        ]
+      }
+    },
+    {
+      "input": [
+        {
+          "health": "ok",
+          "name": "sda",
+          "size": 2
+        },
+        {
+          "health": "failing",
+          "name": "sdb",
+          "size": 3.5
+        },
+        {
+          "health": "failing",
+          "name": "sdc",
+          "size": 1
+        }
+      ],
+      "name": "map keeps values",
+      "operations": [
+        {
+          "op": "map",
+          "to": "{{item.size}}"
+        },
+        {
+          "op": "sum"
+        }
+      ],
+      "outcome": {
+        "value": 6.5
+      }
+    },
+    {
+      "input": [
+        {
+          "health": "ok",
+          "name": "sda",
+          "size": 2
+        },
+        {
+          "health": "failing",
+          "name": "sdb",
+          "size": 3.5
+        },
+        {
+          "health": "failing",
+          "name": "sdc",
+          "size": 1
+        }
+      ],
+      "name": "sort_by descending",
+      "operations": [
+        {
+          "key": "size",
+          "op": "sort_by",
+          "order": "desc"
+        },
+        {
+          "args": [
+            "name"
+          ],
+          "op": "pluck"
+        }
+      ],
+      "outcome": {
+        "value": [
+          "sdb",
+          "sda",
+          "sdc"
+        ]
+      }
+    },
+    {
+      "input": [
+        {
+          "health": "ok",
+          "name": "sda",
+          "size": 2
+        },
+        {
+          "health": "failing",
+          "name": "sdb",
+          "size": 3.5
+        },
+        {
+          "health": "failing",
+          "name": "sdc",
+          "size": 1
+        }
+      ],
+      "name": "group_by",
+      "operations": [
+        {
+          "key": "health",
+          "op": "group_by"
+        },
+        {
+          "op": "keys"
+        }
+      ],
+      "outcome": {
+        "value": [
+          "failing",
+          "ok"
+        ]
+      }
+    },
+    {
+      "input": [
+        {
+          "state": "up"
+        },
+        {
+          "state": "down"
+        },
+        {
+          "state": "up"
+        }
+      ],
+      "name": "count_by",
+      "operations": [
+        {
+          "key": "state",
+          "op": "count_by"
+        }
+      ],
+      "outcome": {
+        "value": {
+          "down": 1,
+          "up": 2
+        }
+      }
+    },
+    {
+      "input": "sda",
+      "name": "a list operation on text",
+      "operations": [
+        {
+          "key": "state",
+          "op": "count_by"
+        }
+      ],
+      "outcome": {
+        "error": "operation 1 (count_by): count_by takes a list and got text"
+      }
+    },
+    {
+      "input": "nas,router",
+      "name": "upper over a split text",
+      "operations": [
+        {
+          "args": [
+            ","
+          ],
+          "op": "split"
+        },
+        {
+          "op": "upper"
+        }
+      ],
+      "outcome": {
+        "value": [
+          "NAS",
+          "ROUTER"
+        ]
+      }
+    },
+    {
+      "input": [
+        1.26,
+        null,
+        -2
+      ],
+      "name": "round and abs over a list",
+      "operations": [
+        {
+          "args": [
+            1
+          ],
+          "op": "round"
+        },
+        {
+          "op": "abs"
+        }
+      ],
+      "outcome": {
+        "value": [
+          1.3,
+          null,
+          2
+        ]
+      }
+    },
+    {
+      "input": [
+        "nas",
+        3
+      ],
+      "name": "upper over a mixed list",
+      "operations": [
+        {
+          "op": "upper"
+        }
+      ],
+      "outcome": {
+        "error": "operation 1 (upper): upper takes text and got a number at position 1"
+      }
+    },
+    {
+      "input": [
+        "a",
+        "b"
+      ],
+      "name": "length of a list stays whole",
+      "operations": [
+        {
+          "op": "length"
+        }
+      ],
+      "outcome": {
+        "value": 2
+      }
+    },
+    {
+      "input": [
+        " nas ",
+        " router "
+      ],
+      "name": "each through a chain",
+      "operations": [
+        {
+          "op": "each",
+          "operations": [
+            {
+              "op": "trim"
+            },
+            {
+              "op": "upper"
+            },
+            {
+              "args": [
+                "R",
+                "r"
+              ],
+              "op": "replace"
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "value": [
+          "NAS",
+          "rOUTEr"
+        ]
+      }
+    },
+    {
+      "input": [
+        [
+          1,
+          2
+        ],
+        [
+          3
+        ]
+      ],
+      "name": "each with map and join",
+      "operations": [
+        {
+          "op": "each",
+          "operations": [
+            {
+              "op": "map",
+              "to": "{{item}}{{index}}"
+            },
+            {
+              "args": [
+                "-"
+              ],
+              "op": "join"
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "value": [
+          "10-21",
+          "30"
+        ]
+      }
+    },
+    {
+      "input": [
+        [
+          1,
+          5
+        ],
+        [
+          7,
+          2
+        ]
+      ],
+      "name": "each with a nested filter",
+      "operations": [
+        {
+          "op": "each",
+          "operations": [
+            {
+              "op": "filter",
+              "where": {
+                "left": "{{item}}",
+                "op": ">",
+                "right": "3"
+              }
+            },
+            {
+              "op": "length"
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "value": [
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "input": [
+        "1",
+        "x"
+      ],
+      "name": "a failing nested operation",
+      "operations": [
+        {
+          "op": "each",
+          "operations": [
+            {
+              "op": "number"
+            }
+          ]
+        }
+      ],
+      "outcome": {
+        "error": "operation 1.1 (number): number cannot read \"x\" as a number"
+      }
+    }
+  ]
+}

@@ -172,3 +172,15 @@ it("automations while on show no module notice", () => {
   renderWith(apiSamples.automations);
   expect(screen.queryByText(/The Automations module is off/)).not.toBeInTheDocument();
 });
+
+it("the journal of one workflow asks for its runs", async () => {
+  const fetch = vi.fn(async (path: string) =>
+    path.startsWith("/api/workflows") ? jsonResponse(apiSamples.workflows) : path.startsWith("/api/webhooks") ? jsonResponse(apiSamples.webhooks) : jsonResponse(apiSamples.automationRuns),
+  );
+  vi.stubGlobal("fetch", fetch);
+  renderWith(apiSamples.automations);
+  screen.getByRole("combobox", { name: "Show runs of" }).focus();
+  await userEvent.keyboard("{Enter}");
+  await userEvent.click(await screen.findByRole("option", { name: "Revive a service" }));
+  await waitFor(() => expect(fetch.mock.calls.map(([path]) => path)).toContain("/api/automations/runs?workflow=revive"));
+});
