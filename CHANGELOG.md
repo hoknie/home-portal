@@ -8,6 +8,7 @@ The versions follow [Semantic Versioning](https://semver.org/).
 
 ### Features
 
+- Added variables to value fields ([ed03b92](https://github.com/hoknie/home-portal/commit/ed03b9265cb60c923f219f214b0d598d7dbcefe0))
 - Improved workflow ui and vars setters ([7d742f5](https://github.com/hoknie/home-portal/commit/7d742f58259533cffaac9dc2301293a0a7a2cf83))
 - Added breadcrumbs ([a461ca9](https://github.com/hoknie/home-portal/commit/a461ca90f2d5d29cbcb0d025d2688c90abe64a99))
 - Added workflows ([a7f5c5e](https://github.com/hoknie/home-portal/commit/a7f5c5e007c9b9e1466af81f1d7f4190b7fd50bb))
@@ -15,6 +16,10 @@ The versions follow [Semantic Versioning](https://semver.org/).
 ### Dependencies
 
 - Bump base64 from 0.22.1 to 0.23.1 ([a33d67f](https://github.com/hoknie/home-portal/commit/a33d67f883249c7fe6220a773b10ca287c8470ac))
+
+### Other
+
+- Changelog updated ([80fd2ad](https://github.com/hoknie/home-portal/commit/80fd2ad5b1dea768f763dfa216c451e1730661ac))
 
 [Full diff](https://github.com/hoknie/home-portal/compare/v0.1.7...HEAD)
 
