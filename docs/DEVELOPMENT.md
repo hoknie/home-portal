@@ -2,7 +2,8 @@
 
 home-portal is one process: a Rust server (axum + tokio, a Cargo workspace) that serves a
 Next.js static export from a folder shipped beside the binary. For installing and configuring
-the portal, see [README.md](README.md).
+the portal, see [README.md](../README.md), [INSTALL.md](INSTALL.md) and
+[CONFIGURATION.md](CONFIGURATION.md).
 
 ## Requirements
 

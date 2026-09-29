@@ -288,8 +288,10 @@ pub trait Feature: Send + Sync {
 - **The interface is a fallback after the `/api` 404** (`portal_web::serve`), so an unknown endpoint
   never receives `index.html` with a 200. It tries the exact file, then `path/index.html`; a request
   is a missing asset (404) only when its last path segment ends in a **known file extension** —
-  "contains a dot" misroutes hostnames and addresses in route parameters — and everything else gets
-  the entry page. `_next/static/` is cached immutably, HTML with `no-cache`. A binary built without
+  "contains a dot" misroutes hostnames and addresses in route parameters. Everything else gets the
+  page of its nearest folder that has one (`controllers/serve.rs#nearest_page`, so
+  `/admin/workflows/revive/history/42/` gets `admin/workflows/index.html`, whose screen reads the rest
+  of the path), and the entry page when no folder above it has a page. `_next/static/` is cached immutably, HTML with `no-cache`. A binary built without
   the interface answers 503 saying so.
 - **The public half is explicit.** `portal-public` answers `/api/public/portal` from two ports the
   root adapts (`adapters/public_services.rs`, `adapters/public_layout.rs`), with response types of
@@ -740,6 +742,36 @@ too.
 - **The trace rides on the run.** `ActiveRun` holds a live `Trace` the runner appends to; `RunRecord`
   and `StoredRun` gain optional `workflow` and `trace` (200 entries, the rest counted), so old
   journal lines still load. The run journal and the workflow pages draw it as a timeline.
+- **Script output.** A `script` entry keeps `Streams` (`types/progress/streams.rs`): standard output
+  and standard error apart, each a `Tail` with its true byte count, and the command (the script and
+  its rendered arguments), all masked for secrets in `runner.rs`. `Trace::finish` keeps each
+  stream's last 16 KiB within 128 KiB per run; past that an entry keeps 1 KiB of each and sets
+  `budget_reached`. `output` stays for `http` bodies and for old records, which load unchanged. A
+  failed or timed-out script's detail adds the last non-empty line of standard error, else of
+  standard output (`helpers/terminal_line.rs#last_line`, the Rust twin of `terminalText`), taken
+  from the full tail before the budget. On the web, `TraceEntryView` shows "Details" on script
+  entries, in the journal and in the editor's run panel alike; it opens
+  `entities/automation/ui/trace/script-log-dialog.tsx`: the command quoted by
+  `shared/lib/shell-quote` (also the automation builder's preview), outcome, exit code, duration, and
+  both streams through `RunOutput`, or an old entry's single output.
+- **Live runs without push.** A running run is polled every second (`ACTIVE_RUNS_MILLISECONDS`);
+  nothing is pushed. `Frame.entry` names the trace entry of the running step, and the steps that wait
+  (`wait`, `http`, `script`, `probe`, `notify`, a waiting `automation`) call
+  `WorkflowRunner::publish` before waiting. It copies the values collected so far
+  (`rendered::snapshot`), masked, onto the running entry through `Trace::progress`, and for a `wait`
+  it also records `wait_seconds`. `Trace::finish` still replaces them with the full, bounded log.
+  `TraceEntryResponse::of(entry, now)` answers a running entry's duration as the time since it
+  started. The web ticks between answers (`widgets/workflow-editor/model/live-time.ts`): elapsed time
+  is the answer's duration plus the time since `dataUpdatedAt`, so the two clocks never meet. A
+  WebSocket or SSE channel was rejected: it would add a second authenticated path through restarts
+  and Caddy, for under a second of gain.
+- **Scripts that may fail.** `script` has `fail_on_error` (default `true`), as `http` does. With
+  `false`, a non-zero exit is a success that keeps `exit_code`, the streams and the detail with the
+  last line, and logs "tolerated". A timeout still fails. A boolean field set back to its catalogue
+  default leaves the file (`step-form.tsx`); `script.fail_on_error` is shown inverted as "Continue the
+  run when the script fails" (`INVERTED_FIELDS`), off by default. The appended error line is cut to
+  120 characters; the trace timeline shows a step's detail on one line and its values and log lines
+  on at most two, each whole on hover.
 - **The interface rewrites `steps` as a whole.** `repositories/workflows.rs` sets the entry's own keys
   keeping their decor, as for automations, and replaces `steps` with freshly built arrays of tables
   (`[[workflows.steps.then]]`, …); `branches` stay inline. Comments inside `steps` are lost, comments
@@ -770,10 +802,43 @@ too.
   - `model/templates.ts` and `ui/templates-gallery.tsx`: the starter templates.
 
   `widgets/workflow-editor` draws the diagram with `@xyflow/react` (loaded by `next/dynamic` on the
-  editor pages only), with an inspector (a side panel, or a bottom sheet on a phone), a palette, a
-  problems panel, undo and redo, a runs panel (`GET /api/automations/runs?workflow=<id>`), and the run drawn as a live path: highlighted flowing arrows, order numbers and dimmed unreached nodes. `shared/ui/template-input` is the field with
+  workflow pages only). It has two screens that share `ui/canvas-area.tsx` and the column on the
+  right of the canvas (`ui/panels/side-column.tsx`):
+  - `ui/workflow-page.tsx` with `ui/workflow-viewer.tsx`: the workflow's page, read-only.
+    `ViewToolbar` offers "Run", "History", "Edit" and "Delete" (`entities/workflow/ui/delete-workflow-button.tsx`). The
+    column holds the run list (`RunsPanel`, `GET /api/automations/runs?workflow=<id>`) on `history/`,
+    or the run panel of `history/<run>/`, whose run is drawn on the canvas as a live path (highlighted
+    flowing arrows, order numbers, dimmed unreached nodes). Both offer "Close" back to `<id>/`, which
+    has no column and draws no run. Choosing a node opens `ui/inspector/step-card.tsx`, the step read
+    back from the catalogue with no inputs, in that column; on a run's address it sits folded as
+    "Settings" in the run panel. Running nodes carry `ui/nodes/live-badge.tsx` (a countdown ring on a
+    `wait`, elapsed time otherwise). Nodes that ran show their templates' values as chips
+    (`model/values-on-nodes.ts#withValues`, marking whole-field matches inside the summary), with the
+    "Values | Templates" switch (`ui/canvas/values-switch.tsx`);
+  - `ui/workflow-editor-screen.tsx` with `ui/workflow-editor.tsx`: the edit and new pages.
+    `EditToolbar` offers undo, redo, "Problems", "Cancel" and "Save". The column holds the
+    inspector (a bottom sheet on a phone) or the problems list.
+
+  Both load through `model/use-workflow-data.ts`. `useEditorState` takes `readOnly` and the run to
+  show from its screen; it has no mode of its own. `shared/ui/template-input` is the field with
   highlighting and completion, also used by the automation builder. `widgets/workflows` is the list,
   and the trace timeline sits in `entities/automation` beside the run details.
+
+  **Addresses.** `app/admin/workflows/workflows-route.tsx` hosts every workflow address. It is the
+  page of both `/admin/workflows/` and `/admin/workflows/new/`, and the portal serves it for
+  `/admin/workflows/<id>/…` as their nearest page (§ on serving above). After mount it reads the
+  path with `shared/lib/navigation#useAddress` and picks, through
+  `entities/workflow/model/address.ts#workflowAddressOf`, one of:
+  - the list;
+  - the editor (`new`, `<id>/edit/`);
+  - the workflow's page (`<id>/`, `<id>/history/`, `<id>/history/<run>/`).
+
+  It also keeps the run last shown for the editor's suggestions. Moves between these addresses go
+  through `pushAddress` (native `history.pushState`) and `shared/ui/address-link`, never through
+  `router.push`, which would fetch a route payload the export does not have. `useLeaveGuard`
+  registers with `useAddress`, so an unsaved edit asks before any such move, "Back" included.
+  `/admin/workflows/edit/?id=` is a redirect to `<id>/edit/`, which is why `new` and `edit` are
+  reserved workflow ids. `pnpm dev` gets the same fallback from a `rewrites().fallback` entry.
 
 ### 6.12. Notifications
 

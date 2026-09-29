@@ -1,160 +1,37 @@
 # home-portal
 
-A self-hosted start page for a home network. It shows whether your services are up, how they
-have behaved over the last 30 days, and lets you manage them — all from one small program.
+A self-hosted start page for a home network. It shows whether your services are up and how they
+have behaved over the last 30 days, and lets you manage them from the browser — all from one small
+program with no database.
 
-- **Status of every service** — HTTP, TCP and ICMP probes, uptime and latency history over
-  30 days, a diagnosis when something is down (also from the command line:
-  `home-portal probe <id|url>`), and Telegram notifications.
-- **Service icons** — from Lucide, the [dashboard-icons](https://github.com/homarr-labs/dashboard-icons)
-  catalogue, a URL, a file, or found on the service's own page; the portal fetches and caches
-  them, so a visitor's browser never contacts a private address.
-- **A home page you arrange** — sections and widgets (service tiles, status summary, host
-  metrics, weather, calendar) in quarter-to-full widths, edited in the browser.
-- **Environments** — the same service reachable at one address at home and another over VPN;
-  visitors from the internet get a public page with only what is marked `public`. A visitor
-  at home can look at the portal as another environment sees it.
-- **Publishing through Caddy** — the portal downloads, runs and configures Caddy, with
-  Let's Encrypt, Caddy's own authority or your certificates, optionally behind the portal's
-  sign-in.
-- **Local DNS** — an authoritative server for the portal's own names (`portal.home`,
-  `jellyfin.home`), answering each network with the proxy's address in it, over UDP, TCP,
-  DNS over TLS and DNS over HTTPS; never a resolver for anything else. See [Local DNS](#local-dns).
-- **Sign-in** — users with argon2id passwords; sessions survive a restart, and one sign-in covers
-  every host published through Caddy. Repeated wrong passwords lock the address for a minute.
-- **Automations and webhooks** — run your own scripts on a cron schedule, on portal events
-  (a service goes down, someone signs in, the configuration changes…), by hand, or when another
-  system calls `POST /webhook/<id>`.
-- **One TOML file** — the interface edits it in place and keeps your comments; secrets live in
-  a separate file of mode 0600.
-- **Network settings from the browser** — the address and port change on the settings page,
-  and the portal restarts itself to apply them.
+- **[Services and their status](docs/features/services-and-status.md)** — HTTP, TCP and ICMP checks,
+  30 days of uptime and latency, a plain-words diagnosis when something is down, and icons.
+- **[A home page you arrange](docs/features/home-page.md)** — sections and widgets (service tiles,
+  status summary, host metrics, weather, calendar), laid out in the browser.
+- **[Environments](docs/features/environments.md)** — the right address at home, over VPN or from the
+  internet, and a public page with only what you mark public.
+- **[Reverse proxy](docs/features/reverse-proxy.md)** — publish services under their own names with
+  HTTPS through Caddy, which the portal downloads and runs, optionally behind its sign-in.
+- **[Local DNS](docs/features/local-dns.md)** — names like `jellyfin.home` that resolve on your
+  networks without editing your router's records.
+- **[Users and sign-in](docs/features/users-and-sign-in.md)** — who may manage the portal.
+- **[Automations](docs/features/automations.md)**, **[webhooks](docs/features/webhooks.md)** and
+  **[workflows](docs/features/workflows.md)** — run your own scripts on a schedule, on portal events or
+  when another system calls, and chain steps on a canvas you can watch while they run.
+- **[Notifications](docs/features/notifications.md)** — Telegram messages when a service changes state.
+- **[Scripts](docs/features/scripts.md)**, **[network settings](docs/features/network-and-restart.md)**
+  and **[modules](docs/features/modules.md)** — where your scripts live, the portal's own address, and
+  switching the optional parts on and off.
 
-Building it yourself or working on the code: see [DEVELOPMENT.md](DEVELOPMENT.md).
+The settings are plain TOML files that the interface edits in place, keeping your comments.
 
-## Install
+- **Install:** [docs/INSTALL.md](docs/INSTALL.md) — packages for macOS, Debian/Ubuntu and RHEL/Fedora,
+  and archives.
+- **Configure:** [docs/CONFIGURATION.md](docs/CONFIGURATION.md) — how the files fit together.
+- **All features:** [docs/features/](docs/features/README.md).
+- **Develop:** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) — building it yourself and working on the code.
 
-Every release carries a package and an archive per platform, and a `SHA256SUMS` over all of
-them. Check what you downloaded first:
-
-```sh
-sha256sum --check --ignore-missing SHA256SUMS      # shasum -a 256 -c on macOS
-```
-
-| File | For |
-|---|---|
-| `home-portal_<version>.macos.universal.pkg` | macOS 11 or later, Apple silicon and Intel: installs and starts everything |
-| `home-portal_<version>.debian.amd64.deb` / `.debian.arm64.deb` | Debian, Ubuntu, Raspberry Pi OS (64-bit) and relatives |
-| `home-portal_<version>.el.x86_64.rpm` / `.el.aarch64.rpm` | RHEL, AlmaLinux, Rocky, Fedora and relatives |
-| `home-portal_<version>.linux.x86_64.tar.gz` / `.linux.aarch64.tar.gz` | Any Linux, to place by hand |
-| `home-portal_<version>.macos.universal.tar.gz` | macOS, to place by hand |
-
-### macOS
-
-Open the `.pkg`. It installs the portal and sets it up for the user signed in:
-- the configuration in `~/.config/home-portal/home-portal.toml`;
-- the user **admin**, with a random password in `~/.config/home-portal/initial-password`;
-- a LaunchAgent that starts the portal at every login.
-
-Then open http://127.0.0.1:8080. An older installation in
-`~/Library/Application Support/home-portal` is moved to `~/.config/home-portal`, and a link is
-left at the old place.
-
-Another user of the Mac sets the portal up with `/usr/local/libexec/home-portal/setup`.
-`sudo /usr/local/libexec/home-portal/uninstall` removes it; add `--purge` to delete the
-configuration and data too.
-
-### Debian, Ubuntu, RHEL and relatives
-
-```sh
-sudo apt install ./home-portal_<version>.debian.amd64.deb     # or
-sudo dnf install ./home-portal_<version>.el.x86_64.rpm
-sudo cat /etc/home-portal/initial-password                   # the password of admin
-```
-
-The package runs the portal as the systemd service `home-portal`, under a system user of the
-same name, on http://127.0.0.1:8080:
-- the configuration is `/etc/home-portal/home-portal.toml`, with the user **admin**;
-- the data is kept in `/var/lib/home-portal`;
-- scripts for automations go into `/var/lib/home-portal/scripts` (owned by root, 0755).
-
-An upgrade keeps the configuration, and so does removing the package; `apt purge` deletes it.
-
-### From the archive
-
-```sh
-tar -xzf home-portal_<version>.linux.x86_64.tar.gz
-cd home-portal_<version>.linux.x86_64
-mkdir -p ~/.config/home-portal
-cp config/home-portal.example.toml ~/.config/home-portal/home-portal.toml
-./home-portal password-hash          # type a password, then add the hash as a [[users]] entry
-./home-portal
-```
-
-```toml
-[[users]]
-name = "admin"
-password_hash = "$argon2id$..."
-```
-
-Keep the `web/` folder beside the binary: it is the interface. Without it the portal still
-runs, but its pages answer 503. The archive also holds `examples/` and systemd or launchd files
-for the portal and Caddy.
-
-## Local DNS
-
-The portal can answer DNS for the names it publishes, so `portal.home` and `jellyfin.home` resolve
-without editing your router's records by hand. Each network gets the proxy's address in that network
-(at home the LAN address, over the VPN the VPN address). Only your own environments get answers:
-everyone else, and every name outside your zones, is refused, and nothing is forwarded to other
-servers.
-
-1. On **Management → Proxy**, open the DNS card, add your zone (for example `home`) and check the
-   answers for each environment.
-2. Turn the server on. It listens on port 53; on Linux that needs
-   `AmbientCapabilities=CAP_NET_BIND_SERVICE` through `systemctl edit home-portal`, or pick another
-   port.
-3. Tell your router to forward the zone to the portal: in dnsmasq or Pi-hole
-   `server=/home/192.168.1.60`, in a FRITZ!Box, pfSense or OPNsense a domain override. For a VPN, set
-   the portal as its DNS server.
-
-Phones can use DNS over TLS (the host shown on the card, for Android's Private DNS) or DNS over HTTPS
-(`https://<portal host>/dns-query`). Android's Private DNS only accepts a certificate the phone
-trusts, so use a host with ACME there.
-
-## Configuration
-
-Everything is set in one TOML file. Start from
-[`config/home-portal.example.toml`](config/home-portal.example.toml), which explains every
-section in its comments. [`examples/`](examples/README.md) has a complete setup split over
-several files, ready-made entries for common home software (Jellyfin, Plex, Home Assistant,
-Pi-hole, Proxmox…), automations with a sample script, and launchd and systemd files.
-
-| Setting | What it does |
-|---|---|
-| `HOME_PORTAL_CONFIG` | Path to the main file; by default `~/.config/home-portal/home-portal.toml` (or `$XDG_CONFIG_HOME/home-portal/home-portal.toml`) |
-| `HOME_PORTAL_ADDRESS=ip:port` | Overrides `[network]` address and port |
-| `HOME_PORTAL_WEB` | The interface folder, when it is not beside the binary or in `../share/home-portal/web` |
-| `[files]` | Where each part lives: `services.toml`, `dashboard.toml`, `automations.toml`, `webhooks.toml`, `users.toml`, `notifications.toml`, `proxy.toml`, `dns.toml`, `secrets.toml` and `workflows/` (one file per workflow) beside the main file unless set; the portal never rewrites these paths |
-| `[secrets]` | Tokens and passwords, in a file of mode 0600 (see [`config/secrets.example.toml`](config/secrets.example.toml)); settings name a key, never the value |
-| `[storage]` | Where the portal keeps what it writes, see below |
-
-### Scripts for automations
-
-Scripts come only from the scripts directory, never from the interface, and run without a
-shell. The directory and every script must be `0755` or stricter and owned by the portal's
-user or root:
-
-```sh
-chmod 755 ~/.config/home-portal/scripts ~/.config/home-portal/scripts/*.sh
-```
-
-A script lies directly in the directory or one subfolder down; hidden paths are ignored. Each
-run gets the event's fields as arguments (`args = ["--", "{{service.id}}"]`), as `PORTAL_*`
-variables and as JSON on standard input. The automations page shows runs as they happen,
-with their output, and can stop them.
-
-# Screenshots
+## Screenshots
 
 <details>
 <summary>Main</summary>

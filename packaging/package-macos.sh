@@ -70,7 +70,7 @@ stage() {
     install -m 0644 "$ROOT/config/home-portal.example.toml" "$tree/usr/local/share/home-portal/home-portal.example.toml"
     install_interface "$tree/usr/local/share/home-portal/web"
     install -m 0644 "$ROOT/config/secrets.example.toml" "$tree/usr/local/share/home-portal/secrets.example.toml"
-    install -m 0644 "$ROOT/README.md" "$tree/usr/local/share/doc/home-portal/README.md"
+    install_docs "$tree/usr/local/share/doc/home-portal"
     install -m 0644 "$ROOT/LICENSE" "$tree/usr/local/share/doc/home-portal/LICENSE"
     cp -R "$ROOT/examples" "$tree/usr/local/share/doc/home-portal/examples"
     find "$tree/usr/local/share/doc/home-portal/examples" -type d -exec chmod 0755 {} +

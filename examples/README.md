@@ -1,6 +1,7 @@
 # Examples
 
-How to build, run and configure the portal as a whole: [the README](../README.md).
+How to build, run and configure the portal as a whole: [the README](../README.md). What each part does
+and its main settings: [the feature pages](../docs/features/README.md).
 
 Every file here is loaded by `cargo test` (`bin/home-portal/tests/examples.rs`) through every
 validator of the portal, so an example that stops working fails the build.

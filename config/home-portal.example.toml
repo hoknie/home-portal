@@ -2,8 +2,8 @@
 # Copy to ~/.config/home-portal/home-portal.toml, the default place ($XDG_CONFIG_HOME/home-portal
 # when XDG_CONFIG_HOME is set), or point HOME_PORTAL_CONFIG at your copy (`just run` reads
 # config/home-portal.toml beside this file). The web interface edits the file in place and keeps
-# your comments. How to install and configure the portal: ../README.md; how to build it:
-# ../DEVELOPMENT.md.
+# your comments. Start at ../README.md; installing: ../docs/INSTALL.md; how the files fit
+# together: ../docs/CONFIGURATION.md; every feature: ../docs/features/README.md.
 #
 # More examples in ../examples/: a complete setup split over several files, ready-made
 # entries for Jellyfin, Plex, Home Assistant, Pi-hole, Proxmox and more, a sectioned

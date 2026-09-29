@@ -32,6 +32,14 @@ install_interface() {
 # Writes $RELEASE/home-portal_<version>.<platform>.<arch>.tar.gz holding the binary, the
 # interface in web/, the configuration examples, the examples folder and the deploy files beside
 # the binary.
+install_docs() {
+    local dir="$1"
+    install -d -m 0755 "$dir/docs/features"
+    install -m 0644 "$ROOT/README.md" "$dir/README.md"
+    install -m 0644 "$ROOT/docs/INSTALL.md" "$ROOT/docs/CONFIGURATION.md" "$dir/docs/"
+    install -m 0644 "$ROOT"/docs/features/*.md "$dir/docs/features/"
+}
+
 archive() {
     local binary="$1" platform="$2" arch="$3"
     shift 3
@@ -51,7 +59,7 @@ archive() {
     for deploy in "$@"; do
         install -m 0644 "$ROOT/examples/deploy/$deploy" "$tree/$deploy"
     done
-    install -m 0644 "$ROOT/README.md" "$tree/README.md"
+    install_docs "$tree"
     install -m 0644 "$ROOT/LICENSE" "$tree/LICENSE"
 
     mkdir -p "$RELEASE"

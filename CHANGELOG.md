@@ -8,6 +8,8 @@ The versions follow [Semantic Versioning](https://semver.org/).
 
 ### Features
 
+- Added to workflow realtime trace view ([3dbe6a9](https://github.com/hoknie/home-portal/commit/3dbe6a90ac0c4a62ba648a123bbd2925a440a460))
+- Updated ux for workflow ([6e909c9](https://github.com/hoknie/home-portal/commit/6e909c90a54c5512c643cc20633737d5be0b87aa))
 - Separated config files ([69f59d9](https://github.com/hoknie/home-portal/commit/69f59d972d16174dbf8b6883680ce813daa37499))
 - Added support for script edit from ui ([3c87c26](https://github.com/hoknie/home-portal/commit/3c87c260f6b480790dabf40283c135075af42987))
 - Added variables to value fields ([ed03b92](https://github.com/hoknie/home-portal/commit/ed03b9265cb60c923f219f214b0d598d7dbcefe0))
