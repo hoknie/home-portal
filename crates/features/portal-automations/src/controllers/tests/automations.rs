@@ -138,7 +138,7 @@ async fn a_write_needs_the_current_revision() {
     assert_eq!(status, StatusCode::CREATED);
     assert_ne!(etag.unwrap(), current);
     assert_eq!(body["when"]["cron"], "0 3 * * *");
-    let text = fs::read_to_string(api.folder.path().join("home-portal.toml")).unwrap();
+    let text = fs::read_to_string(api.folder.path().join("automations.toml")).unwrap();
     assert!(text.contains("id = \"nightly\""));
 }
 
@@ -193,7 +193,7 @@ async fn an_edit_keeps_the_comments_and_the_untouched_keys() {
     )
     .await;
     assert_eq!(status, StatusCode::OK);
-    let text = fs::read_to_string(api.folder.path().join("home-portal.toml")).unwrap();
+    let text = fs::read_to_string(api.folder.path().join("automations.toml")).unwrap();
     assert_eq!(
         text,
         FILE.replace("title = \"Restart\"", "title = \"Restart Jellyfin\"")

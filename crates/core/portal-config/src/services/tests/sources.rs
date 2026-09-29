@@ -28,7 +28,7 @@ fn a_syntax_error_is_refused_with_its_file_and_line() {
 }
 
 #[test]
-fn services_from_an_included_file_are_listed_with_the_others() {
+fn services_from_the_main_file_are_moved_after_those_already_in_their_home() {
     let portal = Portal::with(&[
         (
             "home-portal.toml",
@@ -46,8 +46,9 @@ fn services_from_an_included_file_are_listed_with_the_others() {
         .iter()
         .map(|table| table["id"].as_str().unwrap())
         .collect();
-    assert_eq!(ids, vec!["a", "b", "c"]);
+    assert_eq!(ids, vec!["b", "c", "a"]);
     assert!(snapshot.document.get("include").is_none());
+    assert!(!portal.text("home-portal.toml").contains("[[services]]"));
 }
 
 #[test]
@@ -116,7 +117,7 @@ fn nested_tables_from_several_files_merge_and_their_entries_concatenate() {
             .unwrap()
             .file_name()
             .unwrap(),
-        "widgets.toml"
+        "dashboard.toml"
     );
 }
 
@@ -129,20 +130,27 @@ fn every_entry_knows_the_file_it_came_from() {
         ),
         ("services.toml", "[[services]]\nid = \"b\"\n"),
     ]);
+    super::support::rewrite(
+        &portal.path("home-portal.toml"),
+        &format!(
+            "{}\n[[services]]\nid = \"by-hand\"\n",
+            portal.text("home-portal.toml")
+        ),
+    );
     let snapshot = portal.store.read();
     assert_eq!(
         snapshot.origins.of("services", 0).unwrap(),
-        portal.path("home-portal.toml")
+        portal.path("services.toml")
     );
     assert_eq!(
-        snapshot.origins.of("services", 1).unwrap(),
-        portal.path("services.toml")
+        snapshot.origins.of("services", 2).unwrap(),
+        portal.path("home-portal.toml")
     );
     assert_eq!(
         snapshot.origins.table("network").unwrap(),
         portal.path("home-portal.toml")
     );
-    assert_eq!(snapshot.origins.count("services"), 2);
+    assert_eq!(snapshot.origins.count("services"), 3);
 }
 
 #[test]

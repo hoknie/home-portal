@@ -1,4 +1,4 @@
-use portal_config::{Revision, Revisioned};
+use portal_config::{Revision, Revisioned, Section};
 use portal_feature::{ApiError, FieldError};
 use serde_json::Value;
 
@@ -32,7 +32,7 @@ impl ChangeChannel {
             .ok_or(ApiError::NotFound(Self::UNKNOWN))?;
         let configuration = &self.channels.configuration;
         let target = channel_origin(&configuration.read(), name)
-            .unwrap_or_else(|| configuration.writes_to());
+            .unwrap_or_else(|| configuration.home_of(Section::Notifications));
         let channel = entry.channel.clone();
         let (_, snapshot) = configuration
             .update(&target, revision, |document| {

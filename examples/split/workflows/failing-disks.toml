@@ -1,0 +1,26 @@
+# Report the failing disks of the NAS: read its disk list, keep the unhealthy ones, and send
+# their names on one line. A transform applies its operations in order; inside filter and
+# map, {{item}} is the current element and {{index}} its position.
+id = "failing-disks"
+title = "Failing disks"
+
+[[steps]]
+id = "list"
+kind = "http"
+url = "http://nas.lan/api/disks"
+response_sample = '{"disks": [{"name": "sda", "health": "ok"}, {"name": "sdb", "health": "failing"}]}'
+
+[[steps]]
+id = "bad"
+kind = "transform"
+input = "{{steps.list.json.disks}}"
+operations = [
+  { op = "filter", where = { left = "{{item.health}}", op = "!=", right = "ok" } },
+  { op = "pluck", args = ["name"] },
+  { op = "join", args = [", "] },
+]
+
+[[steps]]
+id = "tell"
+kind = "notify"
+text = "Failing disks: {{steps.bad.value | default(\"none\")}} ({{steps.list.json.disks | length}} in all)"

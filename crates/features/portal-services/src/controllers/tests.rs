@@ -292,7 +292,7 @@ async fn a_publication_saved_through_the_api_is_reported_with_its_defaults_and_w
         serde_json::json!({"host":"media.example.com","upstream":null,"environments":["internet"],"auth":["internet"],"tls":null,"upstream_verify":true})
     );
     assert!(
-        fs::read_to_string(&path)
+        fs::read_to_string(path.with_file_name("services.toml"))
             .unwrap()
             .contains("proxy = { host = \"media.example.com\", auth = [\"internet\"] }\n")
     );

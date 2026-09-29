@@ -5,9 +5,9 @@ use serde_json::{Value, json};
 
 use super::automations::{Api, api, get, send, write};
 use crate::features::AutomationsFeature;
-use crate::features::tests::{eventually, start};
+use crate::features::tests::start;
 
-const FILE: &str = r#"[modules]
+pub const FILE: &str = r#"[modules]
 workflows = true
 
 # Brings a service back.
@@ -40,7 +40,7 @@ workflow = "revive"
 inputs = { service = "nas" }
 "#;
 
-fn ready() -> Api {
+pub fn ready() -> Api {
     let api = api(FILE);
     start(&api.feature);
     api
@@ -54,10 +54,35 @@ async fn revision(api: &Api) -> String {
 }
 
 fn text(api: &Api) -> String {
-    fs::read_to_string(api.folder.path().join("home-portal.toml")).unwrap()
+    workflow_text(api, "revive")
 }
 
-fn fields(body: &Value) -> Vec<String> {
+fn workflow_text(api: &Api, id: &str) -> String {
+    fs::read_to_string(api.folder.path().join(format!("workflows/{id}.toml"))).unwrap()
+}
+
+fn every_file(api: &Api) -> Vec<(String, String)> {
+    let mut paths = vec![
+        api.folder.path().join("home-portal.toml"),
+        api.folder.path().join("automations.toml"),
+    ];
+    let mut workflows: Vec<_> = fs::read_dir(api.folder.path().join("workflows"))
+        .unwrap()
+        .flatten()
+        .map(|entry| entry.path())
+        .collect();
+    workflows.sort();
+    paths.extend(workflows);
+    paths
+        .into_iter()
+        .map(|path| {
+            let text = fs::read_to_string(&path).unwrap_or_default();
+            (path.display().to_string(), text)
+        })
+        .collect()
+}
+
+pub fn fields(body: &Value) -> Vec<String> {
     body["errors"]
         .as_array()
         .unwrap()
@@ -140,12 +165,19 @@ async fn saving_a_tree_keeps_the_comment_above_the_entry_and_reads_back() {
     assert_eq!(status, StatusCode::OK, "{body}");
     assert_ne!(etag.unwrap(), current);
     let saved = text(&api);
-    assert!(saved.contains("# Brings a service back.\n[[workflows]]"));
-    assert!(saved.contains("title = \"Revive\" # shown in the list"));
-    assert!(saved.contains("[[workflows.steps.then]]"));
-    assert!(saved.contains("[[workflows.steps.then.body]]"));
-    assert!(saved.contains("[[workflows.steps.else]]"));
-    assert!(saved.contains("timeout_seconds = 600"));
+    assert!(
+        saved.starts_with("# Brings a service back.\nid = \"revive\""),
+        "{saved}"
+    );
+    assert!(
+        saved.contains("title = \"Revive\" # shown in the list"),
+        "{saved}"
+    );
+    assert!(saved.contains("[[steps.then]]"), "{saved}");
+    assert!(saved.contains("[[steps.then.body]]"), "{saved}");
+    assert!(saved.contains("[[steps.else]]"), "{saved}");
+    assert!(!saved.contains("[[workflows"), "{saved}");
+    assert!(saved.contains("timeout_seconds = 600"), "{saved}");
     let (_, _, listed) = send(&api, get(AutomationsFeature::WORKFLOWS)).await;
     let steps = &listed["workflows"][0]["steps"];
     assert_eq!(steps, &tree()["steps"]);
@@ -154,6 +186,7 @@ async fn saving_a_tree_keeps_the_comment_above_the_entry_and_reads_back() {
 #[tokio::test]
 async fn a_nested_error_is_answered_with_its_full_path() {
     let api = ready();
+    let before = every_file(&api);
     let current = revision(&api).await;
     let mut wrong = tree();
     wrong["steps"][1]["then"][0]["body"][0]["url"] = json!("ftp://x");
@@ -183,7 +216,7 @@ async fn a_nested_error_is_answered_with_its_full_path() {
     .await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(fields(&body), vec!["steps[1].else[0].reason"]);
-    assert_eq!(text(&api), FILE);
+    assert_eq!(every_file(&api), before);
 }
 
 #[tokio::test]
@@ -233,6 +266,7 @@ async fn a_new_workflow_is_appended_and_a_taken_id_is_refused() {
 #[tokio::test]
 async fn deleting_a_workflow_in_use_is_refused_naming_its_users() {
     let api = ready();
+    let before = every_file(&api);
     let current = revision(&api).await;
     let (status, _, body) = send(
         &api,
@@ -241,7 +275,7 @@ async fn deleting_a_workflow_in_use_is_refused_naming_its_users() {
     .await;
     assert_eq!(status, StatusCode::CONFLICT);
     assert!(body.as_str().unwrap().contains("nas-down"));
-    assert_eq!(text(&api), FILE);
+    assert_eq!(every_file(&api), before);
     let (status, _, body) = send(
         &api,
         write("DELETE", "/api/workflows/spare", Some(&current), ""),
@@ -250,90 +284,6 @@ async fn deleting_a_workflow_in_use_is_refused_naming_its_users() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["workflows"].as_array().unwrap().len(), 1);
     assert!(!text(&api).contains("spare"));
-}
-
-#[tokio::test]
-async fn running_answers_202_and_refuses_a_disabled_workflow_or_an_unknown_input() {
-    let api = ready();
-    let (status, _, body) = send(
-        &api,
-        write(
-            "POST",
-            "/api/workflows/revive/run",
-            None,
-            r#"{"inputs":{"service":"nas"}}"#,
-        ),
-    )
-    .await;
-    assert_eq!(status, StatusCode::ACCEPTED);
-    let run_id: u64 = body["run_id"].as_str().unwrap().parse().unwrap();
-    let sink = api.feature.state.sink.clone();
-    assert!(eventually(|| sink.journal.find(run_id).is_some()).await);
-    let run = sink.journal.find(run_id).unwrap();
-    assert_eq!(run.automation, "workflow:revive");
-    assert_eq!(run.workflow.as_deref(), Some("revive"));
-    assert_eq!(run.result.outcome, crate::types::Outcome::Succeeded);
-    let (status, _, _) = send(&api, write("POST", "/api/workflows/spare/run", None, "")).await;
-    assert_eq!(status, StatusCode::CONFLICT);
-    let (status, _, body) = send(
-        &api,
-        write(
-            "POST",
-            "/api/workflows/revive/run",
-            None,
-            r#"{"inputs":{"other":"x"}}"#,
-        ),
-    )
-    .await;
-    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
-    assert_eq!(fields(&body), vec!["inputs.other"]);
-    let (status, _, _) = send(&api, write("POST", "/api/workflows/nope/run", None, "")).await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
-}
-
-#[tokio::test]
-async fn running_while_the_module_is_off_is_a_conflict() {
-    let api = api(&FILE.replace("workflows = true", "workflows = false"));
-    let (status, _, body) = send(&api, write("POST", "/api/workflows/revive/run", None, "")).await;
-    assert_eq!(status, StatusCode::CONFLICT);
-    assert_eq!(body, "the workflows module is off");
-    let (status, _, _) = send(&api, get(AutomationsFeature::WORKFLOWS)).await;
-    assert_eq!(status, StatusCode::OK);
-}
-
-#[tokio::test]
-async fn the_catalogue_lists_kinds_operators_and_event_fields() {
-    let api = ready();
-    let (status, _, body) = send(&api, get(AutomationsFeature::WORKFLOW_CATALOGUE)).await;
-    assert_eq!(status, StatusCode::OK);
-    let http = body["kinds"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|kind| kind["name"] == "http")
-        .unwrap();
-    assert_eq!(http["group"], "actions");
-    assert!(
-        http["fields"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|field| field["name"] == "method" && field["type"] == "choice")
-    );
-    assert!(http["results"].as_array().unwrap().contains(&json!("json")));
-    assert!(
-        body["operators"]
-            .as_array()
-            .unwrap()
-            .contains(&json!({"name": "is-empty", "takes_right": false}))
-    );
-    assert!(
-        body["events"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|event| event["name"] == "manual")
-    );
 }
 
 #[tokio::test]

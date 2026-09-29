@@ -1,4 +1,4 @@
-use portal_config::{Revision, Revisioned};
+use portal_config::{Revision, Revisioned, Section};
 use portal_feature::ApiError;
 
 use super::ListNotifications;
@@ -23,8 +23,8 @@ impl ChangeRules {
         revision: &Revision,
     ) -> Result<Revisioned<NotificationsView>, ApiError> {
         let configuration = &self.channels.configuration;
-        let target =
-            rules_origin(&configuration.read()).unwrap_or_else(|| configuration.writes_to());
+        let target = rules_origin(&configuration.read())
+            .unwrap_or_else(|| configuration.home_of(Section::Notifications));
         let (_, snapshot) = configuration
             .update(&target, revision, |document| {
                 write_rules(document, &rules);

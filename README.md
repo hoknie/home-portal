@@ -135,9 +135,8 @@ Pi-hole, Proxmox…), automations with a sample script, and launchd and systemd 
 | `HOME_PORTAL_CONFIG` | Path to the main file; by default `~/.config/home-portal/home-portal.toml` (or `$XDG_CONFIG_HOME/home-portal/home-portal.toml`) |
 | `HOME_PORTAL_ADDRESS=ip:port` | Overrides `[network]` address and port |
 | `HOME_PORTAL_WEB` | The interface folder, when it is not beside the binary or in `../share/home-portal/web` |
-| `include = [...]` | Further files read after the main one, inside its directory |
+| `[files]` | Where each part lives: `services.toml`, `dashboard.toml`, `automations.toml`, `webhooks.toml`, `users.toml`, `notifications.toml`, `proxy.toml`, `dns.toml`, `secrets.toml` and `workflows/` (one file per workflow) beside the main file unless set; the portal never rewrites these paths |
 | `[secrets]` | Tokens and passwords, in a file of mode 0600 (see [`config/secrets.example.toml`](config/secrets.example.toml)); settings name a key, never the value |
-| `configuration.writes_to` | Which file the interface edits |
 | `[storage]` | Where the portal keeps what it writes, see below |
 
 ### Scripts for automations

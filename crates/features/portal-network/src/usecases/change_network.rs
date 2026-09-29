@@ -30,7 +30,7 @@ impl ChangeNetwork {
             .origins
             .table(SECTION)
             .map(Path::to_path_buf)
-            .unwrap_or_else(|| self.configuration.writes_to());
+            .unwrap_or_else(|| self.configuration.path().to_path_buf());
         let (_, snapshot) = self
             .configuration
             .update(&target, revision, |document| {

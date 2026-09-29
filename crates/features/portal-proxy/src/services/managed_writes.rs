@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use portal_config::{ConfigStore, Revision};
+use portal_config::{ConfigStore, Revision, Section};
 use portal_feature::ApiError;
 
 use crate::repositories::{SECTION, write_managed};
@@ -11,7 +11,7 @@ pub fn section_target(configuration: &ConfigStore) -> PathBuf {
         .origins
         .table(SECTION)
         .map(Path::to_path_buf)
-        .unwrap_or_else(|| configuration.writes_to())
+        .unwrap_or_else(|| configuration.home_of(Section::Proxy))
 }
 
 pub async fn store_managed(

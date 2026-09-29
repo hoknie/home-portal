@@ -1,0 +1,40 @@
+# Check a list of hosts: a typed list input with a default, a dictionary built from rows, the
+# names cleaned element by element, the report handed to a script through its environment and
+# its standard input, and an automation started with an event field of our own. Inputs may be
+# plain names or tables with type (text, number, boolean, list, object), default and description.
+id = "check-hosts"
+title = "Check hosts"
+inputs = [{ name = "hosts", type = "list", default = ["nas", "router"], description = "Hosts to check" }, "note"]
+
+[[steps]]
+id = "names"
+kind = "transform"
+input = "{{inputs.hosts | join(',')}}"
+operations = [
+  { op = "split", args = [","] },
+  { op = "each", operations = [{ op = "trim" }, { op = "upper" }] },
+]
+
+[[steps]]
+id = "report"
+kind = "set"
+variable = "report"
+object = { hosts = "{{steps.names.value}}", count = "{{inputs.hosts | length}}", note = "{{inputs.note | default('none')}}" }
+
+[[steps]]
+id = "log"
+kind = "script"
+script = "echo-event.sh"
+args = ["hosts"]
+env = { HOSTS = "{{steps.names.value | join(' ')}}" }
+stdin = "{{vars.report}}"
+
+# An automation step queues an automation as "Run now" would; its fields replace the event's.
+# With wait = true it waits for the outcome. A workflow cannot start the automation that
+# started it, and such chains stop at 4.
+[[steps]]
+id = "restart"
+kind = "automation"
+automation = "restart-jellyfin"
+fields = { "service.id" = "jellyfin" }
+wait = false

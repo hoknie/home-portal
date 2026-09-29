@@ -52,7 +52,7 @@ pub fn refuse_nested(path: &Path, document: &DocumentMut) -> Result<(), ConfigEr
     }
 }
 
-fn inside(directory: &Path, name: &str) -> bool {
+pub fn inside(directory: &Path, name: &str) -> bool {
     let candidate = Path::new(name);
     if candidate.is_absolute() {
         return false;

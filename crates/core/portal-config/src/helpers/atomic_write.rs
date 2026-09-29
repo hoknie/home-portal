@@ -11,10 +11,33 @@ pub fn write_atomically(path: &Path, previous: &[u8], contents: &str) -> io::Res
     let mut file = open_private(&temporary)?;
     file.write_all(contents.as_bytes())?;
     file.sync_all()?;
+    if path.exists() {
+        keep_previous(path, previous)?;
+    }
+    fs::rename(&temporary, path)
+}
+
+pub fn keep_previous(path: &Path, previous: &[u8]) -> io::Result<()> {
     let mut kept = open_private(&sibling(path, PREVIOUS_SUFFIX))?;
     kept.write_all(previous)?;
-    kept.sync_all()?;
-    fs::rename(&temporary, path)
+    kept.sync_all()
+}
+
+#[cfg(unix)]
+pub fn create_private_folder(folder: &Path) -> io::Result<()> {
+    use std::os::unix::fs::DirBuilderExt;
+    if folder.is_dir() {
+        return Ok(());
+    }
+    fs::DirBuilder::new()
+        .recursive(true)
+        .mode(0o700)
+        .create(folder)
+}
+
+#[cfg(not(unix))]
+pub fn create_private_folder(folder: &Path) -> io::Result<()> {
+    fs::create_dir_all(folder)
 }
 
 fn sibling(path: &Path, suffix: &str) -> PathBuf {

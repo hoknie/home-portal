@@ -8,7 +8,7 @@ use axum::http::header::{CONTENT_TYPE, ETAG, IF_MATCH};
 use axum::http::{Request, StatusCode};
 use axum::response::Response;
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
+use portal_config::{ConfigStore, Section};
 use portal_feature::Feature;
 use portal_model::Environment;
 use serde_json::Value;
@@ -28,9 +28,9 @@ pub struct Portal {
 
 fn portal() -> Portal {
     let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, FILE).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let main = directory.path().join("home-portal.toml");
+    fs::write(&main, FILE).unwrap();
+    let store = Arc::new(ConfigStore::open(&main).unwrap());
     let feature = ServicesFeature::new(
         store.clone(),
         portal_model::Environment::internet(),
@@ -40,7 +40,7 @@ fn portal() -> Portal {
     store.adopt(vec![feature.validator().unwrap()]).unwrap();
     Portal {
         router: feature.router(),
-        path,
+        path: store.home_of(Section::Services),
         _directory: directory,
     }
 }

@@ -6,7 +6,8 @@ use portal_config::{ConfigStore, Revision};
 use portal_feature::ApiError;
 
 use super::support::{
-    OFF, ON, entry, get, portal, portal_with, revision, send, signed_in, text_of, write,
+    OFF, ON, entry, get, portal, portal_with, revision, send, signed_in, text_of, users_text_of,
+    write,
 };
 use crate::features::AuthFeature;
 use crate::usecases::DeleteUser;
@@ -25,8 +26,8 @@ async fn a_user_added_from_the_interface_signs_in_with_that_password() {
     .await;
     assert_eq!(status, StatusCode::CREATED);
     assert_eq!(body["users"][1]["name"], "anna");
-    let text = text_of(&portal);
-    assert!(text.starts_with("# people\n"), "{text}");
+    assert!(text_of(&portal).starts_with("# people\n"));
+    let text = users_text_of(&portal);
     assert!(
         text.contains("name = \"anna\"\npassword_hash = \"$argon2id$"),
         "{text}"
@@ -39,7 +40,7 @@ async fn a_user_added_from_the_interface_signs_in_with_that_password() {
 async fn a_taken_name_and_a_short_password_are_refused_by_field_and_leave_the_file() {
     let portal = portal(format!("{ON}{}", entry("admin", "secret99")));
     let cookie = signed_in(&portal, "admin", "secret99").await.unwrap();
-    let before = text_of(&portal);
+    let before = users_text_of(&portal);
     let revision = revision(&portal, &cookie).await;
     let body = r#"{"name":" admin ","password":"short"}"#;
     let (status, _, answer) = send(
@@ -56,15 +57,15 @@ async fn a_taken_name_and_a_short_password_are_refused_by_field_and_leave_the_fi
         .collect();
     assert_eq!(fields, vec!["name", "password"]);
     assert!(!answer.to_string().contains("short"));
-    assert_eq!(text_of(&portal), before);
+    assert_eq!(users_text_of(&portal), before);
 }
 
 #[tokio::test]
-async fn a_user_is_added_to_the_included_file_that_holds_the_users() {
+async fn a_user_is_added_to_the_file_the_owner_chose_for_users() {
     let portal = portal_with(&[
         (
             "home-portal.toml",
-            format!("include = [\"people.toml\"]\n\n{ON}"),
+            format!("{ON}\n[files]\nusers = \"people.toml\"\n"),
         ),
         ("people.toml", entry("admin", "secret99")),
     ]);
@@ -108,7 +109,7 @@ async fn writes_while_the_module_is_off_are_refused_and_signing_in_still_works()
         entry("anna", "correct horse")
     ));
     let cookie = signed_in(&portal, "admin", "secret99").await.unwrap();
-    let before = text_of(&portal);
+    let before = users_text_of(&portal);
     let revision = revision(&portal, &cookie).await;
     for (method, uri, body) in [
         ("POST", AuthFeature::USERS.to_string(), NEW),
@@ -127,7 +128,7 @@ async fn writes_while_the_module_is_off_are_refused_and_signing_in_still_works()
             "{answer}"
         );
     }
-    assert_eq!(text_of(&portal), before);
+    assert_eq!(users_text_of(&portal), before);
     assert!(signed_in(&portal, "anna", "correct horse").await.is_some());
 }
 
@@ -187,7 +188,7 @@ async fn deleting_another_user_ends_their_session() {
     .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["users"].as_array().unwrap().len(), 1);
-    assert!(!text_of(&portal).contains("anna"));
+    assert!(!users_text_of(&portal).contains("anna"));
     let (after, _, _) = send(&portal, get(AuthFeature::USERS, &anna)).await;
     assert_eq!(after, StatusCode::UNAUTHORIZED);
 }

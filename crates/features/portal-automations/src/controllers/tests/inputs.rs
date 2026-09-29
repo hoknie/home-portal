@@ -69,7 +69,7 @@ async fn saving_keeps_plain_names_and_writes_typed_inputs_as_tables() {
     )
     .await;
     assert_eq!(status, StatusCode::OK, "{answer}");
-    let saved = fs::read_to_string(api.folder.path().join("home-portal.toml")).unwrap();
+    let saved = fs::read_to_string(api.folder.path().join("workflows/check-hosts.toml")).unwrap();
     assert!(
         saved.contains(r#"inputs = ["service", { name = "hosts", type = "list", default = ["nas", "nvr"], description = "Hosts to check" }]"#),
         "{saved}"

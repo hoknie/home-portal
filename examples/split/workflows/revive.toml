@@ -1,0 +1,59 @@
+# Bring a service back: probe it, and while it is not up call its restart API up to three
+# times, then say how it ended.
+id = "revive"
+title = "Revive a service"
+description = "Probe, retry the restart API three times, then report"
+tags = ["media"]
+inputs = ["service"]
+timeout_seconds = 600
+
+[[steps]]
+id = "first_probe"
+label = "Probe it now"
+kind = "probe"
+service = "{{inputs.service}}"
+
+[[steps]]
+id = "down"
+label = "Is it down?"
+kind = "if"
+condition = { left = "{{steps.first_probe.state}}", op = "!=", right = "up" }
+
+[[steps.then]]
+id = "retry"
+label = "Try three times"
+kind = "loop"
+repeat = 3
+
+[[steps.then.body]]
+id = "restart"
+label = "Ask the host to restart it"
+kind = "http"
+method = "POST"
+url = "http://192.168.1.10:9000/restart/{{inputs.service}}"
+headers = { Authorization = "Bearer {{secrets.telegram_token}}" }
+fail_on_error = false
+
+[[steps.then.body]]
+id = "settle"
+kind = "wait"
+seconds = 20
+
+[[steps.then.body]]
+id = "again"
+kind = "probe"
+service = "{{inputs.service}}"
+
+[[steps.then.body]]
+id = "back"
+kind = "if"
+condition = { left = "{{steps.again.state}}", op = "==", right = "up" }
+then = [{ id = "done", kind = "stop", outcome = "succeeded", reason = "{{inputs.service}} is back" }]
+
+# notify sends through every enabled notification channel; channel = "telegram" picks one.
+# The old kind = "telegram" still loads and is saved as notify.
+[[steps]]
+id = "report"
+kind = "notify"
+title = "{{inputs.service}}"
+text = "{{inputs.service}}: {{steps.first_probe.state}}, restart tries: {{steps.retry.iterations}}"

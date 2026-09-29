@@ -60,7 +60,7 @@ fn users_are_written_back_to_the_file_they_came_from() {
     let folder = tempfile::tempdir().unwrap();
     let main = folder.path().join("home-portal.toml");
     let people = folder.path().join("people.toml");
-    fs::write(&main, "include = [\"people.toml\"]\n").unwrap();
+    fs::write(&main, "[files]\nusers = \"people.toml\"\n").unwrap();
     fs::write(&people, PEOPLE).unwrap();
     let store = Arc::new(ConfigStore::open(&main).unwrap());
     let snapshot = store.read();

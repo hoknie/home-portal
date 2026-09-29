@@ -1,0 +1,34 @@
+# Leave a loop early or skip a pass: break ends the nearest loop and the run goes on after it,
+# continue goes on with the next pass. Both work only inside a loop body (also inside its if
+# steps), never through parallel. The loop's result says whether a break ended it.
+id = "wake-the-first"
+title = "Wake the first host that answers"
+inputs = [{ name = "hosts", type = "list", default = ["nas", "backup", "media"] }]
+
+[[steps]]
+id = "each"
+label = "Each host"
+kind = "loop"
+for_each = "{{inputs.hosts}}"
+
+[[steps.body]]
+id = "skip_media"
+kind = "if"
+condition = { left = "{{loop.item}}", op = "==", right = "media" }
+then = [{ id = "next", kind = "continue" }]
+
+[[steps.body]]
+id = "look"
+kind = "probe"
+service = "{{loop.item}}"
+
+[[steps.body]]
+id = "found"
+kind = "if"
+condition = { left = "{{steps.look.state}}", op = "==", right = "up" }
+then = [{ id = "leave", kind = "break" }]
+
+[[steps]]
+id = "result"
+kind = "log"
+message = "passes: {{steps.each.iterations}}, found one: {{steps.each.left_early}}"

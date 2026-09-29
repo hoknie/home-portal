@@ -1,31 +1,33 @@
 use std::collections::BTreeMap;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};
+use std::sync::{Condvar, Mutex, PoisonError, RwLock};
 use std::thread::{self, ThreadId};
 
-use portal_feature::{ApiError, Check, FieldError, Validator};
+use portal_feature::{Check, FieldError, Validator};
 use toml_edit::DocumentMut;
 
-use super::loading::{load, revision_of, writes_to};
+use super::loading::{WRITES_TO_IGNORED, load, names_writes_to, read_main, workflow_files};
+use super::settling::settle;
 use crate::helpers::{
-    merge, stamp_of, storage_errors, storage_places, stray_configuration, take_secrets,
-    write_atomically,
+    layout_errors, layout_of, stamp_of, storage_errors, storage_places, stray_configuration,
 };
 use crate::types::{
-    ConfigError, ConfigurationLocation, Current, Revision, SecretString, Snapshot, Stamp, Storage,
+    ConfigError, ConfigurationLocation, Current, Layout, Loaded, Origins, SecretString, Section,
+    Snapshot, Source, Stamp, Storage,
 };
 
 pub struct ConfigStore {
-    main: PathBuf,
-    validators: RwLock<Vec<Validator>>,
-    checks: RwLock<Vec<Check>>,
-    current: Mutex<Current>,
-    reloading: Mutex<Option<ThreadId>>,
-    reloaded: Condvar,
-    secrets: RwLock<BTreeMap<String, SecretString>>,
-    writing: tokio::sync::Mutex<()>,
-    storage: BTreeMap<Storage, PathBuf>,
+    pub(super) main: PathBuf,
+    pub(super) validators: RwLock<Vec<Validator>>,
+    pub(super) checks: RwLock<Vec<Check>>,
+    pub(super) current: Mutex<Current>,
+    pub(super) reloading: Mutex<Option<ThreadId>>,
+    pub(super) reloaded: Condvar,
+    pub(super) secrets: RwLock<BTreeMap<String, SecretString>>,
+    pub(super) writing: tokio::sync::Mutex<()>,
+    pub(super) storage: BTreeMap<Storage, PathBuf>,
+    pub(super) layout: Layout,
 }
 
 impl ConfigStore {
@@ -48,33 +50,42 @@ impl ConfigStore {
 
     pub fn open(path: impl Into<PathBuf>) -> Result<ConfigStore, ConfigError> {
         let main = path.into();
-        let loaded = load(&main)?;
+        let written = read_main(&main)?;
+        let errors = layout_errors(&main, &written);
+        if !errors.is_empty() {
+            return Err(ConfigError::Invalid { path: main, errors });
+        }
+        let layout = layout_of(&main, &written);
+        settle(&main, &layout)?;
+        let loaded = load(&main, &layout)?;
         let errors = storage_errors(&main, &loaded.snapshot.document);
         if !errors.is_empty() {
             return Err(ConfigError::Invalid { path: main, errors });
         }
+        if names_writes_to(&loaded.snapshot.document) {
+            tracing::warn!(path = %main.display(), "{WRITES_TO_IGNORED}");
+        }
         let storage = storage_places(&main, &loaded.snapshot.document);
-        let stamps = loaded
-            .sources
-            .iter()
-            .map(|source| stamp_of(&source.path))
-            .collect();
-        Ok(ConfigStore {
-            main,
+        let store = ConfigStore {
             validators: RwLock::new(Vec::new()),
             checks: RwLock::new(Vec::new()),
             current: Mutex::new(Current {
-                sources: loaded.sources,
-                snapshot: loaded.snapshot,
-                stamps,
+                sources: Vec::new(),
+                snapshot: loaded.snapshot.clone(),
+                stamps: Vec::new(),
+                listing: Vec::new(),
                 problem: None,
             }),
             reloading: Mutex::new(None),
             reloaded: Condvar::new(),
-            secrets: RwLock::new(loaded.secrets),
+            secrets: RwLock::new(BTreeMap::new()),
             writing: tokio::sync::Mutex::new(()),
             storage,
-        })
+            layout,
+            main,
+        };
+        store.adopt_loaded(loaded);
+        Ok(store)
     }
 
     pub fn adopt(&self, validators: Vec<Validator>) -> Result<(), ConfigError> {
@@ -91,13 +102,14 @@ impl ConfigStore {
     }
 
     fn revalidate(&self) -> Result<(), ConfigError> {
-        let errors = self.validate(&self.read().document);
+        let snapshot = self.read();
+        let errors = self.validate(&snapshot.document);
         if errors.is_empty() {
             Ok(())
         } else {
             Err(ConfigError::Invalid {
                 path: self.main.clone(),
-                errors,
+                errors: self.with_files(errors, &snapshot.origins),
             })
         }
     }
@@ -113,6 +125,18 @@ impl ConfigStore {
             .unwrap_or_else(|| PathBuf::from(kind.default_name()))
     }
 
+    pub fn home_of(&self, section: Section) -> PathBuf {
+        self.layout.file_of(section)
+    }
+
+    pub fn workflow_file(&self, id: &str) -> PathBuf {
+        self.layout.workflow_file(id)
+    }
+
+    pub fn in_workflow_folder(&self, path: &Path) -> bool {
+        self.layout.in_folder(path)
+    }
+
     pub fn paths(&self) -> Vec<PathBuf> {
         self.current
             .lock()
@@ -121,10 +145,6 @@ impl ConfigStore {
             .iter()
             .map(|source| source.path.clone())
             .collect()
-    }
-
-    pub fn writes_to(&self) -> PathBuf {
-        writes_to(&self.main, &self.read().document)
     }
 
     pub fn secret(&self, name: &str) -> Option<SecretString> {
@@ -170,13 +190,12 @@ impl ConfigStore {
             }
             *reloading = Some(me);
         }
-        let seen = self.disk_stamps();
+        let seen = self.disk_state();
         let adopted = self.reload();
         if !adopted {
-            self.current
-                .lock()
-                .unwrap_or_else(PoisonError::into_inner)
-                .stamps = seen;
+            let mut current = self.current.lock().unwrap_or_else(PoisonError::into_inner);
+            current.stamps = seen.0;
+            current.listing = seen.1;
         }
         *self
             .reloading
@@ -194,20 +213,50 @@ impl ConfigStore {
             .clone()
     }
 
-    fn disk_stamps(&self) -> Vec<Option<Stamp>> {
-        self.current
+    fn watched(&self, sources: &[Source]) -> Vec<PathBuf> {
+        let mut paths = self.layout.files();
+        for source in sources {
+            if !paths.contains(&source.path) {
+                paths.push(source.path.clone());
+            }
+        }
+        paths
+    }
+
+    fn state_of(&self, sources: &[Source]) -> (Vec<Option<Stamp>>, Vec<PathBuf>) {
+        let stamps = self
+            .watched(sources)
+            .iter()
+            .map(|path| stamp_of(path))
+            .collect();
+        (stamps, workflow_files(&self.layout.folder()))
+    }
+
+    fn disk_state(&self) -> (Vec<Option<Stamp>>, Vec<PathBuf>) {
+        let sources = self
+            .current
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .sources
-            .iter()
-            .map(|source| stamp_of(&source.path))
-            .collect()
+            .clone();
+        self.state_of(&sources)
     }
 
     fn unchanged(&self) -> Option<Snapshot> {
-        let stamps = self.disk_stamps();
+        let (stamps, listing) = self.disk_state();
         let current = self.current.lock().unwrap_or_else(PoisonError::into_inner);
-        (stamps == current.stamps).then(|| current.snapshot.clone())
+        (stamps == current.stamps && listing == current.listing).then(|| current.snapshot.clone())
+    }
+
+    pub(super) fn adopt_loaded(&self, loaded: Loaded) {
+        let (stamps, listing) = self.state_of(&loaded.sources);
+        *self.secrets.write().unwrap_or_else(PoisonError::into_inner) = loaded.secrets;
+        let mut current = self.current.lock().unwrap_or_else(PoisonError::into_inner);
+        current.sources = loaded.sources;
+        current.snapshot = loaded.snapshot;
+        current.stamps = stamps;
+        current.listing = listing;
+        current.problem = None;
     }
 
     pub fn problem(&self) -> Option<String> {
@@ -219,73 +268,13 @@ impl ConfigStore {
             .clone()
     }
 
-    pub async fn update<T>(
-        &self,
-        target: &Path,
-        expected: &Revision,
-        edit: impl FnOnce(&mut DocumentMut) -> Result<T, ApiError>,
-    ) -> Result<(T, Snapshot), ApiError> {
-        let _writing = self.writing.lock().await;
-        let loaded = load(&self.main).map_err(|error| {
-            ApiError::Conflict(format!("the configuration is invalid: {error}"))
-        })?;
-        if let Some(problem) = self.validate(&loaded.snapshot.document).first() {
-            return Err(ApiError::Conflict(format!(
-                "the configuration is invalid: {}: {}",
-                problem.field, problem.message
-            )));
-        }
-        if loaded.snapshot.revision != *expected {
-            return Err(ApiError::Conflict(Self::STALE_MESSAGE.to_string()));
-        }
-        let mut sources = loaded.sources;
-        let index = sources
-            .iter()
-            .position(|source| source.path == target)
-            .ok_or_else(|| {
-                ApiError::Internal(format!("{} is not a configuration file", target.display()))
-            })?;
-        let value = edit(&mut sources[index].document)?;
-        let text = sources[index].document.to_string();
-        let previous = std::mem::replace(&mut sources[index].bytes, text.clone().into_bytes());
-        let (mut merged, origins) = merge(&sources).map_err(|error| {
-            ApiError::Invalid(vec![FieldError::new("configuration", error.message())])
-        })?;
-        let secrets = take_secrets(&mut merged);
-        let errors = self.validate(&merged);
-        if !errors.is_empty() {
-            return Err(ApiError::Invalid(errors));
-        }
-        write_atomically(target, &previous, &text).map_err(|error| {
-            ApiError::Internal(format!("writing {}: {error}", target.display()))
-        })?;
-        let snapshot = Snapshot {
-            document: Arc::new(merged),
-            revision: revision_of(&sources),
-            origins: Arc::new(origins),
-        };
-        let stamps = sources
-            .iter()
-            .map(|source| stamp_of(&source.path))
-            .collect();
-        let mut current = self.current.lock().unwrap_or_else(PoisonError::into_inner);
-        current.sources = sources;
-        current.snapshot = snapshot.clone();
-        current.stamps = stamps;
-        current.problem = None;
-        *self.secrets.write().unwrap_or_else(PoisonError::into_inner) = secrets;
-        Ok((value, snapshot))
+    pub(super) fn load_now(&self) -> Result<Loaded, ConfigError> {
+        load(&self.main, &self.layout)
     }
 
     fn reload(&self) -> bool {
-        let known = self
-            .current
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .snapshot
-            .revision
-            .clone();
-        let loaded = match load(&self.main) {
+        let known = self.snapshot_now().revision;
+        let loaded = match self.load_now() {
             Ok(loaded) => loaded,
             Err(error) => {
                 self.ignore(error.message());
@@ -301,24 +290,16 @@ impl ConfigStore {
         }
         let previous = std::mem::replace(
             &mut *self.secrets.write().unwrap_or_else(PoisonError::into_inner),
-            loaded.secrets,
+            loaded.secrets.clone(),
         );
-        if let Some(error) = self.validate(&loaded.snapshot.document).first() {
+        let errors = self.validate(&loaded.snapshot.document);
+        if let Some(error) = self.with_files(errors, &loaded.snapshot.origins).first() {
             *self.secrets.write().unwrap_or_else(PoisonError::into_inner) = previous;
             self.ignore(format!("{}: {}", error.field, error.message));
             return false;
         }
         tracing::info!(path = %self.main.display(), "configuration reloaded");
-        let stamps = loaded
-            .sources
-            .iter()
-            .map(|source| stamp_of(&source.path))
-            .collect();
-        let mut current = self.current.lock().unwrap_or_else(PoisonError::into_inner);
-        current.sources = loaded.sources;
-        current.snapshot = loaded.snapshot;
-        current.stamps = stamps;
-        current.problem = None;
+        self.adopt_loaded(loaded);
         true
     }
 
@@ -330,8 +311,38 @@ impl ConfigStore {
             .problem = Some(problem);
     }
 
-    fn validate(&self, document: &DocumentMut) -> Vec<FieldError> {
+    pub(super) fn with_files(&self, errors: Vec<FieldError>, origins: &Origins) -> Vec<FieldError> {
+        let prefix = format!("{}[", Section::Workflows.key());
+        errors
+            .into_iter()
+            .map(|error| {
+                let index = error
+                    .field
+                    .strip_prefix(&prefix)
+                    .and_then(|rest| rest.split(']').next())
+                    .and_then(|number| number.parse::<usize>().ok());
+                match index.and_then(|index| origins.of(Section::Workflows.key(), index)) {
+                    Some(file) if self.layout.in_folder(file) => FieldError::new(
+                        error.field.clone(),
+                        format!("{} (in {})", error.message, self.shown(file)),
+                    ),
+                    _ => error,
+                }
+            })
+            .collect()
+    }
+
+    fn shown(&self, file: &Path) -> String {
+        let base = self.main.parent().unwrap_or(Path::new(""));
+        file.strip_prefix(base)
+            .unwrap_or(file)
+            .display()
+            .to_string()
+    }
+
+    pub(super) fn validate(&self, document: &DocumentMut) -> Vec<FieldError> {
         let mut errors = storage_errors(&self.main, document);
+        errors.extend(layout_errors(&self.main, document));
         errors.extend(
             self.validators
                 .read()

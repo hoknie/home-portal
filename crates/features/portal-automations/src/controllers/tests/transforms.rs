@@ -50,7 +50,7 @@ async fn a_transform_is_saved_as_a_list_of_operations_in_order_and_reads_back() 
     )
     .await;
     assert_eq!(status, StatusCode::OK, "{answer}");
-    let saved = fs::read_to_string(api.folder.path().join("home-portal.toml")).unwrap();
+    let saved = fs::read_to_string(api.folder.path().join("workflows/disks.toml")).unwrap();
     let filter = saved.find("op = \"filter\"").expect(&saved);
     let pluck = saved.find("op = \"pluck\"").expect(&saved);
     let join = saved.find("op = \"join\"").expect(&saved);

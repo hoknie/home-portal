@@ -62,28 +62,6 @@ when = { event = "manual" }
 workflow = "check-hosts"
 inputs = { hosts = ["nas", "router", "nvr"], note = "by hand" }
 
-# Webhooks: POST /webhook/<id>. Create them under Management → Webhooks so the portal
-# generates the id and the token; it shows the token once and keeps only its SHA-256.
-# A caller sends the token as "Authorization: Bearer <token>" or "X-Webhook-Token: <token>",
-# and every declared variable in a JSON body or the query string:
-#   curl -X POST -H 'Authorization: Bearer <token>' -d '{"branch":"main"}' \
-#        https://portal.example.com/webhook/7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d
-[[webhooks]]
-id = "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d"
-title = "Deploy from CI"
-variables = ["branch"]
-action = "script"
-run = { script = "echo-event.sh", args = ["deploy", "--", "{{webhook.branch}}"], timeout_seconds = 300 }
-# SHA-256 of the token; replace it from the interface ("Replace the token").
-token_sha256 = "b5d4045c3f466fa91fe2cc6abe79232a1a57cdf104f7a26e716e0a1e2789df78"
-
-# An event webhook: automations filter it on "webhook.received".
-[[webhooks]]
-id = "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d"
-title = "Motion at the door"
-variables = ["camera"]
-action = "event"
-
 [[automations]]
 id = "motion-alert"
 title = "Motion at the door"

@@ -47,6 +47,8 @@ async fn put_proxy_ignores_enabled_and_writes_no_switch() {
     let text = fs::read_to_string(&portal.path).unwrap();
     assert!(!text.contains("enabled"), "{text}");
     assert!(!text.contains("trusted_proxies"), "{text}");
+    let proxy = fs::read_to_string(&portal.proxy).unwrap();
+    assert!(!proxy.contains("enabled"), "{proxy}");
 }
 
 #[tokio::test]
@@ -86,7 +88,7 @@ async fn incomplete_settings_are_accepted_while_the_proxy_is_off() {
 #[tokio::test]
 async fn a_missing_host_is_refused_on_its_field_while_the_proxy_is_on() {
     let portal = portal(SWITCHED_ON);
-    let before = fs::read_to_string(&portal.path).unwrap();
+    let before = fs::read_to_string(&portal.proxy).unwrap();
     let revision = revision_of(&portal).await;
     let response = send(&portal, put("{}", Some(&revision)), CADDY, "local").await;
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
@@ -97,7 +99,7 @@ async fn a_missing_host_is_refused_on_its_field_while_the_proxy_is_on() {
         .map(|error| error["field"].as_str().unwrap().to_string())
         .collect();
     assert_eq!(fields, vec!["proxy.portal_host"]);
-    assert_eq!(fs::read_to_string(&portal.path).unwrap(), before);
+    assert_eq!(fs::read_to_string(&portal.proxy).unwrap(), before);
 }
 
 #[tokio::test]
@@ -123,7 +125,7 @@ async fn other_ports_are_written_and_shown_in_every_address() {
         answer["routes"][0]["address"],
         "https://portal.example.com:8443"
     );
-    let text = fs::read_to_string(&portal.path).unwrap();
+    let text = fs::read_to_string(&portal.proxy).unwrap();
     assert!(
         text.contains("http_port = 8080\nhttps_port = 8443"),
         "{text}"
@@ -131,7 +133,7 @@ async fn other_ports_are_written_and_shown_in_every_address() {
     let revision = revision_of(&portal).await;
     let back = send(&portal, put(ENABLE, Some(&revision)), CADDY, "local").await;
     assert_eq!(back.status(), StatusCode::OK);
-    assert!(!fs::read_to_string(&portal.path).unwrap().contains("_port"));
+    assert!(!fs::read_to_string(&portal.proxy).unwrap().contains("_port"));
 }
 
 #[tokio::test]

@@ -43,15 +43,19 @@ impl DeleteWorkflow {
                 names.join(", ")
             )));
         }
-        let (_, snapshot) = self
-            .configuration
-            .update(&target, revision, |document| {
-                let index =
-                    workflow_position(document, id).ok_or(ApiError::NotFound(Workflow::UNKNOWN))?;
-                remove_workflow(document, index);
-                Ok(())
-            })
-            .await?;
+        let snapshot = if self.configuration.in_workflow_folder(&target) {
+            self.configuration.remove(&target, revision).await?
+        } else {
+            self.configuration
+                .update(&target, revision, |document| {
+                    let index = workflow_position(document, id)
+                        .ok_or(ApiError::NotFound(Workflow::UNKNOWN))?;
+                    remove_workflow(document, index);
+                    Ok(())
+                })
+                .await?
+                .1
+        };
         self.views.sink.cache.refresh(&snapshot.document);
         Ok(Revisioned::new(
             self.views.workflows(&snapshot.document),

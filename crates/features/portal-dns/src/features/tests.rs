@@ -142,7 +142,7 @@ async fn changing_the_port_through_the_api_moves_the_server_and_keeps_comments()
     })
     .await;
     assert_eq!(moved["settings"]["port"], second);
-    let text = fs::read_to_string(folder.path().join("home-portal.toml")).unwrap();
+    let text = fs::read_to_string(folder.path().join("dns.toml")).unwrap();
     assert!(
         text.contains("# Local names.\n[dns]\nenabled = true # on\n"),
         "{text}"
@@ -182,7 +182,7 @@ async fn put_dns_ignores_enabled_and_settings_saved_while_off_open_no_socket() {
         .unwrap();
     let response = router.clone().oneshot(request).await.unwrap();
     assert_eq!(response.status(), StatusCode::OK);
-    let text = fs::read_to_string(folder.path().join("home-portal.toml")).unwrap();
+    let text = fs::read_to_string(folder.path().join("dns.toml")).unwrap();
     let section = text.split("\n[dns.").next().unwrap_or_default();
     assert!(!section.contains("enabled"), "{text}");
     assert!(text.contains("zones = [\"home\"]"), "{text}");
@@ -199,11 +199,9 @@ async fn switching_the_module_off_closes_the_sockets_within_two_seconds() {
     let (folder, _configuration, router) = portal(&enabled_on(port));
     let listening = settled(&router, |body| body["plain"]["listening"] == true).await;
     assert_eq!(listening["plain"]["listening"], true);
-    fs::write(
-        folder.path().join("home-portal.toml"),
-        format!("[modules]\ndns = false\n\n{}", enabled_on(port)),
-    )
-    .unwrap();
+    let main = folder.path().join("home-portal.toml");
+    let kept = fs::read_to_string(&main).unwrap();
+    fs::write(&main, format!("[modules]\ndns = false\n\n{kept}")).unwrap();
     let began = Instant::now();
     let closed = settled(&router, |body| body["plain"]["listening"] == false).await;
     assert_eq!(closed["enabled"], false);

@@ -6,5 +6,6 @@ mod runs;
 mod scripts;
 mod transforms;
 mod webhooks;
+mod workflow_catalogue;
 mod workflow_runs;
 mod workflows;

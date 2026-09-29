@@ -115,3 +115,54 @@ fn a_written_file_is_readable_by_its_owner_only() {
     let mode = fs::metadata(&path).unwrap().permissions().mode() & 0o777;
     assert_eq!(mode, 0o600);
 }
+
+mod entries {
+    use toml_edit::{DocumentMut, Item};
+
+    use super::super::{unwrapped, wrapped};
+
+    fn example_workflows() -> Vec<String> {
+        let folder = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../examples/split/workflows");
+        let mut files: Vec<_> = std::fs::read_dir(folder)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .filter(|path| {
+                path.extension()
+                    .is_some_and(|extension| extension == "toml")
+            })
+            .collect();
+        files.sort();
+        files
+            .iter()
+            .map(|path| std::fs::read_to_string(path).unwrap())
+            .collect()
+    }
+
+    #[test]
+    fn every_example_workflow_survives_wrapping_and_unwrapping_as_its_own_file() {
+        let files = example_workflows();
+        assert!(files.len() >= 3);
+        for text in files {
+            assert!(text.starts_with("id = ") || text.starts_with('#'), "{text}");
+            assert!(text.contains("[[steps]]"), "{text}");
+            assert!(!text.contains("[[workflows"), "{text}");
+            let parsed: DocumentMut = text.parse().unwrap();
+            let again = unwrapped(&wrapped(&parsed)).to_string();
+            assert_eq!(again, text);
+            let entry = wrapped(&parsed);
+            assert_eq!(entry["workflows"].as_array_of_tables().unwrap().len(), 1);
+            assert!(matches!(
+                entry["workflows"][0].get("id"),
+                Some(Item::Value(_))
+            ));
+        }
+    }
+
+    #[test]
+    fn comments_on_the_top_keys_of_a_workflow_file_are_kept() {
+        let text = "# Bring a service back\nid = \"revive\"\n# what people see\ntitle = \"Revive\"\n\n[[steps]]\nid = \"probe\"\nkind = \"probe\"\n";
+        let parsed: DocumentMut = text.parse().unwrap();
+        assert_eq!(unwrapped(&wrapped(&parsed)).to_string(), text);
+    }
+}

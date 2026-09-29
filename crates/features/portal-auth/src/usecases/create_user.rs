@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use portal_config::{ConfigStore, Revision, Revisioned};
+use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::ApiError;
 
 use crate::repositories::{append, last_origin};
@@ -39,7 +39,8 @@ impl CreateUser {
         let Some(name) = name.filter(|_| errors.is_empty()) else {
             return Err(ApiError::Invalid(errors));
         };
-        let target = last_origin(&snapshot).unwrap_or_else(|| self.configuration.writes_to());
+        let target =
+            last_origin(&snapshot).unwrap_or_else(|| self.configuration.home_of(Section::Users));
         let password_hash = hashed(password).await?;
         let (_, written) = self
             .configuration

@@ -72,7 +72,11 @@ async fn webhooks_answer_again_within_five_seconds_of_switching_on() {
     let (status, _, _) = send(&api, call()).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-    fs::write(api.folder.path().join("home-portal.toml"), hook()).unwrap();
+    fs::write(
+        api.folder.path().join("home-portal.toml"),
+        "[modules]\nwebhooks = true\n",
+    )
+    .unwrap();
     let cache = api.feature.state.sink.cache.clone();
     let began = std::time::Instant::now();
     assert!(eventually(|| cache.webhooks_on()).await);

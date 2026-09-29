@@ -117,11 +117,10 @@ async fn changing_the_rules_needs_the_revision_and_names_a_bad_state() {
     .await;
     assert_eq!(status, StatusCode::OK, "{body}");
     assert_eq!(body["rules"]["recovered"], false);
-    let text = std::fs::read_to_string(&api.path).unwrap();
-    assert!(
-        text.contains("# keep me") && text.contains("recovered = false"),
-        "{text}"
-    );
+    assert_eq!(std::fs::read_to_string(&api.path).unwrap(), "# keep me\n");
+    let home = api.path.with_file_name("notifications.toml");
+    let text = std::fs::read_to_string(&home).unwrap();
+    assert!(text.contains("recovered = false"), "{text}");
 }
 
 #[tokio::test]

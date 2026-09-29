@@ -26,6 +26,7 @@ pub const OUTSIDE: &str = "203.0.113.9";
 pub struct Portal {
     pub router: Router,
     pub path: std::path::PathBuf,
+    pub proxy: std::path::PathBuf,
     _directory: TempDir,
 }
 
@@ -72,6 +73,7 @@ pub fn portal_pinned(text: &str, source: &str, version: &str) -> Portal {
     );
     Portal {
         router: feature.router().merge(feature.public_router()),
+        proxy: path.with_file_name("proxy.toml"),
         path,
         _directory: directory,
     }

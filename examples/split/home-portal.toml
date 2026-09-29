@@ -1,23 +1,31 @@
-# A complete home-portal setup, split over six files and a scripts directory:
+# A complete home-portal setup. Each part lives in its own file beside this one:
 #
-#   home-portal.toml   this file: network, environments, notifications, where edits go
+#   home-portal.toml   this file: the interface, network, environments and modules
 #   services.toml      the services and how they are probed
-#   widgets.toml       the home page: its sections and widgets
+#   dashboard.toml     the home page: its sections and widgets
 #   automations.toml   scripts run on a schedule or on the portal's events
-#   workflows.toml     runs of several steps: conditions, loops, HTTP, scripts, Telegram
+#   webhooks.toml      addresses other systems call to start a script or an event
+#   workflows/         runs of several steps, one file per workflow (see ../README.md)
+#   notifications.toml when and where the portal tells you a service went down
+#   proxy.toml         publishing the portal and services through Caddy
+#   users.toml         people who may sign in (created when you add the first one)
 #   secrets.toml       tokens and passwords, mode 0600 (copy secrets.example.toml)
 #   scripts/           the scripts automations may run, 0755 or stricter
 #
+# The interface writes each part to its own file and never back into this one. A [files]
+# table here may move any part elsewhere in this directory, for example
+#   [files]
+#   workflows = "flows/"
+# and the portal keeps that choice as written. An older all-in-one file is split this way
+# at the first start, with a .previous copy of every file it rewrites.
+#
 # Copy the directory, add a user (see below) and start the portal with
 #   HOME_PORTAL_CONFIG=/path/to/split/home-portal.toml home-portal
-
-include = [
-  "services.toml",
-  "widgets.toml",
-  "automations.toml",
-  "workflows.toml",
-  "secrets.toml",
-]
+#
+# People who may sign in go in users.toml. Create the hash with:  home-portal password-hash
+# [[users]]
+# name = "admin"
+# password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
 
 # Russian for visitors whose browser asks for none of en, ru, es; each visitor can still
 # switch in the header.
@@ -44,44 +52,3 @@ networks = ["10.8.0.0/24"]
 [modules]
 proxy = true
 workflows = true
-
-# Caddy publishes the portal and the services that carry a proxy table (see
-# services.toml). The portal writes Caddy's whole configuration through its admin API,
-# so start Caddy from deploy/caddy.plist or deploy/caddy.service and add nothing by hand.
-# Ports 80 and 443 must reach Caddy for Let's Encrypt; the state is under
-# Management → Proxy, and `home-portal proxy render` prints what Caddy is given.
-[proxy]
-admin = "http://127.0.0.1:2019"
-portal_host = "portal.home.example.com"
-# One sign-in covers every published host under this domain. Use a subdomain of your
-# own for it, not the whole domain: every host under it receives the session cookie.
-cookie_domain = "home.example.com"
-
-# How hosts get certificates unless a service says otherwise:
-#   mode = "acme"       Let's Encrypt over HTTP-01; needs ports 80 and 443 forwarded
-#   mode = "internal"   Caddy's own authority; install its root from Management → Proxy
-#   mode = "files"      certificate and key files on Caddy's host
-[proxy.tls]
-mode = "acme"
-email = "owner@example.com"
-
-# People who may sign in. Create the hash with:  home-portal password-hash
-# [[users]]
-# name = "admin"
-# password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
-
-# Announce when a service goes down and when it recovers, on every ready channel.
-[notifications]
-states = ["down", "unreadable"]
-recovered = true
-
-# The Telegram channel.
-[notifications.telegram]
-enabled = true
-secret = "telegram_token"
-chat_id = "123456789"
-
-# The interface adds new services to services.toml. Services and the layout are
-# edited in the file they already live in.
-[configuration]
-writes_to = "services.toml"

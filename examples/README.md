@@ -7,7 +7,7 @@ validator of the portal, so an example that stops working fails the build.
 
 | Path | What it shows |
 |---|---|
-| `split/` | A complete setup in six files: the main file with the network, environments, `[modules]`, the `[proxy]` section, Telegram and `include`; `services.toml`, with services published in every TLS mode and one behind the portal's sign-in; `widgets.toml` with a sectioned layout using every widget type and every size; `automations.toml` with a nightly schedule, a restart when a service goes down, an audit of sign-ins from outside and a script on start-up; `workflows.toml` with a retry loop around a restart API, parallel status checks, a script and a call; `secrets.example.toml` |
+| `split/` | A complete setup with each part in its own file: the main file with the interface, network, environments and `[modules]`; `services.toml`, with services published in every TLS mode and one behind the portal's sign-in; `dashboard.toml` with a sectioned layout using every widget type and every size; `automations.toml` with a nightly schedule, a restart when a service goes down, an audit of sign-ins from outside and a script on start-up; `webhooks.toml` with a script webhook and an event webhook; `workflows/`, one file per workflow: a retry loop around a restart API, parallel status checks, a script, a call, transforms and leaving a loop early; `notifications.toml` with Telegram; `proxy.toml`; `secrets.example.toml` |
 | `split/scripts/echo-event.sh` | A POSIX `sh` script that prints the arguments and the `PORTAL_*` variables it received and the event from standard input — a starting point for your own |
 | `services/media.toml` | Jellyfin, Plex, qBittorrent, Transmission, Immich |
 | `services/home.toml` | Home Assistant, Nextcloud, Grafana |
@@ -23,11 +23,11 @@ validator of the portal, so an example that stops working fails the build.
 1. Copy `split/` somewhere of your own, copy `split/secrets.example.toml` to `secrets.toml`,
    run `chmod 600 secrets.toml` and fill in the secrets you use.
 2. Add a user: run `home-portal password-hash`, paste the hash into a `[[users]]` entry in
-   `home-portal.toml`.
+   `users.toml` beside the main file.
 3. Replace the services in `services.toml` with yours; copy entries from `services/`.
 4. Start the portal: `HOME_PORTAL_CONFIG=/path/to/home-portal.toml home-portal`.
 5. Arrange the home page in the interface under **Management → Layout**, or edit
-   `widgets.toml` by hand; both keep your comments.
+   `dashboard.toml` by hand; both keep your comments.
 
 ## Layout in two minutes
 
@@ -101,3 +101,27 @@ you press **Run now**. Build one under
    automations. `split/automations.toml` has one of each.
 6. Scripts run as the portal's user and inherit its permissions — see the notes in
    `deploy/home-portal.plist` and `deploy/home-portal.service`.
+
+## Workflows in two minutes
+
+Each file in `split/workflows/` is one workflow, named after its id: `revive.toml` holds `id = "revive"`.
+The portal lists them in the order of their names, ignores hidden files and anything that
+is not `.toml`, and picks up a file added or removed by hand without a restart. Management →
+Workflows creates, renames and deletes these files; saving a workflow rewrites its steps as a
+whole, so comments inside the steps are lost, while the comment at the top of the file stays.
+
+Switch workflows on with `[modules] workflows = true` in `home-portal.toml` (they need
+automations).
+
+Every text is a template: {{inputs.x}}, {{vars.x}}, {{steps.<id>.<field>}} (for example
+{{steps.ping.json.state}}), {{event.<field>}}, {{loop.item}}, {{loop.index}},
+{{secrets.<key>}}, which is sent as it is but shown as *** in the journal, and the portal's
+own values, read when the step starts: {{portal.services.<id>.<field>}} (name, group, url,
+address, state, since, latency_milliseconds, public), {{portal.services}} as a list,
+{{portal.network.address}}, .port and .url, {{portal.modules.<name>.is_enabled}} and
+{{portal.environments}}.
+A name may be followed by filters, applied left to right:
+{{steps.list.json.disks | pluck("name") | join(", ") | upper}}, {{vars.note | default("none")}}.
+
+A run is bounded: timeout_seconds (300 unless set), 1000 steps, 100 iterations per loop,
+4 parallel branches, 8 levels of nesting and 4 levels of calls.

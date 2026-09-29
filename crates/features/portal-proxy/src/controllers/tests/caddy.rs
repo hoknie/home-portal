@@ -107,7 +107,7 @@ async fn start_and_stop_write_managed_and_need_the_revision() {
     assert_eq!(started.status(), StatusCode::OK);
     assert_eq!(json(started).await["caddy"]["managed"], true);
     assert!(
-        fs::read_to_string(&portal.path)
+        fs::read_to_string(&portal.proxy)
             .unwrap()
             .contains("managed = true")
     );
@@ -129,7 +129,7 @@ async fn start_and_stop_write_managed_and_need_the_revision() {
     .await;
     assert_eq!(stopped.status(), StatusCode::OK);
     assert!(
-        fs::read_to_string(&portal.path)
+        fs::read_to_string(&portal.proxy)
             .unwrap()
             .contains("managed = false")
     );
@@ -217,7 +217,7 @@ fn put_source(body: &str, revision: Option<&str>) -> Request<Body> {
 async fn pinning_a_version_writes_it_and_answers_with_the_new_revision() {
     let portal = portal(&file("http://127.0.0.1:9"));
     let revision = revision_of(&portal).await;
-    let before = fs::read_to_string(&portal.path).unwrap();
+    let before = fs::read_to_string(&portal.proxy).unwrap();
     let response = send(
         &portal,
         put_source(r#"{"source":"","version":"2.10.2"}"#, Some(&revision)),
@@ -236,7 +236,7 @@ async fn pinning_a_version_writes_it_and_answers_with_the_new_revision() {
             .unwrap()
             .ends_with("/tags/v2.10.2")
     );
-    let after = fs::read_to_string(&portal.path).unwrap();
+    let after = fs::read_to_string(&portal.proxy).unwrap();
     assert!(after.contains(r#"version = "2.10.2""#), "{after}");
     assert_eq!(after.lines().count(), before.lines().count(), "{after}");
 }
@@ -245,7 +245,7 @@ async fn pinning_a_version_writes_it_and_answers_with_the_new_revision() {
 async fn a_malformed_version_is_refused_by_name_and_the_file_is_unchanged() {
     let portal = portal(&file("http://127.0.0.1:9"));
     let revision = revision_of(&portal).await;
-    let before = fs::read_to_string(&portal.path).unwrap();
+    let before = fs::read_to_string(&portal.proxy).unwrap();
     let response = send(
         &portal,
         put_source(r#"{"version":"newest"}"#, Some(&revision)),
@@ -256,7 +256,7 @@ async fn a_malformed_version_is_refused_by_name_and_the_file_is_unchanged() {
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
     let body = json(response).await;
     assert!(body.to_string().contains("proxy.caddy.version"), "{body}");
-    assert_eq!(fs::read_to_string(&portal.path).unwrap(), before);
+    assert_eq!(fs::read_to_string(&portal.proxy).unwrap(), before);
 }
 
 #[tokio::test]

@@ -90,7 +90,7 @@ async fn the_loop_loads_at_start_and_again_after_the_file_changes() {
     assert!(state.last_applied_at.is_some());
     let services = "\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://192.168.1.10:8096\"\nproxy = { host = \"media.example.com\" }\n";
     tokio::time::sleep(Duration::from_millis(1100)).await;
-    fs::write(&setup.path, file(&url, services)).unwrap();
+    fs::write(setup.path.with_file_name("services.toml"), services).unwrap();
     assert!(
         eventually(|| caddy.with(|recorded| recorded
             .configuration

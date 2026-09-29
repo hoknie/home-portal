@@ -5,14 +5,19 @@ use toml_edit::{DocumentMut, Item, Table};
 use crate::types::{ConfigError, Origins, Source};
 
 use super::includes::INCLUDE_KEY;
+use super::positions::{highest, shifted};
 
 pub fn merge(sources: &[Source]) -> Result<(DocumentMut, Origins), ConfigError> {
     let mut merged = DocumentMut::new();
     let mut origins = Origins::default();
+    let mut next = 0;
     for source in sources {
+        let placed = shifted(source.document.as_item().clone(), next);
+        next = next.max(highest(&placed) + 1);
+        let table = placed.as_table().cloned().unwrap_or_default();
         merge_table(
             merged.as_table_mut(),
-            source.document.as_table(),
+            &table,
             &source.path,
             "",
             &mut origins,

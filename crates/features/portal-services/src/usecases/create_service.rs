@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use portal_config::{ConfigStore, Revision, Revisioned};
+use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::{ApiError, EventName, EventSink, PortalEvent};
 use time::OffsetDateTime;
 
@@ -37,7 +37,7 @@ impl CreateService {
         let entry = self
             .showcase
             .checked(entry, &self.configuration.read().document)?;
-        let target = self.configuration.writes_to();
+        let target = self.configuration.home_of(Section::Services);
         let (_, snapshot) = self
             .configuration
             .update(&target, revision, |document| {

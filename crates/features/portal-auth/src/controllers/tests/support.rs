@@ -169,3 +169,7 @@ pub async fn revision(portal: &Portal, cookie: &str) -> String {
 pub fn text_of(portal: &Portal) -> String {
     fs::read_to_string(&portal.main).unwrap()
 }
+
+pub fn users_text_of(portal: &Portal) -> String {
+    fs::read_to_string(portal.folder.path().join("users.toml")).unwrap_or_default()
+}

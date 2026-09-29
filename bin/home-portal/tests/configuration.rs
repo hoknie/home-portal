@@ -274,3 +274,94 @@ fn a_mistyped_scripts_key_refuses_to_start_naming_it() {
         .to_string();
     assert!(message.contains("scripts.editable"), "{message}");
 }
+
+fn split_example() -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/split")
+}
+
+fn all_in_one() -> String {
+    let source = split_example();
+    let mut text = std::fs::read_to_string(source.join("home-portal.toml")).unwrap();
+    for name in [
+        "services.toml",
+        "dashboard.toml",
+        "automations.toml",
+        "webhooks.toml",
+        "notifications.toml",
+        "proxy.toml",
+    ] {
+        text.push('\n');
+        text.push_str(&std::fs::read_to_string(source.join(name)).unwrap());
+    }
+    let mut workflows: Vec<_> = std::fs::read_dir(source.join("workflows"))
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "toml")
+        })
+        .collect();
+    workflows.sort();
+    for path in workflows {
+        let file = std::fs::read_to_string(path).unwrap();
+        let (comment, rest) = file.split_at(file.find("id = ").unwrap());
+        text.push_str(&format!(
+            "\n{comment}[[workflows]]\n{}",
+            rest.replace("[[steps", "[[workflows.steps")
+        ));
+    }
+    text
+}
+
+fn ids(store: &ConfigStore, section: &str) -> Vec<String> {
+    store.read().document[section]
+        .as_array_of_tables()
+        .unwrap()
+        .iter()
+        .map(|entry| entry["id"].as_str().unwrap().to_string())
+        .collect()
+}
+
+#[test]
+fn an_all_in_one_file_starts_as_the_split_layout_and_answers_the_same_entries() {
+    let directory = tempfile::tempdir().unwrap();
+    let main = directory.path().join("home-portal.toml");
+    std::fs::write(&main, all_in_one()).unwrap();
+    let moved = ConfigStore::open(&main).unwrap();
+    let copy = tempfile::tempdir().unwrap();
+    std::fs::create_dir(copy.path().join("workflows")).unwrap();
+    for entry in std::fs::read_dir(split_example())
+        .unwrap()
+        .chain(std::fs::read_dir(split_example().join("workflows")).unwrap())
+    {
+        let path = entry.unwrap().path();
+        if path
+            .extension()
+            .is_some_and(|extension| extension == "toml")
+        {
+            let relative = path.strip_prefix(split_example()).unwrap();
+            std::fs::copy(&path, copy.path().join(relative)).unwrap();
+        }
+    }
+    let split = ConfigStore::open(copy.path().join("home-portal.toml")).unwrap();
+    for section in ["services", "automations", "webhooks", "workflows"] {
+        assert_eq!(ids(&moved, section), ids(&split, section), "{section}");
+    }
+    assert_eq!(
+        moved.read().document["dashboard"].to_string(),
+        split.read().document["dashboard"].to_string()
+    );
+    for name in [
+        "services.toml",
+        "dashboard.toml",
+        "automations.toml",
+        "webhooks.toml",
+        "notifications.toml",
+        "proxy.toml",
+        "workflows/revive.toml",
+    ] {
+        assert!(directory.path().join(name).is_file(), "{name}");
+    }
+    assert!(directory.path().join("home-portal.toml.previous").is_file());
+    assert_eq!(portal_config::pending_moves(&main).unwrap(), Vec::new());
+}

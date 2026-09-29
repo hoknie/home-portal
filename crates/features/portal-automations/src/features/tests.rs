@@ -147,7 +147,8 @@ async fn a_hand_edit_produces_one_configuration_change() {
     start(&feature);
     tokio::time::sleep(Duration::from_millis(100)).await;
     let path = folder.path().join("home-portal.toml");
-    fs::write(&path, format!("{text}# edited by hand\n")).unwrap();
+    let main = fs::read_to_string(&path).unwrap();
+    fs::write(&path, format!("{main}# edited by hand\n")).unwrap();
     assert!(eventually(|| runs(&feature).len() == 1).await);
     tokio::time::sleep(Duration::from_millis(1500)).await;
     let found = runs(&feature);

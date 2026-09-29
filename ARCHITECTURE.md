@@ -329,8 +329,8 @@ too.
 
 ### 6.1. The configuration file
 
-- **One TOML file holds every setting** — `network`, `users`, `services`, `dashboard`,
-  `environments`, `notifications` — at `HOME_PORTAL_CONFIG`, by default
+- **One main TOML file holds the short settings** — `interface`, `network`, `environments`,
+  `modules`, `storage`, `scripts`, `files` — at `HOME_PORTAL_CONFIG`, by default
   `$XDG_CONFIG_HOME/home-portal/home-portal.toml` when that variable is absolute, else
   `~/.config/home-portal/home-portal.toml`; the working directory is never consulted
   (`portal_config::configuration_path`). A missing default file with a `home-portal.toml` in the
@@ -341,11 +341,30 @@ too.
   `config/home-portal.example.toml` is the commented starting point; `just run` reads
   `config/home-portal.toml`. `HOME_PORTAL_ADDRESS` overrides
   `network.address` and `network.port`.
-- **The file may name further files.** `include` lists paths inside the main file's directory, read
-  in that order. Lists (`services`, `users`, `dashboard.widgets`) are the concatenation of every
-  file's entries; a plain key defined twice is an error naming both files. Nesting is refused, so
-  the set of files is visible in one place. The merged document carries where each entry came from,
-  and `configuration.writes_to` says which file the interface edits.
+- **Every other section has a home beside it.** `types/layouts/` names them (`Section`, `Home`,
+  `Layout`): `services.toml`, `dashboard.toml`, `users.toml`, `notifications.toml`, `proxy.toml`,
+  `dns.toml`, `automations.toml` (with `automation_settings`), `webhooks.toml`, `secrets.toml`, and
+  the folder `workflows/`. `[files]` in the main file moves any of them inside the directory;
+  `helpers/layout.rs` resolves the homes once at start, as `[storage]` is, and checks them under
+  `files.<key>`. A missing home reads as empty; the first write creates it 0600
+  (`services/writing.rs`). New entries go to `ConfigStore::home_of(section)`, edits to the file
+  that holds the entry (`Origins`), and nothing writes `[files]`, `include` or `configuration`.
+- **One workflow, one file.** `workflows/<id>.toml` holds the workflow's own keys and `[[steps]]`.
+  The loader wraps each file into a one-entry `[[workflows]]` document (`helpers/entries.rs`), so
+  merging, `Origins`, validation and the workflow repository see one list; writing unwraps it.
+  `update` creates a file, `update_moved` renames it when the id changes (new file first, then the
+  old one removed with its `.previous`), and `remove` deletes it. The folder's listing is part of
+  the stamps and the revision, so a file dropped in by hand is read and makes older revisions
+  stale. Errors on `workflows[i]` name the file.
+- **An old layout is moved at start.** `services/settling.rs` plans every move of a section found
+  outside its home (the main file, an included file, another home) in memory, refuses a collision
+  naming both places before writing anything, then writes targets before sources with
+  `.previous` and logs each move. Table positions are shifted past the target's
+  (`helpers/positions.rs`); the merge shifts every source's positions too, because
+  `deserialize_section` prints and re-reads the merged document. `include` is still read after the
+  homes and its sections are moved the same way; `configuration.writes_to` is ignored with a
+  warning. Lists are the concatenation of every file's entries, homes first; a plain key defined
+  twice is an error naming both files.
 - **`[storage]` says where the portal keeps what it writes.** `sessions.json`, `icons/`,
   `history/`, `automations/`, `caddy/` and the `scripts/` automations run lie beside the main
   file unless `storage.directory` moves them all or `storage.<name>` moves one; relative paths are
@@ -362,7 +381,8 @@ too.
   it touches and keeps comments, order and formatting everywhere else. When a service is deleted,
   the comment lines separated from it by a blank line stay with the file.
 - **Each section belongs to one feature**: the feature parses it (`types/`), validates it
-  (`validator()`) and edits it (`repositories/`). `portal-config` knows no section.
+  (`validator()`) and edits it (`repositories/`). `portal-config` knows only where each section
+  lives, never what it means.
 - **Writes are atomic and guarded.** Responses carry the file's revision (SHA-256) as `ETag`; a
   write needs `If-Match` (428 without it) and is refused with 409 when the file changed since. The
   new content goes to a temporary file with mode 0600, the old content to `<name>.previous`, and a

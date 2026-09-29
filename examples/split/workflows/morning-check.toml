@@ -1,0 +1,35 @@
+# Check the NAS and the router at the same time, keep the router's status, run a local
+# script with it, and call "revive" for the NAS when it looks bad.
+id = "morning-check"
+title = "Morning check"
+tags = ["media"]
+
+[[steps]]
+id = "both"
+kind = "parallel"
+branches = [
+  [{ id = "nas_state", kind = "status", service = "nas" }],
+  [{ id = "router_state", kind = "status", service = "router" }],
+]
+
+[[steps]]
+id = "remember"
+kind = "set"
+variable = "router"
+value = "{{steps.router_state.state}}"
+
+[[steps]]
+id = "log"
+kind = "script"
+script = "echo-event.sh"
+args = ["morning", "--", "{{vars.router}}"]
+timeout_seconds = 30
+
+[[steps]]
+id = "nas_bad"
+kind = "if"
+condition = { any = [
+  { left = "{{steps.nas_state.state}}", op = "==", right = "down" },
+  { left = "{{steps.nas_state.state}}", op = "==", right = "unreadable" },
+] }
+then = [{ id = "call_revive", kind = "workflow", workflow = "revive", inputs = { service = "nas" } }]

@@ -1,0 +1,42 @@
+# Report the portal itself: a loop takes exactly one of repeat, for_each and while; here it
+# goes over every service, and the note reads the NAS directly and a module switch.
+id = "portal-report"
+title = "Portal report"
+inputs = [{ name = "pause", type = "number", default = 1, description = "Seconds to wait before the report" }]
+
+[[steps]]
+id = "each"
+kind = "loop"
+for_each = "{{portal.services}}"
+
+[[steps.body]]
+id = "line"
+kind = "set"
+variable = "last"
+value = "{{loop.item.name}}: {{loop.item.state}}"
+
+# Dictionary keys, filter arguments and numbers take variables too: the key below is each
+# service's id, get(loop.item.id) reads it back without quotes, and the wait comes from an input.
+[[steps.body]]
+id = "states"
+kind = "set"
+variable = "states"
+object = { "{{loop.item.id}}" = "{{loop.item.state}}" }
+
+# log writes a message into the run's trace (info, warning or error) and never stops the run.
+# Every step's trace entry also keeps what its templates gave and what it did.
+[[steps.body]]
+id = "note"
+kind = "log"
+message = "{{loop.item.id}} is {{vars.states | get(loop.item.id)}}"
+level = "info"
+
+[[steps]]
+id = "pause"
+kind = "wait"
+seconds = "{{inputs.pause}}"
+
+[[steps]]
+id = "tell"
+kind = "notify"
+text = "NAS is {{portal.services.nas.state}}, users module on: {{portal.modules.users.is_enabled}}, portal at {{portal.network.url}}"

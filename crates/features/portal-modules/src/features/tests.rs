@@ -253,7 +253,8 @@ async fn a_legacy_key_is_replaced_and_comments_are_kept() {
         text.contains("[modules]\nproxy = true\ndns = false\n"),
         "{text}"
     );
-    assert!(text.contains("# names\n[dns]\nport = 53\n"), "{text}");
+    let dns = fs::read_to_string(portal.folder.path().join("dns.toml")).unwrap();
+    assert!(dns.contains("# names\n[dns]\nport = 53\n"), "{dns}");
 }
 
 #[tokio::test]

@@ -32,9 +32,14 @@ fn curl(jar: &Path, arguments: &[&str]) -> (String, String) {
     (status.to_string(), body.to_string())
 }
 
+fn network(port: u16) -> String {
+    format!("[network]\naddress = \"127.0.0.1\"\nport = {port}\n")
+}
+
 fn configuration(port: u16, hash: &str) -> String {
     format!(
-        "[network]\naddress = \"127.0.0.1\"\nport = {port}\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[[automations]]\nid = \"on-stop\"\ntitle = \"On stop\"\nwhen = {{ event = \"portal.stopping\" }}\nrun = {{ script = \"stop.sh\", timeout_seconds = 30 }}\n"
+        "{}\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[[automations]]\nid = \"on-stop\"\ntitle = \"On stop\"\nwhen = {{ event = \"portal.stopping\" }}\nrun = {{ script = \"stop.sh\", timeout_seconds = 30 }}\n",
+        network(port)
     )
 }
 
@@ -82,7 +87,7 @@ fn a_restart_from_the_api_applies_the_new_port_in_the_same_process_and_runs_the_
         ],
     );
     assert_eq!(status, "200");
-    fs::write(&path, configuration(second, &hash)).unwrap();
+    fs::write(&path, network(second)).unwrap();
     let (_, network) = curl(&jar, &[&at(first, "/api/network")]);
     assert!(network.contains("\"restart_required\":true"), "{network}");
     let (status, _) = curl(&jar, &["-X", "POST", &at(first, "/api/portal/restart")]);

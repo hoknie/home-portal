@@ -198,7 +198,7 @@ async fn a_token_is_shown_once_and_only_its_hash_is_kept() {
     let id = created["webhook"]["id"].as_str().unwrap().to_string();
     assert_eq!(token.len(), 64);
     assert_eq!(created["webhook"]["address"], format!("/webhook/{id}"));
-    let text = fs::read_to_string(api.folder.path().join("home-portal.toml")).unwrap();
+    let text = fs::read_to_string(api.folder.path().join("webhooks.toml")).unwrap();
     assert!(text.contains(&token_hash(&token)));
     assert!(!text.contains(&token));
     let (_, _, listed) = send(&api, get("/api/webhooks")).await;
@@ -367,7 +367,7 @@ async fn tags_are_saved_listed_and_shared_in_the_catalogue() {
     )
     .await;
     assert_eq!(status, StatusCode::OK);
-    let text = fs::read_to_string(api.folder.path().join("home-portal.toml")).unwrap();
+    let text = fs::read_to_string(api.folder.path().join("webhooks.toml")).unwrap();
     assert!(text.contains("tags = [\"camera\", \"door\"]"), "{text}");
     let (_, _, listed) = send(&api, get("/api/webhooks")).await;
     let motion = listed["webhooks"]

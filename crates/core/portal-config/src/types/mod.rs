@@ -1,6 +1,7 @@
 mod config_error;
 mod configuration_location;
 mod current;
+mod layouts;
 mod loaded;
 mod origins;
 mod revision;
@@ -17,6 +18,7 @@ mod tests;
 pub use config_error::ConfigError;
 pub use configuration_location::ConfigurationLocation;
 pub use current::Current;
+pub use layouts::{Home, Layout, Section, Shape};
 pub use loaded::Loaded;
 pub use origins::Origins;
 pub use revision::Revision;

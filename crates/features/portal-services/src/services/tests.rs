@@ -131,6 +131,7 @@ async fn the_supervisor_starts_stops_and_restarts_probing_as_the_file_changes() 
     let path = directory.path().join("home-portal.toml");
     write(&path, &service_text("media", &first.url()));
     let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let path = path.with_file_name("services.toml");
     let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), Vec::new()));
     let supervisor = Supervisor::new(
         store,

@@ -4,7 +4,7 @@ use portal_config::{ConfigStore, Revision, Revisioned};
 use portal_feature::ApiError;
 
 use super::checked;
-use crate::repositories::{append_workflow, workflow_position};
+use crate::repositories::{append_workflow, workflow_origin, workflow_position};
 use crate::services::{Views, decode_workflow};
 use crate::types::{RawWorkflow, Workflow, WorkflowView};
 
@@ -28,7 +28,10 @@ impl CreateWorkflow {
         revision: &Revision,
     ) -> Result<Revisioned<WorkflowView>, ApiError> {
         let workflow = decode_workflow(&raw).map_err(ApiError::Invalid)?;
-        let target = self.configuration.writes_to();
+        let target = self.configuration.workflow_file(&workflow.id);
+        if target.exists() || workflow_origin(&self.configuration.read(), &workflow.id).is_some() {
+            return Err(ApiError::invalid("id", Workflow::TAKEN_ID));
+        }
         let (_, snapshot) = self
             .configuration
             .update(&target, revision, |document| {

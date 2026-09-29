@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use portal_config::{ConfigStore, Revision, Revisioned};
+use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::ApiError;
 
 use crate::repositories::write_layout;
@@ -77,6 +77,6 @@ impl ChangeLayout {
             .into_iter()
             .next()
             .or_else(|| origins.table(Self::DASHBOARD).map(PathBuf::from))
-            .unwrap_or_else(|| self.configuration.writes_to()))
+            .unwrap_or_else(|| self.configuration.home_of(Section::Dashboard)))
     }
 }

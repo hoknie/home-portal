@@ -13,13 +13,16 @@ use portal_services::ServiceEntries;
 use toml_edit::DocumentMut;
 
 const EXAMPLES: &str = "examples";
-const SPLIT: [&str; 5] = [
+const SPLIT: [&str; 7] = [
     "home-portal.toml",
     "services.toml",
-    "widgets.toml",
+    "dashboard.toml",
     "automations.toml",
-    "workflows.toml",
+    "webhooks.toml",
+    "notifications.toml",
+    "proxy.toml",
 ];
+const WORKFLOWS: &str = "workflows";
 const SECRETS: &str = "secrets.example.toml";
 const SECRET_VALUES: &str = "telegram_token = \"123456789:AA\"\ncalendar_password = \"example\"\n";
 const ENVIRONMENTS: &str = "[environments.local]\nnetworks = [\"192.168.1.0/24\"]\n\n[environments.vpn]\nnetworks = [\"10.8.0.0/24\"]\n";
@@ -57,8 +60,33 @@ fn every_error(path: &Path) -> String {
     problems.join("\n")
 }
 
+fn copied_split() -> tempfile::TempDir {
+    let directory = tempfile::tempdir().unwrap();
+    let source = examples().join("split");
+    for name in SPLIT {
+        fs::copy(source.join(name), directory.path().join(name)).unwrap();
+    }
+    fs::create_dir(directory.path().join(WORKFLOWS)).unwrap();
+    for entry in fs::read_dir(source.join(WORKFLOWS)).unwrap() {
+        let path = entry.unwrap().path();
+        fs::copy(
+            &path,
+            directory
+                .path()
+                .join(WORKFLOWS)
+                .join(path.file_name().unwrap()),
+        )
+        .unwrap();
+    }
+    directory
+}
+
 fn services_of(path: &Path) -> Vec<portal_services::ServiceEntry> {
-    let store = Arc::new(ConfigStore::open(path).unwrap());
+    let directory = tempfile::tempdir().unwrap();
+    let main = directory.path().join("home-portal.toml");
+    fs::write(&main, "").unwrap();
+    fs::copy(path, directory.path().join("services.toml")).unwrap();
+    let store = Arc::new(ConfigStore::open(&main).unwrap());
     ServiceEntries::new(store)
         .run()
         .unwrap_or_else(|message| panic!("{}: {message}", path.display()))
@@ -114,11 +142,8 @@ fn assert_teaches(path: &Path) {
 
 #[test]
 fn the_split_example_loads_through_every_validator() {
-    let directory = tempfile::tempdir().unwrap();
+    let directory = copied_split();
     let source = examples().join("split");
-    for name in SPLIT {
-        fs::copy(source.join(name), directory.path().join(name)).unwrap();
-    }
     let main = directory.path().join("home-portal.toml");
     let text = fs::read_to_string(&main).unwrap();
     fs::write(&main, format!("{text}{}", user())).unwrap();
@@ -207,7 +232,7 @@ fn the_service_catalogue_holds_every_service_it_promises() {
 
 #[test]
 fn the_split_layout_uses_every_size_and_every_widget_type_the_portal_serves() {
-    let text = fs::read_to_string(examples().join("split/widgets.toml")).unwrap();
+    let text = fs::read_to_string(examples().join("split/dashboard.toml")).unwrap();
     for size in ["quarter", "third", "half", "two-thirds", "full"] {
         assert!(
             text.contains(&format!("size = \"{size}\"")),
@@ -275,4 +300,29 @@ impl portal_scripts::ProcessIdentity for ThisProcess {
     fn groups(&self) -> Vec<u32> {
         portal_automations::effective_groups()
     }
+}
+
+#[test]
+fn the_split_example_needs_no_moving_and_holds_one_file_per_workflow() {
+    let directory = copied_split();
+    let main = directory.path().join("home-portal.toml");
+    assert_eq!(portal_config::pending_moves(&main).unwrap(), Vec::new());
+    let store = ConfigStore::open(&main).unwrap();
+    let workflows = store.read().document["workflows"]
+        .as_array_of_tables()
+        .unwrap()
+        .len();
+    let files = fs::read_dir(examples().join("split").join(WORKFLOWS))
+        .unwrap()
+        .filter(|entry| {
+            entry
+                .as_ref()
+                .unwrap()
+                .path()
+                .extension()
+                .is_some_and(|extension| extension == "toml")
+        })
+        .count();
+    assert_eq!(workflows, files);
+    assert!(files >= 6);
 }

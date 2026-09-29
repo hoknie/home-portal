@@ -99,8 +99,8 @@ fn publishing_a_service_updates_dns_within_seconds() {
     let before = ask(dns, "home", TYPE_SOA).map(|answer| serial_of(&answer));
     let absent = ask(dns, "photos.home", TYPE_A).and_then(|answer| address_of(&answer));
     fs::write(
-        &path,
-        configuration(dns, admin, &hash, "proxy = { host = \"photos.home\" }\n"),
+        path.with_file_name("services.toml"),
+        "[[services]]\nid = \"photos\"\nname = \"Photos\"\nurl = \"http://192.168.1.7\"\nproxy = { host = \"photos.home\" }\n",
     )
     .unwrap();
     let began = Instant::now();

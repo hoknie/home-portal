@@ -1,0 +1,19 @@
+# Caddy publishes the portal and the services that carry a proxy table (see
+# services.toml). The portal writes Caddy's whole configuration through its admin API,
+# so start Caddy from deploy/caddy.plist or deploy/caddy.service and add nothing by hand.
+# Ports 80 and 443 must reach Caddy for Let's Encrypt; the state is under
+# Management → Proxy, and `home-portal proxy render` prints what Caddy is given.
+[proxy]
+admin = "http://127.0.0.1:2019"
+portal_host = "portal.home.example.com"
+# One sign-in covers every published host under this domain. Use a subdomain of your
+# own for it, not the whole domain: every host under it receives the session cookie.
+cookie_domain = "home.example.com"
+
+# How hosts get certificates unless a service says otherwise:
+#   mode = "acme"       Let's Encrypt over HTTP-01; needs ports 80 and 443 forwarded
+#   mode = "internal"   Caddy's own authority; install its root from Management → Proxy
+#   mode = "files"      certificate and key files on Caddy's host
+[proxy.tls]
+mode = "acme"
+email = "owner@example.com"

@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use portal_config::{ConfigStore, Revision, Revisioned};
+use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::ApiError;
 
 use crate::loops::CaddySync;
@@ -32,7 +32,7 @@ impl ChangeProxy {
             .origins
             .table(SECTION)
             .map(Path::to_path_buf)
-            .unwrap_or_else(|| self.configuration.writes_to());
+            .unwrap_or_else(|| self.configuration.home_of(Section::Proxy));
         self.configuration
             .update(&target, revision, |document| {
                 write_choice(document, choice);

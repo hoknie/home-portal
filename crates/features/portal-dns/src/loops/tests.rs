@@ -64,7 +64,14 @@ fn fixture(name: &str) -> PathBuf {
 
 fn configuration(port: u16, extra: &str) -> String {
     format!(
-        "[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.home\"\n\n[dns]\nenabled = true\naddress = \"127.0.0.1\"\nport = {port}\nzones = [\"home\"]\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\n{extra}"
+        "[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.home\"\n\n{}",
+        dns_section(port, extra)
+    )
+}
+
+fn dns_section(port: u16, extra: &str) -> String {
+    format!(
+        "[dns]\nenabled = true\naddress = \"127.0.0.1\"\nport = {port}\nzones = [\"home\"]\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\n{extra}"
     )
 }
 
@@ -158,11 +165,7 @@ async fn changing_the_port_moves_the_server() {
     let (first, second) = (free_port(), free_port());
     let (folder, runtime) = started(&configuration(first, ""));
     assert!(eventually(async || runtime.library.state().plain.listening).await);
-    fs::write(
-        folder.path().join("home-portal.toml"),
-        configuration(second, ""),
-    )
-    .unwrap();
+    fs::write(folder.path().join("dns.toml"), dns_section(second, "")).unwrap();
     let bytes = query("jellyfin.home.", RecordType::A);
     assert!(eventually(async || over_udp(second, &bytes).await.is_some()).await);
     assert!(over_udp(first, &bytes).await.is_none());

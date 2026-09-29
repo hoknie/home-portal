@@ -1,0 +1,10 @@
+# Announce when a service goes down and when it recovers, on every ready channel.
+[notifications]
+states = ["down", "unreadable"]
+recovered = true
+
+# The Telegram channel.
+[notifications.telegram]
+enabled = true
+secret = "telegram_token"
+chat_id = "123456789"

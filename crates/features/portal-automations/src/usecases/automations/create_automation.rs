@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use portal_config::{ConfigStore, Revision, Revisioned};
+use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::ApiError;
 
 use crate::repositories::{append, position};
@@ -27,7 +27,7 @@ impl CreateAutomation {
         revision: &Revision,
     ) -> Result<Revisioned<AutomationView>, ApiError> {
         let automation = Automation::decode(raw).map_err(ApiError::Invalid)?;
-        let target = self.configuration.writes_to();
+        let target = self.configuration.home_of(Section::Automations);
         let (_, snapshot) = self
             .configuration
             .update(&target, revision, |document| {

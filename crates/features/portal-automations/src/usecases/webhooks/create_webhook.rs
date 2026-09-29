@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use portal_config::{ConfigStore, Revision, Revisioned};
+use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::ApiError;
 
 use crate::helpers::{new_token, new_webhook_id, token_hash};
@@ -32,7 +32,7 @@ impl CreateWebhook {
         raw.id = new_webhook_id();
         raw.token_sha256 = token.as_deref().map(token_hash);
         let webhook = Webhook::decode(&raw).map_err(ApiError::Invalid)?;
-        let target = self.configuration.writes_to();
+        let target = self.configuration.home_of(Section::Webhooks);
         let (_, snapshot) = self
             .configuration
             .update(&target, revision, |document| {

@@ -17,11 +17,14 @@ use tower::ServiceExt;
 
 use crate::DashboardFeature;
 
-const FILE: &str = "# my portal\n\n[network]\nport = 8080 # keep\n\n# counts\n[[dashboard.widgets]]\ntype = \"status-summary\"\n\n[[dashboard.widgets]]\ntype = \"weather\"\nid = \"riga\"\nsettings = { latitude = 56.95 }\n";
+const MAIN: &str = "# my portal\n\n[network]\nport = 8080 # keep\n";
+
+const FILE: &str = "# counts\n[[dashboard.widgets]]\ntype = \"status-summary\"\n\n[[dashboard.widgets]]\ntype = \"weather\"\nid = \"riga\"\nsettings = { latitude = 56.95 }\n";
 
 struct Portal {
     router: Router,
     path: PathBuf,
+    main: PathBuf,
     _directory: TempDir,
 }
 
@@ -51,14 +54,16 @@ fn portal_with(files: &[(&str, &str)]) -> Portal {
     for (name, text) in files {
         fs::write(directory.path().join(name), text).unwrap();
     }
-    let path = directory.path().join(files[0].0);
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let main = directory.path().join(files[0].0);
+    let path = directory.path().join("dashboard.toml");
+    let store = Arc::new(ConfigStore::open(&main).unwrap());
     let feature = DashboardFeature::new(store.clone());
     store.adopt(vec![feature.validator().unwrap()]).unwrap();
     store.adopt_checks(vec![Arc::new(latitude_check)]).unwrap();
     Portal {
         router: feature.router(),
         path,
+        main,
         _directory: directory,
     }
 }
@@ -105,18 +110,15 @@ fn reversed(body: &Value) -> Value {
 
 #[tokio::test]
 async fn a_saved_layout_is_written_and_the_rest_of_the_file_is_byte_identical() {
-    let portal = portal_with(&[("home-portal.toml", FILE)]);
+    let portal = portal_with(&[("home-portal.toml", MAIN), ("dashboard.toml", FILE)]);
     let (revision, body) = loaded(&portal).await;
     let (status, etag, saved) = send(&portal, put(Some(&revision), &reversed(&body))).await;
     assert_eq!(status, StatusCode::OK, "{saved}");
     assert_ne!(etag.unwrap(), revision);
     assert_eq!(saved["widgets"][0]["key"], "riga");
     assert_eq!(saved["widgets"][1]["key"], "status-summary");
+    assert_eq!(fs::read_to_string(&portal.main).unwrap(), MAIN);
     let text = fs::read_to_string(&portal.path).unwrap();
-    assert!(
-        text.starts_with("# my portal\n\n[network]\nport = 8080 # keep\n"),
-        "{text}"
-    );
     assert!(
         text.ends_with(
             "# counts\n[[dashboard.widgets]]\ntype = \"status-summary\"\nid = \"status-summary\"\n"
@@ -127,7 +129,7 @@ async fn a_saved_layout_is_written_and_the_rest_of_the_file_is_byte_identical() 
 
 #[tokio::test]
 async fn a_save_without_a_revision_is_428_and_with_a_stale_one_is_409() {
-    let portal = portal_with(&[("home-portal.toml", FILE)]);
+    let portal = portal_with(&[("home-portal.toml", MAIN), ("dashboard.toml", FILE)]);
     let (revision, body) = loaded(&portal).await;
     assert_eq!(
         send(&portal, put(None, &body)).await.0,
@@ -145,7 +147,7 @@ async fn a_save_without_a_revision_is_428_and_with_a_stale_one_is_409() {
 
 #[tokio::test]
 async fn invalid_widgets_are_named_by_their_place_in_the_editor() {
-    let portal = portal_with(&[("home-portal.toml", FILE)]);
+    let portal = portal_with(&[("home-portal.toml", MAIN), ("dashboard.toml", FILE)]);
     let (revision, body) = loaded(&portal).await;
     let mut bad = body.clone();
     bad["widgets"][0]["size"] = json!("wide");
@@ -169,16 +171,20 @@ async fn invalid_widgets_are_named_by_their_place_in_the_editor() {
 
 #[tokio::test]
 async fn a_layout_spread_over_two_files_is_refused_naming_both_and_nothing_changes() {
-    let main = format!("include = [\"widgets.toml\"]\n\n{FILE}");
-    let extra = "[[dashboard.widgets]]\ntype = \"services\"\n";
-    let portal = portal_with(&[("home-portal.toml", &main), ("widgets.toml", extra)]);
+    let portal = portal_with(&[("home-portal.toml", MAIN), ("dashboard.toml", FILE)]);
+    let main = format!("{MAIN}\n[[dashboard.widgets]]\ntype = \"services\"\n");
+    fs::write(&portal.main, &main).unwrap();
+    let file = fs::File::options().write(true).open(&portal.main).unwrap();
+    file.set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(5))
+        .unwrap();
     let (revision, body) = loaded(&portal).await;
     let (status, _, message) = send(&portal, put(Some(&revision), &reversed(&body))).await;
     assert_eq!(status, StatusCode::CONFLICT);
     let message = message.as_str().unwrap();
     assert!(
-        message.contains("home-portal.toml") && message.contains("widgets.toml"),
+        message.contains("home-portal.toml") && message.contains("dashboard.toml"),
         "{message}"
     );
-    assert_eq!(fs::read_to_string(&portal.path).unwrap(), main);
+    assert_eq!(fs::read_to_string(&portal.main).unwrap(), main);
+    assert_eq!(fs::read_to_string(&portal.path).unwrap(), FILE);
 }

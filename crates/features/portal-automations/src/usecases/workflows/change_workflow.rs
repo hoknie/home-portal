@@ -29,20 +29,29 @@ impl ChangeWorkflow {
         revision: &Revision,
     ) -> Result<Revisioned<WorkflowView>, ApiError> {
         let workflow = decode_workflow(&raw).map_err(ApiError::Invalid)?;
-        let target = workflow_origin(&self.configuration.read(), id)
-            .ok_or(ApiError::NotFound(Workflow::UNKNOWN))?;
-        let (_, snapshot) = self
-            .configuration
-            .update(&target, revision, |document| {
-                let index =
-                    workflow_position(document, id).ok_or(ApiError::NotFound(Workflow::UNKNOWN))?;
-                if workflow.id != id && workflow_position(document, &workflow.id).is_some() {
-                    return Err(ApiError::invalid("id", Workflow::TAKEN_ID));
-                }
-                replace_workflow(document, index, &workflow, &raw.steps);
-                checked(document, &workflow.id)
-            })
-            .await?;
+        let current = self.configuration.read();
+        let target = workflow_origin(&current, id).ok_or(ApiError::NotFound(Workflow::UNKNOWN))?;
+        let renamed = workflow.id != id;
+        if renamed && workflow_origin(&current, &workflow.id).is_some() {
+            return Err(ApiError::invalid("id", Workflow::TAKEN_ID));
+        }
+        let edit = |document: &mut toml_edit::DocumentMut| {
+            let index =
+                workflow_position(document, id).ok_or(ApiError::NotFound(Workflow::UNKNOWN))?;
+            replace_workflow(document, index, &workflow, &raw.steps);
+            checked(document, &workflow.id)
+        };
+        let (_, snapshot) = if renamed && self.configuration.in_workflow_folder(&target) {
+            let moved = self.configuration.workflow_file(&workflow.id);
+            if moved.exists() {
+                return Err(ApiError::invalid("id", Workflow::TAKEN_ID));
+            }
+            self.configuration
+                .update_moved(&target, &moved, revision, edit)
+                .await?
+        } else {
+            self.configuration.update(&target, revision, edit).await?
+        };
         self.views.sink.cache.refresh(&snapshot.document);
         let view = self
             .views

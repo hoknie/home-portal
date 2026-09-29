@@ -14,11 +14,26 @@
 # the scripts directory ([storage] below; scripts/ beside this file by default). The directory and every script must be 0755 or
 # stricter: under a umask of 0002 a checkout gives 0775, which the portal refuses.
 
-# Further files read after this one, in order. Paths are relative to this file's
-# directory, must stay inside it, and may not include further files.
-# Lists such as [[services]] and [[dashboard.widgets]] are joined in this order;
-# a plain key defined twice is an error naming both files.
-# include = ["services.toml", "secrets.toml"]
+# This file holds only the short settings: [interface], [network], [environments.*],
+# [modules], [storage] and [scripts]. Everything else lives in its own file beside it, and the
+# interface writes each part there, never back into this file:
+#   services.toml       [[services]]            dashboard.toml     [dashboard]
+#   users.toml          [[users]]               notifications.toml [notifications]
+#   proxy.toml          [proxy]                 dns.toml           [dns]
+#   automations.toml    [[automations]], [automation_settings]
+#   webhooks.toml       [[webhooks]]            secrets.toml       [secrets], mode 0600
+#   workflows/          one file per workflow, named after its id (revive.toml)
+# A file that does not exist yet is simply empty; the first entry saved creates it.
+# [files] moves any part elsewhere inside this directory; the portal never rewrites these
+# paths. Read at start: restart after a change.
+# [files]
+# workflows = "flows/"
+# automations = "rules.toml"
+# webhooks = "rules.toml"
+#
+# A section found in this file (or in an included file) is moved to its own file at start,
+# keeping its comments, with a .previous copy of every file rewritten. `include` still reads
+# further files, but their sections are moved the same way.
 
 # Where the portal keeps what it writes (sessions.json, icons/, history/, automations/,
 # caddy/) and the scripts/ that automations run. Relative paths are relative to this
@@ -71,7 +86,7 @@ trusted_proxies = []
 # notifications = true
 
 # Workflows: steps with conditions, loops, parallel branches, HTTP requests, scripts, notifications
-# and service checks (../examples/split/workflows.toml shows every kind). Management →
+# and service checks (../examples/split/workflows/ shows every kind). Management →
 # Workflows edits them in a block editor, which rewrites an entry's steps as a whole: comments
 # inside steps are lost, comments like these above an entry stay. An automation runs one with
 # workflow = "ping-nas" and inputs = { service = "{{service.id}}" } in place of run.
@@ -154,7 +169,8 @@ trusted_proxies = []
 # name = "admin"
 # password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
 
-# Services shown on the home page and probed in the background.
+# Services shown on the home page and probed in the background. Entries written here are
+# moved to services.toml beside this file at the first start; keep adding them there.
 [[services]]
 id = "router"
 name = "Router"
@@ -250,7 +266,4 @@ description = "Home router admin page"
 # secret = "telegram_token"
 # chat_id = "123456789"
 
-# Which file the interface writes to. The main file by default; it must be one of
-# the files above.
-# [configuration]
-# writes_to = "services.toml"
+# [configuration] writes_to is no longer used: every part is written to its own file.
