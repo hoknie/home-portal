@@ -7,5 +7,6 @@ pub struct ScriptsResponse {
     pub directory: String,
     pub exists: bool,
     pub user_id: u32,
+    pub editing: bool,
     pub scripts: Vec<ScriptResponse>,
 }

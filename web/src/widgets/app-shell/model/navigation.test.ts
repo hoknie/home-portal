@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { MANAGEMENT, MODULE_LINKS, isActive, moduleLinks } from "./navigation";
+import { MANAGEMENT, MODULE_LINKS, isActive, moduleLinks, sectionLinks } from "./navigation";
 
 it("marks a management section on its own page and its subpages only", () => {
   expect(isActive("/", "/")).toBe(true);
@@ -20,4 +20,10 @@ it("the modules section lists proxy, dns, automations, webhooks, users, workflow
 it("only enabled modules are listed", () => {
   expect(moduleLinks(new Set(["automations", "proxy"])).map((item) => item.module)).toEqual(["proxy", "automations"]);
   expect(moduleLinks(new Set())).toEqual([]);
+});
+
+it("scripts follow the modules while editing is on, whatever modules are switched", () => {
+  expect(sectionLinks(new Set(["workflows"]), true).map((item) => item.href)).toEqual(["/admin/workflows/", "/admin/scripts/"]);
+  expect(sectionLinks(new Set(), true).map((item) => item.label)).toEqual(["scripts"]);
+  expect(sectionLinks(new Set(["workflows"]), false).map((item) => item.label)).toEqual(["workflows"]);
 });

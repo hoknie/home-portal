@@ -25,9 +25,10 @@ pub async fn scripts(State(state): State<AutomationsState>) -> Json<ScriptsRespo
         .ok()
         .flatten();
     Json(ScriptsResponse {
-        directory: state.scripts.canonical_root().display().to_string(),
+        directory: state.scripts.root().display().to_string(),
         exists: listed.is_some(),
         user_id: crate::clients::effective_user(),
+        editing: state.scripts.editing(),
         scripts: listed
             .unwrap_or_default()
             .into_iter()

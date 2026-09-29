@@ -168,12 +168,14 @@ fn defaults() -> Vec<Value> {
         json!({"id": "both", "kind": "parallel", "branches": [[nothing("left_step")], [nothing("right_step")]]}),
         json!({"id": "call", "kind": "workflow", "workflow": "other"}),
         nothing("idle"),
+        json!({"id": "leave", "kind": "break"}),
+        json!({"id": "skip", "kind": "continue"}),
         json!({"id": "done", "kind": "stop", "outcome": "succeeded"}),
         json!({"id": "remember", "kind": "set", "variable": "note", "value": "x"}),
         json!({"id": "pause", "kind": "wait", "seconds": 1}),
         json!({"id": "reshape", "kind": "transform", "input": "[]", "operations": [{"op": "reverse"}]}),
         json!({"id": "ask", "kind": "http", "method": "GET", "url": "http://nas.lan"}),
-        json!({"id": "run", "kind": "script", "script": "restart.sh"}),
+        json!({"id": "run", "kind": "script", "script": "restart.sh", "timeout_seconds": 60}),
         json!({"id": "tell", "kind": "notify", "text": "hello"}),
         json!({"id": "note", "kind": "log", "message": "x", "level": "info"}),
         json!({"id": "start", "kind": "automation", "automation": "manual-one"}),
@@ -201,6 +203,18 @@ fn toml_value(value: &Value) -> toml_edit::Value {
     }
 }
 
+fn inside_a_loop_when_it_needs_one(step: &Value) -> Value {
+    match step["kind"].as_str() {
+        Some("break" | "continue") => json!({
+            "id": format!("{}_loop", step["id"].as_str().unwrap_or_default()),
+            "kind": "loop",
+            "repeat": 1,
+            "body": [step],
+        }),
+        _ => step.clone(),
+    }
+}
+
 #[test]
 fn every_step_kind_has_a_minimal_valid_step_shared_with_the_interface() {
     let steps = defaults();
@@ -220,7 +234,7 @@ fn every_step_kind_has_a_minimal_valid_step_shared_with_the_interface() {
     );
     let steps_text: Vec<String> = steps
         .iter()
-        .map(|step| toml_value(step).to_string())
+        .map(|step| toml_value(&inside_a_loop_when_it_needs_one(step)).to_string())
         .collect();
     let text = format!(
         "[modules]\nworkflows = true\n\n[[workflows]]\nid = \"all\"\ntitle = \"All\"\nsteps = [{}]\n\n[[workflows]]\nid = \"other\"\ntitle = \"Other\"\nsteps = [{{ id = \"n\", kind = \"nothing\" }}]\n\n[[automations]]\nid = \"manual-one\"\ntitle = \"Manual\"\nwhen = {{ event = \"manual\" }}\nrun = {{ script = \"restart.sh\" }}\n",

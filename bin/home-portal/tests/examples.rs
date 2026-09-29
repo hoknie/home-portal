@@ -254,10 +254,25 @@ fn the_split_example_runs_its_automations_from_its_sample_script() {
         .filter_map(|table| table.get("run").and_then(|run| run["script"].as_str()))
         .collect();
     assert_eq!(scripts.len(), 6);
-    let directory = portal_automations::ScriptsDirectory::at(main.with_file_name("scripts"));
+    let directory = portal_scripts::ResolveScript::at(
+        main.with_file_name("scripts"),
+        std::sync::Arc::new(ThisProcess),
+    );
     for script in scripts {
         directory
-            .resolve(script)
+            .run(script)
             .unwrap_or_else(|refusal| panic!("{script}: {}", refusal.message));
+    }
+}
+
+struct ThisProcess;
+
+impl portal_scripts::ProcessIdentity for ThisProcess {
+    fn user(&self) -> u32 {
+        portal_automations::effective_user()
+    }
+
+    fn groups(&self) -> Vec<u32> {
+        portal_automations::effective_groups()
     }
 }

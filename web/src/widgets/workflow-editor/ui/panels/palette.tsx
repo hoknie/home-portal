@@ -8,8 +8,16 @@ import { useState } from "react";
 import { KIND_GROUPS, type Kind, type Target } from "@/entities/workflow";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
 
+import { kindPlaceable, slotContext } from "../../model/checks/placing";
 import { useEditor } from "../../model/editor-context";
 import { FALLBACK_ICON, GROUP_TONE, KIND_ICONS } from "../nodes/kind-style";
+
+const QUICK_ENDS = [
+  { key: "endRun", kind: "stop", loop: false },
+  { key: "skip", kind: "nothing", loop: false },
+  { key: "leaveLoop", kind: "break", loop: true },
+  { key: "nextPass", kind: "continue", loop: true },
+] as const;
 
 export type PaletteProps = { target: Target | null; onChoose: (kind: Kind, target: Target) => void; onClose: () => void };
 
@@ -23,7 +31,11 @@ export function Palette({ target, onChoose, onClose }: PaletteProps) {
   const needle = query.trim().toLowerCase();
   const matches = (kind: Kind) =>
     needle === "" || [kind.name, text(`kinds.${kind.name}.name`), text(`kinds.${kind.name}.description`)].some((value) => value.toLowerCase().includes(needle));
-  const shown = editor.catalogue.kinds.filter(matches);
+  const shown = editor.catalogue.kinds.filter((kind) => matches(kind) && (target === null || kindPlaceable(kind.name, target)));
+  const context = target ? slotContext(target) : { inBranch: false, inLoop: false };
+  const quick = QUICK_ENDS.filter((entry) => context.inBranch && (!entry.loop || context.inLoop))
+    .map((entry) => ({ ...entry, kind: editor.catalogue.kinds.find((kind) => kind.name === entry.kind) }))
+    .filter((entry): entry is typeof entry & { kind: Kind } => entry.kind !== undefined);
   return (
     <Dialog
       open={target !== null}
@@ -43,6 +55,32 @@ export function Palette({ target, onChoose, onClose }: PaletteProps) {
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input autoFocus aria-label={t("search")} placeholder={t("search")} className="ps-9" value={query} onChange={(change) => setQuery(change.target.value)} />
         </div>
+        {quick.length > 0 ? (
+          <section className="grid gap-2" aria-label={t("quick.title")}>
+            <h3 className="text-sm font-semibold">{t("quick.title")}</h3>
+            <div className="flex flex-wrap gap-2">
+              {quick.map((entry) => {
+                const Icon = KIND_ICONS[entry.kind.name] ?? FALLBACK_ICON;
+                return (
+                  <button
+                    key={entry.key}
+                    type="button"
+                    className="flex items-center gap-2 rounded-full border border-glass-edge bg-glass-tint px-3 py-1.5 text-sm transition-colors hover:border-primary hover:bg-accent"
+                    onClick={() => {
+                      setQuery("");
+                      if (target) {
+                        onChoose(entry.kind, target);
+                      }
+                    }}
+                  >
+                    <Icon className="size-4" aria-hidden />
+                    {t(`quick.${entry.key}`)}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
         {shown.length === 0 ? <p className="text-sm text-muted-foreground">{t("noMatches")}</p> : null}
         {KIND_GROUPS.map((group) => {
           const kinds = shown.filter((kind) => kind.group === group);

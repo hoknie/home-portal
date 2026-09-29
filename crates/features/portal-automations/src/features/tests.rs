@@ -48,6 +48,7 @@ pub fn portal(configuration: &str, scripts: &[(&str, &str)]) -> (TempDir, Automa
         store,
         Arc::new(FakeDirectory),
         Arc::new(crate::fakes::FakeActions::default()),
+        Arc::new(crate::fakes::FakeScripts::at(root)),
     )
     .unwrap();
     (folder, feature)
@@ -215,6 +216,7 @@ async fn the_run_journal_is_kept_across_a_restart_and_numbering_goes_on() {
         store,
         Arc::new(FakeDirectory),
         Arc::new(crate::fakes::FakeActions::default()),
+        Arc::new(crate::fakes::FakeScripts::at(folder.path().join("scripts"))),
     )
     .unwrap();
     let restored = again.state.sink.journal.runs(None);

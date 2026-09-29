@@ -16,6 +16,7 @@ use portal_proxy::{
     CheckPublication, CurrentProxySettings, PrepareProxy, ProxyFeature, ProxyPorts,
 };
 use portal_public::PublicFeature;
+use portal_scripts::{ListScripts, ResolveScript, ScriptEditing, ScriptsFeature};
 use portal_secrets::SecretsFeature;
 use portal_services::{ServiceEntries, ServicesFeature, ServicesPorts};
 use portal_weather::WeatherFeature;
@@ -23,8 +24,8 @@ use portal_widget::WidgetRegistry;
 
 use super::channels::channels;
 use crate::adapters::{
-    AutomationDirectory, DnsDirectory, NetworkConnection, ProxyPublishing, ServiceCatalogue,
-    ServicePublications, WidgetLayout, WorkflowActions,
+    AutomationDirectory, DnsDirectory, NetworkConnection, PortalProcess, ProxyPublishing,
+    ScriptShelf, ServiceCatalogue, ServicePublications, WidgetLayout, WorkflowActions,
 };
 use crate::types::{BootError, Registry, Restart, Wiring};
 
@@ -36,6 +37,12 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         proxy: CurrentProxySettings::new(configuration.clone()),
     });
     let actions = Arc::new(WorkflowActions::default());
+    let identity: Arc<PortalProcess> = Arc::new(PortalProcess);
+    let shelf = Arc::new(ScriptShelf {
+        resolve: ResolveScript::new(&configuration, identity.clone()),
+        list: ListScripts::new(&configuration, identity.clone()),
+        editing: ScriptEditing::new(configuration.clone()),
+    });
     let automations = Arc::new(
         AutomationsFeature::new(
             configuration.clone(),
@@ -45,6 +52,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
                 environments: CurrentEnvironments::new(configuration.clone()),
             }),
             actions.clone(),
+            shelf,
         )
         .map_err(|message| BootError::Feature {
             name: AutomationsFeature::NAME,
@@ -126,6 +134,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         icons.clone(),
         Arc::new(notifications),
         Arc::new(SecretsFeature::new(configuration.clone())),
+        Arc::new(ScriptsFeature::new(configuration.clone(), identity)),
         Arc::new(DashboardFeature::new(configuration.clone())),
         Arc::new(ModulesFeature::new(
             configuration.clone(),

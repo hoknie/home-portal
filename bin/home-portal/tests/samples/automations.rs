@@ -3,10 +3,12 @@ use std::collections::BTreeMap;
 use portal_automations::{
     AcceptedResponse, AutomationResponse, AutomationsResponse, CatalogueResponse, Choice,
     CreatedWebhookResponse, Directory, MarksResponse, OutcomeResponse, OutputResponse,
-    QueuedResponse, RawMarks, RawRun, RawWebhook, ReceptionResponse, RunResponse,
-    RunSettingsResponse, RunsResponse, ScheduleResponse, ScriptResponse, ScriptsResponse,
-    StatesResponse, TokenResponse, Webhook, WebhookResponse, WebhooksResponse, WhenResponse,
+    QueuedResponse, RawMarks, RawRun, RawWebhook, ReceptionResponse, Refusal, RefusalCode,
+    RunResponse, RunSettingsResponse, RunsResponse, ScheduleResponse, ScriptEntry, ScriptResponse,
+    ScriptsResponse, StatesResponse, TokenResponse, Webhook, WebhookResponse, WebhooksResponse,
+    WhenResponse,
 };
+use portal_model::ScriptHeader;
 
 use crate::check;
 
@@ -243,28 +245,34 @@ fn the_automation_samples_match_their_serializers() {
             directory: "/srv/home-portal/scripts".into(),
             exists: true,
             user_id: 501,
+            editing: false,
             scripts: vec![
-                ScriptResponse {
+                ScriptResponse::of(ScriptEntry {
                     path: "backup/nightly.sh".into(),
-                    runnable: true,
                     problem: None,
-                    code: None,
-                    concerns: None,
-                },
-                ScriptResponse {
+                    header: ScriptHeader::default(),
+                }),
+                ScriptResponse::of(ScriptEntry {
+                    path: "media/restart.sh".into(),
+                    problem: None,
+                    header: ScriptHeader::parse(
+                        "#!/bin/sh\n# @description Restart a service's container\n# @arg service <text> Service id\n# @arg --retries <number=3> Tries before giving up\n# @arg --force Skip the health check\n# @arg mode <fast|full=fast> How deep to check\n",
+                    ),
+                }),
+                ScriptResponse::of(ScriptEntry {
                     path: "open.sh".into(),
-                    runnable: false,
-                    problem: Some("open.sh can be written by group or others".into()),
-                    code: Some("writable".into()),
-                    concerns: Some("/srv/home-portal/scripts/open.sh".into()),
-                },
-                ScriptResponse {
+                    problem: Some(Refusal {
+                        code: RefusalCode::Writable,
+                        path: "/srv/home-portal/scripts/open.sh".into(),
+                        message: "open.sh can be written by group or others".into(),
+                    }),
+                    header: ScriptHeader::parse("# @arg --keep <weird> Days\n"),
+                }),
+                ScriptResponse::of(ScriptEntry {
                     path: "restart.sh".into(),
-                    runnable: true,
                     problem: None,
-                    code: None,
-                    concerns: None,
-                },
+                    header: ScriptHeader::default(),
+                }),
             ],
         })
         .unwrap(),

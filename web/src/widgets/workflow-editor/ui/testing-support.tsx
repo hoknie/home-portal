@@ -7,6 +7,7 @@ import { apiSamples } from "@/shared/api";
 import { renderWithProviders } from "@/shared/lib/testing";
 
 import type { Draft } from "../model/draft";
+import type { Sources } from "../model/editor-context";
 import { WorkflowEditor } from "./workflow-editor";
 
 export const catalogue = workflowCatalogueSchema.parse(apiSamples.workflowCatalogue);
@@ -53,7 +54,7 @@ export function withSteps(steps: Step[], extra: Partial<Workflow> = {}): Workflo
   return { ...sampleWorkflows[1], id: "draft", title: "Draft", used_by: [], steps, ...extra };
 }
 
-export function openEditor(workflow: Workflow | null, options: { initial?: Draft | null; onConflict?: () => void } = {}) {
+export function openEditor(workflow: Workflow | null, options: { initial?: Draft | null; onConflict?: () => void; scripts?: Sources["scripts"] } = {}) {
   const onSaved = vi.fn();
   const onConflict = options.onConflict ?? vi.fn();
   const result = renderWithProviders(
@@ -69,7 +70,7 @@ export function openEditor(workflow: Workflow | null, options: { initial?: Draft
           { id: "router", name: "Router" },
         ],
         states: ["up", "degraded", "down", "unreadable"],
-        scripts: [{ path: "restart.sh", runnable: true, problem: null }],
+        scripts: options.scripts ?? [{ path: "restart.sh", runnable: true, problem: null }],
         secrets: [{ name: "token", set: true }],
         channels: [
           { name: "telegram", readiness: "ready" },

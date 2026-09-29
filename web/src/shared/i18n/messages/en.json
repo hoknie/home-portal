@@ -41,7 +41,8 @@
     "notifications": "Notifications",
     "collapseMenu": "Collapse menu",
     "expandMenu": "Expand menu",
-    "menu": "Menu"
+    "menu": "Menu",
+    "scripts": "Scripts"
   },
   "theme": {
     "label": "Theme",
@@ -1328,7 +1329,9 @@
       "inputDefault": "The default is not of the input's type",
       "variableName": "Capital letters, digits and _, starting with a letter",
       "variableReserved": "Set by the portal; choose another name",
-      "numberOrTemplate": "Must be a whole number or a template such as '{{'inputs.seconds'}}'"
+      "numberOrTemplate": "Must be a whole number or a template such as '{{'inputs.seconds'}}'",
+      "neverRuns": "This step never runs: an earlier step ends this branch",
+      "needsLoop": "Needs an enclosing loop: works only inside a loop body, not through parallel"
     },
     "canvas": {
       "label": "Workflow diagram",
@@ -1400,14 +1403,23 @@
       "automationWaited": "{title}, waiting",
       "setList": "{variable}: list of {count}",
       "setObject": "{variable}: {count, plural, one {# key} other {# keys}}",
-      "repeatTemplate": "{count} times"
+      "repeatTemplate": "{count} times",
+      "break": "leaves the loop",
+      "continue": "goes to the next pass"
     },
     "warningCount": "{count, plural, one {# warning} other {# warnings}}",
     "palette": {
       "title": "Add a step",
       "description": "Choose what should happen at this point",
       "search": "Find a step",
-      "noMatches": "No step matches"
+      "noMatches": "No step matches",
+      "quick": {
+        "title": "End this branch",
+        "endRun": "End run",
+        "skip": "Skip",
+        "leaveLoop": "Leave loop",
+        "nextPass": "Next pass"
+      }
     },
     "destinations": {
       "top": "At the end of the workflow",
@@ -1520,7 +1532,13 @@
         "object": "Dictionary"
       }
     },
-    "checkedWhenRuns": "A template: checked when the step runs"
+    "checkedWhenRuns": "A template: checked when the step runs",
+    "markers": {
+      "succeeded": "End: succeeded",
+      "failed": "End: failed",
+      "break": "Leave loop",
+      "continue": "Next pass"
+    }
   },
   "templateInput": {
     "suggestions": "Values you can insert",
@@ -1621,6 +1639,16 @@
         "name": "Log",
         "description": "Writes a message into the run's trace, with values filled in. It never stops the run, whatever its level.",
         "example": "checking '{{'loop.item'}}': '{{'steps.status.state'}}'"
+      },
+      "break": {
+        "name": "Leave loop",
+        "description": "Ends the loop it is in at once; the run goes on after the loop. Only inside a loop.",
+        "example": "If the NAS answered, leave the retry loop."
+      },
+      "continue": {
+        "name": "Next pass",
+        "description": "Skips the rest of this pass and starts the loop's next one. Only inside a loop.",
+        "example": "Skip the TV and check the next host."
       }
     },
     "fields": {
@@ -1832,7 +1860,8 @@
         "branch": "The branch it took: then or else"
       },
       "loop": {
-        "iterations": "How many passes ran"
+        "iterations": "How many passes ran",
+        "left_early": "True when a “Leave loop” step ended it"
       },
       "workflow": {
         "vars": "The variables the called workflow set"
@@ -2206,6 +2235,95 @@
       "automation": "New automation",
       "webhook": "New webhook",
       "workflow": "New workflow"
+    }
+  },
+  "scriptArguments": {
+    "title": "Arguments",
+    "declared": "From the script's header",
+    "required": "required",
+    "defaultIs": "Default: {value}",
+    "editAsList": "Edit as a list",
+    "editAsFields": "Edit as fields",
+    "doesNotFit": "These arguments do not follow what the script declares, so they are kept as a list.",
+    "headerProblems": "The script's header has problems; those lines are ignored:",
+    "choices": "Choices"
+  },
+  "scripts": {
+    "title": "Scripts",
+    "subtitle": "The scripts automations, webhooks and workflows run, in the scripts directory and its folders.",
+    "off": "Editing scripts is switched off in the configuration file. Add this to it to switch it on:",
+    "missing": "The scripts directory {directory} does not exist yet.",
+    "createDirectory": "Create folder",
+    "newScript": "New script",
+    "newFolder": "New folder",
+    "rename": "Rename or move",
+    "delete": "Delete",
+    "deleteFolder": "Delete folder {name}",
+    "deleteTitle": "Delete {path}?",
+    "deleteDescription": "The file is removed from the scripts directory.",
+    "deleteUsed": "It is used by {users}; their next runs will be refused.",
+    "folder": "Folder",
+    "topLevel": "Directly in scripts",
+    "name": "Name",
+    "create": "Create",
+    "move": "Move",
+    "save": "Save",
+    "saved": "Saved",
+    "unsaved": "Unsaved changes",
+    "leftOut": "{count, plural, one {# entry deeper than one folder is not shown.} other {# entries deeper than one folder are not shown.}}",
+    "readOnly": "Scripts can be changed only from inside your environments, so this page is read-only here.",
+    "choose": "Choose a script to open it.",
+    "empty": "No scripts yet.",
+    "runnable": "Can run",
+    "notRunnable": "Cannot run",
+    "mode": "Mode {mode}",
+    "unreadable": {
+      "binary": "This file is not text, so it cannot be edited here.",
+      "too-large": "This file is larger than 256 KiB, so it cannot be edited here.",
+      "link": "This is a symbolic link, so it cannot be edited here."
+    },
+    "conflict": "The script changed since you opened it. Your text is kept.",
+    "reload": "Reload",
+    "overwrite": "Overwrite",
+    "leave": "You have unsaved changes to this script. Leave anyway?",
+    "text": "Script text",
+    "declared": "Declared by the header",
+    "noArguments": "The header declares no arguments.",
+    "tree": "Files",
+    "newScriptTitle": "New script",
+    "newFolderTitle": "New folder",
+    "renameTitle": "Rename or move {path}",
+    "filesCount": "{count, plural, one {# file} other {# files}}",
+    "chooseTitle": "No script open",
+    "sizeBytes": "{size} B",
+    "sizeKib": "{size} KiB",
+    "modified": "Changed",
+    "usage": "How it is called",
+    "required": "required",
+    "optional": "optional",
+    "defaultValue": "default {value}",
+    "whatItDoes": "What it does",
+    "noDescription": "The header has no @description line yet.",
+    "shortcut": "⌘S / Ctrl+S",
+    "types": {
+      "text": "text",
+      "number": "number",
+      "flag": "switch",
+      "choice": "choice"
+    },
+    "help": {
+      "title": "Header format",
+      "intro": "Comment lines at the very top of the script, right after #!, describe it. The portal reads them without running the script and offers fields for them in automations, webhooks and workflow steps.",
+      "rows": {
+        "description": "One line saying what the script does.",
+        "required": "A positional argument; it is required.",
+        "optional": "A ? after the name makes a positional argument optional.",
+        "option": "An option with a type and a default.",
+        "flag": "An option without a type is a switch: it is passed alone when on.",
+        "choice": "A choice between fixed values, with a default."
+      },
+      "rules": "Types are text, number, flag, or choices such as a|b. The header ends at the first line that is not a comment; at most 64 lines and 32 arguments are read.",
+      "insert": "Insert an example header"
     }
   }
 }

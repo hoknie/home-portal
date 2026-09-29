@@ -33,7 +33,7 @@ pub const KINDS: &[Kind] = &[
                 .defaulting("100"),
             Field::of("body", Steps).required(),
         ],
-        results: &["iterations"],
+        results: &["iterations", "left_early"],
         exclusive: &[&["repeat", "for_each", "while"]],
     },
     Kind {
@@ -55,6 +55,20 @@ pub const KINDS: &[Kind] = &[
     },
     Kind {
         name: "nothing",
+        group: KindGroup::Flow,
+        fields: &[],
+        results: &[],
+        exclusive: &[],
+    },
+    Kind {
+        name: "break",
+        group: KindGroup::Flow,
+        fields: &[],
+        results: &[],
+        exclusive: &[],
+    },
+    Kind {
+        name: "continue",
         group: KindGroup::Flow,
         fields: &[],
         results: &[],

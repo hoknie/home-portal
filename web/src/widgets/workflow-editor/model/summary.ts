@@ -55,6 +55,10 @@ export function summaryOf(
       return typeof step.repeat === "string" ? { key: "summaries.repeatTemplate", params: { count: step.repeat } } : { key: "summaries.repeat", params: { count: step.repeat ?? 1 } };
     case "nothing":
       return { key: "summaries.nothing", params: {} };
+    case "break":
+      return { key: "summaries.break", params: {} };
+    case "continue":
+      return { key: "summaries.continue", params: {} };
     case "parallel":
       return { key: "summaries.parallel", params: { count: step.branches?.length ?? 0 } };
     default:

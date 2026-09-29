@@ -255,3 +255,22 @@ fn telegram_enabled_without_its_token_refuses_to_start_naming_the_secret() {
     assert!(error.contains("notifications.telegram.secret"), "{error}");
     assert!(error.contains("telegram_token"), "{error}");
 }
+
+#[test]
+fn a_mistyped_scripts_key_refuses_to_start_naming_it() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = support::with_extra(&directory, "secret", "\n[scripts]\neditable = true\n");
+    let wiring = support::wiring_for(&path);
+    let registry = registered(&wiring).unwrap();
+    let validators = registry
+        .features
+        .iter()
+        .filter_map(|feature| feature.validator())
+        .collect();
+    let message = wiring
+        .configuration
+        .adopt(validators)
+        .unwrap_err()
+        .to_string();
+    assert!(message.contains("scripts.editable"), "{message}");
+}

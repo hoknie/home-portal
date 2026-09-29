@@ -2,6 +2,7 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
+import { scriptsKey, scriptsSchema } from "@/entities/automation";
 import { environmentKey } from "@/entities/environment";
 import { type Modules, modulesKey, modulesSchema } from "@/entities/module";
 import { sessionKey } from "@/entities/session";
@@ -145,4 +146,24 @@ it("a collapsed menu stays collapsed after a reload", () => {
   shellWith(["workflows"]);
   expect(screen.getByRole("complementary", { name: "Menu" }).closest("[data-menu]")).toHaveAttribute("data-menu", "collapsed");
   window.localStorage.clear();
+});
+
+it("offers scripts after the modules while the file switches editing on, and not otherwise", () => {
+  const client = testQueryClient();
+  client.setQueryDefaults(scriptsKey, { staleTime: Infinity });
+  client.setQueryData(scriptsKey, scriptsSchema.parse({ ...apiSamples.automationScripts, editing: true }));
+  client.setQueryData(sessionKey, { name: "admin" });
+  client.setQueryData(environmentKey, { environment: "local", detected: "local", switchable: true, environments: ["local"] });
+  client.setQueryDefaults(modulesKey, { staleTime: Infinity });
+  client.setQueryData(modulesKey, { data: modulesWith(["automations", "workflows"]), revision: '"m"' });
+  renderWithProviders(<AppShell>content</AppShell>, client);
+  const group = screen.getAllByRole("group", { name: "Modules" })[0];
+  const names = within(group).getAllByRole("link").map((link) => link.textContent);
+  expect(names).toEqual(["Automations", "Workflows", "Scripts"]);
+  expect(within(group).getByRole("link", { name: "Scripts" })).toHaveAttribute("href", expect.stringMatching(/^\/admin\/scripts\/?$/));
+});
+
+it("hides scripts while editing is off", () => {
+  shellWith(["automations"]);
+  expect(screen.queryByRole("link", { name: "Scripts" })).not.toBeInTheDocument();
 });

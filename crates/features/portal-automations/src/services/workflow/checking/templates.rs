@@ -24,7 +24,7 @@ pub fn templates_of(step: &Step) -> Vec<(String, &str)> {
         StepKind::Wait { seconds } => {
             found.extend(seconds.template().map(|text| ("seconds".to_string(), text)));
         }
-        StepKind::Parallel { .. } | StepKind::Nothing => {}
+        StepKind::Parallel { .. } | StepKind::Nothing | StepKind::Break | StepKind::Continue => {}
         StepKind::Automation { fields, .. } => {
             for (name, value) in fields {
                 found.push((format!("fields.{name}"), value));

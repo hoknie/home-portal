@@ -1,0 +1,286 @@
+{
+  "cases": [
+    {
+      "header": {
+        "arguments": [
+          {
+            "choices": [],
+            "default": null,
+            "description": "Service id",
+            "name": "service",
+            "option": false,
+            "required": true,
+            "type": "text"
+          },
+          {
+            "choices": [],
+            "default": "3",
+            "description": "Tries before giving up",
+            "name": "--retries",
+            "option": true,
+            "required": false,
+            "type": "number"
+          },
+          {
+            "choices": [],
+            "default": null,
+            "description": "Skip the health check",
+            "name": "--force",
+            "option": true,
+            "required": false,
+            "type": "flag"
+          }
+        ],
+        "description": "Restart a service's container",
+        "problems": []
+      },
+      "name": "a shell header",
+      "text": "#!/bin/sh\n# @description Restart a service's container\n# @arg service <text> Service id\n# @arg --retries <number=3> Tries before giving up\n# @arg --force Skip the health check\nset -eu\n"
+    },
+    {
+      "header": {
+        "arguments": [
+          {
+            "choices": [
+              "fast",
+              "full"
+            ],
+            "default": "fast",
+            "description": "How deep to check",
+            "name": "mode",
+            "option": false,
+            "required": false,
+            "type": "choice"
+          }
+        ],
+        "description": null,
+        "problems": []
+      },
+      "name": "a choice",
+      "text": "# @arg mode <fast|full=fast> How deep to check\n"
+    },
+    {
+      "header": {
+        "arguments": [
+          {
+            "choices": [],
+            "default": null,
+            "description": "",
+            "name": "name",
+            "option": false,
+            "required": true,
+            "type": "text"
+          }
+        ],
+        "description": null,
+        "problems": []
+      },
+      "name": "the header ends at the first command",
+      "text": "# @arg name <text>\nset -e\n# @arg late <text>\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": [
+          {
+            "line": 2,
+            "message": "line 2 declares an argument that --force is a flag, and a flag takes no default"
+          }
+        ]
+      },
+      "name": "a flag with a default",
+      "text": "#!/bin/sh\n# @arg --force <flag=true> Always\n"
+    },
+    {
+      "header": {
+        "arguments": [
+          {
+            "choices": [],
+            "default": null,
+            "description": "",
+            "name": "name",
+            "option": false,
+            "required": true,
+            "type": "text"
+          }
+        ],
+        "description": null,
+        "problems": [
+          {
+            "line": 1,
+            "message": "line 1 declares an argument that has the type weird, but weird is not a known type; use text, number, flag or choices such as a|b"
+          }
+        ]
+      },
+      "name": "an unknown type",
+      "text": "# @arg --keep <weird> Days\n# @arg name\n"
+    },
+    {
+      "header": {
+        "arguments": [
+          {
+            "choices": [],
+            "default": null,
+            "description": "",
+            "name": "host",
+            "option": false,
+            "required": false,
+            "type": "text"
+          }
+        ],
+        "description": "One",
+        "problems": [
+          {
+            "line": 2,
+            "message": "line 2 is a second @description; only the first one counts"
+          },
+          {
+            "line": 4,
+            "message": "line 4 declares host a second time"
+          },
+          {
+            "line": 5,
+            "message": "line 5 declares the required port after an optional positional argument"
+          }
+        ]
+      },
+      "name": "slashes, a second description, a repeated and a late required name",
+      "text": "// @description One\n// @description Two\n// @arg host?\n// @arg host\n// @arg port <number>\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": [
+          {
+            "line": 1,
+            "message": "line 1 declares an argument that force is a flag, which must be an option such as --force"
+          }
+        ]
+      },
+      "name": "a positional flag",
+      "text": "# @arg force <flag>\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": [
+          {
+            "line": 1,
+            "message": "line 1 declares an argument that count has the default many, which is not a number"
+          }
+        ]
+      },
+      "name": "a number default that is not a number",
+      "text": "# @arg count <number=many>\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": [
+          {
+            "line": 1,
+            "message": "line 1 declares an argument that mode has the default c, which is not a choice of a, b"
+          }
+        ]
+      },
+      "name": "a choice default that is not a choice",
+      "text": "# @arg mode <a|b=c>\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": [
+          {
+            "line": 1,
+            "message": "line 1 declares an argument that has a type that is not closed with >"
+          }
+        ]
+      },
+      "name": "an unclosed type",
+      "text": "# @arg mode <text\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": [
+          {
+            "line": 1,
+            "message": "line 1 declares an argument that names Mode, but a name is lowercase letters, digits, _ and -, starting with a letter, or -- before such a name"
+          },
+          {
+            "line": 2,
+            "message": "line 2 declares an argument that names --2x, but a name is lowercase letters, digits, _ and -, starting with a letter, or -- before such a name"
+          },
+          {
+            "line": 3,
+            "message": "line 3 declares an argument that names -x, but a name is lowercase letters, digits, _ and -, starting with a letter, or -- before such a name"
+          }
+        ]
+      },
+      "name": "a bad name",
+      "text": "# @arg Mode\n# @arg --2x\n# @arg -x\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": [
+          {
+            "line": 1,
+            "message": "line 1 declares an argument that names --force?, but a name is lowercase letters, digits, _ and -, starting with a letter, or -- before such a name"
+          }
+        ]
+      },
+      "name": "an optional option mark",
+      "text": "# @arg --force?\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": []
+      },
+      "name": "no header",
+      "text": "echo hi\n# @arg late\n"
+    },
+    {
+      "header": {
+        "arguments": [],
+        "description": null,
+        "problems": [
+          {
+            "line": 1,
+            "message": "line 1 declares an argument that has a choice with an empty value"
+          }
+        ]
+      },
+      "name": "an empty choice",
+      "text": "# @arg mode <a||b>\n"
+    },
+    {
+      "header": {
+        "arguments": [
+          {
+            "choices": [],
+            "default": "/tmp",
+            "description": "Where to look",
+            "name": "path",
+            "option": false,
+            "required": false,
+            "type": "text"
+          }
+        ],
+        "description": null,
+        "problems": []
+      },
+      "name": "blank lines and other tags",
+      "text": "#!/usr/bin/env python3\n\n# @author me\n#\n# @arg path? <text=/tmp> Where to look\n"
+    }
+  ]
+}

@@ -7,9 +7,9 @@ use time::OffsetDateTime;
 
 use super::AutomationSink;
 use crate::helpers::render;
+use crate::ports::ScriptLibrary;
 use crate::services::{
-    Budget, Frame, ScriptsDirectory, Secrets, WorkflowRunner, WorkflowTools, bind_inputs,
-    input_problem,
+    Budget, Frame, Secrets, WorkflowRunner, WorkflowTools, bind_inputs, input_problem,
 };
 use crate::types::{
     Ending, Finished, InputValue, Invocation, Outcome, Pending, RunControl, RunRecord, StepLogging,
@@ -20,7 +20,7 @@ pub const WORKFLOWS_OFF: &str = "workflows-off";
 
 pub async fn execute_workflow(
     sink: Arc<AutomationSink>,
-    (scripts, tools): (&ScriptsDirectory, &WorkflowTools),
+    (scripts, tools): (&Arc<dyn ScriptLibrary>, &WorkflowTools),
     pending: Pending,
     call: &WorkflowCall,
 ) {

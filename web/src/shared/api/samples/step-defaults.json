@@ -4,6 +4,14 @@
     "id": "start",
     "kind": "automation"
   },
+  "break": {
+    "id": "leave",
+    "kind": "break"
+  },
+  "continue": {
+    "id": "skip",
+    "kind": "continue"
+  },
   "http": {
     "id": "ask",
     "kind": "http",
@@ -77,7 +85,8 @@
   "script": {
     "id": "run",
     "kind": "script",
-    "script": "restart.sh"
+    "script": "restart.sh",
+    "timeout_seconds": 60
   },
   "set": {
     "id": "remember",

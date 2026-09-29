@@ -36,6 +36,7 @@ export {
   contains,
   duplicate,
   everyStep,
+  filledTimeout,
   idFor,
   idsOf,
   insert,
@@ -61,7 +62,9 @@ export { emptyValue, fitsType, initialValues, inputNames, namedInputs, plainInpu
 export type { Scope } from "./model/scope";
 export { DEEPEST_CONDITION, JOINS, OPERATOR_NAMES, operatorName, depthOf, emptyRow, incomplete, joinOf, joined, rowsOf, summary, takesRight } from "./model/conditions";
 export type { Join } from "./model/conditions";
-export { END_ID, START_ID, emptyId, frameId, joinId, layoutOf } from "./model/flow/layout";
+export { END_ID, START_ID, emptyId, frameId, joinId, layoutOf, markerId } from "./model/flow/layout";
+export { LOOP_EXITS, closedAt, closes, closingOf, insideLoop, listCloses, needsLoop, unreachableSteps } from "./model/flow/ends";
+export type { Closing } from "./model/flow/ends";
 export type { Layout } from "./model/flow/layout";
 export { NODE_TYPES, flowOf, loopLabel } from "./model/flow/build";
 export type { EdgeLabel, Flow, FlowEdge, FlowNode, FlowNodeType } from "./model/flow/build";
@@ -69,7 +72,7 @@ export { flowOrder, neighbour } from "./model/flow/order";
 export type { Direction } from "./model/flow/order";
 export { orderOf, overlayOf, runPath } from "./model/flow/overlay";
 export type { NodeRun, Overlay, RunPath, RunState } from "./model/flow/overlay";
-export { CARD, EMPTY, END, JOIN, TERMINAL } from "./model/flow/sizes";
+export { CARD, EMPTY, END, GAP_X, GAP_Y, JOIN, MARKER, TERMINAL } from "./model/flow/sizes";
 export type { Box } from "./model/flow/sizes";
 export { REASONS, checkTemplate, templateNames } from "./model/suggestions/check";
 export type { Reason, TemplateName, TemplateProblem } from "./model/suggestions/check";

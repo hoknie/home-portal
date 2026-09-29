@@ -82,6 +82,7 @@ pub async fn run_loop(
     let inside = place.inside("body");
     let mut count = 0usize;
     let mut flow = Flow::Continue;
+    let mut left_early = false;
     loop {
         let more = match mode {
             LoopMode::Repeat(_) => count < times as usize,
@@ -114,12 +115,19 @@ pub async fn run_loop(
             lines.push(format!("pass {}: {shown}", count + 1));
         }
         frame.loop_item = Some((item, count));
-        let pass = inside.repeated(count).with_item(shown);
+        let pass = inside.repeated(count).with_item(shown).in_loop(&step.label);
         let result = runner.run_steps(body, frame, &pass).await;
         count += 1;
-        if let Flow::End(ending) = result {
-            flow = Flow::End(ending);
-            break;
+        match result {
+            Flow::End(ending) => {
+                flow = Flow::End(ending);
+                break;
+            }
+            Flow::Break => {
+                left_early = true;
+                break;
+            }
+            Flow::Continue | Flow::NextPass => {}
         }
     }
     frame.loop_item = previous;
@@ -127,9 +135,16 @@ pub async fn run_loop(
         Flow::End(Ending::Failed(reason)) => reason.clone(),
         _ => format!("{count} iterations"),
     };
-    lines.push(format!("ended after {count} passes"));
+    lines.push(if left_early {
+        format!("left early after {count} passes")
+    } else {
+        format!("ended after {count} passes")
+    });
     StepReport::done(
-        WorkflowRunner::step_result(&[("iterations", Value::from(count))]),
+        WorkflowRunner::step_result(&[
+            ("iterations", Value::from(count)),
+            ("left_early", Value::from(left_early)),
+        ]),
         detail,
     )
     .with_log(lines)
@@ -214,11 +229,13 @@ pub async fn run_call(
         .await;
     let vars = Value::Object(child.vars.into_iter().collect());
     match flow {
-        Flow::Continue | Flow::End(Ending::Succeeded(_)) => StepReport::done(
-            WorkflowRunner::step_result(&[("vars", vars)]),
-            workflow.clone(),
-        )
-        .logged(called_with),
+        Flow::Continue | Flow::Break | Flow::NextPass | Flow::End(Ending::Succeeded(_)) => {
+            StepReport::done(
+                WorkflowRunner::step_result(&[("vars", vars)]),
+                workflow.clone(),
+            )
+            .logged(called_with)
+        }
         Flow::End(ending) => StepReport::ended(ending).logged(called_with),
     }
 }

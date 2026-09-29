@@ -14,8 +14,7 @@ use super::join::Pending;
 use super::script_step::run_script;
 use super::transform_step::run_transform;
 use crate::clients::{GroupRegistry, HttpClient};
-use crate::ports::{AutomationStarter, PortalActions};
-use crate::services::ScriptsDirectory;
+use crate::ports::{AutomationStarter, PortalActions, ScriptLibrary};
 use portal_feature::ModuleSwitches;
 
 use crate::services::workflow::checking::templates_of;
@@ -33,7 +32,7 @@ pub struct WorkflowRunner {
     pub workflows: Arc<Vec<Workflow>>,
     pub actions: Arc<dyn PortalActions>,
     pub http: HttpClient,
-    pub scripts: ScriptsDirectory,
+    pub scripts: Arc<dyn ScriptLibrary>,
     pub groups: Arc<dyn GroupRegistry>,
     pub budget: Budget,
     pub trace: Arc<Mutex<Trace>>,
@@ -46,7 +45,7 @@ pub struct WorkflowRunner {
 impl WorkflowRunner {
     pub async fn run(&self, workflow: &Workflow, frame: &mut Frame) -> Ending {
         match self.run_steps(&workflow.steps, frame, &Place::root()).await {
-            Flow::Continue => Ending::Succeeded(None),
+            Flow::Continue | Flow::Break | Flow::NextPass => Ending::Succeeded(None),
             Flow::End(ending) => ending,
         }
     }
@@ -63,8 +62,9 @@ impl WorkflowRunner {
                     path: format!("{}[{index}]", place.path),
                     ..place.clone()
                 };
-                if let Flow::End(ending) = self.run_step(step, frame, &here).await {
-                    return Flow::End(ending);
+                let flow = self.run_step(step, frame, &here).await;
+                if flow != Flow::Continue {
+                    return flow;
                 }
             }
             Flow::Continue
@@ -113,7 +113,9 @@ impl WorkflowRunner {
             frame.steps.insert(step.id.clone(), report.result.clone());
         }
         let outcome = match &report.flow {
-            Flow::Continue | Flow::End(Ending::Succeeded(_)) => StepOutcome::Succeeded,
+            Flow::Continue | Flow::Break | Flow::NextPass | Flow::End(Ending::Succeeded(_)) => {
+                StepOutcome::Succeeded
+            }
             Flow::End(Ending::Failed(_)) => StepOutcome::Failed,
             Flow::End(Ending::TimedOut) => StepOutcome::TimedOut,
             Flow::End(Ending::Stopped) => StepOutcome::Stopped,
@@ -151,6 +153,22 @@ impl WorkflowRunner {
             StepKind::Set { variable, value } => run_set(variable, value, frame),
             StepKind::Wait { seconds } => run_wait(self, seconds, frame).await,
             StepKind::Nothing => StepReport::done(Value::Null, ""),
+            StepKind::Break => StepReport::done(
+                Value::Null,
+                format!(
+                    "left the loop “{}”",
+                    place.loop_label.as_deref().unwrap_or_default()
+                ),
+            )
+            .with_flow(Flow::Break),
+            StepKind::Continue => StepReport::done(
+                Value::Null,
+                format!(
+                    "next pass of “{}”",
+                    place.loop_label.as_deref().unwrap_or_default()
+                ),
+            )
+            .with_flow(Flow::NextPass),
             StepKind::Automation {
                 automation,
                 fields,

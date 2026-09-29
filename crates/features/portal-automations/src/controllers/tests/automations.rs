@@ -15,7 +15,7 @@ use tower::ServiceExt;
 use crate::features::AutomationsFeature;
 use crate::features::tests::{eventually, portal, start};
 
-const FILE: &str = r#"[automation_settings]
+pub const FILE: &str = r#"[automation_settings]
 timezone = "Europe/Berlin"
 
 # Restarts the media server.
@@ -215,6 +215,7 @@ async fn an_automation_in_an_included_file_is_edited_in_that_file() {
         store,
         Arc::new(crate::features::tests::FakeDirectory),
         Arc::new(crate::fakes::FakeActions::default()),
+        Arc::new(crate::fakes::FakeScripts::at(folder.path().join("scripts"))),
     )
     .unwrap();
     let api = Api {

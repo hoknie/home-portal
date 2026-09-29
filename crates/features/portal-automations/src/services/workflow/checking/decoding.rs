@@ -7,7 +7,8 @@ use super::action_decoding::{
     decode_service,
 };
 use super::flow_decoding::{
-    decode_call, decode_if, decode_loop, decode_parallel, decode_set, decode_stop, decode_wait,
+    check_loop_exits, decode_call, decode_if, decode_loop, decode_parallel, decode_set,
+    decode_stop, decode_wait,
 };
 use super::inputs_decoding::decode_inputs;
 use super::names::{NAME_RULE, between_rule, valid_name, within};
@@ -53,6 +54,7 @@ pub fn decode_workflow(raw: &RawWorkflow) -> Result<Workflow, Vec<FieldError>> {
         errors.push(FieldError::new("steps", "must hold at least one step"));
     }
     let steps = decode_steps(&raw.steps, "steps", 0, &mut errors);
+    check_loop_exits(&steps, "steps", false, &mut errors);
     let mut seen = HashSet::new();
     every_step(&steps, "steps", &mut |step, path| {
         if !seen.insert(step.id.clone()) {
@@ -148,6 +150,8 @@ fn decode_step(
         "notify" => decode_notify(raw, path, errors),
         "log" => decode_log(raw, path, errors),
         "nothing" => Some(StepKind::Nothing),
+        "break" => Some(StepKind::Break),
+        "continue" => Some(StepKind::Continue),
         "automation" => decode_automation(raw, path, errors),
         "probe" => decode_service(raw, path, errors).map(|service| StepKind::Probe { service }),
         _ => decode_service(raw, path, errors).map(|service| StepKind::Status { service }),

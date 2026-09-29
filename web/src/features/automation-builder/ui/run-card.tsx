@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 
 import { type CatalogueEvent, ScriptProblems, type Scripts } from "@/entities/automation";
+import { HeaderProblems } from "@/entities/script";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Input } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -23,7 +24,8 @@ export function RunCard({ form, event, scripts, workflows, offerWorkflow = false
   const errors = form.formState.errors;
   const chosen = form.watch("script");
   const action = workflows ? form.watch("action") : "script";
-  const known = scripts.scripts.some((script) => script.path === chosen);
+  const picked = scripts.scripts.find((script) => script.path === chosen);
+  const known = picked !== undefined;
   const choice =
     workflows && (offerWorkflow || action === "workflow") ? (
       <div role="radiogroup" aria-label={t("action")} className="flex w-fit gap-1 rounded-lg border border-glass-edge p-1">
@@ -78,8 +80,10 @@ export function RunCard({ form, event, scripts, workflows, offerWorkflow = false
             <Input id="automation-timeout" type="number" min={1} max={3600} inputMode="numeric" {...form.register("timeout_seconds", { valueAsNumber: true })} />
           </FormField>
         </div>
+        {picked?.description ? <p className="-mt-2 text-sm text-muted-foreground">{picked.description}</p> : null}
         <ScriptProblems scripts={scripts} />
-        <ArgumentList form={form} event={event} />
+        <HeaderProblems problems={picked?.argument_problems ?? []} />
+        <ArgumentList key={chosen} form={form} event={event} declared={picked?.arguments ?? []} />
       </div>
     </SectionCard>
   );

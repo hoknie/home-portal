@@ -5,11 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { useScripts } from "@/entities/automation";
 import { enabledModules, useModules } from "@/entities/module";
 import { cn } from "@/shared/lib/cn";
 import { Separator, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/primitives";
 
-import { MANAGEMENT, isActive, moduleLinks } from "../model/navigation";
+import { MANAGEMENT, isActive, sectionLinks } from "../model/navigation";
 
 export type NavLinksProps = { onNavigate?: () => void; compact?: boolean };
 
@@ -48,7 +49,8 @@ export function NavLinks({ onNavigate, compact = false }: NavLinksProps) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const modules = useModules();
-  const links = modules.data ? moduleLinks(enabledModules(modules.data.data)) : [];
+  const scripts = useScripts();
+  const links = sectionLinks(modules.data ? enabledModules(modules.data.data) : new Set(), scripts.data?.editing ?? false);
   return (
     <nav className="grid gap-1">
       {MANAGEMENT.map(({ href, label, icon }) => (

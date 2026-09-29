@@ -1,0 +1,42 @@
+{
+  "content": "#!/bin/sh\n# @description Restart a service's container\n# @arg service <text> Service id\n# @arg --force Skip the health check\nexec true\n",
+  "entry": {
+    "argument_problems": [],
+    "arguments": [
+      {
+        "choices": [],
+        "default": null,
+        "description": "Service id",
+        "name": "service",
+        "option": false,
+        "required": true,
+        "type": "text"
+      },
+      {
+        "choices": [],
+        "default": null,
+        "description": "Skip the health check",
+        "name": "--force",
+        "option": true,
+        "required": false,
+        "type": "flag"
+      }
+    ],
+    "code": null,
+    "concerns": null,
+    "description": "Restart a service's container",
+    "folder": "media",
+    "mode": "0700",
+    "modified": "2026-09-21T14:13:20Z",
+    "name": "restart.sh",
+    "path": "media/restart.sh",
+    "problem": null,
+    "revision": "ec7fa81bd8c37cca2a15f2232ac05fd61ee1f7dfefb2a3aa74040dfd64a522bf",
+    "runnable": true,
+    "size": 135,
+    "text": true,
+    "unreadable": null
+  },
+  "path": "media/restart.sh",
+  "revision": "ec7fa81bd8c37cca2a15f2232ac05fd61ee1f7dfefb2a3aa74040dfd64a522bf"
+}

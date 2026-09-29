@@ -1,7 +1,6 @@
 use portal_feature::FieldError;
 
 use super::names::number_setting;
-use crate::helpers::script_shape_problem;
 use crate::types::{
     HttpStep, Invocation, LogLevel, METHODS, NumberSetting, RawNumber, RawStep, RunSettings,
     StepKind,
@@ -104,7 +103,7 @@ pub fn literal_http(url: &str) -> bool {
 pub fn decode_script(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> Option<StepKind> {
     let before = errors.len();
     let script = raw.script.clone().unwrap_or_default();
-    if let Some(problem) = script_shape_problem(&script) {
+    if let Some(problem) = portal_model::ScriptPath::problem(&script) {
         errors.push(FieldError::new(format!("{path}.script"), problem));
     }
     let timeout = timeout_of(

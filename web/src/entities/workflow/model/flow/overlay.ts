@@ -63,6 +63,9 @@ export function runPath(flow: Flow, overlay: Overlay, entries: TraceEntry[], sta
     if (node.type === "step" && overlay.has(node.id)) {
       nodes.add(node.id);
     }
+    if (node.type === "marker" && node.path && overlay.has(pathText(node.path))) {
+      nodes.add(node.id);
+    }
     if (node.type === "join" && node.path) {
       const owner = overlay.get(pathText(node.path));
       if (owner && !owner.running) {

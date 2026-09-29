@@ -5,8 +5,7 @@ mod marks_response;
 mod run_settings_response;
 mod runs;
 mod schedule_response;
-mod script_response;
-mod scripts_response;
+mod scripts;
 mod states_response;
 mod webhooks;
 mod when_response;
@@ -25,8 +24,7 @@ pub use runs::{
     TraceEntryResponse, TraceResponse,
 };
 pub use schedule_response::ScheduleResponse;
-pub use script_response::ScriptResponse;
-pub use scripts_response::ScriptsResponse;
+pub use scripts::{ScriptResponse, ScriptsResponse};
 pub use states_response::StatesResponse;
 pub use webhooks::{
     AcceptedResponse, CreatedWebhookResponse, ReceptionResponse, TokenResponse, WebhookResponse,

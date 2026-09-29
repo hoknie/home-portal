@@ -59,4 +59,19 @@ describe("editor problems", () => {
     expect(problems.length).toBeGreaterThan(0);
     expect(blocking(problems)).toEqual([]);
   });
+
+  it("a step after a stop is a warning that it never runs, not an error", () => {
+    const ended: Draft = {
+      ...draft,
+      steps: [
+        { id: "done", kind: "stop", outcome: "succeeded" },
+        { id: "late", kind: "wait", seconds: 1 },
+      ],
+    };
+    const problems = problemsFor(context({ draft: ended }));
+    expect(problems.filter((problem) => problem.key === "workflowEditor.problems.neverRuns")).toEqual([
+      { at: "steps[1]", severity: "warning", key: "workflowEditor.problems.neverRuns", params: {}, text: null },
+    ]);
+    expect(blocking(problems).filter((problem) => problem.at.startsWith("steps["))).toEqual([]);
+  });
 });

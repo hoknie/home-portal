@@ -8,7 +8,7 @@ const RESULT_TYPES: Record<string, Record<string, ValueType>> = {
   script: { exit_code: "number", stdout: "text", stderr: "text" },
   probe: { latency_milliseconds: "number", state: "text", diagnosis: "text" },
   status: { state: "text", since: "text" },
-  loop: { iterations: "number" },
+  loop: { iterations: "number", left_early: "boolean" },
   if: { branch: "text" },
   workflow: { vars: "object" },
 };

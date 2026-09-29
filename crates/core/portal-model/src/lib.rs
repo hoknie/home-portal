@@ -1,7 +1,8 @@
 mod types;
 
 pub use types::{
-    DetectedEnvironment, Diagnosis, Environment, EnvironmentError, Environments, Language,
-    ProbeOutcome, Publication, RawEnvironment, RawEnvironmentsSection, ServiceId, ServiceIdError,
+    ArgumentKind, DetectedEnvironment, Diagnosis, Environment, EnvironmentError, Environments,
+    HeaderProblem, Language, ProbeOutcome, Publication, RawEnvironment, RawEnvironmentsSection,
+    ScriptArgument, ScriptHeader, ScriptPath, ScriptPathProblem, ServiceId, ServiceIdError,
     ServiceState, ServiceStatus, TlsMode, TlsPolicy,
 };

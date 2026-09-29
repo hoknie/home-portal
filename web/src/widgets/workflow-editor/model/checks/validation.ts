@@ -1,4 +1,15 @@
-import { type Condition, type KindField, type Step, type WorkflowCatalogue, everyStep, fitsType, pathText, variableProblem } from "@/entities/workflow";
+import {
+  type Condition,
+  type KindField,
+  LOOP_EXITS,
+  type Step,
+  type WorkflowCatalogue,
+  everyStep,
+  fitsType,
+  insideLoop,
+  pathText,
+  variableProblem,
+} from "@/entities/workflow";
 
 import type { Draft } from "../draft";
 
@@ -111,6 +122,10 @@ export function problemsOf(draft: Draft, catalogue: WorkflowCatalogue, taken: st
   everyStep(draft.steps, (step, path) => {
     const at = pathText(path);
     stepProblems(step, at, catalogue, problems);
+    const place = path[path.length - 1];
+    if ((LOOP_EXITS as readonly string[]).includes(step.kind) && !insideLoop({ owner: path.slice(0, -1), list: place.list, index: place.index })) {
+      problems[at] = "workflowEditor.problems.needsLoop";
+    }
     if (seen.has(step.id)) {
       problems[`${at}.id`] = "workflowEditor.problems.duplicateId";
     }

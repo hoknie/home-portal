@@ -249,3 +249,31 @@ fn required_steps(
         }
     }
 }
+
+pub const LOOP_EXIT_RULE: &str = "needs an enclosing loop; break and continue work only inside a loop body, not through parallel";
+
+pub fn check_loop_exits(steps: &[Step], path: &str, in_loop: bool, errors: &mut Vec<FieldError>) {
+    for (index, step) in steps.iter().enumerate() {
+        let here = format!("{path}[{index}]");
+        match &step.kind {
+            StepKind::Break | StepKind::Continue if !in_loop => {
+                errors.push(FieldError::new(here.clone(), LOOP_EXIT_RULE));
+            }
+            StepKind::If {
+                then, otherwise, ..
+            } => {
+                check_loop_exits(then, &format!("{here}.then"), in_loop, errors);
+                check_loop_exits(otherwise, &format!("{here}.else"), in_loop, errors);
+            }
+            StepKind::Loop { body, .. } => {
+                check_loop_exits(body, &format!("{here}.body"), true, errors);
+            }
+            StepKind::Parallel { branches } => {
+                for (branch, steps) in branches.iter().enumerate() {
+                    check_loop_exits(steps, &format!("{here}.branches[{branch}]"), false, errors);
+                }
+            }
+            _ => {}
+        }
+    }
+}

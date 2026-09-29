@@ -3,6 +3,7 @@ mod filters;
 mod http;
 mod inputs;
 mod logging;
+mod loop_exits;
 mod portal;
 mod running;
 mod scope;

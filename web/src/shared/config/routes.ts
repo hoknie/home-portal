@@ -17,6 +17,7 @@ export const routes = {
   newWorkflow: "/admin/workflows/new/",
   editWorkflow: (id: string) => `/admin/workflows/edit/?id=${encodeURIComponent(id)}`,
   adminNotifications: "/admin/notifications/",
+  adminScripts: "/admin/scripts/",
   newWebhook: "/admin/webhooks/new/",
   editWebhook: (id: string) => `/admin/webhooks/edit/?id=${encodeURIComponent(id)}`,
   webhookDetails: (id: string) => `/admin/webhooks/details/?id=${encodeURIComponent(id)}`,
@@ -87,6 +88,10 @@ export const api = {
   notifications: "/api/notifications",
   notificationChannel: (name: string) => `/api/notifications/channels/${encodeURIComponent(name)}`,
   notificationTest: "/api/notifications/test",
+  scripts: "/api/scripts",
+  scriptFile: (path?: string) => (path === undefined ? "/api/scripts/file" : `/api/scripts/file?path=${encodeURIComponent(path)}`),
+  scriptFolder: (name?: string) => (name === undefined ? "/api/scripts/folder" : `/api/scripts/folder?name=${encodeURIComponent(name)}`),
+  scriptMove: "/api/scripts/move",
 } as const;
 
 export const MODULE_PAGES = {

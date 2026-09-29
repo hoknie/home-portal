@@ -5,6 +5,8 @@ import { cn } from "cn";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { GAP_Y } from "@/entities/workflow";
+
 import { useEditor } from "../../model/editor-context";
 import { slotKey } from "../../model/edits/drop";
 import type { CanvasEdge } from "./edge-data";
@@ -16,13 +18,42 @@ export function useEdgeLabel() {
   return (label: NonNullable<CanvasEdge["data"]>["label"]) => (label ? t(label.key, label.params as Record<string, string | number>) : null);
 }
 
+export const RADIUS = 14;
+
+export const LOOP_CLEARANCE = 32;
+
+export function railPath(source: { x: number; y: number }, target: { x: number; y: number }, rail: number) {
+  const level = Math.min(Math.max(rail, source.y), target.y);
+  const across = target.x - source.x;
+  if (Math.abs(across) < 1) {
+    return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
+  }
+  const direction = Math.sign(across);
+  const radius = Math.max(0, Math.min(RADIUS, Math.abs(across) / 2, level - source.y, target.y - level));
+  return [
+    `M ${source.x} ${source.y}`,
+    `L ${source.x} ${level - radius}`,
+    `Q ${source.x} ${level} ${source.x + direction * radius} ${level}`,
+    `L ${target.x - direction * radius} ${level}`,
+    `Q ${target.x} ${level} ${target.x} ${level + radius}`,
+    `L ${target.x} ${target.y}`,
+  ].join(" ");
+}
+
+export function slotSpot(source: { x: number; y: number }, target: { x: number; y: number }, rail: number | undefined) {
+  return rail === undefined ? { x: target.x, y: (source.y + target.y) / 2 } : { x: source.x, y: Math.min(source.y + GAP_Y / 2, Math.max(rail, source.y)) };
+}
+
 export function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, markerEnd }: EdgeProps<CanvasEdge>) {
   const t = useTranslations("workflowEditor");
   const editor = useEditor();
   const labelText = useEdgeLabel();
-  const [path, , labelY] = getSmoothStepPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, borderRadius: 14 });
+  const [smooth, , labelY] = getSmoothStepPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition, borderRadius: RADIUS });
+  const rail = data?.rail;
+  const path = rail === undefined ? smooth : railPath({ x: sourceX, y: sourceY }, { x: targetX, y: targetY }, rail);
   const text = labelText(data?.label);
   const slot = data?.slot;
+  const spot = text && !slot ? { x: targetX, y: labelY } : slotSpot({ x: sourceX, y: sourceY }, { x: targetX, y: targetY }, rail);
   return (
     <>
       <BaseEdge
@@ -34,12 +65,23 @@ export function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePositio
           data?.tone && `!stroke-[2.5px] ${EDGE_TONE[data.tone]}`,
           data?.taken && "!stroke-[3px]",
           data?.dimmed && "opacity-30",
+          data?.dashed && "[stroke-dasharray:6_4] opacity-60",
         )}
       />
       <EdgeLabelRenderer>
-        <div className="nodrag nopan pointer-events-auto absolute flex flex-col items-center gap-1" style={{ transform: `translate(-50%, -50%) translate(${targetX}px, ${text && !slot ? labelY : (sourceY + targetY) / 2}px)` }}>
+        <div
+          className="nodrag nopan pointer-events-auto absolute flex flex-col items-center gap-1"
+          style={{ transform: `translate(-50%, -50%) translate(${spot.x}px, ${spot.y}px)` }}
+        >
           {text ? (
-            <span className={cn("rounded-full border border-glass-edge bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs", data?.taken && "border-primary text-primary")}>{text}</span>
+            <span
+              className={cn(
+                "rounded-full border border-glass-edge bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs",
+                data?.taken && "border-primary text-primary",
+              )}
+            >
+              {text}
+            </span>
           ) : null}
           {slot && !editor.readOnly ? (
             <button
@@ -49,10 +91,10 @@ export function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePositio
               onClick={() => editor.openPalette(slot)}
               className={cn(
                 "grid place-items-center rounded-full border border-glass-edge bg-background text-muted-foreground shadow-xs transition-all hover:scale-110 hover:border-primary hover:text-primary",
-                data?.dragging ? "size-9 border-2 border-dashed border-primary text-primary" : "size-6 opacity-70 hover:opacity-100",
+                data?.dragging ? "size-10 border-2 border-dashed border-primary text-primary" : "size-8 opacity-70 hover:opacity-100",
               )}
             >
-              <Plus className="size-3.5" aria-hidden />
+              <Plus className="size-4" aria-hidden />
             </button>
           ) : null}
         </div>
@@ -63,7 +105,7 @@ export function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePositio
 
 export function LoopEdge({ id, sourceX, sourceY, targetX, targetY, data, markerEnd }: EdgeProps<CanvasEdge>) {
   const labelText = useEdgeLabel();
-  const right = Math.max(sourceX, targetX, data?.right ?? sourceX) + 20;
+  const right = Math.max(sourceX, targetX, data?.right ?? sourceX) + LOOP_CLEARANCE;
   const path = `M ${sourceX} ${sourceY} L ${right} ${sourceY} L ${right} ${targetY} L ${targetX} ${targetY}`;
   const text = labelText(data?.label);
   return (

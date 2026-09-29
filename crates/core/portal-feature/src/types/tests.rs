@@ -31,6 +31,7 @@ async fn every_kind_of_error_answers_with_its_own_status() {
     let cases = [
         (ApiError::BadRequest("bad".into()), StatusCode::BAD_REQUEST),
         (ApiError::Unauthorized, StatusCode::UNAUTHORIZED),
+        (ApiError::Forbidden("outside".into()), StatusCode::FORBIDDEN),
         (ApiError::NotFound("missing"), StatusCode::NOT_FOUND),
         (ApiError::Conflict("stale".into()), StatusCode::CONFLICT),
         (

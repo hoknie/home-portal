@@ -1,0 +1,85 @@
+{
+  "directory": "/srv/home-portal/scripts",
+  "exists": true,
+  "files": [
+    {
+      "argument_problems": [],
+      "arguments": [],
+      "code": null,
+      "concerns": null,
+      "description": null,
+      "folder": null,
+      "mode": "0700",
+      "modified": "2026-09-21T14:13:20Z",
+      "name": "backup.sh",
+      "path": "backup.sh",
+      "problem": null,
+      "revision": "a8076d3d28d21e02012b20eaf7dbf75409a6277134439025f282e368e3305abf",
+      "runnable": true,
+      "size": 10,
+      "text": true,
+      "unreadable": null
+    },
+    {
+      "argument_problems": [],
+      "arguments": [
+        {
+          "choices": [],
+          "default": null,
+          "description": "Service id",
+          "name": "service",
+          "option": false,
+          "required": true,
+          "type": "text"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "description": "Skip the health check",
+          "name": "--force",
+          "option": true,
+          "required": false,
+          "type": "flag"
+        }
+      ],
+      "code": null,
+      "concerns": null,
+      "description": "Restart a service's container",
+      "folder": "media",
+      "mode": "0700",
+      "modified": "2026-09-21T14:13:20Z",
+      "name": "restart.sh",
+      "path": "media/restart.sh",
+      "problem": null,
+      "revision": "ec7fa81bd8c37cca2a15f2232ac05fd61ee1f7dfefb2a3aa74040dfd64a522bf",
+      "runnable": true,
+      "size": 135,
+      "text": true,
+      "unreadable": null
+    },
+    {
+      "argument_problems": [],
+      "arguments": [],
+      "code": null,
+      "concerns": null,
+      "description": null,
+      "folder": null,
+      "mode": "0700",
+      "modified": "2026-09-21T14:13:20Z",
+      "name": "tool",
+      "path": "tool",
+      "problem": null,
+      "revision": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "runnable": true,
+      "size": 0,
+      "text": false,
+      "unreadable": "binary"
+    }
+  ],
+  "folders": [
+    "media"
+  ],
+  "inside": true,
+  "left_out": 1,
+  "user_id": 501
+}

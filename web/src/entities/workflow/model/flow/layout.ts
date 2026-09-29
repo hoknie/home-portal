@@ -1,6 +1,7 @@
 import type { Step } from "../schema";
 import { type Path, ROOT, childList, listsOf, pathText } from "../tree";
-import { type Box, CARD, EMPTY, END, FRAME_PADDING, GAP_X, GAP_Y, JOIN, type Size, TERMINAL } from "./sizes";
+import { closes, closingOf } from "./ends";
+import { type Box, CARD, EMPTY, END, FRAME_PADDING, GAP_X, GAP_Y, JOIN, MARKER, MARKER_GAP, type Size, TERMINAL } from "./sizes";
 
 export type Layout = Map<string, Box>;
 
@@ -9,6 +10,10 @@ export const END_ID = "end";
 
 export function joinId(path: Path) {
   return `${pathText(path)}:join`;
+}
+
+export function markerId(path: Path) {
+  return `${pathText(path)}:end`;
 }
 
 export function frameId(path: Path) {
@@ -39,15 +44,19 @@ function stepSize(step: Step, path: Path): Size {
   if (branches.length > 0) {
     const columns = branches.map((list) => listSize(childList(step, list), path, list));
     const width = columns.reduce((sum, size) => sum + size.width, 0) + GAP_X * (columns.length - 1);
+    const join = closes(step) ? 0 : GAP_Y + JOIN.height;
     return {
       width: Math.max(CARD.width, width),
-      height: CARD.height + GAP_Y + Math.max(...columns.map((size) => size.height)) + GAP_Y + JOIN.height,
+      height: CARD.height + GAP_Y + Math.max(...columns.map((size) => size.height)) + join,
     };
   }
   if (step.kind === "loop") {
     const body = listSize(childList(step, "body"), path, "body");
     const frame = { width: body.width + FRAME_PADDING * 2, height: body.height + GAP_Y + JOIN.height + FRAME_PADDING * 2 };
     return { width: Math.max(CARD.width, frame.width), height: CARD.height + GAP_Y / 2 + frame.height };
+  }
+  if (closingOf(step) !== null) {
+    return { width: CARD.width, height: CARD.height + MARKER_GAP + MARKER.height };
   }
   return CARD;
 }
@@ -83,6 +92,9 @@ function placeStep(layout: Layout, step: Step, path: Path, center: number, top: 
       bottom = Math.max(bottom, end);
       left += column.size.width + GAP_X;
     }
+    if (closes(step)) {
+      return bottom;
+    }
     put(layout, joinId(path), center, bottom + GAP_Y, JOIN);
     return bottom + GAP_Y + JOIN.height;
   }
@@ -95,6 +107,10 @@ function placeStep(layout: Layout, step: Step, path: Path, center: number, top: 
     const frameBottom = end + GAP_Y + JOIN.height + FRAME_PADDING;
     put(layout, frameId(path), center, frameTop, { width: size.width + FRAME_PADDING * 2, height: frameBottom - frameTop });
     return frameBottom;
+  }
+  if (closingOf(step) !== null) {
+    put(layout, markerId(path), center, below + MARKER_GAP, MARKER);
+    return below + MARKER_GAP + MARKER.height;
   }
   return below;
 }

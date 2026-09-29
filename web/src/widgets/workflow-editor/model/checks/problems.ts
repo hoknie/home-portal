@@ -13,6 +13,7 @@ import {
   scopeAt,
   templateNames,
   templatesOf,
+  unreachableSteps,
 } from "@/entities/workflow";
 import type { Trace } from "@/entities/automation";
 
@@ -89,7 +90,14 @@ export function problemsFor(context: ProblemContext): Problem[] {
     context.workflow !== null && context.workflow.used_by.length === 0
       ? [{ at: "", severity: "warning" as const, key: "workflowEditor.problems.notStarted", params: {}, text: null }]
       : [];
-  const all = [...structural, ...templateProblems(context), ...server, ...unused];
+  const lost = unreachableSteps(context.draft.steps).map<Problem>((path) => ({
+    at: pathText(path),
+    severity: "warning",
+    key: "workflowEditor.problems.neverRuns",
+    params: {},
+    text: null,
+  }));
+  const all = [...structural, ...templateProblems(context), ...server, ...lost, ...unused];
   return all
     .map((problem, index) => ({ problem, index, rank: rank(context.draft.steps, problem.at) }))
     .sort((left, right) => left.rank - right.rank || left.index - right.index)

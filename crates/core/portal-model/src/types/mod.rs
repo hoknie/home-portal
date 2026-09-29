@@ -7,6 +7,7 @@ mod probe_outcome;
 mod publishing;
 mod raw_environment;
 mod raw_environments_section;
+mod scripts;
 mod service_id;
 mod service_state;
 mod service_status;
@@ -23,6 +24,9 @@ pub use probe_outcome::ProbeOutcome;
 pub use publishing::{Publication, TlsMode, TlsPolicy};
 pub use raw_environment::RawEnvironment;
 pub use raw_environments_section::RawEnvironmentsSection;
+pub use scripts::{
+    ArgumentKind, HeaderProblem, ScriptArgument, ScriptHeader, ScriptPath, ScriptPathProblem,
+};
 pub use service_id::{ServiceId, ServiceIdError};
 pub use service_state::ServiceState;
 pub use service_status::ServiceStatus;

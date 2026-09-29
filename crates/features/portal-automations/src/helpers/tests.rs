@@ -1,4 +1,4 @@
-use super::{render, script_shape_problem, unknown_placeholders};
+use super::{render, unknown_placeholders};
 
 fn lookup(name: &str) -> Option<&'static str> {
     match name {
@@ -39,16 +39,6 @@ fn an_unknown_field_is_reported_and_a_known_one_is_not() {
         vec!["service.name"]
     );
     assert!(unknown_placeholders("plain", &allowed).is_empty());
-}
-
-#[test]
-fn a_script_path_must_stay_inside_the_directory() {
-    assert!(script_shape_problem("restart.sh").is_none());
-    assert!(script_shape_problem("media/restart.sh").is_none());
-    assert!(script_shape_problem("./restart.sh").is_none());
-    for refused in ["", "  ", "/bin/sh", "../home-portal.toml", "media/../../x"] {
-        assert!(script_shape_problem(refused).is_some(), "{refused:?}");
-    }
 }
 
 #[test]

@@ -17,6 +17,9 @@ import notificationTest from "./notification-test.json";
 import notifications from "./notifications.json";
 import proxy from "./proxy.json";
 import publicPortal from "./public-portal.json";
+import scriptHeaders from "./script-headers.json";
+import scriptText from "./script-text.json";
+import scriptsTree from "./scripts-tree.json";
 import secrets from "./secrets.json";
 import services from "./services.json";
 import session from "./session.json";
@@ -56,6 +59,9 @@ export const apiSamples = {
   notifications,
   proxy,
   publicPortal,
+  scriptHeaders,
+  scriptText,
+  scriptsTree,
   secrets,
   services,
   session,

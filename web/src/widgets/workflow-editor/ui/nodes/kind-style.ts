@@ -5,12 +5,14 @@ import {
   GitBranch,
   Globe,
   Hourglass,
+  LogOut,
   type LucideIcon,
   Radar,
   Repeat,
   ScrollText,
   Shuffle,
   Send,
+  SkipForward,
   Split,
   SquareFunction,
   Terminal,
@@ -38,6 +40,8 @@ export const KIND_ICONS: Record<string, LucideIcon> = {
   probe: Radar,
   status: Activity,
   nothing: CircleDashed,
+  break: LogOut,
+  continue: SkipForward,
 };
 
 export const FALLBACK_ICON = SquareFunction;

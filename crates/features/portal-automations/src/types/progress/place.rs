@@ -4,6 +4,7 @@ pub struct Place {
     pub iteration: Option<usize>,
     pub calls: usize,
     pub item: Option<String>,
+    pub loop_label: Option<String>,
 }
 
 impl Place {
@@ -13,6 +14,7 @@ impl Place {
             iteration: None,
             calls: 0,
             item: None,
+            loop_label: None,
         }
     }
 
@@ -35,12 +37,20 @@ impl Place {
         Place { item, ..self }
     }
 
+    pub fn in_loop(self, label: &str) -> Place {
+        Place {
+            loop_label: Some(label.to_string()),
+            ..self
+        }
+    }
+
     pub fn called(&self, workflow: &str) -> Place {
         Place {
             path: format!("{}.{workflow}.steps", self.path),
             iteration: self.iteration,
             calls: self.calls + 1,
             item: self.item.clone(),
+            loop_label: None,
         }
     }
 }

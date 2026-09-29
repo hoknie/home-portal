@@ -10,6 +10,7 @@ use super::FieldError;
 pub enum ApiError {
     BadRequest(String),
     Unauthorized,
+    Forbidden(String),
     NotFound(&'static str),
     Conflict(String),
     UnsupportedMediaType,
@@ -33,6 +34,7 @@ impl ApiError {
         match self {
             ApiError::BadRequest(_) => StatusCode::BAD_REQUEST,
             ApiError::Unauthorized => StatusCode::UNAUTHORIZED,
+            ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
             ApiError::NotFound(_) => StatusCode::NOT_FOUND,
             ApiError::Conflict(_) => StatusCode::CONFLICT,
             ApiError::UnsupportedMediaType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
@@ -53,6 +55,7 @@ impl ApiError {
         match self {
             ApiError::BadRequest(message)
             | ApiError::Conflict(message)
+            | ApiError::Forbidden(message)
             | ApiError::BadGateway(message)
             | ApiError::ServiceUnavailable(message) => message,
             ApiError::NotFound(what) => what.to_string(),

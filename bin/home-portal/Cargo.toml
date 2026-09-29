@@ -40,6 +40,7 @@ portal-proxy.workspace = true
 portal-dns.workspace = true
 portal-public.workspace = true
 portal-secrets.workspace = true
+portal-scripts.workspace = true
 portal-services.workspace = true
 portal-telegram.workspace = true
 portal-weather.workspace = true

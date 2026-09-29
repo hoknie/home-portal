@@ -3,7 +3,7 @@
 import { Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { type Condition, type KindField, type Path, type Step, emptyRow, hiddenFields, idFor, idsOf, pathText, variableProblem } from "@/entities/workflow";
+import { type Condition, type KindField, type Path, type Step, emptyRow, filledTimeout, hiddenFields, idFor, idsOf, pathText, variableProblem } from "@/entities/workflow";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
 
@@ -11,6 +11,7 @@ import { useEditor } from "../../model/editor-context";
 import { ConditionBuilder } from "./condition-builder";
 import { ExclusiveChoice } from "./data/exclusive-choice";
 import { ListField } from "./list-field";
+import { ScriptArgumentsField } from "./script-arguments-field";
 import { SampleField } from "./sample-field";
 import { SELECT } from "./select-class";
 import { TableField } from "./table-field";
@@ -82,7 +83,7 @@ function Field({ path, step, field }: { path: Path; step: Step; field: KindField
               path={path}
               field={field.name}
               label={text.label}
-              value={value === undefined || value === null ? "" : String(value)}
+              value={value === undefined || value === null ? (filledTimeout(step.kind, field.name) ? (field.default ?? "") : "") : String(value)}
               onChange={(next) => set(numberOrTemplate(next))}
             />
           </FormField>
@@ -126,6 +127,19 @@ function Field({ path, step, field }: { path: Path; step: Step; field: KindField
       );
     }
     case "template-list":
+      if (step.kind === "script" && field.name === "args") {
+        const values = Array.isArray(value) ? (value as string[]) : [];
+        return (
+          <ScriptArgumentsField
+            path={path}
+            label={text.label}
+            hint={hint}
+            script={typeof step.script === "string" ? step.script : ""}
+            values={values}
+            onChange={(next) => set(next.length === 0 ? undefined : next)}
+          />
+        );
+      }
       return <ListField path={path} field={field.name} label={text.label} hint={hint} values={Array.isArray(value) ? (value as string[]) : []} onChange={(next) => set(next.length === 0 ? undefined : next)} />;
     case "template-table": {
       const called = step.kind === "workflow" ? editor.sources.workflows.find((workflow) => workflow.id === step.workflow) : undefined;

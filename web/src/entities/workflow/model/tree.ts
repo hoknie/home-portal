@@ -235,6 +235,12 @@ export function duplicate(steps: Step[], path: Path): Step[] {
   return insert(steps, { owner: path.slice(0, -1), list: last.list, index: last.index + 1 }, copy);
 }
 
+export const SCRIPT_TIMEOUT_DEFAULT = 60;
+
+export function filledTimeout(kind: string, field: string) {
+  return kind === "script" && field === "timeout_seconds";
+}
+
 function initial(kind: Kind): Partial<Step> {
   const values: Record<string, unknown> = {};
   for (const field of kind.fields) {
@@ -248,6 +254,8 @@ function initial(kind: Kind): Partial<Step> {
       values[field.name] = field.default ?? field.choices[0];
     } else if (field.required && (field.type === "template" || field.type === "name" || field.type === "workflow" || field.type === "script")) {
       values[field.name] = "";
+    } else if (filledTimeout(kind.name, field.name)) {
+      values[field.name] = Number(field.default ?? SCRIPT_TIMEOUT_DEFAULT);
     } else if (field.required && field.type === "integer") {
       values[field.name] = Number(field.default ?? field.minimum ?? 1);
     }

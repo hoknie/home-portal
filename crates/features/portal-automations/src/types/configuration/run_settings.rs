@@ -1,7 +1,6 @@
 use portal_feature::FieldError;
 
 use super::RawRun;
-use crate::helpers::script_shape_problem;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RunSettings {
@@ -16,7 +15,7 @@ impl RunSettings {
 
     pub fn decode(raw: &RawRun) -> Result<RunSettings, Vec<FieldError>> {
         let mut errors = Vec::new();
-        if let Some(problem) = script_shape_problem(&raw.script) {
+        if let Some(problem) = portal_model::ScriptPath::problem(&raw.script) {
             errors.push(FieldError::new("run.script", problem));
         }
         let timeout = raw.timeout_seconds.unwrap_or(Self::DEFAULT_TIMEOUT as i64);

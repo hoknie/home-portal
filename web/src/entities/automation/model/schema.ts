@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { headerProblemSchema, scriptArgumentSchema } from "@/entities/script/@x/automation";
+
 export const EVENT_NAMES = [
   "schedule",
   "portal.started",
@@ -159,6 +161,7 @@ export const scriptsSchema = z.object({
   directory: z.string(),
   exists: z.boolean(),
   user_id: z.number().default(0),
+  editing: z.boolean().default(false),
   scripts: z.array(
     z.object({
       path: z.string(),
@@ -166,6 +169,9 @@ export const scriptsSchema = z.object({
       problem: z.string().nullable(),
       code: z.string().nullable().default(null),
       concerns: z.string().nullable().default(null),
+      description: z.string().nullable().default(null),
+      arguments: z.array(scriptArgumentSchema).default([]),
+      argument_problems: z.array(headerProblemSchema).default([]),
     }),
   ),
 });

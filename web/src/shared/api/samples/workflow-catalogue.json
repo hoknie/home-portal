@@ -653,7 +653,8 @@
       "group": "flow",
       "name": "loop",
       "results": [
-        "iterations"
+        "iterations",
+        "left_early"
       ]
     },
     {
@@ -712,6 +713,20 @@
       "fields": [],
       "group": "flow",
       "name": "nothing",
+      "results": []
+    },
+    {
+      "exclusive": [],
+      "fields": [],
+      "group": "flow",
+      "name": "break",
+      "results": []
+    },
+    {
+      "exclusive": [],
+      "fields": [],
+      "group": "flow",
+      "name": "continue",
       "results": []
     },
     {

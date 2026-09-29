@@ -4,14 +4,15 @@ use std::time::Instant;
 use time::OffsetDateTime;
 use tokio::sync::Semaphore;
 
-use crate::services::{AutomationSink, FinishGuard, ScriptsDirectory, WorkflowTools, execute};
+use crate::ports::ScriptLibrary;
+use crate::services::{AutomationSink, FinishGuard, WorkflowTools, execute};
 use crate::types::{RunRecord, SkipReason};
 
 pub const PARALLEL_RUNS: usize = 4;
 
 pub async fn dispatch_forever(
     sink: Arc<AutomationSink>,
-    scripts: ScriptsDirectory,
+    scripts: Arc<dyn ScriptLibrary>,
     tools: WorkflowTools,
 ) {
     let permits = Arc::new(Semaphore::new(PARALLEL_RUNS));
@@ -52,7 +53,7 @@ pub async fn dispatch_forever(
 
 pub async fn dispatch_children_forever(
     sink: Arc<AutomationSink>,
-    scripts: ScriptsDirectory,
+    scripts: Arc<dyn ScriptLibrary>,
     tools: WorkflowTools,
 ) {
     loop {

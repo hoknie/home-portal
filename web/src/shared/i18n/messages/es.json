@@ -41,7 +41,8 @@
     "notifications": "Notificaciones",
     "collapseMenu": "Contraer el menú",
     "expandMenu": "Expandir el menú",
-    "menu": "Menú"
+    "menu": "Menú",
+    "scripts": "Scripts"
   },
   "theme": {
     "label": "Tema",
@@ -1328,7 +1329,9 @@
       "inputDefault": "El valor por defecto no es del tipo de la entrada",
       "variableName": "Mayúsculas, dígitos y _, empezando por una letra",
       "variableReserved": "Lo fija el portal; elija otro nombre",
-      "numberOrTemplate": "Debe ser un número entero o una plantilla como '{{'inputs.seconds'}}'"
+      "numberOrTemplate": "Debe ser un número entero o una plantilla como '{{'inputs.seconds'}}'",
+      "neverRuns": "Este paso nunca se ejecuta: un paso anterior termina esta rama",
+      "needsLoop": "Necesita un bucle que lo contenga: solo funciona dentro del cuerpo de un bucle, no a través de parallel"
     },
     "canvas": {
       "label": "Diagrama del flujo",
@@ -1400,14 +1403,23 @@
       "automationWaited": "{title}, esperando",
       "setList": "{variable}: lista de {count}",
       "setObject": "{variable}: {count, plural, one {# clave} other {# claves}}",
-      "repeatTemplate": "{count} veces"
+      "repeatTemplate": "{count} veces",
+      "break": "sale del bucle",
+      "continue": "pasa a la siguiente pasada"
     },
     "warningCount": "{count, plural, one {# aviso} other {# avisos}}",
     "palette": {
       "title": "Añadir un paso",
       "description": "Elija qué debe pasar en este punto",
       "search": "Buscar un paso",
-      "noMatches": "Ningún paso coincide"
+      "noMatches": "Ningún paso coincide",
+      "quick": {
+        "title": "Terminar esta rama",
+        "endRun": "Terminar",
+        "skip": "Omitir",
+        "leaveLoop": "Salir del bucle",
+        "nextPass": "Siguiente pasada"
+      }
     },
     "destinations": {
       "top": "Al final del flujo",
@@ -1520,7 +1532,13 @@
         "object": "Diccionario"
       }
     },
-    "checkedWhenRuns": "Una plantilla: se comprueba al ejecutar el paso"
+    "checkedWhenRuns": "Una plantilla: se comprueba al ejecutar el paso",
+    "markers": {
+      "succeeded": "Fin: con éxito",
+      "failed": "Fin: con error",
+      "break": "Salir del bucle",
+      "continue": "Siguiente pasada"
+    }
   },
   "templateInput": {
     "suggestions": "Valores que puede insertar",
@@ -1621,6 +1639,16 @@
         "name": "Registro",
         "description": "Escribe un mensaje en la traza de la ejecución, con los valores sustituidos. Nunca detiene la ejecución, sea cual sea su nivel.",
         "example": "comprobando '{{'loop.item'}}': '{{'steps.status.state'}}'"
+      },
+      "break": {
+        "name": "Salir del bucle",
+        "description": "Termina en el acto el bucle en el que está; la ejecución sigue después del bucle. Solo dentro de un bucle.",
+        "example": "Si el NAS respondió, salir del bucle de reintentos."
+      },
+      "continue": {
+        "name": "Siguiente pasada",
+        "description": "Omite el resto de esta pasada y empieza la siguiente del bucle. Solo dentro de un bucle.",
+        "example": "Saltar la TV y revisar el siguiente host."
       }
     },
     "fields": {
@@ -1832,7 +1860,8 @@
         "branch": "La rama que tomó: then o else"
       },
       "loop": {
-        "iterations": "Cuántas pasadas hubo"
+        "iterations": "Cuántas pasadas hubo",
+        "left_early": "True cuando lo terminó un paso «Salir del bucle»"
       },
       "workflow": {
         "vars": "Las variables que asignó el flujo llamado"
@@ -2206,6 +2235,95 @@
       "automation": "Nueva automatización",
       "webhook": "Nuevo webhook",
       "workflow": "Nuevo flujo"
+    }
+  },
+  "scriptArguments": {
+    "title": "Argumentos",
+    "declared": "Del encabezado del script",
+    "required": "obligatorio",
+    "defaultIs": "Por defecto: {value}",
+    "editAsList": "Editar como lista",
+    "editAsFields": "Editar como campos",
+    "doesNotFit": "Estos argumentos no siguen lo que declara el script, así que se mantienen como lista.",
+    "headerProblems": "El encabezado del script tiene problemas; esas líneas se ignoran:",
+    "choices": "Opciones"
+  },
+  "scripts": {
+    "title": "Scripts",
+    "subtitle": "Los scripts que ejecutan las automatizaciones, los webhooks y los flujos, en el directorio scripts y sus carpetas.",
+    "off": "La edición de scripts está desactivada en el archivo de configuración. Añade esto para activarla:",
+    "missing": "El directorio de scripts {directory} aún no existe.",
+    "createDirectory": "Crear carpeta",
+    "newScript": "Nuevo script",
+    "newFolder": "Nueva carpeta",
+    "rename": "Renombrar o mover",
+    "delete": "Eliminar",
+    "deleteFolder": "Eliminar la carpeta {name}",
+    "deleteTitle": "¿Eliminar {path}?",
+    "deleteDescription": "El archivo se elimina del directorio de scripts.",
+    "deleteUsed": "Lo usan {users}; sus próximas ejecuciones se rechazarán.",
+    "folder": "Carpeta",
+    "topLevel": "Directamente en scripts",
+    "name": "Nombre",
+    "create": "Crear",
+    "move": "Mover",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "unsaved": "Cambios sin guardar",
+    "leftOut": "{count, plural, one {# entrada a más de una carpeta de profundidad no se muestra.} other {# entradas a más de una carpeta de profundidad no se muestran.}}",
+    "readOnly": "Los scripts solo se pueden cambiar desde dentro de tus entornos, así que aquí la página es de solo lectura.",
+    "choose": "Elige un script para abrirlo.",
+    "empty": "Aún no hay scripts.",
+    "runnable": "Se puede ejecutar",
+    "notRunnable": "No se puede ejecutar",
+    "mode": "Permisos {mode}",
+    "unreadable": {
+      "binary": "Este archivo no es de texto, así que no se puede editar aquí.",
+      "too-large": "Este archivo ocupa más de 256 KiB, así que no se puede editar aquí.",
+      "link": "Es un enlace simbólico, así que no se puede editar aquí."
+    },
+    "conflict": "El script cambió desde que lo abriste. Tu texto se conserva.",
+    "reload": "Recargar",
+    "overwrite": "Sobrescribir",
+    "leave": "Tienes cambios sin guardar en este script. ¿Salir de todos modos?",
+    "text": "Texto del script",
+    "declared": "Declarado en el encabezado",
+    "noArguments": "El encabezado no declara argumentos.",
+    "tree": "Archivos",
+    "newScriptTitle": "Nuevo script",
+    "newFolderTitle": "Nueva carpeta",
+    "renameTitle": "Renombrar o mover {path}",
+    "filesCount": "{count, plural, one {# archivo} other {# archivos}}",
+    "chooseTitle": "Ningún script abierto",
+    "sizeBytes": "{size} B",
+    "sizeKib": "{size} KiB",
+    "modified": "Modificado",
+    "usage": "Cómo se llama",
+    "required": "obligatorio",
+    "optional": "opcional",
+    "defaultValue": "por defecto {value}",
+    "whatItDoes": "Qué hace",
+    "noDescription": "El encabezado aún no tiene una línea @description.",
+    "shortcut": "⌘S / Ctrl+S",
+    "types": {
+      "text": "texto",
+      "number": "número",
+      "flag": "interruptor",
+      "choice": "opciones"
+    },
+    "help": {
+      "title": "Formato del encabezado",
+      "intro": "Las líneas de comentario al principio del script, justo después de #!, lo describen. El portal las lee sin ejecutar el script y ofrece campos para ellas en automatizaciones, webhooks y pasos de flujos.",
+      "rows": {
+        "description": "Una línea que dice qué hace el script.",
+        "required": "Un argumento posicional; es obligatorio.",
+        "optional": "Un ? tras el nombre hace opcional un argumento posicional.",
+        "option": "Una opción con tipo y valor por defecto.",
+        "flag": "Una opción sin tipo es un interruptor: se pasa sola cuando está activa.",
+        "choice": "Una elección entre valores fijos, con valor por defecto."
+      },
+      "rules": "Los tipos son text, number, flag u opciones como a|b. El encabezado termina en la primera línea que no es un comentario; se leen como máximo 64 líneas y 32 argumentos.",
+      "insert": "Insertar un encabezado de ejemplo"
     }
   }
 }

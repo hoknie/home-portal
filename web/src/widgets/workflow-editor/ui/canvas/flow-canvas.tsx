@@ -23,19 +23,21 @@ import { useEffect, useMemo, useState } from "react";
 import { isActive } from "@/entities/automation";
 import { type Flow, type Overlay, type RunPath, flowOf, runPath } from "@/entities/workflow";
 
-import { dropTarget, slotPoints } from "../../model/edits/drop";
+import { placeable } from "../../model/checks/placing";
+import { DROP_RADIUS, dropTarget, slotPoints } from "../../model/edits/drop";
 import { useEditor } from "../../model/editor-context";
 import { EmptyNode } from "../nodes/empty-node";
 import { EndNode } from "../nodes/end-node";
 import { FrameNode } from "../nodes/frame-node";
 import { JoinNode } from "../nodes/join-node";
+import { MarkerNode } from "../nodes/marker-node";
 import type { CanvasNode } from "../nodes/node-data";
 import { StartNode } from "../nodes/start-node";
 import { StepNode } from "../nodes/step-node";
 import type { CanvasEdge } from "./edge-data";
 import { FlowEdge, LoopEdge } from "./flow-edge";
 
-const NODE_TYPES: NodeTypes = { start: StartNode, step: StepNode, join: JoinNode, frame: FrameNode, empty: EmptyNode, end: EndNode };
+const NODE_TYPES: NodeTypes = { start: StartNode, step: StepNode, join: JoinNode, frame: FrameNode, empty: EmptyNode, marker: MarkerNode, end: EndNode };
 const EDGE_TYPES: EdgeTypes = { flow: FlowEdge, again: LoopEdge };
 
 function nodesOf(flow: Flow, selected: string | null, fixed: boolean, path: RunPath | null): CanvasNode[] {
@@ -86,6 +88,8 @@ function edgesOf(flow: Flow, taken: (source: string, label?: string) => boolean,
       dimmed: path !== null && !path.edges.has(edge.id),
       label: edge.label,
       slot: edge.slot,
+      rail: edge.rail,
+      dashed: edge.dashed,
       taken: taken(edge.source, edge.label?.key),
       dragging,
       right: frames.get(edge.target),
@@ -181,7 +185,8 @@ function Canvas() {
         setDragging(false);
         const from = node.data.node.path;
         const center = { x: node.position.x + node.data.node.box.width / 2, y: node.position.y + node.data.node.box.height / 2 };
-        const target = from ? dropTarget(points, from, center) : null;
+        const moving = node.data.node.step;
+        const target = from ? dropTarget(points, from, center, DROP_RADIUS, (candidate) => moving === undefined || placeable(moving, candidate)) : null;
         if (from && target) {
           editor.move(from, target);
         } else {

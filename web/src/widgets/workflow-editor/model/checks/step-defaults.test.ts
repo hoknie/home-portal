@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type Step, chosenOf, newStep, workflowCatalogueSchema } from "@/entities/workflow";
+import { LOOP_EXITS, type Step, chosenOf, newStep, workflowCatalogueSchema } from "@/entities/workflow";
 import { apiSamples } from "@/shared/api";
 
 import { problemsOf } from "./validation";
@@ -35,7 +35,8 @@ describe("every kind from the palette", () => {
     for (const group of kind.exclusive) {
       expect(group.filter((field) => (step as Record<string, unknown>)[field] !== undefined)).toEqual([chosenOf(step, group)]);
     }
-    const draft = { id: "all", title: "All", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [step] };
+    const placed = (LOOP_EXITS as readonly string[]).includes(name) ? { id: "wrap", kind: "loop", repeat: 1, body: [step] } : step;
+    const draft = { id: "all", title: "All", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [placed] };
     const problems = Object.keys(problemsOf(draft, catalogue, [])).filter((at) => at.startsWith("steps[0]"));
     expect(problems).toEqual([]);
   });

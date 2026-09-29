@@ -80,7 +80,7 @@ pub async fn run_prepared(
         workflows,
         actions: actions.clone(),
         http: crate::clients::HttpClient::new().unwrap(),
-        scripts: crate::services::ScriptsDirectory::at(root),
+        scripts: Arc::new(crate::fakes::FakeScripts::at(root)),
         groups: Arc::new(Groups::default()),
         budget: Budget::new(Duration::from_secs(workflow.timeout_seconds), stop),
         trace: Arc::new(Mutex::new(Trace::default())),

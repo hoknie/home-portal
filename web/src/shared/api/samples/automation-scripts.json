@@ -1,24 +1,89 @@
 {
   "directory": "/srv/home-portal/scripts",
+  "editing": false,
   "exists": true,
   "scripts": [
     {
+      "argument_problems": [],
+      "arguments": [],
       "code": null,
       "concerns": null,
+      "description": null,
       "path": "backup/nightly.sh",
       "problem": null,
       "runnable": true
     },
     {
+      "argument_problems": [],
+      "arguments": [
+        {
+          "choices": [],
+          "default": null,
+          "description": "Service id",
+          "name": "service",
+          "option": false,
+          "required": true,
+          "type": "text"
+        },
+        {
+          "choices": [],
+          "default": "3",
+          "description": "Tries before giving up",
+          "name": "--retries",
+          "option": true,
+          "required": false,
+          "type": "number"
+        },
+        {
+          "choices": [],
+          "default": null,
+          "description": "Skip the health check",
+          "name": "--force",
+          "option": true,
+          "required": false,
+          "type": "flag"
+        },
+        {
+          "choices": [
+            "fast",
+            "full"
+          ],
+          "default": "fast",
+          "description": "How deep to check",
+          "name": "mode",
+          "option": false,
+          "required": false,
+          "type": "choice"
+        }
+      ],
+      "code": null,
+      "concerns": null,
+      "description": "Restart a service's container",
+      "path": "media/restart.sh",
+      "problem": null,
+      "runnable": true
+    },
+    {
+      "argument_problems": [
+        {
+          "line": 1,
+          "message": "line 1 declares an argument that has the type weird, but weird is not a known type; use text, number, flag or choices such as a|b"
+        }
+      ],
+      "arguments": [],
       "code": "writable",
       "concerns": "/srv/home-portal/scripts/open.sh",
+      "description": null,
       "path": "open.sh",
       "problem": "open.sh can be written by group or others",
       "runnable": false
     },
     {
+      "argument_problems": [],
+      "arguments": [],
       "code": null,
       "concerns": null,
+      "description": null,
       "path": "restart.sh",
       "problem": null,
       "runnable": true

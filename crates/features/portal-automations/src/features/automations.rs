@@ -18,11 +18,11 @@ use crate::controllers::{
 use crate::loops::{
     JournalWriter, dispatch_children_forever, dispatch_forever, schedule_forever, watch_forever,
 };
-use crate::ports::{Clock, Directory, PortalActions};
+use crate::ports::{Clock, Directory, PortalActions, ScriptLibrary};
 use crate::repositories::RunFile;
 use crate::services::{
-    AutomationCache, AutomationSink, Journal, ScriptsDirectory, StatusRelay, SystemClock, Views,
-    WebhookBook, WebhookWriter, WorkflowTools, validate_automations,
+    AutomationCache, AutomationSink, Journal, StatusRelay, SystemClock, Views, WebhookBook,
+    WebhookWriter, WorkflowTools, validate_automations,
 };
 use crate::types::{AutomationsState, WorkflowCases};
 use crate::usecases::{
@@ -68,10 +68,10 @@ impl AutomationsFeature {
         configuration: Arc<ConfigStore>,
         directory: Arc<dyn Directory>,
         actions: Arc<dyn PortalActions>,
+        scripts: Arc<dyn ScriptLibrary>,
     ) -> Result<AutomationsFeature, String> {
         let tools = WorkflowTools::of(configuration.clone(), actions)?;
         let cache = Arc::new(AutomationCache::of(&configuration.read().document));
-        let scripts = ScriptsDirectory::at(configuration.storage(Storage::Scripts));
         let file = Arc::new(RunFile::at(&configuration.storage(Storage::Automations)));
         let sink = Arc::new(AutomationSink::restored(cache, file.load(Journal::KEPT)));
         let writer = Arc::new(JournalWriter::new(sink.journal.clone(), file));

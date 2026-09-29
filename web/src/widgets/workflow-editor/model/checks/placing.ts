@@ -1,4 +1,4 @@
-import { type Path, parsePath, pathText } from "@/entities/workflow";
+import { type Path, ROOT, type Step, type Target, insideLoop, needsLoop, parsePath, pathText } from "@/entities/workflow";
 
 import type { Problems } from "./validation";
 
@@ -25,4 +25,18 @@ export function blocksToOpen(problems: Problems): string[] {
 
 export function fieldKey(path: Path, field: string) {
   return `${pathText(path)}.${field}`;
+}
+
+export type SlotContext = { inBranch: boolean; inLoop: boolean };
+
+export function slotContext(target: Target): SlotContext {
+  return { inBranch: target.list !== ROOT, inLoop: insideLoop(target) };
+}
+
+export function placeable(step: Step, target: Target) {
+  return !needsLoop(step) || insideLoop(target);
+}
+
+export function kindPlaceable(kind: string, target: Target) {
+  return placeable({ id: kind, kind }, target);
 }

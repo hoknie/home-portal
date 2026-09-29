@@ -49,6 +49,7 @@ crates/features/          LAYER 2 — one crate per subject the portal shows or 
   portal-public/          the portal page shown without a session
   portal-proxy/           publishing services through Caddy: its configuration, forward-auth, TLS
   portal-automations/     the owner's scripts, run on a schedule or on the portal's events
+  portal-scripts/         the scripts directory: where a script may lie and whether it can run
   portal-dns/             an authoritative DNS server for the names the proxy publishes
   portal-modules/         the modules page's API: which optional parts are on, and their requirements
 crates/notification/      LAYER 2 — one crate per notification channel; depends on core crates only
@@ -524,7 +525,8 @@ too.
   Admission — already running, one run already waiting, the cooldown, 60 starts an hour — is
   decided before the queue, which holds at most 100 runs and drops the oldest.
 - **No shell, and only `scripts/`.** A script is a path inside the `scripts` storage place (§6.1).
-  Before every run `services/scripts.rs` resolves it and refuses a file outside the directory, one
+  Before every run the `ScriptLibrary` port resolves it: `bin/home-portal/src/adapters/script_library.rs`
+  calls `portal-scripts` (§6.13), which refuses a file outside the directory, one
   that is not an executable regular file, one owned by neither the portal's user nor root, and one
   that group or others can write — the file or any directory down to it. The interface lists the
   scripts and never writes one. Each argument is one argv item with `{{field}}` placeholders; the
@@ -629,6 +631,13 @@ too.
   3600 at most), 1000 executed steps, 100 iterations per loop, 8 levels of nesting and the run's stop
   `watch`; every wait, HTTP request and probe races the stop and the deadline. `parallel` runs 2–4
   branches with `join_all` and merges their results in branch order. Values are capped at 64 KiB.
+- **Leaving a loop is a flow, not an ending.** `Flow` (`types/progress/flow.rs`) is `Continue`,
+  `Break`, `NextPass` or `End(Ending)`. `runner.rs` returns any flow but `Continue` at once, an `if`
+  passes it up, and the loop driver (`running/flow_steps.rs`) consumes `Break` (setting `left_early`)
+  and `NextPass`; `stop` still ends the whole run. `checking/flow_decoding.rs#check_loop_exits`
+  refuses `break` and `continue` outside a loop body or through `parallel`, so they never reach a
+  join or the root, where the runner treats them as `Continue` anyway. `Place.loop_label` names the
+  loop in their trace detail.
 - **Templates** `{{event.*}}`, `{{inputs.*}}`, `{{vars.*}}`, `{{steps.<id>.<path>}}`, `{{loop.*}}`
   and `{{secrets.<key>}}` are rendered by `evaluating/values.rs`. A secret is sent as it is, but every
   rendered secret is replaced by `***` in the trace and the journal.
@@ -720,6 +729,22 @@ too.
   - `model/flow/`: `flowOf` builds the diagram (start, one node per step, joins, loop frames, end,
     arrows and the "+" slots) from the tree, and `layoutOf` places it deterministically, so nothing
     about positions is stored;
+  - `model/flow/ends.ts`: how a list ends. `closingOf` gives `succeeded` or `failed` for a `stop`,
+    and the loop exits for `break` and `continue`; `closes` also covers an `if`/`parallel` all of whose
+    branches end; `closedAt` and `unreachableSteps` find the steps that never run; `needsLoop` and
+    `insideLoop` say where `break` and `continue` may go (a loop body, through `if`, never through
+    `parallel`). `build.ts` puts a `marker` node (`<path>:end`, `ui/nodes/marker-node.tsx`) under
+    every ending step with no arrow to the join, drops the join of a fully ending `if`/`parallel`,
+    emits the shared end node only when a path reaches it, and gives never-run steps `unreachable`
+    (dimmed) and `dashed` arrows, which `checks/problems.ts` warns about. Each branch's closing arrow
+    carries `rail`, a level `GAP_Y / 2` above its join: `ui/canvas/flow-edge.tsx#railPath` draws it
+    down its own column to that level and only then across, so a short branch never crosses a long
+    one, and its "+" (`slotSpot` in the same file) sits right under the branch's last step. The room lives in `model/flow/sizes.ts`: `GAP_Y = 96`,
+    `GAP_X = 80`, `MARKER` and `MARKER_GAP`, and `FRAME_PADDING = 32`; the 32 px "+" and the loop
+    return's `LOOP_CLEARANCE` are in `flow-edge.tsx`.
+    `widgets/workflow-editor/model/checks/placing.ts` (`slotContext`, `placeable`) filters the
+    palette, "Move to…" and dragging, and the palette offers the quick ends ("End run", "Skip", and
+    inside a loop "Leave loop" and "Next pass");
   - `model/suggestions/`: `suggestionsAt` mirrors `checking/scope.rs` for the `{{` completion, with
     JSON keys from the last run, and `checkTemplate` gives the same reasons as the server;
   - `model/templates.ts` and `ui/templates-gallery.tsx`: the starter templates.
@@ -757,6 +782,50 @@ too.
   `/admin/notifications` lives in `widgets/modules` (`ui/notifications/`), because `widgets/` is at
   steiger's slice limit. Channel settings are drawn from their JSON: a switch for a boolean, the
   secret picker for `secret`, a text field otherwise.
+
+### 6.13. Scripts
+
+- **The scripts directory is its own feature, `portal-scripts`.** It owns where a script may lie
+  and whether it can run (`services/directory.rs`: links, owner, modes, every folder down to the
+  file) and serves them as the use cases `ResolveScript` and `ListScripts`. Automations, webhooks and
+  workflows only run scripts: `portal-automations` reaches the directory through its
+  `ScriptLibrary` port, adapted by `adapters/script_library.rs`, which maps each problem code onto
+  the journal's `RefusalCode` one to one. Spawning a process stays in `portal-automations`.
+- **One path rule.** `portal_model::ScriptPath` is the pure shape rule (relative, no `..`, no hidden
+  part, at most one folder deep) that both crates check with, on load and before every run.
+- **Who the portal is.** The runnability checks need the portal's user and groups, which only
+  `libc` answers, and `unsafe` lives in one file (§6.9). `portal-scripts` asks its `ProcessIdentity`
+  port, and `adapters/process_identity.rs` answers from
+  `portal_automations::{effective_user, effective_groups}`.
+- **What a script declares.** `portal_model::ScriptHeader::parse` reads `@description` and `@arg`
+  lines from the comments at the top of a file (after `#!`, at most 64 lines and 8 KiB), never by
+  running it. `services/headers.rs` caches it by path, mtime and size, and reads it only for files
+  that lie inside the directory, so a link out never shows another file's first lines. The
+  automations listing carries it through the port; the interface maps it onto `args` itself
+  (`entities/script/model/arguments.ts`), so the server never interprets it and hand-written `args`
+  keep working. `samples/script-headers.json` holds the cases both parsers must agree on.
+- **Editing is switched in the file only.** `[scripts] editing` (`services/settings.rs`, validated as
+  the feature's own section) is not a module and no endpoint writes it. The routes of `/api/scripts`
+  are always registered and every handler asks `ScriptEditing` first, answering 404 while it is off,
+  so a change applies on the next read without a restart. Writes also need the address-detected
+  environment (`DetectedEnvironment`, never the cookie's choice) not to be `internet`, else 403
+  (`ApiError::Forbidden`), and are logged with the user and the path, never the content.
+- **Writes are whole.** `services/writer.rs` holds one lock per directory, refuses any path part that
+  is a symbolic link, writes a hidden `.<name>.tmp-…` with `create_new` and mode 0700, syncs it,
+  renames it over the target and syncs the folder, so a run never sees half a file and a crash
+  leaves only a hidden file, which the feature sweeps after an hour. Revisions are
+  `portal_config::Revision` (SHA-256 of the bytes), with 428 without `If-Match` and 409 when stale.
+  Texts are at most 256 KiB of UTF-8 without NUL; the directory holds at most 500 files; folders
+  are one level deep, created 0700 and removed only when empty.
+- **Web:** `entities/script` holds the schemas and queries of `/api/scripts`, the TypeScript mirror of
+  the header parser (`model/header.ts`, checked against `samples/script-headers.json`), the mapping
+  onto `args` and the argument form (`ui/declared-arguments.tsx`), which the automation builder's
+  `RunCard` (also used by the webhook form) and the workflow inspector
+  (`ui/inspector/script-arguments-field.tsx`) share. The page `/admin/scripts` lives in
+  `widgets/automations` (`ui/scripts/`), because `features/` and `widgets/` are at steiger's slice
+  limit; its text area is `shared/ui/code-area`, which paints a small in-house highlight
+  (`highlight.ts`) under a transparent `<textarea>`, so no editor library is needed. The navigation adds "Scripts" after the modules
+  from `editing` in the automations listing (`widgets/app-shell/model/navigation.ts#sectionLinks`).
 
 ## 7. Async and cost
 

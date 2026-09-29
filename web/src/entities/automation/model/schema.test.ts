@@ -39,7 +39,7 @@ describe("automation", () => {
     const catalogue = catalogueSchema.parse(apiSamples.automationCatalogue);
     expect(catalogue.events.map((event) => event.name)).toContain("service.status-changed");
     expect(catalogue.choices.environments).toContain("internet");
-    expect(scriptsSchema.parse(apiSamples.automationScripts).scripts[1]).toMatchObject({ runnable: false });
+    expect(scriptsSchema.parse(apiSamples.automationScripts).scripts.find((script) => script.path === "open.sh")).toMatchObject({ runnable: false });
     expect(scheduleSchema.parse(apiSamples.automationSchedule).times).toHaveLength(5);
     expect(queuedSchema.parse(apiSamples.automationQueued).run_id).toBe("42");
   });

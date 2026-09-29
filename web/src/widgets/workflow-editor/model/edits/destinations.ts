@@ -1,4 +1,6 @@
-import { type Path, type Step, type Target, contains, everyStep, listsOf, pathText, stepsIn } from "@/entities/workflow";
+import { type Path, type Step, type Target, at, contains, everyStep, listsOf, pathText, stepsIn } from "@/entities/workflow";
+
+import { placeable } from "../checks/placing";
 
 export type Destination = { target: Target; owner: Step | null; list: string };
 
@@ -20,5 +22,6 @@ export function destinationsFor(steps: Step[], path: Path): Destination[] {
       found.push({ target: { owner: here, list, index: stepsIn(steps, here, list).length }, owner: step, list });
     }
   });
-  return found;
+  const moving = at(steps, path);
+  return moving === undefined ? found : found.filter((destination) => placeable(moving, destination.target));
 }

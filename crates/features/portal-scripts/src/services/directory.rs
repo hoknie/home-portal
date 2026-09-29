@@ -2,13 +2,17 @@ use std::fs;
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 
-use crate::clients::{effective_groups, effective_user};
-use crate::helpers::{DEEPEST, script_shape};
-use crate::types::{Refusal, RefusalCode, ScriptEntry};
+use std::sync::Arc;
 
-#[derive(Debug, Clone)]
+use portal_model::{ScriptHeader, ScriptPath};
+
+use crate::ports::ProcessIdentity;
+use crate::types::{ProblemCode, ScriptFile, ScriptProblem, ScriptTree, Unreadable};
+
+#[derive(Clone)]
 pub struct ScriptsDirectory {
     root: PathBuf,
+    identity: Arc<dyn ProcessIdentity>,
 }
 
 impl ScriptsDirectory {
@@ -19,8 +23,12 @@ impl ScriptsDirectory {
     const OTHERS_EXECUTE: u32 = 0o001;
     const ANYONE_EXECUTES: u32 = 0o111;
 
-    pub fn at(root: PathBuf) -> ScriptsDirectory {
-        ScriptsDirectory { root }
+    pub fn at(root: PathBuf, identity: Arc<dyn ProcessIdentity>) -> ScriptsDirectory {
+        ScriptsDirectory { root, identity }
+    }
+
+    pub fn user(&self) -> u32 {
+        self.identity.user()
     }
 
     pub fn root(&self) -> &Path {
@@ -31,14 +39,18 @@ impl ScriptsDirectory {
         fs::canonicalize(&self.root).unwrap_or_else(|_| self.root.clone())
     }
 
-    pub fn resolve(&self, script: &str) -> Result<PathBuf, Refusal> {
+    pub fn resolve(&self, script: &str) -> Result<PathBuf, ScriptProblem> {
         let named = self.root.join(script);
-        if let Some((code, problem)) = script_shape(script) {
-            return Err(Refusal::new(code, &named, format!("the script {problem}")));
+        if let Some((code, problem)) = shape_refusal(script) {
+            return Err(ScriptProblem::new(
+                code,
+                &named,
+                format!("the script {problem}"),
+            ));
         }
         let root = fs::canonicalize(&self.root).map_err(|_| {
-            Refusal::new(
-                RefusalCode::NotFound,
+            ScriptProblem::new(
+                ProblemCode::NotFound,
                 &self.root,
                 format!(
                     "the scripts directory {} does not exist",
@@ -47,15 +59,15 @@ impl ScriptsDirectory {
             )
         })?;
         let resolved = fs::canonicalize(root.join(script)).map_err(|_| {
-            Refusal::new(
-                RefusalCode::NotFound,
+            ScriptProblem::new(
+                ProblemCode::NotFound,
                 &named,
                 format!("{script} does not exist in the scripts directory"),
             )
         })?;
         if !resolved.starts_with(&root) || resolved == root {
-            return Err(Refusal::new(
-                RefusalCode::Outside,
+            return Err(ScriptProblem::new(
+                ProblemCode::Outside,
                 &named,
                 format!("{script} is outside the scripts directory"),
             ));
@@ -64,48 +76,46 @@ impl ScriptsDirectory {
             .strip_prefix(&root)
             .map(|path| path.to_string_lossy().to_string())
             .unwrap_or_default();
-        if let Some((code, problem)) = script_shape(&inside) {
-            return Err(Refusal::new(
+        if let Some((code, problem)) = shape_refusal(&inside) {
+            return Err(ScriptProblem::new(
                 code,
                 &resolved,
                 format!("{script} leads to {inside}, which {problem}"),
             ));
         }
         let metadata = fs::metadata(&resolved).map_err(|error| {
-            Refusal::new(
-                RefusalCode::NotFound,
+            ScriptProblem::new(
+                ProblemCode::NotFound,
                 &resolved,
                 format!("{script} cannot be read: {error}"),
             )
         })?;
         if !metadata.is_file() {
-            return Err(Refusal::new(
-                RefusalCode::NotAFile,
+            return Err(ScriptProblem::new(
+                ProblemCode::NotAFile,
                 &resolved,
                 format!("{script} is not a regular file"),
             ));
         }
-        Self::check_folders(&root, &resolved, script)?;
-        Self::check_file(&metadata, &resolved, script)?;
+        self.check_folders(&root, &resolved, script)?;
+        self.check_file(&metadata, &resolved, script)?;
         Ok(resolved)
     }
 
-    pub fn list(&self) -> Option<Vec<ScriptEntry>> {
+    pub fn tree(&self) -> Option<ScriptTree> {
         let root = fs::canonicalize(&self.root).ok()?;
-        let mut found = Vec::new();
-        self.walk(&root, &root, 1, &mut found);
-        found.sort_by(|left, right| left.path.cmp(&right.path));
-        Some(found)
+        let mut tree = ScriptTree::default();
+        self.walk(&root, &root, 1, &mut tree);
+        tree.files.sort_by(|left, right| left.path.cmp(&right.path));
+        tree.folders.sort();
+        Some(tree)
     }
 
-    fn walk(&self, root: &Path, folder: &Path, depth: usize, found: &mut Vec<ScriptEntry>) {
+    fn walk(&self, root: &Path, folder: &Path, depth: usize, tree: &mut ScriptTree) {
         let Ok(entries) = fs::read_dir(folder) else {
             return;
         };
         for entry in entries.flatten() {
-            if found.len() >= Self::LISTED {
-                return;
-            }
             if entry.file_name().to_string_lossy().starts_with('.') {
                 continue;
             }
@@ -115,33 +125,64 @@ impl ScriptsDirectory {
             };
             let name = relative.to_string_lossy().to_string();
             if entry.file_type().is_ok_and(|kind| kind.is_dir()) {
-                if depth < DEEPEST {
-                    self.walk(root, &path, depth + 1, found);
+                if depth < ScriptPath::DEEPEST {
+                    tree.folders.push(name);
+                    self.walk(root, &path, depth + 1, tree);
+                } else {
+                    tree.left_out += 1;
                 }
                 continue;
             }
-            let problem = self.resolve(&name).err();
-            found.push(ScriptEntry {
+            if tree.files.len() >= Self::LISTED {
+                tree.left_out += 1;
+                continue;
+            }
+            let metadata = fs::symlink_metadata(&path).ok();
+            let link = metadata
+                .as_ref()
+                .is_some_and(|found| found.file_type().is_symlink());
+            let size = metadata.as_ref().map_or(0, fs::Metadata::len);
+            let unreadable = if link {
+                Some(Unreadable::Link)
+            } else if size > ScriptFile::LARGEST_TEXT {
+                Some(Unreadable::TooLarge)
+            } else {
+                None
+            };
+            tree.files.push(ScriptFile {
+                problem: self.resolve(&name).err(),
                 path: name,
-                problem,
+                header: ScriptHeader::default(),
+                size,
+                modified: metadata.as_ref().and_then(|found| found.modified().ok()),
+                mode: metadata
+                    .as_ref()
+                    .map_or(0, |found| found.permissions().mode() & 0o7777),
+                unreadable,
+                revision: None,
             });
         }
     }
 
-    fn check_folders(root: &Path, resolved: &Path, script: &str) -> Result<(), Refusal> {
+    fn check_folders(
+        &self,
+        root: &Path,
+        resolved: &Path,
+        script: &str,
+    ) -> Result<(), ScriptProblem> {
         let mut folder = resolved.parent();
         while let Some(current) = folder {
             let metadata = fs::metadata(current).map_err(|error| {
-                Refusal::new(
-                    RefusalCode::NotFound,
+                ScriptProblem::new(
+                    ProblemCode::NotFound,
                     current,
                     format!("{script} cannot be checked: {error}"),
                 )
             })?;
             let owner = metadata.uid();
-            if owner != effective_user() && owner != 0 {
-                return Err(Refusal::new(
-                    RefusalCode::FolderOwner,
+            if owner != self.identity.user() && owner != 0 {
+                return Err(ScriptProblem::new(
+                    ProblemCode::FolderOwner,
                     current,
                     format!(
                         "{script} is in {}, which is owned by neither the portal's user nor root",
@@ -150,8 +191,8 @@ impl ScriptsDirectory {
                 ));
             }
             if metadata.permissions().mode() & Self::WRITABLE_BY_OTHERS != 0 {
-                return Err(Refusal::new(
-                    RefusalCode::FolderWritable,
+                return Err(ScriptProblem::new(
+                    ProblemCode::FolderWritable,
                     current,
                     format!(
                         "{script} is in {}, which group or others can write",
@@ -167,19 +208,24 @@ impl ScriptsDirectory {
         Ok(())
     }
 
-    fn check_file(metadata: &fs::Metadata, resolved: &Path, script: &str) -> Result<(), Refusal> {
+    fn check_file(
+        &self,
+        metadata: &fs::Metadata,
+        resolved: &Path,
+        script: &str,
+    ) -> Result<(), ScriptProblem> {
         let mode = metadata.permissions().mode();
         if mode & Self::WRITABLE_BY_OTHERS != 0 {
-            return Err(Refusal::new(
-                RefusalCode::Writable,
+            return Err(ScriptProblem::new(
+                ProblemCode::Writable,
                 resolved,
                 format!("{script} can be written by group or others"),
             ));
         }
-        let user = effective_user();
+        let user = self.identity.user();
         if metadata.uid() != user && metadata.uid() != 0 {
-            return Err(Refusal::new(
-                RefusalCode::Owner,
+            return Err(ScriptProblem::new(
+                ProblemCode::Owner,
                 resolved,
                 format!("{script} is owned by neither the portal's user nor root"),
             ));
@@ -188,18 +234,23 @@ impl ScriptsDirectory {
             mode & Self::ANYONE_EXECUTES != 0
         } else if metadata.uid() == user {
             mode & Self::OWNER_EXECUTES != 0
-        } else if effective_groups().contains(&metadata.gid()) {
+        } else if self.identity.groups().contains(&metadata.gid()) {
             mode & Self::GROUP_EXECUTES != 0
         } else {
             mode & Self::OTHERS_EXECUTE != 0
         };
         if !executable {
-            return Err(Refusal::new(
-                RefusalCode::NotExecutable,
+            return Err(ScriptProblem::new(
+                ProblemCode::NotExecutable,
                 resolved,
                 format!("{script} is not executable by the portal's user"),
             ));
         }
         Ok(())
     }
+}
+
+fn shape_refusal(script: &str) -> Option<(ProblemCode, &'static str)> {
+    let problem = ScriptPath::parse(script).err()?;
+    Some((ProblemCode::of_shape(problem), problem.message()))
 }

@@ -33,6 +33,13 @@
 # scripts = "/usr/local/libexec/home-portal"
 # caddy = "/var/lib/home-portal/caddy"
 
+# Editing scripts from the interface (Management → Scripts). Off unless set here: anyone who
+# can sign in may then put code on this host that automations run as the portal's user, so
+# switch it on only when every user may do that. Only this file switches it; the interface
+# never offers it. Writes are refused from outside your environments, written whole and 0700.
+# [scripts]
+# editing = true
+
 # The interface's language when the visitor has not chosen one with the switcher and their
 # browser asks for none of en, ru, es. English when not set.
 # [interface]

@@ -8,7 +8,9 @@ use portal_model::Environment;
 use portal_proxy::PublishedServices;
 use portal_services::{Publishing, ServicesFeature, ServicesPorts};
 
-use super::{AutomationDirectory, ProxyPublishing, ServicePublications};
+use super::{
+    AutomationDirectory, PortalProcess, ProxyPublishing, ScriptShelf, ServicePublications,
+};
 
 struct Silent;
 
@@ -249,4 +251,35 @@ async fn the_portal_state_waits_for_the_portal_to_start() {
         actions.state().await.unwrap_err(),
         super::WorkflowActions::NOT_READY
     );
+}
+
+#[test]
+fn the_script_shelf_refuses_a_link_that_leaves_the_directory_through_the_port() {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+
+    use portal_automations::{RefusalCode, ScriptLibrary};
+    use portal_scripts::{ListScripts, ResolveScript};
+
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().join("scripts");
+    fs::create_dir(&root).unwrap();
+    fs::set_permissions(&root, fs::Permissions::from_mode(0o755)).unwrap();
+    fs::write(root.join("backup.sh"), "#!/bin/sh\n").unwrap();
+    fs::set_permissions(root.join("backup.sh"), fs::Permissions::from_mode(0o755)).unwrap();
+    symlink("/bin/sh", root.join("evil.sh")).unwrap();
+    let main = directory.path().join("home-portal.toml");
+    fs::write(&main, "[scripts]\nediting = true\n").unwrap();
+    let shelf = ScriptShelf {
+        resolve: ResolveScript::at(root.clone(), Arc::new(PortalProcess)),
+        list: ListScripts::at(root.clone(), Arc::new(PortalProcess)),
+        editing: portal_scripts::ScriptEditing::new(Arc::new(ConfigStore::open(&main).unwrap())),
+    };
+    let refusal = shelf.resolve("evil.sh").unwrap_err();
+    assert_eq!(refusal.code, RefusalCode::Outside);
+    assert!(shelf.resolve("backup.sh").is_ok());
+    let listed = shelf.list().unwrap();
+    let evil = listed.iter().find(|entry| entry.path == "evil.sh").unwrap();
+    assert_eq!(evil.problem.as_ref().unwrap().code, RefusalCode::Outside);
+    assert_eq!(shelf.root(), fs::canonicalize(&root).unwrap());
+    assert!(shelf.editing());
 }

@@ -1,4 +1,4 @@
-import { Bell, Blocks, Globe, House, LayoutDashboard, Network, Route, Server, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
+import { Bell, Blocks, FileCode, Globe, House, LayoutDashboard, Network, Route, Server, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
 
 import type { ModuleName } from "@/entities/module";
 import { routes } from "@/shared/config";
@@ -23,6 +23,14 @@ export const MODULE_LINKS = [
 
 export function moduleLinks(enabled: ReadonlySet<ModuleName>) {
   return MODULE_LINKS.filter((link) => enabled.has(link.module));
+}
+
+export const SCRIPTS_LINK = { href: routes.adminScripts, label: "scripts", icon: FileCode } as const;
+
+export type SectionLink = { href: string; label: (typeof MODULE_LINKS)[number]["label"] | typeof SCRIPTS_LINK.label; icon: LucideIcon };
+
+export function sectionLinks(enabled: ReadonlySet<ModuleName>, editing: boolean): SectionLink[] {
+  return [...moduleLinks(enabled), ...(editing ? [SCRIPTS_LINK] : [])];
 }
 
 export function isActive(pathname: string, href: string) {

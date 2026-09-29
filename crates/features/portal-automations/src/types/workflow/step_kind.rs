@@ -51,6 +51,8 @@ pub enum StepKind {
         service: String,
     },
     Nothing,
+    Break,
+    Continue,
     Automation {
         automation: String,
         fields: Vec<(String, String)>,
@@ -82,6 +84,8 @@ impl StepKind {
             StepKind::Probe { .. } => "probe",
             StepKind::Status { .. } => "status",
             StepKind::Nothing => "nothing",
+            StepKind::Break => "break",
+            StepKind::Continue => "continue",
             StepKind::Automation { .. } => "automation",
             StepKind::Log { .. } => "log",
         }

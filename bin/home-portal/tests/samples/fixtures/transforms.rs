@@ -1,7 +1,7 @@
 use portal_automations::{RawOperation, TransformValue};
 use serde_json::{Value, json};
 
-use super::check;
+use crate::check;
 
 fn cases() -> Vec<(&'static str, Value, Value)> {
     let disks = json!([

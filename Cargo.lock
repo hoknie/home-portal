@@ -688,6 +688,7 @@ dependencies = [
  "portal-notification",
  "portal-proxy",
  "portal-public",
+ "portal-scripts",
  "portal-secrets",
  "portal-services",
  "portal-telegram",
@@ -1566,6 +1567,25 @@ dependencies = [
  "time",
  "tokio",
  "tower",
+]
+
+[[package]]
+name = "portal-scripts"
+version = "0.1.9"
+dependencies = [
+ "axum",
+ "http-body-util",
+ "portal-config",
+ "portal-feature",
+ "portal-model",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "time",
+ "tokio",
+ "toml_edit",
+ "tower",
+ "tracing",
 ]
 
 [[package]]

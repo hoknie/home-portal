@@ -254,6 +254,8 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
             service: String::new(),
         },
         StepKind::Nothing,
+        StepKind::Break,
+        StepKind::Continue,
         StepKind::Log {
             message: String::new(),
             level: crate::types::LogLevel::Info,

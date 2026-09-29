@@ -6,12 +6,13 @@ use time::OffsetDateTime;
 use super::AutomationSink;
 use super::execute_workflow;
 use crate::clients::Runner;
-use crate::services::{ScriptsDirectory, WorkflowTools};
+use crate::ports::ScriptLibrary;
+use crate::services::WorkflowTools;
 use crate::types::{Finished, Invocation, Outcome, Pending, RunControl, RunRecord, Tail};
 
 pub async fn execute(
     sink: Arc<AutomationSink>,
-    (scripts, tools): (&ScriptsDirectory, &WorkflowTools),
+    (scripts, tools): (&Arc<dyn ScriptLibrary>, &WorkflowTools),
     pending: Pending,
 ) {
     if sink.closed() {
@@ -42,7 +43,7 @@ pub async fn execute(
             },
         ),
         Ok(program) => {
-            let directory = scripts.canonical_root();
+            let directory = scripts.root();
             let invocation = Invocation::for_run(&pending, program, directory);
             sink.active
                 .started(pending.run_id, invocation.arguments.clone(), started_at);

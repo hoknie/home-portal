@@ -27,7 +27,7 @@ pub async fn run_script(
     let remaining = runner.budget.remaining();
     let own = Duration::from_secs(run.timeout_seconds);
     let mut invocation = Invocation::for_step(
-        (program, runner.scripts.canonical_root()),
+        (program, runner.scripts.root()),
         arguments,
         &frame.event,
         own.min(remaining),

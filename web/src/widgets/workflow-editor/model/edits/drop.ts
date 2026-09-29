@@ -1,4 +1,4 @@
-import { type Flow, type Path, type Target, contains, pathText } from "@/entities/workflow";
+import { type Flow, GAP_Y, type Path, type Target, contains, pathText } from "@/entities/workflow";
 
 export const DROP_RADIUS = 48;
 
@@ -11,7 +11,12 @@ export function slotPoints(flow: Flow): SlotPoint[] {
     const source = boxes.get(edge.source);
     const target = boxes.get(edge.target);
     if (edge.slot && source && target) {
-      points.push({ target: edge.slot, x: target.x + target.width / 2, y: (source.y + source.height + target.y) / 2 });
+      const bottom = source.y + source.height;
+      points.push(
+        edge.rail === undefined
+          ? { target: edge.slot, x: target.x + target.width / 2, y: (bottom + target.y) / 2 }
+          : { target: edge.slot, x: source.x + source.width / 2, y: Math.min(bottom + GAP_Y / 2, Math.max(edge.rail, bottom)) },
+      );
     }
   }
   for (const node of flow.nodes) {
@@ -29,10 +34,16 @@ function sameSpot(from: Path, target: Target) {
   return sameOwner && last.list === target.list && (target.index === last.index || target.index === last.index + 1);
 }
 
-export function dropTarget(points: SlotPoint[], from: Path, point: { x: number; y: number }, radius = DROP_RADIUS): Target | null {
+export function dropTarget(
+  points: SlotPoint[],
+  from: Path,
+  point: { x: number; y: number },
+  radius = DROP_RADIUS,
+  allowed: (target: Target) => boolean = () => true,
+): Target | null {
   let best: { target: Target; distance: number } | null = null;
   for (const candidate of points) {
-    if (contains(from, candidate.target.owner) || sameSpot(from, candidate.target)) {
+    if (contains(from, candidate.target.owner) || sameSpot(from, candidate.target) || !allowed(candidate.target)) {
       continue;
     }
     const distance = Math.hypot(candidate.x - point.x, candidate.y - point.y);

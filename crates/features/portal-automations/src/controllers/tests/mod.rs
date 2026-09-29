@@ -3,6 +3,7 @@ mod automations;
 mod inputs;
 mod modules;
 mod runs;
+mod scripts;
 mod transforms;
 mod webhooks;
 mod workflow_runs;
