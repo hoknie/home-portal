@@ -4,8 +4,9 @@ use std::time::{Duration, Instant};
 use serde_json::json;
 use tokio::sync::watch;
 
-use super::running::{FakeActions, Outcome, run_scripted};
-use crate::types::{Ending, StepOutcome};
+use super::running::{FakeActions, Outcome, run_prepared, run_scripted};
+use crate::services::workflow::{SecretLookup, Secrets};
+use crate::types::{Ending, StepOutcome, Streams};
 
 fn workflow(timeout: u64, step: &str) -> String {
     format!(
@@ -35,10 +36,10 @@ async fn a_script_step_gets_its_arguments_and_event_fields_and_keeps_its_output(
     let result = &outcome.frame.steps["run"];
     assert_eq!(result["exit_code"], json!(0));
     assert_eq!(result["stdout"], json!("args: -- nas\nfrom w\n"));
-    assert_eq!(
-        outcome.trace.entries[0].output.as_deref(),
-        Some("args: -- nas\nfrom w\n")
-    );
+    let streams = outcome.trace.entries[0].streams.as_ref().unwrap();
+    assert_eq!(streams.stdout.text(), "args: -- nas\nfrom w\n");
+    assert_eq!(streams.command, vec!["say.sh", "--", "nas"]);
+    assert_eq!(outcome.trace.entries[0].output, None);
     assert_eq!(outcome.trace.entries[0].detail, "say.sh exited 0");
 }
 
@@ -49,7 +50,10 @@ async fn a_failing_script_fails_the_step_with_its_exit_code() {
         &[("fail.sh", "echo 'disk full' >&2; exit 3")],
     )
     .await;
-    assert_eq!(outcome.ending, Ending::Failed("fail.sh exited 3".into()));
+    assert_eq!(
+        outcome.ending,
+        Ending::Failed("fail.sh exited 3: disk full".into())
+    );
     assert_eq!(outcome.trace.entries[0].outcome, StepOutcome::Failed);
     assert_eq!(outcome.frame.steps["run"]["stderr"], json!("disk full\n"));
 }
@@ -102,5 +106,89 @@ fn reserved_and_malformed_variable_names_are_refused() {
             "workflows[0].steps[0].env.PORTAL_SERVICE_ID",
             "workflows[0].steps[0].env.lower",
         ]
+    );
+}
+
+#[tokio::test]
+async fn a_script_that_fails_at_the_end_of_a_long_output_names_its_last_error_line() {
+    let outcome = scripted(
+        &workflow(30, "script = \"restart.sh\""),
+        &[(
+            "restart.sh",
+            "head -c 40960 /dev/zero | tr '\\0' 'x'; printf '\\033[31mcontainer not found\\033[0m\\n\\n' >&2; exit 1",
+        )],
+    )
+    .await;
+    let entry = &outcome.trace.entries[0];
+    assert_eq!(entry.detail, "restart.sh exited 1: container not found");
+    let streams = entry.streams.as_ref().unwrap();
+    assert_eq!(
+        streams.stderr.text(),
+        "\u{1b}[31mcontainer not found\u{1b}[0m\n\n"
+    );
+    assert_eq!(streams.stdout.kept_bytes(), Streams::KEPT_PER_STREAM);
+    assert!(streams.stdout.truncated());
+    assert_eq!(streams.stdout.total, 40960);
+    assert!(!streams.budget_reached);
+}
+
+#[tokio::test]
+async fn a_script_without_standard_error_is_explained_by_its_standard_output() {
+    let outcome = scripted(
+        &workflow(30, "script = \"check.sh\""),
+        &[("check.sh", "echo 'checking'; echo 'no space left'; exit 2")],
+    )
+    .await;
+    assert_eq!(
+        outcome.trace.entries[0].detail,
+        "check.sh exited 2: no space left"
+    );
+}
+
+#[tokio::test]
+async fn a_secret_in_the_output_and_the_command_is_masked() {
+    let lookup: SecretLookup = Arc::new(|key: &str| (key == "token").then(|| "s3cr3t".to_string()));
+    let (_sender, stop) = watch::channel(false);
+    let outcome = run_prepared(
+        &workflow(30, "script = \"leak.sh\"\nargs = [\"{{secrets.token}}\"]"),
+        (Arc::new(FakeActions::default()), stop),
+        &[(
+            "leak.sh",
+            "echo \"token is $1\"; echo \"bad $1\" >&2; exit 1",
+        )],
+        Secrets::new(lookup),
+    )
+    .await;
+    let entry = &outcome.trace.entries[0];
+    let streams = entry.streams.as_ref().unwrap();
+    assert_eq!(streams.stdout.text(), "token is ***\n");
+    assert_eq!(streams.stderr.text(), "bad ***\n");
+    assert_eq!(streams.command, vec!["leak.sh", "***"]);
+    assert_eq!(entry.detail, "leak.sh exited 1: bad ***");
+}
+
+#[tokio::test]
+async fn the_output_budget_of_a_run_keeps_the_later_entries_short() {
+    let outcome = scripted(
+        "[[workflows]]\nid = \"w\"\ntitle = \"W\"\ninputs = [\"service\"]\n[[workflows.steps]]\nid = \"again\"\nkind = \"loop\"\nrepeat = 20\nbody = [{ id = \"run\", kind = \"script\", script = \"chatty.sh\" }]\n",
+        &[("chatty.sh", "head -c 10240 /dev/zero | tr '\\0' 'x'")],
+    )
+    .await;
+    assert_eq!(outcome.ending, Ending::Succeeded(None));
+    let kept: Vec<&Streams> = outcome
+        .trace
+        .entries
+        .iter()
+        .filter_map(|entry| entry.streams.as_ref())
+        .collect();
+    assert_eq!(kept.len(), 20);
+    let full = kept.iter().filter(|streams| !streams.budget_reached);
+    assert!(full.map(|streams| streams.bytes()).sum::<usize>() <= Streams::MOST_BYTES_PER_RUN);
+    let last = kept.last().unwrap();
+    assert!(last.budget_reached);
+    assert_eq!(last.stdout.kept_bytes(), Streams::KEPT_PAST_BUDGET);
+    assert_eq!(last.stdout.total, 10240);
+    assert!(
+        kept.iter().map(|streams| streams.bytes()).sum::<usize>() <= Streams::MOST_BYTES_PER_RUN
     );
 }

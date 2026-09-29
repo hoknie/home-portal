@@ -1,4 +1,4 @@
-use crate::types::StepOutcome;
+use crate::types::{StepOutcome, Streams};
 
 use super::StepLog;
 
@@ -8,5 +8,6 @@ pub struct EntryEnd {
     pub detail: String,
     pub output: Option<String>,
     pub shape: Option<String>,
+    pub streams: Option<Streams>,
     pub log: StepLog,
 }

@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use super::{Ending, Flow};
+use super::{Ending, Flow, Streams};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StepReport {
@@ -9,6 +9,7 @@ pub struct StepReport {
     pub detail: String,
     pub output: Option<String>,
     pub shape: Option<String>,
+    pub streams: Option<Streams>,
     pub log: Vec<String>,
 }
 
@@ -20,6 +21,7 @@ impl StepReport {
             detail: detail.into(),
             output: None,
             shape: None,
+            streams: None,
             log: Vec::new(),
         }
     }
@@ -32,6 +34,7 @@ impl StepReport {
             detail: reason,
             output: None,
             shape: None,
+            streams: None,
             log: Vec::new(),
         }
     }
@@ -49,6 +52,7 @@ impl StepReport {
             detail,
             output: None,
             shape: None,
+            streams: None,
             log: Vec::new(),
         }
     }

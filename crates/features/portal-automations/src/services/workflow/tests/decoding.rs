@@ -261,3 +261,21 @@ fn a_loop_with_two_modes_is_refused_naming_the_step() {
     );
     assert_eq!(found, vec!["workflows[0].steps[0]"]);
 }
+
+#[test]
+fn an_id_the_interface_uses_is_refused_listing_every_reserved_id() {
+    for id in ["new", "edit"] {
+        let errors = workflow_errors(&section(
+            &REVIVE.replace("id = \"revive\"", &format!("id = \"{id}\"")),
+        ));
+        let named: Vec<_> = errors
+            .iter()
+            .filter(|error| error.field == "workflows[0].id")
+            .collect();
+        assert_eq!(named.len(), 1, "{id}: {errors:?}");
+        assert_eq!(
+            named[0].message,
+            "is reserved; catalogue, runs, new, edit cannot be used"
+        );
+    }
+}

@@ -1,11 +1,5 @@
-import { Suspense } from "react";
-
-import { WorkflowEditorScreen } from "@/widgets/workflow-editor";
+import { WorkflowsRoute } from "../workflows-route";
 
 export default function NewWorkflowPage() {
-  return (
-    <Suspense>
-      <WorkflowEditorScreen mode="new" />
-    </Suspense>
-  );
+  return <WorkflowsRoute />;
 }

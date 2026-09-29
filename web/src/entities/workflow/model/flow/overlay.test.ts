@@ -10,7 +10,7 @@ import { overlayOf, runPath } from "./overlay";
 const lastRun = workflowsSchema.parse(apiSamples.workflows).workflows[0].last_run!;
 
 function entry(path: string, kind: string, outcome: "running" | "succeeded" | "failed", detail = "", iteration: number | null = null) {
-  return { path, step: path, label: path, kind, iteration, outcome, started_at: "2026-09-25T03:00:00Z", duration_milliseconds: 10, detail, output: null, shape: null, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null };
+  return { path, step: path, label: path, kind, iteration, outcome, started_at: "2026-09-25T03:00:00Z", duration_milliseconds: 10, detail, output: null, shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null };
 }
 
 describe("workflow run overlay", () => {

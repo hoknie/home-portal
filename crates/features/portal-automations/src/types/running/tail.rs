@@ -40,6 +40,16 @@ impl Tail {
         String::from_utf8_lossy(&bytes).into_owned()
     }
 
+    pub fn last(&self, most: usize) -> Tail {
+        let start = self.kept.len().saturating_sub(most);
+        let bytes: Vec<u8> = self.kept.iter().skip(start).copied().collect();
+        Tail::restored(&bytes, self.total)
+    }
+
+    pub fn kept_bytes(&self) -> usize {
+        self.kept.len()
+    }
+
     pub fn truncated(&self) -> bool {
         self.total > self.kept.len() as u64
     }

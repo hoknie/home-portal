@@ -681,8 +681,9 @@
     "runFields": "Event fields",
     "runOutput": "Output",
     "runErrors": "Errors",
-    "truncated": "The last 64 KiB of {bytes} bytes",
+    "truncated": "The last {kept} KiB of {bytes} bytes",
     "noOutput": "empty",
+    "budgetReached": "The run's output budget was reached: only the end of this step's output is kept",
     "manual": "by hand",
     "runNow": "Run now",
     "runNowTitle": "Run “{title}” now?",
@@ -1166,7 +1167,18 @@
         "warning": "warning",
         "error": "error"
       },
-      "branch": "Branch {number} (in parallel)"
+      "branch": "Branch {number} (in parallel)",
+      "scriptLog": {
+        "open": "Details",
+        "title": "Log of {label}",
+        "command": "Command",
+        "outcome": "Outcome",
+        "exitCode": "Exit code",
+        "duration": "Duration",
+        "stdout": "Standard output",
+        "stderr": "Standard error",
+        "output": "Output"
+      }
     },
     "title": "Workflows",
     "subtitle": "Runs of several steps that automations, webhooks or you start",
@@ -1378,18 +1390,17 @@
     "noWorkflowInputs": "No inputs",
     "run": {
       "showLast": "Show the last run",
-      "hideLast": "Hide the run",
       "passes": "Passes of this step",
       "duration": "{milliseconds} ms",
       "title": "Run",
-      "hide": "Hide run",
       "order": "Step {number} of the run",
       "steps": "Steps of the run",
       "stale": "This run ran an earlier version of the steps; the canvas may not match it.",
-      "none": "No run to show yet: run the workflow or choose one in History.",
       "notReached": "This step did not run in this run.",
       "chooseStep": "Choose a step on the canvas or in the list to see its values and log.",
-      "stepDetails": "Step details"
+      "stepDetails": "Step details",
+      "allRuns": "All runs",
+      "notFound": "This run is not one of this workflow's runs, or it is no longer kept."
     },
     "summaries": {
       "wait": "wait {seconds} s",
@@ -1443,13 +1454,9 @@
       "legend": "How it works",
       "saveWithErrors": "Save ({count, plural, one {# error} other {# errors}})",
       "history": "History",
-      "modes": {
-        "label": "Mode",
-        "edit": "Edit",
-        "run": "Run",
-        "view": "View",
-        "runHint": "Save if needed, run the workflow and show its results"
-      }
+      "pageLabel": "Workflow actions",
+      "run": "Run",
+      "edit": "Edit"
     },
     "runs": {
       "title": "Runs of this workflow",
@@ -2235,7 +2242,9 @@
       "automation": "New automation",
       "webhook": "New webhook",
       "workflow": "New workflow"
-    }
+    },
+    "history": "History",
+    "run": "Run {id}"
   },
   "scriptArguments": {
     "title": "Arguments",

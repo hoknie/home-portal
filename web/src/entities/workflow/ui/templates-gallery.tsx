@@ -1,11 +1,11 @@
 "use client";
 
 import { ArrowDown, FilePlus2 } from "lucide-react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { routes } from "@/shared/config";
+import { AddressLink } from "@/shared/ui/address-link";
 
 import { TEMPLATES, type TemplateName } from "../model/templates";
 
@@ -56,9 +56,9 @@ export function TemplatesGallery({ onChoose }: TemplatesGalleryProps) {
                 {content}
               </button>
             ) : (
-              <Link href={templateHref(template.name)} className={className}>
+              <AddressLink href={templateHref(template.name)} className={className}>
                 {content}
-              </Link>
+              </AddressLink>
             )}
           </li>
         );

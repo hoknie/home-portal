@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 function entry(path: string, step: string, kind: string, outcome: TraceEntry["outcome"], output: string | null = null): TraceEntry {
-  return { path, step, label: step, kind, iteration: null, outcome, started_at: "2026-09-25T03:00:00Z", duration_milliseconds: 20, detail: "", output, shape: null, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null };
+  return { path, step, label: step, kind, iteration: null, outcome, started_at: "2026-09-25T03:00:00Z", duration_milliseconds: 20, detail: "", output, shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null };
 }
 
 function workflowRun(entries: TraceEntry[], result: Run["outcome"]["result"]): Run {
@@ -63,4 +63,23 @@ it("following a run shows the finished step and the running wait, then the next 
   expect(within(steps).queryByText("second")).toBeNull();
   expect(await within(steps).findByText("second", {}, { timeout: 3000 })).toBeInTheDocument();
   expect(within(steps).getByText("pause").closest("li")).toHaveAttribute("data-outcome", "succeeded");
+});
+
+it("the log from the journal: a script entry opens its log from Details instead of an Output line", async () => {
+  const failed = {
+    ...entry("steps[0]", "restart", "script", "failed"),
+    detail: "restart.sh exited 1: container not found",
+    stdout: { tail: "stopping\n", bytes: 9, truncated: false },
+    stderr: { tail: "container not found\n", bytes: 20, truncated: false },
+    command: ["restart.sh", "jellyfin"],
+  };
+  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(workflowRun([failed], "failed"))));
+  renderWithProviders(<RunDetails runId="5" onClose={() => {}} />);
+  const steps = await screen.findByRole("list", { name: "Steps" });
+  expect(within(steps).getByText("restart.sh exited 1: container not found")).toBeInTheDocument();
+  expect(within(steps).queryByText("Output")).toBeNull();
+  await userEvent.click(within(steps).getByRole("button", { name: "Details" }));
+  const dialog = await screen.findByRole("dialog", { name: "Log of restart" });
+  expect(within(dialog).getByText("restart.sh 'jellyfin'")).toBeInTheDocument();
+  expect(within(dialog).getByText("Standard error").parentElement).toHaveTextContent("container not found");
 });

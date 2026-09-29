@@ -58,6 +58,8 @@ export { NETWORK_FIELDS, SERVICE_FIELDS, portalProblem, portalSuggestions, porta
 export type { PortalSuggestion, PortalValues } from "./model/portal";
 export { chosenOf, hiddenFields, startingValue, withChoice } from "./model/exclusive";
 export { variableProblem } from "./model/variables";
+export { workflowAddressOf } from "./model/address";
+export type { WorkflowAddress } from "./model/address";
 export { emptyValue, fitsType, initialValues, inputNames, namedInputs, plainInput, runValues } from "./model/inputs";
 export type { Scope } from "./model/scope";
 export { DEEPEST_CONDITION, JOINS, OPERATOR_NAMES, operatorName, depthOf, emptyRow, incomplete, joinOf, joined, rowsOf, summary, takesRight } from "./model/conditions";
@@ -99,3 +101,5 @@ export { InputsForm } from "./ui/inputs-form";
 export type { InputsFormProps } from "./ui/inputs-form";
 export { TEMPLATE_PARAMETER, TemplatesGallery, templateHref } from "./ui/templates-gallery";
 export type { TemplatesGalleryProps } from "./ui/templates-gallery";
+export { DeleteWorkflowButton } from "./ui/delete-workflow-button";
+export type { DeleteWorkflowButtonProps } from "./ui/delete-workflow-button";

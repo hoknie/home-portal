@@ -1,11 +1,5 @@
-import { Suspense } from "react";
+import { LegacyWorkflowEdit } from "./legacy-workflow-edit";
 
-import { WorkflowEditorScreen } from "@/widgets/workflow-editor";
-
-export default function EditWorkflowPage() {
-  return (
-    <Suspense>
-      <WorkflowEditorScreen mode="edit" />
-    </Suspense>
-  );
+export default function LegacyEditWorkflowPage() {
+  return <LegacyWorkflowEdit />;
 }

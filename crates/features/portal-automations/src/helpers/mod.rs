@@ -4,6 +4,7 @@ mod placeholders;
 mod samples;
 mod shape;
 mod tags;
+mod terminal_line;
 mod tokens;
 
 #[cfg(test)]
@@ -17,4 +18,5 @@ pub use samples::sample_of;
 pub use shape::LARGEST_SHAPE;
 pub use shape::shape_of;
 pub use tags::check_tags;
+pub use terminal_line::last_line;
 pub use tokens::{new_token, new_webhook_id, same_secret, token_hash, version_of};

@@ -58,10 +58,24 @@ pub fn answer(source: &dyn AssetSource, language: Language, path: &str) -> Respo
     if looks_like_asset(path) {
         return (StatusCode::NOT_FOUND, NOT_FOUND).into_response();
     }
+    if let Some((served, asset)) = nearest_page(source, tree, path) {
+        return in_language(file(&served, asset), language);
+    }
     match source.get(&format!("{tree}/{ENTRY_PAGE}")) {
         Some(asset) => in_language(file(ENTRY_PAGE, asset), language),
         None => (StatusCode::SERVICE_UNAVAILABLE, source.unavailable()).into_response(),
     }
+}
+
+fn nearest_page(source: &dyn AssetSource, tree: &str, path: &str) -> Option<(String, Asset)> {
+    let segments: Vec<&str> = path
+        .split('/')
+        .filter(|segment| !segment.is_empty())
+        .collect();
+    (1..segments.len()).rev().find_map(|kept| {
+        let served = format!("{tree}/{}/{ENTRY_PAGE}", segments[..kept].join("/"));
+        source.get(&served).map(|asset| (served, asset))
+    })
 }
 
 fn in_language(mut response: Response, language: Language) -> Response {

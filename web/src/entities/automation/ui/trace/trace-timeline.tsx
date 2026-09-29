@@ -6,8 +6,10 @@ import { useTranslations } from "next-intl";
 import { JsonView } from "@/shared/ui/json-view";
 
 import type { StepOutcome, Trace, TraceEntry } from "../../model/schema";
+import { hasScriptLog } from "../../model/script-log";
 import { terminalText } from "../../model/terminal-text";
 import { type TraceRow, depthOf, hasLog, passRows } from "./pass-groups";
+import { ScriptLogDialog } from "./script-log-dialog";
 import { LevelMark, StepLog } from "./step-log";
 
 export { depthOf };
@@ -82,7 +84,8 @@ export function TraceEntryView({ entry }: { entry: TraceEntry }) {
           </div>
         </details>
       ) : null}
-      {entry.output || entry.shape ? (
+      {hasScriptLog(entry) ? <ScriptLogDialog entry={entry} /> : null}
+      {entry.kind !== "script" && (entry.output || entry.shape) ? (
         <details className="text-xs">
           <summary className="cursor-pointer text-muted-foreground">{t(entry.kind === "http" ? "answer" : "output")}</summary>
           <Output entry={entry} />

@@ -14,7 +14,7 @@ it("draws curl's progress meter as a terminal would, one line per line", () => {
 it("notes a truncated output and says when there is none", () => {
   renderWithProviders(
     <>
-      <RunOutput label="Output" output={{ tail: "end\n", bytes: 200_000, truncated: true }} />
+      <RunOutput label="Output" output={{ tail: "x".repeat(64 * 1024), bytes: 200_000, truncated: true }} />
       <RunOutput label="Errors" output={{ tail: "", bytes: 0, truncated: false }} />
     </>,
   );

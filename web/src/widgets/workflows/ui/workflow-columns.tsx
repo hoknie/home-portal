@@ -1,23 +1,23 @@
 "use client";
 
 import { History, Pencil } from "lucide-react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { OutcomeBadge } from "@/entities/automation";
-import type { Workflow } from "@/entities/workflow";
+import { DeleteWorkflowButton, type Workflow } from "@/entities/workflow";
 import { routes } from "@/shared/config";
+import { pushAddress } from "@/shared/lib/navigation";
+import { AddressLink } from "@/shared/ui/address-link";
 import type { Column } from "@/shared/ui/data-table";
-import { Badge, Button } from "@/shared/ui/primitives";
+import { Badge, buttonVariants } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { TagList } from "@/shared/ui/tag-list";
 
-import { DeleteWorkflowButton } from "./delete-workflow-button";
 import { RunWorkflowDialog } from "./run-workflow-dialog";
 
-export type ColumnsOptions = { revision: string | null; moduleOff: boolean; onRun: (runId: string) => void; onHistory: (workflow: Workflow) => void };
+export type ColumnsOptions = { revision: string | null; moduleOff: boolean };
 
-export function useWorkflowColumns({ revision, moduleOff, onRun, onHistory }: ColumnsOptions): Column<Workflow>[] {
+export function useWorkflowColumns({ revision, moduleOff }: ColumnsOptions): Column<Workflow>[] {
   const t = useTranslations();
   return [
     {
@@ -25,9 +25,9 @@ export function useWorkflowColumns({ revision, moduleOff, onRun, onHistory }: Co
       header: t("workflows.columns.title"),
       cell: (workflow) => (
         <div className="grid min-w-0 gap-1">
-          <Link href={routes.editWorkflow(workflow.id)} className="truncate font-medium hover:underline">
+          <AddressLink href={routes.workflow(workflow.id)} className="truncate font-medium hover:underline">
             {workflow.title}
-          </Link>
+          </AddressLink>
           <code className="w-fit font-mono text-xs text-muted-foreground">{workflow.id}</code>
           <TagList tags={workflow.tags} />
         </div>
@@ -74,10 +74,10 @@ export function useWorkflowColumns({ revision, moduleOff, onRun, onHistory }: Co
       cell: (workflow) => {
         const run = workflow.active_run ?? workflow.last_run;
         return run ? (
-          <button type="button" className="flex items-center gap-2 text-xs text-muted-foreground" onClick={() => onRun(run.id)}>
+          <AddressLink href={routes.workflowRun(workflow.id, run.id)} className="flex items-center gap-2 text-xs text-muted-foreground">
             <OutcomeBadge outcome={run.outcome.result} />
             <RelativeTime moment={run.started_at} />
-          </button>
+          </AddressLink>
         ) : (
           <span className="text-xs text-muted-foreground">{t("workflows.neverRan")}</span>
         );
@@ -89,15 +89,13 @@ export function useWorkflowColumns({ revision, moduleOff, onRun, onHistory }: Co
       align: "end",
       cell: (workflow) => (
         <div className="flex justify-end gap-1">
-          <Button type="button" variant="ghost" size="icon" aria-label={t("workflows.runsOf", { title: workflow.title })} onClick={() => onHistory(workflow)}>
+          <AddressLink href={routes.workflowHistory(workflow.id)} aria-label={t("workflows.runsOf", { title: workflow.title })} className={buttonVariants({ variant: "ghost", size: "icon" })}>
             <History aria-hidden />
-          </Button>
-          <RunWorkflowDialog workflow={workflow} moduleOff={moduleOff} onQueued={onRun} />
-          <Button asChild variant="ghost" size="icon">
-            <Link href={routes.editWorkflow(workflow.id)} aria-label={t("common.edit")}>
-              <Pencil aria-hidden />
-            </Link>
-          </Button>
+          </AddressLink>
+          <RunWorkflowDialog workflow={workflow} moduleOff={moduleOff} onQueued={(runId) => pushAddress(routes.workflowRun(workflow.id, runId))} />
+          <AddressLink href={routes.workflowEdit(workflow.id)} aria-label={t("common.edit")} className={buttonVariants({ variant: "ghost", size: "icon" })}>
+            <Pencil aria-hidden />
+          </AddressLink>
           <DeleteWorkflowButton workflow={workflow} revision={revision} />
         </div>
       ),

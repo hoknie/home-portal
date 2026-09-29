@@ -5,8 +5,11 @@ use serde_json::Value;
 
 use super::runner::WorkflowRunner;
 use crate::clients::Runner;
+use crate::helpers::last_line;
 use crate::services::workflow::evaluating::{Frame, render_text, render_value};
-use crate::types::{Ending, Invocation, Outcome, RunControl, RunSettings, StepReport, Tail};
+use crate::types::{
+    Ending, Invocation, Outcome, RunControl, RunSettings, StepReport, Streams, Tail, TraceEntry,
+};
 
 pub async fn run_script(
     runner: &WorkflowRunner,
@@ -61,19 +64,23 @@ pub async fn run_script(
         ("stdout", Value::from(stdout.clone())),
         ("stderr", Value::from(stderr.clone())),
     ]);
-    let output = Some(format!("{stdout}{stderr}"));
+    let command: Vec<String> = std::iter::once(run.script.clone())
+        .chain(invocation.arguments.iter().cloned())
+        .collect();
     let line = format!(
         "{} → {}",
-        std::iter::once(run.script.as_str())
-            .chain(invocation.arguments.iter().map(String::as_str))
-            .collect::<Vec<_>>()
-            .join(" "),
+        command.join(" "),
         finished
             .exit_code
             .map(|code| format!("exit {code}"))
             .or_else(|| finished.reason.clone())
             .unwrap_or_else(|| finished.outcome.name().to_string())
     );
+    let reason = last_line(&stderr).or_else(|| last_line(&stdout));
+    let explained = |detail: String| match &reason {
+        Some(reason) => format!("{detail}: {}", cut(reason)),
+        None => detail,
+    };
     let detail = match finished.exit_code {
         Some(code) => format!("{} exited {code}", run.script),
         None => finished
@@ -84,21 +91,36 @@ pub async fn run_script(
     let flow_report = match finished.outcome {
         Outcome::Succeeded => StepReport::done(result, detail),
         Outcome::Stopped => StepReport::ended(Ending::Stopped),
-        Outcome::TimedOut if own > remaining => StepReport::ended(Ending::TimedOut),
+        Outcome::TimedOut if own > remaining => {
+            let ended = StepReport::ended(Ending::TimedOut);
+            StepReport {
+                detail: explained(ended.detail.clone()),
+                ..ended
+            }
+        }
         Outcome::TimedOut => StepReport {
             result,
-            ..StepReport::failed(format!(
+            ..StepReport::failed(explained(format!(
                 "{} timed out after {} s",
                 run.script, run.timeout_seconds
-            ))
+            )))
         },
         _ => StepReport {
             result,
-            ..StepReport::failed(detail)
+            ..StepReport::failed(explained(detail))
         },
     };
     StepReport {
-        output,
+        streams: Some(Streams {
+            stdout: finished.stdout,
+            stderr: finished.stderr,
+            command,
+            budget_reached: false,
+        }),
         ..flow_report.logged(line)
     }
+}
+
+fn cut(reason: &str) -> String {
+    reason.chars().take(TraceEntry::LONGEST_DETAIL).collect()
 }

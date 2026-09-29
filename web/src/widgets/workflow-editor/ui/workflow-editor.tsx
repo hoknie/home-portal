@@ -9,32 +9,28 @@ import {
   type Workflow,
   type WorkflowCatalogue,
   idsOf,
-  namedInputs,
   newStep,
   parsePath,
   pathText,
-  useRunWorkflow,
   useSaveWorkflow,
 } from "@/entities/workflow";
-import { ConflictError, ThrottledError, ValidationError } from "@/shared/api";
+import { ConflictError, ValidationError } from "@/shared/api";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 
 import { blocksToOpen, problemsFromServer } from "../model/checks/placing";
 import { type Problem, blocking } from "../model/checks/problems";
-import { type Draft, requestOf, sameDraft, sameSteps } from "../model/draft";
+import { type Draft, requestOf, sameDraft } from "../model/draft";
 import { EditorContext, type Sources } from "../model/editor-context";
 import { useEditorState } from "../model/use-editor-state";
-import { CanvasLoader } from "./canvas/canvas-loader";
+import { CanvasArea } from "./canvas-area";
 import { fieldId } from "./inspector/template-field";
 import { Inspector } from "./inspector/inspector";
-import { Legend, legendDismissed, rememberLegend } from "./panels/legend";
+import { EditToolbar } from "./panels/edit-toolbar";
+import { legendDismissed } from "./panels/legend";
 import { Palette } from "./panels/palette";
 import { ProblemsPanel } from "./panels/problems-panel";
-import { RunPanel } from "./panels/run-panel";
-import { RunDialog } from "./panels/run-dialog";
-import { RunsPanel } from "./panels/runs-panel";
-import { Toolbar } from "./panels/toolbar";
+import { SideColumn } from "./panels/side-column";
 
 export type WorkflowEditorProps = {
   workflow: Workflow | null;
@@ -44,30 +40,34 @@ export type WorkflowEditorProps = {
   catalogue: WorkflowCatalogue;
   sources: Omit<Sources, "workflows">;
   tags: string[];
-  onSaved: () => void;
+  lastShownRun?: string | null;
+  onSaved: (id: string) => void;
+  onCancel: () => void;
   onConflict: () => void;
 };
 
 const HEADER_FIELDS: Record<string, string> = { title: "workflow-title", id: "workflow-id", timeout_seconds: "workflow-timeout" };
 
-export function WorkflowEditor({ workflow, initial = null, revision, workflows, catalogue, sources, tags, onSaved, onConflict }: WorkflowEditorProps) {
+export function WorkflowEditor({ workflow, initial = null, revision, workflows, catalogue, sources, tags, lastShownRun = null, onSaved, onCancel, onConflict }: WorkflowEditorProps) {
   const t = useTranslations();
   const save = useSaveWorkflow();
-  const runWorkflow = useRunWorkflow();
   const [identity, setIdentity] = useState<string | null>(workflow?.id ?? null);
-  const state = useEditorState({ workflow, selfId: identity, initial, workflows, catalogue, sources, tags });
+  const state = useEditorState({ workflow, selfId: identity, initial, workflows, catalogue, sources, tags, readOnly: false, shownRun: lastShownRun, openRun: null });
   const { editor, draft } = state;
   const [base, setBase] = useState<Draft>(draft);
   const [savedRevision, setSavedRevision] = useState<string | null>(null);
   const [conflict, setConflict] = useState(false);
-  const [leaving, setLeaving] = useState(false);
+  const [savedTo, setSavedTo] = useState<string | null>(null);
   const [problemsOpen, setProblemsOpen] = useState(false);
-  const [runsOpen, setRunsOpen] = useState(false);
   const [legendOpen, setLegendOpen] = useState(() => !legendDismissed());
-  const [runOpen, setRunOpen] = useState(false);
   const [focusRequest, setFocusRequest] = useState<string | null>(null);
   const dirty = !sameDraft(draft, base);
-  useLeaveGuard(dirty && !leaving, t("workflowEditor.leave"));
+  useLeaveGuard(dirty && savedTo === null, t("workflowEditor.leave"));
+  useEffect(() => {
+    if (savedTo !== null) {
+      onSaved(savedTo);
+    }
+  }, [savedTo, onSaved]);
   useEffect(() => {
     if (focusRequest) {
       document.getElementById(focusRequest)?.focus();
@@ -77,6 +77,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
   const warnings = editor.problems.length - errors;
 
   const choose = (problem: Problem) => {
+    setProblemsOpen(false);
     const { path, field } = parsePath(problem.at);
     if (path.length === 0) {
       editor.select(problem.at === "" ? null : START_ID);
@@ -87,12 +88,12 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
     setFocusRequest(field ? fieldId(path, field) : null);
   };
 
-  const store = async () => {
+  const store = async (): Promise<string | null> => {
     setConflict(false);
     if (errors > 0) {
       setProblemsOpen(true);
       toast.error(t("workflowEditor.fixProblems"));
-      return false;
+      return null;
     }
     try {
       const saved = await save.mutateAsync({ id: identity, body: requestOf(draft), revision: savedRevision ?? revision });
@@ -101,7 +102,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
       setSavedRevision(saved.revision);
       state.setServer({});
       toast.success(t(identity ? "workflowEditor.saved" : "workflowEditor.created"));
-      return true;
+      return saved.data.id;
     } catch (error) {
       if (error instanceof ValidationError) {
         const found = problemsFromServer(error.fields);
@@ -118,37 +119,14 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
       } else {
         toast.error(t("errors.generic"));
       }
-      return false;
+      return null;
     }
   };
 
   const saveAndLeave = async () => {
-    if (editor.readOnly) {
-      return;
-    }
-    if (await store()) {
-      setLeaving(true);
-      onSaved();
-    }
-  };
-
-  const saveAndRun = async () => {
-    if ((dirty || identity === null) && !(await store())) {
-      return;
-    }
-    setRunOpen(true);
-  };
-
-  const run = async (inputs: Record<string, unknown>) => {
-    if (!identity) {
-      return;
-    }
-    try {
-      const queued = await runWorkflow.mutateAsync({ id: identity, inputs });
-      editor.showRun(queued.run_id);
-      setRunOpen(false);
-    } catch (error) {
-      toast.error(t(error instanceof ThrottledError ? "workflows.runThrottled" : error instanceof ConflictError ? "workflows.runRefused" : "workflows.runFailed", { seconds: error instanceof ThrottledError ? error.retryAfterSeconds : 0 }));
+    const saved = await store();
+    if (saved !== null) {
+      setSavedTo(saved);
     }
   };
 
@@ -160,7 +138,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
     if (moves[event.key]) {
       event.preventDefault();
       state.navigate(moves[event.key]);
-    } else if ((event.key === "Delete" || event.key === "Backspace") && !editor.readOnly && editor.selected && editor.selected !== START_ID) {
+    } else if ((event.key === "Delete" || event.key === "Backspace") && editor.selected && editor.selected !== START_ID) {
       event.preventDefault();
       editor.remove(parsePath(editor.selected).path);
     } else if (event.key === "?") {
@@ -180,75 +158,37 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
         }}
       >
         {conflict ? <ErrorNotice title={t("errors.conflict")} description={t("workflowEditor.conflictKept")} /> : null}
-        <div className="relative">
-          <Toolbar
-            canUndo={state.history.past.length > 0}
-            canRedo={state.history.future.length > 0}
-            errors={errors}
-            warnings={warnings}
-            problemsOpen={problemsOpen}
-            runsOpen={runsOpen}
-            saving={save.isPending}
-            onUndo={state.undo}
-            onRedo={state.redo}
-            onProblems={() => {
-              setRunsOpen(false);
-              setProblemsOpen((open) => !open);
-            }}
-            onRuns={() => {
-              setProblemsOpen(false);
-              setRunsOpen((open) => !open);
-            }}
-            onLegend={() => setLegendOpen(true)}
-            onSaveAndRun={() => void saveAndRun()}
-            mode={editor.mode}
-            onMode={editor.setMode}
-          />
-          {problemsOpen ? (
-            <div className="glass-panel absolute top-full left-0 z-30 mt-2 w-[28rem] max-w-full rounded-xl shadow-lg">
-              <ProblemsPanel onChoose={choose} />
-            </div>
-          ) : null}
-          {runsOpen ? (
-            <div className="glass-panel absolute top-full left-0 z-30 mt-2 w-[28rem] max-w-full rounded-xl shadow-lg">
-              <RunsPanel
-                onChoose={(id) => {
-                  editor.showRun(id);
-                  setRunsOpen(false);
-                }}
-              />
-            </div>
-          ) : null}
-        </div>
+        <EditToolbar
+          canUndo={state.history.past.length > 0}
+          canRedo={state.history.future.length > 0}
+          errors={errors}
+          warnings={warnings}
+          problemsOpen={problemsOpen}
+          saving={save.isPending}
+          onUndo={state.undo}
+          onRedo={state.redo}
+          onProblems={() => setProblemsOpen((open) => !open)}
+          onLegend={() => setLegendOpen(true)}
+          onCancel={onCancel}
+        />
         <div className="flex h-[calc(100dvh-13rem)] min-h-[34rem] flex-col gap-3 md:flex-row">
-          <div className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-glass-edge bg-background/40">
-            <CanvasLoader />
-            {legendOpen ? (
-              <div className="absolute top-3 left-3 z-20">
-                <Legend
-                  onDismiss={() => {
-                    rememberLegend(true);
-                    setLegendOpen(false);
-                  }}
-                />
-              </div>
-            ) : null}
-          </div>
-          {editor.readOnly ? (
-            <RunPanel run={editor.run} title={draft.title} stale={editor.stale || (dirty && !sameSteps(draft, base))} onHide={() => editor.setMode("edit")} />
+          <CanvasArea legendOpen={legendOpen} onLegendClosed={() => setLegendOpen(false)} />
+          {problemsOpen ? (
+            <SideColumn title={t("workflowEditor.problemsPanel.title")}>
+              <ProblemsPanel onChoose={choose} />
+            </SideColumn>
           ) : editor.selected ? (
             <Inspector />
           ) : null}
         </div>
         <Palette
-          target={editor.readOnly ? null : state.palette}
+          target={state.palette}
           onClose={() => state.setPalette(null)}
           onChoose={(kind, target) => {
             state.setPalette(null);
             editor.insert(target, newStep(kind, idsOf(draft.steps)));
           }}
         />
-        <RunDialog open={runOpen} title={draft.title} inputs={namedInputs(draft.inputs)} pending={runWorkflow.isPending} onClose={() => setRunOpen(false)} onRun={(inputs) => void run(inputs)} />
       </form>
     </EditorContext.Provider>
   );

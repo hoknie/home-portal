@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { routes } from "@/shared/config";
 
-export type TrailItem = { label: string; href?: string };
+export type TrailItem = { label: string; href?: string; local?: boolean };
 
 export const SECTIONS = {
   services: routes.adminServices,

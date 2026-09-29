@@ -31,7 +31,7 @@ export function RunsPanel({ onChoose }: { onChoose: (id: string) => void }) {
     return <p className="p-3 text-sm text-muted-foreground">{t("none")}</p>;
   }
   return (
-    <ul className="grid max-h-80 gap-1 overflow-y-auto p-2" aria-label={t("title")}>
+    <ul className="grid gap-1 p-2" aria-label={t("title")}>
       {runs.data.runs.map((run) => (
         <li key={run.id}>
           <button

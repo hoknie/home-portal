@@ -16,7 +16,11 @@ export default function config(phase: string): NextConfig {
     return withNextIntl({
       ...shared,
       async rewrites() {
-        return [{ source: "/api/:path*", destination: `${portalOrigin}/api/:path*` }];
+        return {
+          beforeFiles: [],
+          afterFiles: [{ source: "/api/:path*", destination: `${portalOrigin}/api/:path*` }],
+          fallback: [{ source: "/admin/workflows/:path+", destination: "/admin/workflows/" }],
+        };
       },
     });
   }

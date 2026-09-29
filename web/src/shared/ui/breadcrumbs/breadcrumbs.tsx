@@ -6,8 +6,9 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { AddressLink } from "@/shared/ui/address-link";
 
-export type Crumb = { label: string; href?: string };
+export type Crumb = { label: string; href?: string; local?: boolean };
 
 export type BreadcrumbsProps = { items: Crumb[] };
 
@@ -30,6 +31,10 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
                 <span aria-current={last ? "page" : undefined} className={cn("truncate", last && "font-medium text-foreground")}>
                   {item.label}
                 </span>
+              ) : item.local ? (
+                <AddressLink href={item.href} className="truncate rounded-sm hover:text-foreground hover:underline">
+                  {item.label}
+                </AddressLink>
               ) : (
                 <Link href={item.href} className="truncate rounded-sm hover:text-foreground hover:underline">
                   {item.label}

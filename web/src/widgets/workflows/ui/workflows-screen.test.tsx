@@ -1,6 +1,6 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { modulesKey, modulesSchema } from "@/entities/module";
 import { workflowsKey, workflowsSchema } from "@/entities/workflow";
@@ -10,6 +10,10 @@ import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib
 import { WorkflowsScreen } from "./workflows-screen";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
+
+beforeEach(() => {
+  window.history.replaceState(null, "", "/admin/workflows/");
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -57,7 +61,7 @@ it("a workflow in use names who starts it, and delete is disabled with the reaso
   expect(within(rowOf("Note")).getByRole("button", { name: "Delete" })).toBeEnabled();
 });
 
-it("run now asks for the inputs, warns, and opens the run's trace", async () => {
+it("run now asks for the inputs, warns, and leads to the run on the workflow's page", async () => {
   const fetch = vi.fn(async (path: string) =>
     path.endsWith("/run") ? jsonResponse({ run_id: "13" }) : jsonResponse(workflowsSchema.parse(apiSamples.workflows).workflows[0].last_run),
   );
@@ -69,8 +73,7 @@ it("run now asks for the inputs, warns, and opens the run's trace", async () => 
   await userEvent.type(within(dialog).getByLabelText("service"), "nas");
   await userEvent.click(within(dialog).getByRole("button", { name: "Run now" }));
   expect(fetch).toHaveBeenCalledWith("/api/workflows/revive/run", expect.objectContaining({ method: "POST", body: JSON.stringify({ inputs: { service: "nas", tries: 3 } }) }));
-  expect(await screen.findByRole("list", { name: "Steps" })).toBeInTheDocument();
-  expect(fetch).toHaveBeenCalledWith("/api/automations/runs/13", expect.anything());
+  await waitFor(() => expect(window.location.pathname).toBe("/admin/workflows/revive/history/13/"));
 });
 
 it("workflows while off: the list stays, the notice shows and run now is disabled", () => {
@@ -79,16 +82,23 @@ it("workflows while off: the list stays, the notice shows and run now is disable
   expect(within(rowOf("Revive a service")).getByRole("button", { name: "Run now" })).toBeDisabled();
 });
 
-it("the runs of a workflow open from its row with who started them", async () => {
-  const lastRun = workflowsSchema.parse(apiSamples.workflows).workflows[0].last_run;
-  const manual = { ...lastRun, id: "13", automation: "workflow:revive", fields: { ...lastRun!.fields, "run.by": "admin" } };
-  const fetch = vi.fn(async (path: string) => (path.startsWith("/api/automations/runs?workflow=revive") ? jsonResponse({ runs: [manual, lastRun] }) : jsonResponse({ automations: [] })));
-  vi.stubGlobal("fetch", fetch);
+it("the runs of a workflow on its row: the history button and the last run lead to the workflow's page", async () => {
   render(true);
-  await userEvent.click(within(rowOf("Revive a service")).getByRole("button", { name: "Runs of Revive a service" }));
-  const sheet = await screen.findByRole("dialog", { name: "Runs of “Revive a service”" });
-  expect(await within(sheet).findByText("By hand")).toBeInTheDocument();
-  expect(within(sheet).getByText("nas-down")).toBeInTheDocument();
+  const row = rowOf("Revive a service");
+  const lastRun = workflowsSchema.parse(apiSamples.workflows).workflows[0].last_run!;
+  expect(within(row).getByRole("link", { name: "Runs of Revive a service" })).toHaveAttribute("href", "/admin/workflows/revive/history/");
+  expect(row.querySelector(`a[href="/admin/workflows/revive/history/${lastRun.id}/"]`)).not.toBeNull();
+  await userEvent.click(within(row).getByRole("link", { name: "Runs of Revive a service" }));
+  expect(window.location.pathname).toBe("/admin/workflows/revive/history/");
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("opening a workflow from the list leads to its page, and Edit to its editor", async () => {
+  render(true);
+  const row = rowOf("Revive a service");
+  expect(within(row).getByRole("link", { name: "Edit" })).toHaveAttribute("href", "/admin/workflows/revive/edit/");
+  await userEvent.click(within(row).getByRole("link", { name: "Revive a service" }));
+  expect(window.location.pathname).toBe("/admin/workflows/revive/");
 });
 
 it("run now builds its form from the input types and sends a list", async () => {

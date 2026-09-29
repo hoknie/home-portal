@@ -14,7 +14,7 @@ describe("workflow schema", () => {
     expect(revive.steps[2].branches).toHaveLength(2);
     expect(revive.used_by).toEqual([{ kind: "automation", id: "nas-down", title: "NAS down" }]);
     expect(revive.last_run?.workflow).toBe("revive");
-    expect(revive.last_run?.trace?.entries.map((entry) => entry.step)).toEqual(["first_probe", "down"]);
+    expect(revive.last_run?.trace?.entries.map((entry) => entry.step)).toEqual(["first_probe", "down", "restart"]);
     expect(parsed.workflows[1].enabled).toBe(false);
   });
 

@@ -1,13 +1,14 @@
+import { quotedCommand } from "@/shared/lib/shell-quote";
+
 import { renderTemplate } from "./placeholders";
 
 export const VARIABLE_PREFIX = "PORTAL_";
 
-export function quoted(argument: string) {
-  return `'${argument.replace(/'/g, `'\\''`)}'`;
-}
-
 export function commandLineOf(script: string, args: string[], samples: Record<string, string>) {
-  return [script, ...args.map((argument) => quoted(renderTemplate(argument, samples)))].join(" ");
+  return quotedCommand(
+    script,
+    args.map((argument) => renderTemplate(argument, samples)),
+  );
 }
 
 export function variableOf(field: string) {

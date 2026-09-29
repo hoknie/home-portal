@@ -13,7 +13,9 @@ import {
   runsSchema,
   scheduleSchema,
   scriptsSchema,
+  traceSchema,
 } from "./schema";
+import { exitCodeOf, scriptLogOf } from "./script-log";
 
 describe("automation", () => {
   it("the automations sample parses with its last run", () => {
@@ -42,6 +44,24 @@ describe("automation", () => {
     expect(scriptsSchema.parse(apiSamples.automationScripts).scripts.find((script) => script.path === "open.sh")).toMatchObject({ runnable: false });
     expect(scheduleSchema.parse(apiSamples.automationSchedule).times).toHaveLength(5);
     expect(queuedSchema.parse(apiSamples.automationQueued).run_id).toBe("42");
+  });
+
+  it("a script entry of the sample parses with its streams and command", () => {
+    const sample = apiSamples.workflows as { workflows: { last_run: { trace: unknown } }[] };
+    const entries = traceSchema.parse(sample.workflows[0].last_run.trace).entries;
+    const script = entries.find((entry) => entry.kind === "script");
+    expect(script).toMatchObject({ stdout: { tail: "stopping jellyfin\nstarted\n", bytes: 25 }, command: ["restart.sh", "jellyfin"], budget_reached: false, output: null });
+    expect(entries.find((entry) => entry.kind === "if")).toMatchObject({ stdout: null, stderr: null, command: null });
+  });
+
+  it("an entry from before separate streams parses and keeps its single output", () => {
+    const old = { path: "steps[0]", step: "run", label: "run", kind: "script", iteration: null, outcome: "failed", started_at: "2026-01-01T00:00:00Z", duration_milliseconds: 3, detail: "restart.sh exited 1", output: "progress\ncontainer not found\n" };
+    const [entry] = traceSchema.parse({ entries: [old], dropped: 0 }).entries;
+    expect(entry).toMatchObject({ stdout: null, stderr: null, command: null, budget_reached: false });
+    expect(scriptLogOf(entry)).toEqual({ kind: "merged", output: { tail: "progress\ncontainer not found\n", bytes: 29, truncated: false } });
+    expect(exitCodeOf(entry)).toBe(1);
+    expect(exitCodeOf({ ...entry, detail: "restart.sh exited 1: container not found" })).toBe(1);
+    expect(exitCodeOf({ ...entry, detail: "restart.sh timed out after 60 s" })).toBeNull();
   });
 
   it("an event or outcome the interface does not know becomes unknown", () => {

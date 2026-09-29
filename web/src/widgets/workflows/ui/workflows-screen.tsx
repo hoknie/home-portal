@@ -4,10 +4,8 @@ import { Plus, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { StopRunButton } from "@/features/stop-run";
-import { RunDetails } from "@/entities/automation";
 import { enabledModules, useModules } from "@/entities/module";
-import { TemplatesGallery, type Workflow, useWorkflows } from "@/entities/workflow";
+import { TemplatesGallery, useWorkflows } from "@/entities/workflow";
 import { DataTable } from "@/shared/ui/data-table";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
@@ -19,7 +17,6 @@ import { SectionCard } from "@/shared/ui/section-card";
 import { TagFilter, distinctTags, stillChosen, tagsMatch } from "@/shared/ui/tag-filter";
 
 import { useWorkflowColumns } from "./workflow-columns";
-import { WorkflowRunsSheet } from "./workflow-runs-sheet";
 
 export function WorkflowsScreen() {
   const trail = useTrail();
@@ -27,9 +24,7 @@ export function WorkflowsScreen() {
   const loadedModules = useModules().data?.data;
   const moduleOff = loadedModules !== undefined && !enabledModules(loadedModules).has("workflows");
   const workflows = useWorkflows();
-  const [openRun, setOpenRun] = useState<string | null>(null);
-  const [history, setHistory] = useState<Workflow | null>(null);
-  const columns = useWorkflowColumns({ revision: workflows.data?.revision ?? null, moduleOff, onRun: setOpenRun, onHistory: setHistory });
+  const columns = useWorkflowColumns({ revision: workflows.data?.revision ?? null, moduleOff });
   const [picked, setChosen] = useState<string[]>([]);
   const list = workflows.data?.data.workflows ?? [];
   const tags = distinctTags(list.map((workflow) => workflow.tags));
@@ -79,11 +74,6 @@ export function WorkflowsScreen() {
           <TemplatesGallery />
         </DialogContent>
       </Dialog>
-      <WorkflowRunsSheet workflow={history} onClose={() => setHistory(null)} onOpenRun={(id) => {
-        setHistory(null);
-        setOpenRun(id);
-      }} />
-      <RunDetails runId={openRun} onClose={() => setOpenRun(null)} actions={(run) => <StopRunButton run={run} title={run.workflow ?? run.automation} />} />
     </div>
   );
 }

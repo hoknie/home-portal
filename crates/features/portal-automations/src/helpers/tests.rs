@@ -68,3 +68,34 @@ fn a_shape_keeps_keys_and_shortens_lists_texts_and_depth() {
     );
     assert!(super::shape_of(&wide).len() <= super::LARGEST_SHAPE);
 }
+
+#[test]
+fn the_last_line_drops_colour_codes() {
+    assert_eq!(
+        super::last_line("\u{1b}[32mok\u{1b}[0m\n\u{1b}[1;31mcontainer not found\u{1b}[m\n"),
+        Some("container not found".to_string())
+    );
+    assert_eq!(
+        super::last_line("\u{1b}]0;title\u{7}text"),
+        Some("text".to_string())
+    );
+}
+
+#[test]
+fn the_last_line_of_a_progress_meter_is_its_last_state() {
+    assert_eq!(
+        super::last_line("  0%\r 45%\r100% done\r\n"),
+        Some("100% done".to_string())
+    );
+    assert_eq!(super::last_line("abcdef\rxy"), Some("xycdef".to_string()));
+}
+
+#[test]
+fn trailing_blank_lines_are_skipped_and_nothing_gives_no_line() {
+    assert_eq!(
+        super::last_line("first\nlast one\n\n   \n"),
+        Some("last one".to_string())
+    );
+    assert_eq!(super::last_line("\n\n"), None);
+    assert_eq!(super::last_line(""), None);
+}

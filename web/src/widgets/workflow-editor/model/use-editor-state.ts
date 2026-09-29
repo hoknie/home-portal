@@ -26,7 +26,7 @@ import {
 } from "@/entities/workflow";
 
 import { type Draft, draftOf } from "./draft";
-import type { EditorApi, EditorMode, Sources } from "./editor-context";
+import type { EditorApi, Sources } from "./editor-context";
 import { type History, historyOf, recorded, redone, undone } from "./edits/history";
 import { problemsFor } from "./checks/problems";
 import type { Problems } from "./checks/validation";
@@ -47,8 +47,6 @@ export function useNarrow() {
   );
 }
 
-export type ShownRun = { id: string };
-
 export type EditorStateInput = {
   workflow: Workflow | null;
   selfId: string | null;
@@ -57,27 +55,28 @@ export type EditorStateInput = {
   catalogue: WorkflowCatalogue;
   sources: Omit<Sources, "workflows">;
   tags: string[];
+  readOnly: boolean;
+  shownRun: string | null;
+  openRun: ((id: string) => void) | null;
 };
 
-export function useEditorState({ workflow, selfId, initial, workflows, catalogue, sources, tags }: EditorStateInput) {
+export function useEditorState({ workflow, selfId, initial, workflows, catalogue, sources, tags, readOnly, shownRun, openRun }: EditorStateInput) {
   const [history, setHistory] = useState<History<Draft>>(() => historyOf(initial ?? draftOf(workflow)));
   const [selected, setSelected] = useState<string | null>(null);
   const [palette, setPalette] = useState<Target | null>(null);
   const [server, setServer] = useState<Problems>({});
   const [idFollowsTitle, setIdFollowsTitle] = useState(workflow === null);
-  const [shown, setShown] = useState<ShownRun | null>(null);
-  const [mode, setModeState] = useState<EditorMode>("edit");
-  const readOnly = mode === "view";
   const [revealed, setRevealed] = useState<{ id: string; at: number } | null>(null);
   const narrow = useNarrow();
   const draft = history.present;
-  const live = useRun(shown ? shown.id : null);
-  const liveRun: Run | undefined = shown ? live.data : undefined;
+  const live = useRun(shownRun);
+  const liveRun: Run | undefined = shownRun && (live.data?.workflow ?? null) === (workflow?.id ?? null) ? live.data : undefined;
+  const runMissing = shownRun !== null && (live.isError || (live.data !== undefined && liveRun === undefined));
   const own = selfId ?? workflow?.id ?? null;
   const others = useMemo(() => workflows.filter((candidate) => candidate.id !== own), [workflows, own]);
   const taken = useMemo(() => others.map((candidate) => candidate.id), [others]);
   const lastRun: Trace | null = liveRun?.trace ?? workflow?.last_run?.trace ?? null;
-  const visible = readOnly && shown !== null;
+  const visible = readOnly && shownRun !== null;
   const shownTrace = visible ? (liveRun?.trace ?? null) : null;
   const overlay = useMemo(() => overlayOf(shownTrace?.entries ?? []), [shownTrace]);
   const problems = useMemo(
@@ -88,14 +87,6 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
   const setDraft = (change: (current: Draft) => Draft, key: string | null = null) => {
     if (!readOnly) {
       setHistory((current) => recorded(current, change(current.present), key, Date.now()));
-    }
-  };
-  const newest = workflow?.active_run?.id ?? workflow?.last_run?.id ?? null;
-  const setMode = (next: EditorMode) => {
-    setModeState(next);
-    setPalette(null);
-    if (next === "view" && shown === null && newest !== null) {
-      setShown({ id: newest });
     }
   };
   const setSteps = (change: (steps: Step[]) => Step[], key: string | null = null) => setDraft((current) => ({ ...current, steps: change(current.steps) }), key);
@@ -110,7 +101,7 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
     overlay,
     workflowId: own,
     run: visible ? (liveRun ?? null) : null,
-    mode,
+    runMissing,
     readOnly,
     stale: visible && liveRun !== undefined && liveRun.steps_version !== null && workflow !== null && workflow.steps_version !== "" && liveRun.steps_version !== workflow.steps_version,
     selected,
@@ -165,12 +156,7 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
       setSteps((steps) => move(steps, from, target));
       setSelected(null);
     },
-    showRun: (id) => {
-      setShown({ id });
-      setModeState("view");
-      setPalette(null);
-    },
-    setMode,
+    openRun,
     revealed,
     reveal: (id) => {
       setSelected(id);
@@ -208,9 +194,7 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
     palette,
     setPalette,
     setServer,
-    shown,
     liveRun,
-    setShown,
     navigate,
     undo: () => (readOnly ? undefined : setHistory(undone)),
     redo: () => (readOnly ? undefined : setHistory(redone)),

@@ -87,6 +87,7 @@ impl WorkflowRunner {
             detail: String::new(),
             output: None,
             shape: None,
+            streams: None,
             log: StepLog::default(),
             item: place.item.clone(),
             level: match &step.kind {
@@ -129,6 +130,10 @@ impl WorkflowRunner {
             .shape
             .as_deref()
             .map(|shape| frame.secrets.mask(shape));
+        let streams = report
+            .streams
+            .clone()
+            .map(|streams| streams.masked(|text| frame.secrets.mask(text)));
         self.trace().finish(
             index,
             EntryEnd {
@@ -136,6 +141,7 @@ impl WorkflowRunner {
                 detail,
                 output,
                 shape,
+                streams,
                 log,
             },
             OffsetDateTime::now_utc(),

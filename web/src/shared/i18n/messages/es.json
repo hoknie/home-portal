@@ -681,8 +681,9 @@
     "runFields": "Campos del evento",
     "runOutput": "Salida",
     "runErrors": "Errores",
-    "truncated": "Los últimos 64 KiB de {bytes} bytes",
+    "truncated": "Los últimos {kept} KiB de {bytes} bytes",
     "noOutput": "vacío",
+    "budgetReached": "Se alcanzó el límite de salida de la ejecución: solo se conserva el final de la salida de este paso",
     "manual": "a mano",
     "runNow": "Ejecutar ahora",
     "runNowTitle": "¿Ejecutar «{title}» ahora?",
@@ -1166,7 +1167,18 @@
         "warning": "aviso",
         "error": "error"
       },
-      "branch": "Rama {number} (en paralelo)"
+      "branch": "Rama {number} (en paralelo)",
+      "scriptLog": {
+        "open": "Detalles",
+        "title": "Registro de {label}",
+        "command": "Comando",
+        "outcome": "Resultado",
+        "exitCode": "Código de salida",
+        "duration": "Duración",
+        "stdout": "Salida estándar",
+        "stderr": "Error estándar",
+        "output": "Salida"
+      }
     },
     "title": "Flujos",
     "subtitle": "Series de pasos que inician las automatizaciones, los webhooks o usted",
@@ -1378,18 +1390,17 @@
     "noWorkflowInputs": "Sin entradas",
     "run": {
       "showLast": "Mostrar la última ejecución",
-      "hideLast": "Ocultar la ejecución",
       "passes": "Pasadas de este paso",
       "duration": "{milliseconds} ms",
       "title": "Ejecución",
-      "hide": "Ocultar ejecución",
       "order": "Paso {number} de la ejecución",
       "steps": "Pasos de la ejecución",
       "stale": "Esta ejecución usó una versión anterior de los pasos; el lienzo puede no coincidir.",
-      "none": "Aún no hay nada que mostrar: ejecuta el flujo o elige una ejecución en el historial.",
       "notReached": "Este paso no se ejecutó en esta ejecución.",
       "chooseStep": "Elige un paso en el lienzo o en la lista para ver sus valores y su registro.",
-      "stepDetails": "Datos del paso"
+      "stepDetails": "Datos del paso",
+      "allRuns": "Todas las ejecuciones",
+      "notFound": "Esta ejecución no es de este flujo, o ya no se conserva."
     },
     "summaries": {
       "wait": "esperar {seconds} s",
@@ -1443,13 +1454,9 @@
       "legend": "Cómo funciona",
       "saveWithErrors": "Guardar ({count, plural, one {# error} other {# errores}})",
       "history": "Historial",
-      "modes": {
-        "label": "Modo",
-        "edit": "Editar",
-        "run": "Ejecutar",
-        "view": "Ver",
-        "runHint": "Guardar si hace falta, ejecutar el flujo y mostrar el resultado"
-      }
+      "pageLabel": "Acciones del flujo",
+      "run": "Ejecutar",
+      "edit": "Editar"
     },
     "runs": {
       "title": "Ejecuciones de este flujo",
@@ -2235,7 +2242,9 @@
       "automation": "Nueva automatización",
       "webhook": "Nuevo webhook",
       "workflow": "Nuevo flujo"
-    }
+    },
+    "history": "Historial",
+    "run": "Ejecución {id}"
   },
   "scriptArguments": {
     "title": "Argumentos",

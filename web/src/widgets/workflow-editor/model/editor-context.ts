@@ -19,10 +19,6 @@ export type Sources = {
   eventFields: { name: string; sample: string }[];
 };
 
-export const EDITOR_MODES = ["edit", "view"] as const;
-
-export type EditorMode = (typeof EDITOR_MODES)[number];
-
 export type EditorApi = {
   draft: Draft;
   catalogue: WorkflowCatalogue;
@@ -33,7 +29,7 @@ export type EditorApi = {
   overlay: Overlay;
   workflowId: string | null;
   run: Run | null;
-  mode: EditorMode;
+  runMissing: boolean;
   readOnly: boolean;
   stale: boolean;
   selected: string | null;
@@ -53,8 +49,7 @@ export type EditorApi = {
   remove: (path: Path) => void;
   duplicate: (path: Path) => void;
   move: (from: Path, target: Target) => void;
-  showRun: (id: string) => void;
-  setMode: (mode: EditorMode) => void;
+  openRun: ((id: string) => void) | null;
   revealed: { id: string; at: number } | null;
   reveal: (id: string) => void;
 };

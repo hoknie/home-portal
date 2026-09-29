@@ -25,7 +25,7 @@ export function ProblemsPanel({ onChoose }: ProblemsPanelProps) {
     );
   }
   return (
-    <ul className="grid max-h-72 gap-1 overflow-y-auto p-2" aria-label={t("title")}>
+    <ul className="grid gap-1 p-2" aria-label={t("title")}>
       {editor.problems.map((problem, index) => {
         const { path, field } = parsePath(problem.at);
         const place = path.length === 0 ? t("workflow") : (nodeLabel(editor.draft.steps, pathText(path)) ?? pathText(path));

@@ -347,3 +347,39 @@ fn a_step_log_keeps_twenty_values_and_lines_of_bounded_length_and_counts_the_res
     assert!(dropped.is_empty());
     assert_eq!((dropped.values_dropped, dropped.lines_dropped), (25, 25));
 }
+
+#[test]
+fn a_record_from_before_separate_streams_keeps_its_output_and_new_streams_survive_the_journal() {
+    let old = r#"{"path":"steps[0]","step":"run","label":"run","kind":"script","iteration":null,"outcome":"failed","started_at":"2026-01-01T00:00:00Z","duration_milliseconds":3,"detail":"restart.sh exited 1","output":"progress\ncontainer not found\n"}"#;
+    let entry = serde_json::from_str::<super::stored::StoredTraceEntry>(old)
+        .unwrap()
+        .into_entry()
+        .unwrap();
+    assert_eq!(
+        entry.output.as_deref(),
+        Some("progress\ncontainer not found\n")
+    );
+    assert_eq!(entry.streams, None);
+    let mut stdout = super::Tail::default();
+    stdout.push(&[b'x'; 20 * 1024]);
+    let mut stderr = super::Tail::default();
+    stderr.push(b"container not found\n");
+    let streams = super::Streams {
+        stdout: stdout.last(super::Streams::KEPT_PER_STREAM),
+        stderr,
+        command: vec!["restart.sh".into(), "jellyfin".into()],
+        budget_reached: true,
+    };
+    let line = serde_json::to_string(&super::stored::StoredTraceEntry::of(&super::TraceEntry {
+        output: None,
+        streams: Some(streams.clone()),
+        ..entry
+    }))
+    .unwrap();
+    let back = serde_json::from_str::<super::stored::StoredTraceEntry>(&line)
+        .unwrap()
+        .into_entry()
+        .unwrap();
+    assert_eq!(back.streams, Some(streams));
+    assert!(back.streams.unwrap().stdout.truncated());
+}

@@ -232,6 +232,8 @@
         "dropped": 0,
         "entries": [
           {
+            "budget_reached": false,
+            "command": null,
             "detail": "nas: down",
             "duration_milliseconds": 120,
             "item": null,
@@ -246,11 +248,15 @@
             "path": "steps[0]",
             "shape": null,
             "started_at": "2026-09-25T03:00:00Z",
+            "stderr": null,
+            "stdout": null,
             "step": "first_probe",
             "values": [],
             "values_dropped": 0
           },
           {
+            "budget_reached": false,
+            "command": null,
             "detail": "then",
             "duration_milliseconds": 120,
             "item": null,
@@ -268,6 +274,8 @@
             "path": "steps[1]",
             "shape": null,
             "started_at": "2026-09-25T03:00:00Z",
+            "stderr": null,
+            "stdout": null,
             "step": "down",
             "values": [
               {
@@ -278,6 +286,8 @@
             "values_dropped": 0
           },
           {
+            "budget_reached": false,
+            "command": null,
             "detail": "1 iterations",
             "duration_milliseconds": 120,
             "item": null,
@@ -292,11 +302,15 @@
             "path": "steps[1].then[0]",
             "shape": null,
             "started_at": "2026-09-25T03:00:00Z",
+            "stderr": null,
+            "stdout": null,
             "step": "retry",
             "values": [],
             "values_dropped": 0
           },
           {
+            "budget_reached": false,
+            "command": null,
             "detail": "POST http://192.168.1.10:9000/restart/nas → 202",
             "duration_milliseconds": 120,
             "item": "\"try 1\"",
@@ -311,11 +325,15 @@
             "path": "steps[1].then[0].body[0]",
             "shape": "{\"state\":\"down\"}",
             "started_at": "2026-09-25T03:00:00Z",
+            "stderr": null,
+            "stdout": null,
             "step": "restart",
             "values": [],
             "values_dropped": 0
           },
           {
+            "budget_reached": false,
+            "command": null,
             "detail": "",
             "duration_milliseconds": 120,
             "item": "\"try 1\"",
@@ -330,6 +348,8 @@
             "path": "steps[1].then[0].body[1]",
             "shape": null,
             "started_at": "2026-09-25T03:00:00Z",
+            "stderr": null,
+            "stdout": null,
             "step": "settle",
             "values": [],
             "values_dropped": 0

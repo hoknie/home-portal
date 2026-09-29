@@ -59,6 +59,8 @@
           "dropped": 0,
           "entries": [
             {
+              "budget_reached": false,
+              "command": null,
               "detail": "down",
               "duration_milliseconds": 120,
               "item": null,
@@ -73,11 +75,15 @@
               "path": "steps[0]",
               "shape": null,
               "started_at": "2026-09-25T03:00:00Z",
+              "stderr": null,
+              "stdout": null,
               "step": "first_probe",
               "values": [],
               "values_dropped": 0
             },
             {
+              "budget_reached": false,
+              "command": null,
               "detail": "then",
               "duration_milliseconds": 120,
               "item": null,
@@ -95,6 +101,8 @@
               "path": "steps[1]",
               "shape": null,
               "started_at": "2026-09-25T03:00:00Z",
+              "stderr": null,
+              "stdout": null,
               "step": "down",
               "values": [
                 {
@@ -102,6 +110,40 @@
                   "value": "\"down\""
                 }
               ],
+              "values_dropped": 0
+            },
+            {
+              "budget_reached": false,
+              "command": [
+                "restart.sh",
+                "jellyfin"
+              ],
+              "detail": "restart.sh exited 0",
+              "duration_milliseconds": 120,
+              "item": null,
+              "iteration": null,
+              "kind": "script",
+              "label": "restart",
+              "level": null,
+              "log": [],
+              "log_dropped": 0,
+              "outcome": "succeeded",
+              "output": null,
+              "path": "steps[1].then[0]",
+              "shape": null,
+              "started_at": "2026-09-25T03:00:00Z",
+              "stderr": {
+                "bytes": 0,
+                "tail": "",
+                "truncated": false
+              },
+              "stdout": {
+                "bytes": 25,
+                "tail": "stopping jellyfin\nstarted\n",
+                "truncated": false
+              },
+              "step": "restart",
+              "values": [],
               "values_dropped": 0
             }
           ]

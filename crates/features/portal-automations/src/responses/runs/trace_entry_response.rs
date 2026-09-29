@@ -1,6 +1,7 @@
 use portal_feature::PortalEvent;
 use serde::Serialize;
 
+use super::OutputResponse;
 use crate::types::TraceEntry;
 
 #[derive(Debug, Clone, Serialize)]
@@ -16,6 +17,10 @@ pub struct TraceEntryResponse {
     pub detail: String,
     pub output: Option<String>,
     pub shape: Option<String>,
+    pub stdout: Option<OutputResponse>,
+    pub stderr: Option<OutputResponse>,
+    pub command: Option<Vec<String>>,
+    pub budget_reached: bool,
     pub values: Vec<RenderedResponse>,
     pub log: Vec<String>,
     pub values_dropped: usize,
@@ -44,6 +49,22 @@ impl TraceEntryResponse {
             detail: entry.detail.clone(),
             output: entry.output.clone(),
             shape: entry.shape.clone(),
+            stdout: entry
+                .streams
+                .as_ref()
+                .map(|streams| OutputResponse::of(&streams.stdout)),
+            stderr: entry
+                .streams
+                .as_ref()
+                .map(|streams| OutputResponse::of(&streams.stderr)),
+            command: entry
+                .streams
+                .as_ref()
+                .map(|streams| streams.command.clone()),
+            budget_reached: entry
+                .streams
+                .as_ref()
+                .is_some_and(|streams| streams.budget_reached),
             values: entry
                 .log
                 .values

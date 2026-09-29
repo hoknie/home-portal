@@ -31,7 +31,7 @@ export function StartNode({ selected }: NodeProps<CanvasNode>) {
         </span>
         <span className="min-w-0 truncate text-sm font-semibold">{editor.draft.title || t("untitled")}</span>
         {headerProblems > 0 ? <span className="size-2 shrink-0 rounded-full bg-destructive" title={t("problemCount", { count: headerProblems })} /> : null}
-        {editor.lastRunId ? (
+        {editor.lastRunId && editor.openRun ? (
           <button
             type="button"
             className="nodrag ms-auto rounded-md p-1 text-muted-foreground hover:bg-glass-tint hover:text-foreground"
@@ -39,7 +39,7 @@ export function StartNode({ selected }: NodeProps<CanvasNode>) {
             title={t("run.showLast")}
             onClick={(event) => {
               event.stopPropagation();
-              editor.showRun(editor.lastRunId ?? "");
+              editor.openRun?.(editor.lastRunId ?? "");
             }}
           >
             <History className="size-4" aria-hidden />

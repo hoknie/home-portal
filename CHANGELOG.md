@@ -8,6 +8,8 @@ The versions follow [Semantic Versioning](https://semver.org/).
 
 ### Features
 
+- Separated config files ([69f59d9](https://github.com/hoknie/home-portal/commit/69f59d972d16174dbf8b6883680ce813daa37499))
+- Added support for script edit from ui ([3c87c26](https://github.com/hoknie/home-portal/commit/3c87c260f6b480790dabf40283c135075af42987))
 - Added variables to value fields ([ed03b92](https://github.com/hoknie/home-portal/commit/ed03b9265cb60c923f219f214b0d598d7dbcefe0))
 - Improved workflow ui and vars setters ([7d742f5](https://github.com/hoknie/home-portal/commit/7d742f58259533cffaac9dc2301293a0a7a2cf83))
 - Added breadcrumbs ([a461ca9](https://github.com/hoknie/home-portal/commit/a461ca90f2d5d29cbcb0d025d2688c90abe64a99))
@@ -19,6 +21,8 @@ The versions follow [Semantic Versioning](https://semver.org/).
 
 ### Other
 
+- Updated changelog and bump version ([157921e](https://github.com/hoknie/home-portal/commit/157921e7064116a3852ca2244f363ac8c17c7365))
+- Added variables to value fields ([342aff8](https://github.com/hoknie/home-portal/commit/342aff8313c4277ac010d6c7af378e1323beb294))
 - Changelog updated ([80fd2ad](https://github.com/hoknie/home-portal/commit/80fd2ad5b1dea768f763dfa216c451e1730661ac))
 
 [Full diff](https://github.com/hoknie/home-portal/compare/v0.1.7...HEAD)

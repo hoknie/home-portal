@@ -45,6 +45,8 @@ export {
 export type { Automation, Catalogue, CatalogueEvent, EventName, FilterName, LogLevel, Outcome, Run, Schedule, Scripts, StepOutcome, Trace, TraceEntry, When } from "./model/schema";
 export { SCRIPT_PROBLEMS, fixOf, problemOf } from "./model/script-help";
 export { terminalText } from "./model/terminal-text";
+export { exitCodeOf, hasScriptLog, scriptLogOf } from "./model/script-log";
+export type { ScriptLog } from "./model/script-log";
 export type { ScriptProblem } from "./model/script-help";
 export { ScriptProblems } from "./ui/script-problems";
 export { OutcomeBadge } from "./ui/outcome-badge";
@@ -54,6 +56,7 @@ export { RunOutput } from "./ui/run-output";
 export { RunTable } from "./ui/run-table";
 export { TraceEntryView, TraceTimeline, rowHeading } from "./ui/trace/trace-timeline";
 export { StepLog, LevelMark } from "./ui/trace/step-log";
+export { ScriptLogDialog } from "./ui/trace/script-log-dialog";
 export { depthOf, hasLog, loopOf, passRows } from "./ui/trace/pass-groups";
 export type { TraceRow } from "./ui/trace/pass-groups";
 export type { RunTableProps } from "./ui/run-table";

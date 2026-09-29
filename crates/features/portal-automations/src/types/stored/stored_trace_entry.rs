@@ -3,7 +3,8 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
-use crate::types::{LogLevel, Rendered, StepLog, StepOutcome, TraceEntry};
+use super::StoredTail;
+use crate::types::{LogLevel, Rendered, StepLog, StepOutcome, Streams, TraceEntry};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StoredTraceEntry {
@@ -23,6 +24,14 @@ pub struct StoredTraceEntry {
     pub output: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shape: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stdout: Option<StoredTail>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stderr: Option<StoredTail>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub command: Vec<String>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub budget_reached: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub values: Vec<(String, String)>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -41,6 +50,10 @@ fn is_zero(count: &usize) -> bool {
     *count == 0
 }
 
+fn is_false(flag: &bool) -> bool {
+    !*flag
+}
+
 impl StoredTraceEntry {
     pub fn of(entry: &TraceEntry) -> StoredTraceEntry {
         StoredTraceEntry {
@@ -55,6 +68,23 @@ impl StoredTraceEntry {
             detail: entry.detail.clone(),
             output: entry.output.clone(),
             shape: entry.shape.clone(),
+            stdout: entry
+                .streams
+                .as_ref()
+                .map(|streams| StoredTail::of(&streams.stdout)),
+            stderr: entry
+                .streams
+                .as_ref()
+                .map(|streams| StoredTail::of(&streams.stderr)),
+            command: entry
+                .streams
+                .as_ref()
+                .map(|streams| streams.command.clone())
+                .unwrap_or_default(),
+            budget_reached: entry
+                .streams
+                .as_ref()
+                .is_some_and(|streams| streams.budget_reached),
             values: entry
                 .log
                 .values
@@ -70,6 +100,12 @@ impl StoredTraceEntry {
     }
 
     pub fn into_entry(self) -> Option<TraceEntry> {
+        let streams = (self.stdout.is_some() || self.stderr.is_some()).then(|| Streams {
+            stdout: self.stdout.map(StoredTail::into_tail).unwrap_or_default(),
+            stderr: self.stderr.map(StoredTail::into_tail).unwrap_or_default(),
+            command: self.command,
+            budget_reached: self.budget_reached,
+        });
         Some(TraceEntry {
             path: self.path,
             step: self.step,
@@ -82,6 +118,7 @@ impl StoredTraceEntry {
             detail: self.detail,
             output: self.output,
             shape: self.shape,
+            streams,
             log: StepLog {
                 values: self
                     .values

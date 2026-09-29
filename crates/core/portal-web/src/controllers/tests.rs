@@ -36,6 +36,7 @@ fn built() -> Files {
         ("en/index.html", ("text/html", "home")),
         ("en/services/index.html", ("text/html", "services")),
         ("en/favicon.ico", ("image/x-icon", "icon")),
+        ("en/admin/workflows/index.html", ("text/html", "workflows")),
         ("es/index.html", ("text/html", "inicio")),
         ("es/services/index.html", ("text/html", "servicios")),
         (
@@ -81,10 +82,38 @@ async fn a_route_with_its_own_page_is_served_that_page() {
 }
 
 #[tokio::test]
-async fn an_unknown_route_even_with_dots_is_the_entry_page() {
+async fn an_unknown_route_even_with_dots_is_the_page_of_its_nearest_folder() {
     let response = answer(&built(), Language::En, "/services/edit/nas.local");
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(body(response).await, "home");
+    assert_eq!(body(response).await, "services");
+}
+
+#[tokio::test]
+async fn a_deep_workflow_address_is_the_page_of_the_workflows_folder() {
+    let response = answer(
+        &built(),
+        Language::En,
+        "/admin/workflows/revive/history/42/",
+    );
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[CACHE_CONTROL], "no-cache");
+    assert_eq!(body(response).await, "workflows");
+}
+
+#[tokio::test]
+async fn an_unknown_route_with_no_page_above_it_is_the_entry_page() {
+    assert_eq!(
+        body(answer(&built(), Language::En, "/nowhere/at/all/")).await,
+        "home"
+    );
+}
+
+#[tokio::test]
+async fn a_route_payload_under_a_deep_address_stays_not_found() {
+    assert_eq!(
+        answer(&built(), Language::En, "/admin/workflows/revive/index.txt").status(),
+        StatusCode::NOT_FOUND
+    );
 }
 
 #[tokio::test]
@@ -126,7 +155,7 @@ async fn every_page_comes_from_the_tree_of_its_language() {
     assert_eq!(deep.status(), StatusCode::OK);
     assert_eq!(deep.headers()[CONTENT_LANGUAGE], "es");
     assert_eq!(deep.headers()[VARY], "Cookie, Accept-Language");
-    assert_eq!(body(deep).await, "inicio");
+    assert_eq!(body(deep).await, "servicios");
 }
 
 #[tokio::test]

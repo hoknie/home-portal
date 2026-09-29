@@ -27,6 +27,7 @@ impl StoredTrace {
                 .collect(),
             dropped: self.dropped,
             log_bytes: 0,
+            output_bytes: 0,
         }
     }
 }

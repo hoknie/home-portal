@@ -1,16 +1,18 @@
 "use client";
 
 import { cn } from "cn";
-import { EyeOff } from "lucide-react";
+import { List } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { StopRunButton } from "@/features/stop-run";
 import { OutcomeBadge, type Run, type TraceEntry, TraceEntryView, depthOf, isActive, passRows, rowHeading } from "@/entities/automation";
 import { START_ID } from "@/entities/workflow";
-import { Button } from "@/shared/ui/primitives";
+import { AddressLink } from "@/shared/ui/address-link";
+import { buttonVariants } from "@/shared/ui/primitives";
 
 import { useEditor } from "../../model/editor-context";
+import { CloseLink } from "./side-column";
 
 const DOT: Record<string, string> = {
   running: "bg-status-degraded animate-pulse",
@@ -109,9 +111,9 @@ function StepDetails({ entries, current, selected, onChoose }: { entries: TraceE
   );
 }
 
-export type RunPanelProps = { run: Run | null; title: string; stale: boolean; onHide: () => void };
+export type RunPanelProps = { run: Run | null; title: string; stale: boolean; missing: boolean; historyHref: string; closeHref: string; empty: ReactNode };
 
-export function RunPanel({ run, title, stale, onHide }: RunPanelProps) {
+export function RunPanel({ run, title, stale, missing, historyHref, closeHref, empty }: RunPanelProps) {
   const t = useTranslations("workflowEditor.run");
   const editor = useEditor();
   const [chosen, setChosen] = useState<number | null>(null);
@@ -131,18 +133,19 @@ export function RunPanel({ run, title, stale, onHide }: RunPanelProps) {
           {run && !isActive(run) ? <span className="text-xs text-muted-foreground tabular-nums">{t("duration", { milliseconds: run.outcome.duration_milliseconds })}</span> : null}
           <span className="ms-auto flex items-center gap-1">
             {run && isActive(run) ? <StopRunButton run={run} title={title} /> : null}
-            <Button type="button" variant="ghost" size="sm" onClick={onHide}>
-              <EyeOff aria-hidden />
-              {t("hide")}
-            </Button>
+            <AddressLink href={historyHref} className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              <List aria-hidden />
+              {t("allRuns")}
+            </AddressLink>
+            <CloseLink href={closeHref} />
           </span>
         </div>
         {stale ? <p className="text-xs text-status-degraded">{t("stale")}</p> : null}
       </header>
       {run === null ? (
-        <p role="status" className="p-4 text-sm text-muted-foreground">
-          {t("none")}
-        </p>
+        <div role="status" className="grid gap-3 p-4 text-sm text-muted-foreground">
+          {missing ? <p>{t("notFound")}</p> : empty}
+        </div>
       ) : (
         <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden">
           <section className="border-b border-glass-edge p-2">

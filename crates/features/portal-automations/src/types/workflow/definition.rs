@@ -24,7 +24,7 @@ impl Workflow {
     pub const SECTION: &'static str = "workflows";
     pub const UNKNOWN: &'static str = "no such workflow";
     pub const TAKEN_ID: &'static str = "is used by another workflow";
-    pub const RESERVED_IDS: [&'static str; 2] = ["catalogue", "runs"];
+    pub const RESERVED_IDS: [&'static str; 4] = ["catalogue", "runs", "new", "edit"];
     pub const DEFAULT_TIMEOUT: u64 = 300;
     pub const LONGEST_TIMEOUT: u64 = 3600;
     pub const LONGEST_ID: usize = 63;

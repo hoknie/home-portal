@@ -7,6 +7,7 @@ mod probe_result;
 mod status_result;
 mod step_outcome;
 mod step_report;
+mod streams;
 mod trace;
 mod trace_entry;
 
@@ -19,5 +20,6 @@ pub use probe_result::ProbeResult;
 pub use status_result::StatusResult;
 pub use step_outcome::StepOutcome;
 pub use step_report::StepReport;
+pub use streams::Streams;
 pub use trace::Trace;
 pub use trace_entry::TraceEntry;

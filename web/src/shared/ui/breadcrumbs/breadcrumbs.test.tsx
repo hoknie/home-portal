@@ -39,3 +39,14 @@ it("a long trail folds its middle on a narrow screen behind a button that shows 
   expect(screen.getByRole("link", { name: "Webhooks" }).closest("li")?.className).not.toContain("hidden");
   expect(screen.queryByRole("button", { name: "Show the whole path" })).toBeNull();
 });
+
+it("a crumb on the same page moves there without leaving it", async () => {
+  window.history.replaceState(null, "", "/admin/workflows/revive/edit/");
+  render(
+    <TestIntl>
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Revive", href: "/admin/workflows/revive/", local: true }, { label: "Edit" }]} />
+    </TestIntl>,
+  );
+  await userEvent.click(screen.getByRole("link", { name: "Revive" }));
+  expect(window.location.pathname).toBe("/admin/workflows/revive/");
+});

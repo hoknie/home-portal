@@ -1,6 +1,6 @@
 use portal_automations::validate_automations;
 use portal_automations::{
-    InputResponse, PortalService, PortalState, QueuedResponse, RenderedResponse,
+    InputResponse, OutputResponse, PortalService, PortalState, QueuedResponse, RenderedResponse,
     TraceEntryResponse, TraceResponse, WorkflowCatalogue, WorkflowCatalogueResponse,
     WorkflowResponse, WorkflowUsageResponse, WorkflowsResponse,
 };
@@ -28,6 +28,14 @@ fn revive() -> WorkflowResponse {
             "down",
         ),
         ("steps[1]", "down", "if", None, "succeeded", "then"),
+        (
+            "steps[1].then[0]",
+            "restart",
+            "script",
+            None,
+            "succeeded",
+            "restart.sh exited 0",
+        ),
     ]));
     WorkflowResponse {
         steps_version: "5d41402abc4b".into(),
@@ -268,6 +276,19 @@ pub fn traced(entries: &[Entry]) -> TraceResponse {
                     detail: detail.to_string(),
                     output: (*kind == "http").then(|| "{\"state\":\"down\"}".to_string()),
                     shape: (*kind == "http").then(|| "{\"state\":\"down\"}".to_string()),
+                    stdout: (*kind == "script").then(|| OutputResponse {
+                        tail: "stopping jellyfin\nstarted\n".into(),
+                        bytes: 25,
+                        truncated: false,
+                    }),
+                    stderr: (*kind == "script").then(|| OutputResponse {
+                        tail: String::new(),
+                        bytes: 0,
+                        truncated: false,
+                    }),
+                    command: (*kind == "script")
+                        .then(|| vec!["restart.sh".to_string(), "jellyfin".to_string()]),
+                    budget_reached: false,
                     values: (*kind == "if")
                         .then(|| RenderedResponse {
                             template: "{{steps.first_probe.state}}".into(),

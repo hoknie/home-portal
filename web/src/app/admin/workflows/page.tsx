@@ -1,5 +1,5 @@
-import { WorkflowsScreen } from "@/widgets/workflows";
+import { WorkflowsRoute } from "./workflows-route";
 
 export default function WorkflowsPage() {
-  return <WorkflowsScreen />;
+  return <WorkflowsRoute />;
 }

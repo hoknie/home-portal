@@ -120,26 +120,17 @@ it("a service field completes an input after {{", async () => {
   expect(service).toHaveValue("{{inputs.service}}");
 });
 
-it("saving again after save and run updates the same workflow without a taken id", async () => {
+it("saving a new workflow leads to its page, and saving it again updates it without a taken id", async () => {
   const created = { ...sampleWorkflows[1], id: "ping-nas", title: "Ping NAS" };
-  const fetch = vi.fn(async (path: string, init?: RequestInit) => {
-    if (path.endsWith("/run")) {
-      return jsonResponse({ run_id: "9" });
-    }
-    if (init?.method === "POST" || init?.method === "PUT") {
-      return jsonResponse(created, { status: init.method === "POST" ? 201 : 200, headers: { ETag: '"r2"' } });
-    }
-    return jsonResponse({ ...created, trace: null });
-  });
+  const fetch = vi.fn(async (_path: string, init?: RequestInit) => jsonResponse(created, { status: init?.method === "POST" ? 201 : 200, headers: { ETag: '"r2"' } }));
   vi.stubGlobal("fetch", fetch);
-  const { client } = openEditor(null, {
+  const { client, onSaved } = openEditor(null, {
     initial: { id: "ping-nas", title: "Ping NAS", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [{ id: "pause", kind: "wait", seconds: 1 }] },
   });
+  await userEvent.click(screen.getByRole("button", { name: /^Save$/ }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalledWith("ping-nas"));
+  expect(fetch).toHaveBeenCalledWith("/api/workflows", expect.objectContaining({ method: "POST" }));
   client.setQueryData(["workflows"], { data: { workflows: [...sampleWorkflows, created] }, revision: '"r2"' });
-  await userEvent.click(screen.getByRole("button", { name: "Run" }));
-  await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Run now" }));
-  expect(await screen.findByRole("radio", { name: "View" })).toHaveAttribute("aria-checked", "true");
-  await userEvent.click(screen.getByRole("radio", { name: "Edit" }));
   pressOnCanvas(await node("pause"));
   const seconds = within(inspector()).getByLabelText(/Seconds/);
   await userEvent.clear(seconds);
@@ -147,6 +138,29 @@ it("saving again after save and run updates the same workflow without a taken id
   await userEvent.click(screen.getByRole("button", { name: /^Save$/ }));
   await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/workflows/ping-nas", expect.objectContaining({ method: "PUT" })));
   expect(screen.queryByText("This id is taken")).toBeNull();
+});
+
+it("the editor offers no run, history or mode control, and Cancel is left to the page", async () => {
+  const { onCancel } = openEditor(withSteps([{ id: "ping", kind: "http", url: "http://nas.lan" }]));
+  await node("ping");
+  const toolbar = screen.getByRole("toolbar", { name: "Editor actions" });
+  expect(within(toolbar).queryByRole("button", { name: "Run" })).toBeNull();
+  expect(within(toolbar).queryByRole("link", { name: /History/ })).toBeNull();
+  expect(screen.queryByRole("radiogroup")).toBeNull();
+  await userEvent.click(within(toolbar).getByRole("button", { name: "Cancel" }));
+  expect(onCancel).toHaveBeenCalled();
+});
+
+it("problems open in the column beside the canvas, and choosing one shows the inspector with the field focused", async () => {
+  openEditor(withSteps([{ id: "call", kind: "http", url: "" }]));
+  await node("call");
+  await userEvent.click(within(screen.getByRole("toolbar", { name: "Editor actions" })).getByRole("button", { name: /^\d+ errors?, / }));
+  const column = screen.getByRole("complementary", { name: "Problems" });
+  const list = within(column).getByRole("list", { name: "Problems" });
+  expect(column.className).not.toContain("absolute");
+  await userEvent.click(within(list).getByRole("button", { name: /^call/ }));
+  expect(screen.queryByRole("complementary", { name: "Problems" })).toBeNull();
+  await waitFor(() => expect(within(inspector()).getByRole("combobox", { name: "URL" })).toHaveFocus());
 });
 
 it("the start node keeps its icon's size whatever the length of the title", async () => {

@@ -31,7 +31,7 @@ pub use logging::{EntryEnd, LogLevel, Rendered, StepLog, StepLogging};
 pub use portal::{PortalService, PortalState, RawServiceId};
 pub use progress::{
     Ending, Flow, HttpAnswer, HttpRequest, Place, ProbeResult, StatusResult, StepOutcome,
-    StepReport, Trace, TraceEntry,
+    StepReport, Streams, Trace, TraceEntry,
 };
 pub use running::{
     ActiveRun, Admission, Finished, Invocation, Pending, Refusal, RefusalCode, RunControl,
