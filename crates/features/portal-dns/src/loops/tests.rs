@@ -150,8 +150,8 @@ async fn a_slow_connection_is_closed_after_the_idle_time() {
     let port = free_port();
     let (_folder, runtime) = started(&configuration(port, ""));
     assert!(eventually(async || runtime.library.state().plain.listening).await);
-    let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
     let began = Instant::now();
+    let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
     let mut buffer = [0u8; 1];
     let read = tokio::time::timeout(Duration::from_secs(3), stream.read(&mut buffer))
         .await
