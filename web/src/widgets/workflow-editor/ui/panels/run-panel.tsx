@@ -1,17 +1,18 @@
 "use client";
 
 import { cn } from "cn";
-import { List } from "lucide-react";
+import { ChevronDown, List } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { StopRunButton } from "@/features/stop-run";
 import { OutcomeBadge, type Run, type TraceEntry, TraceEntryView, depthOf, isActive, passRows, rowHeading } from "@/entities/automation";
-import { START_ID } from "@/entities/workflow";
+import { START_ID, at, parsePath } from "@/entities/workflow";
 import { AddressLink } from "@/shared/ui/address-link";
 import { buttonVariants } from "@/shared/ui/primitives";
 
 import { useEditor } from "../../model/editor-context";
+import { StepCard } from "../inspector/step-card";
 import { CloseLink } from "./side-column";
 
 const DOT: Record<string, string> = {
@@ -24,6 +25,7 @@ const DOT: Record<string, string> = {
 };
 
 const INDENT_REM = 1;
+export const SCROLL_SLACK_PIXELS = 4;
 
 export function entryFor(entries: TraceEntry[], chosen: number | null, selected: string | null): number | null {
   if (chosen !== null && entries[chosen]?.path === selected) {
@@ -41,8 +43,24 @@ function RunSteps({ entries, current, onChoose }: { entries: TraceEntry[]; curre
   const trace = useTranslations("workflows.trace");
   const rows = passRows(entries);
   const orders = rows.map((row, position) => rows.slice(0, position + 1).filter((earlier) => earlier.type === "entry").length);
+  const list = useRef<HTMLOListElement>(null);
+  const [more, setMore] = useState(false);
+  const measure = () => {
+    const element = list.current;
+    setMore(element !== null && element.scrollHeight - element.scrollTop - element.clientHeight > SCROLL_SLACK_PIXELS);
+  };
+  useEffect(() => {
+    const element = list.current;
+    if (element === null) {
+      return;
+    }
+    const watcher = new ResizeObserver(() => measure());
+    watcher.observe(element);
+    return () => watcher.disconnect();
+  }, []);
   return (
-    <ol aria-label={t("steps")} className="grid max-h-64 gap-0.5 overflow-y-auto">
+    <div className="relative">
+    <ol ref={list} onScroll={measure} aria-label={t("steps")} className="grid max-h-64 gap-0.5 overflow-y-auto">
       {rows.map((row, position) => {
         if (row.type !== "entry") {
           return (
@@ -71,6 +89,19 @@ function RunSteps({ entries, current, onChoose }: { entries: TraceEntry[]; curre
         );
       })}
     </ol>
+      {more ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-10 items-end justify-center bg-gradient-to-t from-[var(--glass-overlay-solid)] to-transparent">
+          <button
+            type="button"
+            className="pointer-events-auto mb-0.5 flex items-center gap-1 rounded-full border border-glass-edge bg-background px-2 py-0.5 text-[11px] text-muted-foreground shadow-sm hover:text-foreground"
+            onClick={() => list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" })}
+          >
+            <ChevronDown className="size-3" aria-hidden />
+            {t("moreBelow")}
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -105,9 +136,27 @@ function StepDetails({ entries, current, selected, onChoose }: { entries: TraceE
         </div>
       ) : null}
       <ol>
-        <TraceEntryView entry={entries[current]} />
+        <TraceEntryView entry={entries[current]} indent={false} />
       </ol>
+      <StepSettings path={selected} />
     </div>
+  );
+}
+
+function StepSettings({ path }: { path: string }) {
+  const t = useTranslations("workflowEditor.card");
+  const editor = useEditor();
+  const step = at(editor.draft.steps, parsePath(path).path);
+  if (!step) {
+    return null;
+  }
+  return (
+    <details className="text-xs">
+      <summary className="cursor-pointer text-muted-foreground">{t("settings")}</summary>
+      <div className="mt-1 rounded-md border border-glass-edge bg-glass-tint p-2">
+        <StepCard step={step} compact />
+      </div>
+    </details>
   );
 }
 
@@ -148,11 +197,18 @@ export function RunPanel({ run, title, stale, missing, historyHref, closeHref, e
         </div>
       ) : (
         <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden">
-          <section className="border-b border-glass-edge p-2">
+          <section className="grid gap-1 p-2">
+            <h3 className="px-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{t("stepsCount", { count: entries.length })}</h3>
             <RunSteps entries={entries} current={current} onChoose={choose} />
           </section>
-          <section aria-label={t("stepDetails")} className="min-h-0 overflow-y-auto p-4">
-            <StepDetails entries={entries} current={current} selected={selected} onChoose={choose} />
+          <section aria-label={t("stepDetails")} className="flex min-h-0 flex-col border-t-2 border-glass-edge bg-glass-tint/60">
+            <h3 className="flex min-w-0 items-center gap-1 border-b border-glass-edge px-4 py-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+              {t("stepDetails")}
+              {current !== null ? <span className="truncate font-normal tracking-normal normal-case text-foreground before:me-1 before:text-muted-foreground before:content-['·']">{entries[current].label}</span> : null}
+            </h3>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+              <StepDetails entries={entries} current={current} selected={selected} onChoose={choose} />
+            </div>
           </section>
         </div>
       )}

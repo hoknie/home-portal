@@ -8,7 +8,7 @@ use serde_json::json;
 use super::running::run;
 use crate::types::{Ending, StepOutcome};
 
-fn serve() -> u16 {
+pub fn serve() -> u16 {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();
     thread::spawn(move || {

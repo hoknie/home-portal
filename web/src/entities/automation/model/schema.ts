@@ -70,6 +70,7 @@ export const traceEntrySchema = z.object({
   log_dropped: z.number().default(0),
   item: z.string().nullable().default(null),
   level: z.enum(LOG_LEVELS).nullable().catch(null).default(null),
+  wait_seconds: z.number().nullable().default(null),
 });
 
 export type TraceEntry = z.infer<typeof traceEntrySchema>;

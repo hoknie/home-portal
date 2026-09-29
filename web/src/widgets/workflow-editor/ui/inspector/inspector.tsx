@@ -43,7 +43,7 @@ function useBody() {
       <div className="grid gap-6">
         <StepForm key={selected} path={path} step={step} />
         <Produces step={step} />
-        {run ? <TraceTimeline trace={{ entries: run.entries, dropped: 0 }} /> : null}
+        {run ? <TraceTimeline trace={{ entries: run.entries, dropped: 0 }} indent={false} /> : null}
       </div>
     ),
   };

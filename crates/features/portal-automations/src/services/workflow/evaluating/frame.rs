@@ -17,6 +17,7 @@ pub struct Frame {
     pub portal: Option<Value>,
     pub secrets: Arc<Secrets>,
     pub rendered: Option<Collector>,
+    pub entry: Option<usize>,
 }
 
 impl Frame {
@@ -35,6 +36,7 @@ impl Frame {
             portal: None,
             secrets,
             rendered: None,
+            entry: None,
         }
     }
 

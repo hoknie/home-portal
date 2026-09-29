@@ -337,3 +337,34 @@ it("a number from an input is a template checked when the step runs, and a plain
   await waitFor(() => expect(fetch).toHaveBeenCalled());
   expect(sentBody(fetch).steps[0].seconds).toBe("{{inputs.pause}}");
 });
+
+it("a script that may fail: Continue is off by default, on writes fail_on_error false, off again drops the key, as for http", async () => {
+  const fetch = vi.fn(async () => jsonResponse(sampleWorkflows[1]));
+  vi.stubGlobal("fetch", fetch);
+  const { onSaved } = openEditor(
+    withSteps([
+      { id: "run", kind: "script", script: "restart.sh" },
+      { id: "ping", kind: "http", url: "http://nas.lan", fail_on_error: false },
+    ]),
+  );
+  pressOnCanvas(await node("run"));
+  const going = within(inspector()).getByRole("switch", { name: "Continue the run when the script fails" });
+  expect(going).not.toBeChecked();
+  await userEvent.click(going);
+  pressOnCanvas(await node("ping"));
+  await userEvent.click(within(inspector()).getByRole("switch", { name: "Fail on status 400 and above" }));
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  let steps = sentBody(fetch).steps;
+  expect(steps[0].fail_on_error).toBe(false);
+  expect("fail_on_error" in steps[1]).toBe(false);
+  pressOnCanvas(await node("run"));
+  const again = within(inspector()).getByRole("switch", { name: "Continue the run when the script fails" });
+  expect(again).toBeChecked();
+  await userEvent.click(again);
+  fetch.mockClear();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  steps = sentBody(fetch).steps;
+  expect("fail_on_error" in steps[0]).toBe(false);
+});

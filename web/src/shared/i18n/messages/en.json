@@ -1400,7 +1400,15 @@
       "chooseStep": "Choose a step on the canvas or in the list to see its values and log.",
       "stepDetails": "Step details",
       "allRuns": "All runs",
-      "notFound": "This run is not one of this workflow's runs, or it is no longer kept."
+      "notFound": "This run is not one of this workflow's runs, or it is no longer kept.",
+      "seconds": "{seconds} s",
+      "secondsLeft": "{seconds} seconds left",
+      "runningFor": "Running for {seconds} seconds",
+      "valuesLabel": "Show on the nodes",
+      "showValues": "Values",
+      "showTemplates": "Templates",
+      "stepsCount": "{count, plural, one {# step} other {# steps}}",
+      "moreBelow": "More steps below"
     },
     "summaries": {
       "wait": "wait {seconds} s",
@@ -1545,6 +1553,15 @@
       "failed": "End: failed",
       "break": "Leave loop",
       "continue": "Next pass"
+    },
+    "card": {
+      "title": "Step {label}",
+      "label": "Label",
+      "id": "Id",
+      "yes": "yes",
+      "no": "no",
+      "byDefault": "(default)",
+      "settings": "Settings"
     }
   },
   "templateInput": {
@@ -1799,6 +1816,10 @@
         "stdin": {
           "label": "Standard input",
           "help": "A value written to the script's standard input as JSON, instead of the event fields; for example '{{'vars.report'}}'."
+        },
+        "fail_on_error": {
+          "label": "Continue the run when the script fails",
+          "help": "On lets the run go on after a non-zero exit, with exit_code, stdout and stderr for later steps. Off, a non-zero exit fails the run."
         }
       },
       "notify": {

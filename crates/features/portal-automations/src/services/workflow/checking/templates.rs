@@ -81,6 +81,7 @@ pub fn templates_of(step: &Step) -> Vec<(String, &str)> {
             env,
             stdin,
             timeout,
+            ..
         } => {
             found.extend(
                 timeout

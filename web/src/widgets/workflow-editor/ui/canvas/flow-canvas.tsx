@@ -8,6 +8,7 @@ import {
   Controls,
   MarkerType,
   MiniMap,
+  Panel,
   type NodeChange,
   type NodeTypes,
   type EdgeTypes,
@@ -26,6 +27,7 @@ import { type Flow, type Overlay, type RunPath, flowOf, runPath } from "@/entiti
 import { placeable } from "../../model/checks/placing";
 import { DROP_RADIUS, dropTarget, slotPoints } from "../../model/edits/drop";
 import { useEditor } from "../../model/editor-context";
+import { ValuesSwitch } from "./values-switch";
 import { EmptyNode } from "../nodes/empty-node";
 import { EndNode } from "../nodes/end-node";
 import { FrameNode } from "../nodes/frame-node";
@@ -196,6 +198,11 @@ function Canvas() {
     >
       <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
       <Controls showInteractive={false} position="bottom-left" />
+      {editor.readOnly && editor.overlay.size > 0 ? (
+        <Panel position="top-right">
+          <ValuesSwitch />
+        </Panel>
+      ) : null}
       {editor.narrow ? null : <MiniMap pannable zoomable position="bottom-right" nodeStrokeWidth={2} />}
     </ReactFlow>
   );

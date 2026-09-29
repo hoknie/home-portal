@@ -41,6 +41,7 @@ pub enum StepKind {
         env: Vec<(String, String)>,
         stdin: Option<String>,
         timeout: NumberSetting,
+        fail_on_error: bool,
     },
     Notify {
         channel: Option<String>,

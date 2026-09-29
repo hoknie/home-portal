@@ -44,7 +44,10 @@ impl RunResponse {
                 stderr: OutputResponse::of(&record.result.stderr),
             },
             workflow: record.workflow.clone(),
-            trace: record.trace.as_ref().map(TraceResponse::of),
+            trace: record
+                .trace
+                .as_ref()
+                .map(|trace| TraceResponse::of(trace, None)),
             steps_version: record.steps_version.clone(),
         }
     }
@@ -89,6 +92,7 @@ impl RunResponse {
                     &run.trace
                         .lock()
                         .unwrap_or_else(std::sync::PoisonError::into_inner),
+                    Some(time::OffsetDateTime::now_utc()),
                 )
             }),
             steps_version: None,

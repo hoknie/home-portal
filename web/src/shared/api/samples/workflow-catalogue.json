@@ -1039,6 +1039,17 @@
           "template_keys": false,
           "templated": true,
           "type": "integer"
+        },
+        {
+          "choices": [],
+          "default": "true",
+          "maximum": null,
+          "minimum": null,
+          "name": "fail_on_error",
+          "required": false,
+          "template_keys": false,
+          "templated": false,
+          "type": "boolean"
         }
       ],
       "group": "actions",

@@ -19,7 +19,7 @@ use portal_feature::ModuleSwitches;
 
 use crate::services::workflow::checking::templates_of;
 use crate::services::workflow::evaluating::{
-    Frame, collected, collector, placeholders_in, render_number,
+    Frame, collected, collector, placeholders_in, render_number, snapshot,
 };
 use crate::types::{
     Ending, EntryEnd, Flow, Place, RunSettings, Step, StepKind, StepLog, StepLogging, StepOutcome,
@@ -94,14 +94,17 @@ impl WorkflowRunner {
                 StepKind::Log { level, .. } => Some(*level),
                 _ => None,
             },
+            wait_seconds: None,
         });
         let own = (self.logging == StepLogging::On).then(collector);
         let parent = std::mem::replace(&mut frame.rendered, own.clone());
+        let parent_entry = std::mem::replace(&mut frame.entry, index);
         let report = match self.refresh_portal(step, frame).await {
             Ok(()) => self.dispatch(step, frame, place).await,
             Err(message) => StepReport::failed(message),
         };
         frame.rendered = parent;
+        frame.entry = parent_entry;
         let log = match &own {
             Some(own) => {
                 let mut log = collected(own);
@@ -187,6 +190,7 @@ impl WorkflowRunner {
                 env,
                 stdin,
                 timeout,
+                fail_on_error,
             } => {
                 let longest = RunSettings::LONGEST_TIMEOUT;
                 match render_number(timeout, (1, longest), "timeout_seconds", frame) {
@@ -195,7 +199,7 @@ impl WorkflowRunner {
                             timeout_seconds: seconds,
                             ..run.clone()
                         };
-                        run_script(self, (&run, env, stdin.as_deref()), frame).await
+                        run_script(self, (&run, env, stdin.as_deref(), *fail_on_error), frame).await
                     }
                     Err(message) => StepReport::failed(message),
                 }
@@ -216,6 +220,17 @@ impl WorkflowRunner {
         let state = self.actions.state().await?;
         frame.portal = Some(state.value_with(self.switches));
         Ok(())
+    }
+
+    pub fn publish(&self, frame: &Frame, wait_seconds: Option<u64>) {
+        let Some(index) = frame.entry else {
+            return;
+        };
+        let values = frame
+            .rendered
+            .as_ref()
+            .map(|own| snapshot(own).masked(|text| frame.secrets.mask(text)));
+        self.trace().progress(index, values, wait_seconds);
     }
 
     pub fn trace(&self) -> std::sync::MutexGuard<'_, Trace> {

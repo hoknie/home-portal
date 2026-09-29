@@ -45,7 +45,9 @@ function Body({ run, actions }: { run: Run; actions?: (run: Run) => ReactNode })
           {run.outcome.exit_code !== null ? <KvRow label={t("automations.runExit")}>{run.outcome.exit_code}</KvRow> : null}
           {run.outcome.reason ? (
             <KvRow label={t("automations.runReason")}>
-              <Reason reason={run.outcome.reason} />
+              <span className="line-clamp-3 break-words" title={run.outcome.reason}>
+                <Reason reason={run.outcome.reason} />
+              </span>
             </KvRow>
           ) : null}
           <KvRow label={t("automations.runDuration")}>{t("common.milliseconds", { value: run.outcome.duration_milliseconds })}</KvRow>

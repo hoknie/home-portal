@@ -5,7 +5,7 @@ import { type KeyboardEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { enabledModules, useModules } from "@/entities/module";
-import { DeleteWorkflowButton, type Workflow, type WorkflowCatalogue, namedInputs, useRunWorkflow } from "@/entities/workflow";
+import { DeleteWorkflowButton, START_ID, type Workflow, type WorkflowCatalogue, at, namedInputs, parsePath, useRunWorkflow } from "@/entities/workflow";
 import { ConflictError, ThrottledError } from "@/shared/api";
 import { routes } from "@/shared/config";
 import { pushAddress } from "@/shared/lib/navigation";
@@ -14,11 +14,12 @@ import { Skeleton } from "@/shared/ui/primitives";
 import { EditorContext, type Sources } from "../model/editor-context";
 import { useEditorState } from "../model/use-editor-state";
 import { CanvasArea } from "./canvas-area";
+import { StepCard } from "./inspector/step-card";
 import { legendDismissed } from "./panels/legend";
 import { RunDialog } from "./panels/run-dialog";
 import { RunPanel } from "./panels/run-panel";
 import { RunsPanel } from "./panels/runs-panel";
-import { SideColumn } from "./panels/side-column";
+import { CloseButton, SideColumn } from "./panels/side-column";
 import { ViewToolbar } from "./panels/view-toolbar";
 
 export type WorkflowView = "view" | "history" | "run";
@@ -77,6 +78,15 @@ export function WorkflowViewer({ workflow, view, run, revision, workflows, catal
   };
 
 
+  const chosen = editor.selected && editor.selected !== START_ID ? at(workflow.steps, parsePath(editor.selected).path) : undefined;
+  const card = chosen ? (
+    <SideColumn title={chosen.label ?? chosen.id} actions={<CloseButton onClose={() => editor.select(null)} />}>
+      <div className="p-4">
+        <StepCard step={chosen} />
+      </div>
+    </SideColumn>
+  ) : null;
+
   return (
     <EditorContext.Provider value={editor}>
       <div className="grid gap-3" onKeyDown={keyDown}>
@@ -87,11 +97,14 @@ export function WorkflowViewer({ workflow, view, run, revision, workflows, catal
           runDisabled={moduleOff}
           onRun={() => setRunOpen(true)}
           onLegend={() => setLegendOpen(true)}
+          onHistory={() => editor.select(null)}
           remove={<DeleteWorkflowButton workflow={workflow} revision={revision} labelled onDeleted={() => pushAddress(routes.adminWorkflows)} />}
         />
         <div className="flex h-[calc(100dvh-13rem)] min-h-[34rem] flex-col gap-3 md:flex-row">
           <CanvasArea legendOpen={legendOpen} onLegendClosed={() => setLegendOpen(false)} />
-          {view === "history" ? (
+          {view !== "run" && card ? (
+            card
+          ) : view === "history" ? (
             <SideColumn title={t("workflowEditor.toolbar.history")} closeHref={routes.workflow(workflow.id)}>
               <RunsPanel onChoose={openRun} />
             </SideColumn>

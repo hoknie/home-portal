@@ -57,11 +57,11 @@ function Output({ entry }: { entry: TraceEntry }) {
   return <pre className={`${frame} font-mono whitespace-pre-wrap break-all`}>{terminalText(entry.output ?? "")}</pre>;
 }
 
-export function TraceEntryView({ entry }: { entry: TraceEntry }) {
+export function TraceEntryView({ entry, indent = true }: { entry: TraceEntry; indent?: boolean }) {
   const t = useTranslations("workflows.trace");
   const outcome = t(`outcomes.${entry.outcome.replace("-", "_")}` as "outcomes.running");
   return (
-    <li className="grid gap-1 py-1.5" style={{ paddingInlineStart: `${depthOf(entry.path) * 1.25}rem` }} data-outcome={entry.outcome}>
+    <li className="grid gap-1 py-1.5" style={indent ? { paddingInlineStart: `${depthOf(entry.path) * 1.25}rem` } : undefined} data-outcome={entry.outcome}>
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
         {entry.outcome === "running" ? (
           <LoaderCircle className="size-3 animate-spin text-status-degraded" aria-hidden />
@@ -75,7 +75,11 @@ export function TraceEntryView({ entry }: { entry: TraceEntry }) {
         {entry.iteration !== null ? <span className="text-xs text-muted-foreground">{t("iteration", { number: entry.iteration + 1 })}</span> : null}
         <span className="ms-auto text-xs text-muted-foreground tabular-nums">{t("duration", { value: entry.duration_milliseconds })}</span>
       </div>
-      {entry.detail ? <p className="text-xs break-all text-muted-foreground">{entry.detail}</p> : null}
+      {entry.detail ? (
+        <p className="truncate text-xs text-muted-foreground" title={entry.detail} data-detail="">
+          {entry.detail}
+        </p>
+      ) : null}
       {hasLog(entry) ? (
         <details className="text-xs" open={FAILED.includes(entry.outcome)}>
           <summary className="cursor-pointer text-muted-foreground">{t("details")}</summary>
@@ -111,14 +115,14 @@ function Heading({ row }: { row: Exclude<TraceRow, { type: "entry" }> }) {
   );
 }
 
-export function TraceTimeline({ trace }: { trace: Trace }) {
+export function TraceTimeline({ trace, indent = true }: { trace: Trace; indent?: boolean }) {
   const t = useTranslations("workflows.trace");
   return (
     <div className="grid gap-1">
       <p className="text-sm font-medium">{t("title")}</p>
       {trace.entries.length === 0 ? <p className="text-xs text-muted-foreground">{t("empty")}</p> : null}
       <ol className="divide-y divide-glass-edge" aria-label={t("title")}>
-        {passRows(trace.entries).map((row, index) => (row.type === "entry" ? <TraceEntryView key={`${row.index}-${row.entry.path}`} entry={row.entry} /> : <Heading key={`${row.type}-${"loop" in row ? row.loop : row.parallel}-${row.number}-${index}`} row={row} />))}
+        {passRows(trace.entries).map((row, index) => (row.type === "entry" ? <TraceEntryView key={`${row.index}-${row.entry.path}`} entry={row.entry} indent={indent} /> : <Heading key={`${row.type}-${"loop" in row ? row.loop : row.parallel}-${row.number}-${index}`} row={row} />))}
       </ol>
       {trace.dropped > 0 ? <p className="text-xs text-muted-foreground">{t("dropped", { count: trace.dropped })}</p> : null}
     </div>

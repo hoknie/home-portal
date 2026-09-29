@@ -30,6 +30,7 @@ function script(overrides: Partial<TraceEntry>): TraceEntry {
     log_dropped: 0,
     item: null,
     level: null,
+    wait_seconds: null,
     ...overrides,
   };
 }

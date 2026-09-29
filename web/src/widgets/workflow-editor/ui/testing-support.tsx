@@ -133,7 +133,7 @@ export function pressOnCanvas(element: HTMLElement) {
   fireEvent.click(element);
 }
 
-function AddressHarness({ workflow, start }: { workflow: Workflow; start: string }) {
+function AddressHarness({ workflow, start, scripts }: { workflow: Workflow; start: string; scripts?: Sources["scripts"] }) {
   const { path } = useAddress();
   const [shown, setShown] = useState<string | null>(null);
   const address = workflowAddressOf(path ?? start);
@@ -145,7 +145,7 @@ function AddressHarness({ workflow, start }: { workflow: Workflow; start: string
         revision='"r1"'
         workflows={sampleWorkflows}
         catalogue={catalogue}
-        sources={sourcesFor()}
+        sources={sourcesFor(scripts)}
         tags={[]}
         lastShownRun={shown}
         onSaved={(id) => pushAddress(routes.workflow(id))}
@@ -164,14 +164,14 @@ function AddressHarness({ workflow, start }: { workflow: Workflow; start: string
       revision='"r1"'
       workflows={sampleWorkflows}
       catalogue={catalogue}
-      sources={sourcesFor()}
+      sources={sourcesFor(scripts)}
       tags={[]}
       onRunShown={(_workflow, run) => setShown(run)}
     />
   );
 }
 
-export function openAt(workflow: Workflow, path: string) {
+export function openAt(workflow: Workflow, path: string, scripts?: Sources["scripts"]) {
   window.history.replaceState(null, "", path);
-  return renderWithProviders(<AddressHarness workflow={workflow} start={path} />);
+  return renderWithProviders(<AddressHarness workflow={workflow} start={path} scripts={scripts} />);
 }

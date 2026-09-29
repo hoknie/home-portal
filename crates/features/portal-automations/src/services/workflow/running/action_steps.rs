@@ -23,6 +23,7 @@ pub async fn run_action(runner: &WorkflowRunner, kind: &StepKind, frame: &mut Fr
                 Ok(title) => title.unwrap_or_default(),
                 Err(message) => return StepReport::failed(message),
             };
+            runner.publish(frame, None);
             match runner
                 .budget
                 .guard(runner.actions.notify(channel.as_deref(), &title, &text))
@@ -44,6 +45,7 @@ pub async fn run_action(runner: &WorkflowRunner, kind: &StepKind, frame: &mut Fr
                 Ok(service) => service,
                 Err(message) => return StepReport::failed(message),
             };
+            runner.publish(frame, None);
             match runner.budget.guard(runner.actions.probe(&service)).await {
                 Ok(Ok(probe)) => StepReport::done(
                     WorkflowRunner::step_result(&[

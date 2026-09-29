@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
@@ -26,7 +26,7 @@ afterEach(() => {
 type Entry = NonNullable<Run["trace"]>["entries"][number];
 
 function entry(path: string, step: string, kind: string, outcome: Entry["outcome"], detail = ""): Entry {
-  return { path, step, label: step, kind, iteration: null, outcome, started_at: "2026-09-28T03:00:00Z", duration_milliseconds: 15, detail, output: null, shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null };
+  return { path, step, label: step, kind, iteration: null, outcome, started_at: "2026-09-28T03:00:00Z", duration_milliseconds: 15, detail, output: null, shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null, wait_seconds: null };
 }
 
 function run(result: Run["outcome"]["result"], entries: Entry[]): Run {
@@ -325,4 +325,70 @@ it("seeing why a script failed: the run panel names the last error line and Deta
   expect(within(dialog).getByText("restart.sh 'jellyfin'")).toBeInTheDocument();
   expect(within(dialog).getByText("Exit code").nextElementSibling).toHaveTextContent("1");
   expect(within(dialog).getByText("Standard error").parentElement).toHaveTextContent("container not found");
+});
+
+it("a timer that runs counts down every second between answers and turns green when the wait ends", async () => {
+  const waiting = run("running", [{ ...entry("steps[0]", "nap", "wait", "running"), duration_milliseconds: 0, wait_seconds: 60 }]);
+  const done = run("succeeded", [{ ...entry("steps[0]", "nap", "wait", "succeeded", "60 s"), duration_milliseconds: 60_000, wait_seconds: 60 }]);
+  const answers: ((response: Response) => void)[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (path: string) =>
+      path === "/api/automations/runs/7"
+        ? new Promise<Response>((resolve) => {
+            answers.push(resolve);
+          })
+        : jsonResponse({ error: "not found" }, { status: 404 }),
+    ),
+  );
+  openAt(withSteps([{ id: "nap", kind: "wait", seconds: 60 }], fresh), "/admin/workflows/draft/history/7/");
+  await node("nap");
+  await waitFor(() => expect(answers.length).toBeGreaterThan(0));
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "Date"] });
+  const tick = (milliseconds: number) =>
+    act(async () => {
+      await vi.advanceTimersByTimeAsync(milliseconds);
+    });
+  try {
+    const badge = () => document.querySelector("[data-path='steps[0]'] [data-live='countdown']");
+    answers[0](jsonResponse(waiting));
+    for (let round = 0; round < 20 && badge() === null; round += 1) {
+      await tick(10);
+    }
+    expect(badge()?.textContent).toBe("60 s");
+    await tick(1_000);
+    expect(badge()?.textContent).toBe("59 s");
+    await tick(1_000);
+    expect(badge()?.textContent).toBe("58 s");
+    expect(badge()?.getAttribute("aria-label")).toBe("58 seconds left");
+    answers.slice(1).forEach((answer) => answer(jsonResponse(done)));
+    for (let round = 0; round < 50 && badge() !== null; round += 1) {
+      await tick(100);
+      answers.slice(1).forEach((answer) => answer(jsonResponse(done)));
+    }
+    expect(badge()).toBeNull();
+    expect(document.querySelector("[data-path='steps[0]']")).toHaveAttribute("data-outcome", "succeeded");
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("values on the nodes: a template shows what it gave as a chip naming the template, and Templates brings it back", async () => {
+  const answered = { ...entry("steps[0]", "ping", "http", "succeeded"), values: [{ template: "http://{{inputs.host}}/ping", value: '"http://nas.lan/ping"' }] };
+  vi.stubGlobal("fetch", serving([{ ...run("succeeded", [answered]), id: "8" }]));
+  openAt(withSteps([{ id: "ping", kind: "http", url: "http://{{inputs.host}}/ping" }], fresh), "/admin/workflows/draft/history/8/");
+  const ping = await node("ping");
+  await waitFor(() => expect(ping).toHaveTextContent("GET http://nas.lan/ping"));
+  expect(ping.textContent).not.toMatch(/[-]/);
+  const chip = ping.querySelector<HTMLElement>("[data-template]")!;
+  expect(chip).toHaveTextContent("http://nas.lan/ping");
+  expect(chip).toHaveAttribute("data-template", "http://{{inputs.host}}/ping");
+  act(() => {
+    chip.focus();
+  });
+  expect(await screen.findByRole("tooltip")).toHaveTextContent("http://{{inputs.host}}/ping");
+  await userEvent.click(screen.getByRole("radio", { name: "Templates" }));
+  expect(ping).toHaveTextContent("GET http://{{inputs.host}}/ping");
+  expect(ping.querySelector("[data-template]")).toBeNull();
+  expect(window.localStorage.getItem("home-portal.workflow-editor.show-values")).toBe("0");
 });

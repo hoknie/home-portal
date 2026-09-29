@@ -22,6 +22,7 @@ pub struct TraceEntry {
     pub log: StepLog,
     pub item: Option<String>,
     pub level: Option<LogLevel>,
+    pub wait_seconds: Option<u64>,
 }
 
 impl TraceEntry {

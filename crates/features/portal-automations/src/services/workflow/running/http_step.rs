@@ -12,6 +12,7 @@ pub async fn run_http(runner: &WorkflowRunner, step: &HttpStep, frame: &Frame) -
         Ok(request) => request,
         Err(message) => return StepReport::failed(message),
     };
+    runner.publish(frame, None);
     let began = std::time::Instant::now();
     let answer = match runner.budget.guard(runner.http.send(&request)).await {
         Ok(Ok(answer)) => answer,

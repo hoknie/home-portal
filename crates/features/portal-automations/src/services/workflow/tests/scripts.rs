@@ -192,3 +192,88 @@ async fn the_output_budget_of_a_run_keeps_the_later_entries_short() {
         kept.iter().map(|streams| streams.bytes()).sum::<usize>() <= Streams::MOST_BYTES_PER_RUN
     );
 }
+
+#[tokio::test]
+async fn a_script_error_a_condition_handles_lets_the_run_go_on() {
+    let outcome = scripted(
+        "[[workflows]]\nid = \"w\"\ntitle = \"W\"\ninputs = [\"service\"]\n[[workflows.steps]]\nid = \"restart\"\nkind = \"script\"\nscript = \"restart.sh\"\nfail_on_error = false\n[[workflows.steps]]\nid = \"check\"\nkind = \"if\"\ncondition = { left = \"{{steps.restart.exit_code}}\", op = \"==\", right = \"0\" }\nthen = [{ id = \"fine\", kind = \"nothing\" }]\nelse = [{ id = \"tell\", kind = \"log\", message = \"restart failed\" }]\n",
+        &[("restart.sh", "echo 'container not found' >&2; exit 1")],
+    )
+    .await;
+    assert_eq!(outcome.ending, Ending::Succeeded(None));
+    let restart = &outcome.trace.entries[0];
+    assert_eq!(restart.outcome, StepOutcome::Succeeded);
+    assert_eq!(restart.detail, "restart.sh exited 1: container not found");
+    assert!(
+        restart
+            .log
+            .lines
+            .iter()
+            .any(|line| line.ends_with("exit 1, tolerated")),
+        "{:?}",
+        restart.log.lines
+    );
+    assert_eq!(outcome.frame.steps["restart"]["exit_code"], json!(1));
+    assert_eq!(outcome.trace.entries[1].detail, "else");
+    assert!(
+        outcome
+            .trace
+            .entries
+            .iter()
+            .any(|entry| entry.step == "tell")
+    );
+}
+
+#[tokio::test]
+async fn a_script_that_fails_the_run_by_default_still_does() {
+    let outcome = scripted(
+        &workflow(30, "script = \"restart.sh\""),
+        &[("restart.sh", "echo 'container not found' >&2; exit 1")],
+    )
+    .await;
+    assert_eq!(
+        outcome.ending,
+        Ending::Failed("restart.sh exited 1: container not found".into())
+    );
+}
+
+#[tokio::test]
+async fn a_tolerant_script_that_runs_past_its_own_timeout_still_fails() {
+    let outcome = scripted(
+        &workflow(
+            30,
+            "script = \"slow.sh\"\ntimeout_seconds = 1\nfail_on_error = false",
+        ),
+        &[("slow.sh", "sleep 10")],
+    )
+    .await;
+    assert!(
+        matches!(&outcome.ending, Ending::Failed(reason) if reason.contains("timed out")),
+        "{:?}",
+        outcome.ending
+    );
+    assert_eq!(outcome.trace.entries[0].outcome, StepOutcome::Failed);
+}
+
+#[tokio::test]
+async fn a_long_error_line_is_shortened_in_the_detail_and_kept_whole_in_the_stream() {
+    let long = "x".repeat(400);
+    let outcome = scripted(
+        &workflow(30, "script = \"loud.sh\""),
+        &[("loud.sh", &format!("echo '{long}' >&2; exit 2"))],
+    )
+    .await;
+    let entry = &outcome.trace.entries[0];
+    let reason = entry.detail.strip_prefix("loud.sh exited 2: ").unwrap();
+    assert_eq!(reason.chars().count(), 120);
+    assert!(reason.ends_with('…'));
+    assert!(
+        entry
+            .streams
+            .as_ref()
+            .unwrap()
+            .stderr
+            .text()
+            .contains(&long)
+    );
+}

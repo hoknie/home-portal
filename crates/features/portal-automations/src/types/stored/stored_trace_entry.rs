@@ -44,6 +44,8 @@ pub struct StoredTraceEntry {
     pub item: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub level: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wait_seconds: Option<u64>,
 }
 
 fn is_zero(count: &usize) -> bool {
@@ -96,6 +98,7 @@ impl StoredTraceEntry {
             log_dropped: entry.log.lines_dropped,
             item: entry.item.clone(),
             level: entry.level.map(|level| level.name().to_string()),
+            wait_seconds: entry.wait_seconds,
         }
     }
 
@@ -131,6 +134,7 @@ impl StoredTraceEntry {
             },
             item: self.item,
             level: self.level.as_deref().and_then(LogLevel::of),
+            wait_seconds: self.wait_seconds,
         })
     }
 }

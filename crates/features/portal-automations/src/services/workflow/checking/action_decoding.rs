@@ -131,6 +131,7 @@ pub fn decode_script(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) ->
         env,
         stdin: raw.stdin.clone().filter(|stdin| !stdin.trim().is_empty()),
         timeout,
+        fail_on_error: raw.fail_on_error.unwrap_or(true),
     })
 }
 

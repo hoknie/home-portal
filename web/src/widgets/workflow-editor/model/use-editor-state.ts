@@ -29,6 +29,7 @@ import { type Draft, draftOf } from "./draft";
 import type { EditorApi, Sources } from "./editor-context";
 import { type History, historyOf, recorded, redone, undone } from "./edits/history";
 import { problemsFor } from "./checks/problems";
+import { rememberShowValues, showValuesRemembered } from "./values-on-nodes";
 import type { Problems } from "./checks/validation";
 
 export const NARROW_QUERY = "(max-width: 767px)";
@@ -66,6 +67,7 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
   const [palette, setPalette] = useState<Target | null>(null);
   const [server, setServer] = useState<Problems>({});
   const [idFollowsTitle, setIdFollowsTitle] = useState(workflow === null);
+  const [showValues, setShowValuesState] = useState(showValuesRemembered);
   const [revealed, setRevealed] = useState<{ id: string; at: number } | null>(null);
   const narrow = useNarrow();
   const draft = history.present;
@@ -101,7 +103,13 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
     overlay,
     workflowId: own,
     run: visible ? (liveRun ?? null) : null,
+    runReceivedAt: live.dataUpdatedAt,
     runMissing,
+    showValues,
+    setShowValues: (show) => {
+      rememberShowValues(show);
+      setShowValuesState(show);
+    },
     readOnly,
     stale: visible && liveRun !== undefined && liveRun.steps_version !== null && workflow !== null && workflow.steps_version !== "" && liveRun.steps_version !== workflow.steps_version,
     selected,

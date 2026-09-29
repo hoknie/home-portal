@@ -33,9 +33,13 @@ export function StepLog({ entry }: { entry: TraceEntry }) {
           <dl className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-2 gap-y-1 font-mono">
             {entry.values.map((value, index) => (
               <div key={`${index}-${value.template}`} className="contents">
-                <dt className="break-all text-muted-foreground">{value.template}</dt>
+                <dt className="line-clamp-2 break-all text-muted-foreground" title={value.template}>
+                  {value.template}
+                </dt>
                 <ArrowRight aria-hidden className="mt-0.5 size-3 text-muted-foreground" />
-                <dd className="break-all">{value.value}</dd>
+                <dd className="line-clamp-2 break-all" title={value.value}>
+                  {value.value}
+                </dd>
               </div>
             ))}
           </dl>
@@ -47,7 +51,7 @@ export function StepLog({ entry }: { entry: TraceEntry }) {
           <p className="text-muted-foreground">{t("log")}</p>
           <ol className="grid gap-0.5 font-mono">
             {entry.log.map((line, index) => (
-              <li key={`${index}-${line}`} className="break-all">
+              <li key={`${index}-${line}`} className="line-clamp-2 break-all" title={line}>
                 {line}
               </li>
             ))}

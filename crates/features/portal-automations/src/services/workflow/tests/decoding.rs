@@ -279,3 +279,24 @@ fn an_id_the_interface_uses_is_refused_listing_every_reserved_id() {
         );
     }
 }
+
+#[test]
+fn a_script_step_may_let_a_failure_through_and_fails_the_run_by_default() {
+    let text = "[[workflows]]\nid = \"w\"\ntitle = \"W\"\n[[workflows.steps]]\nid = \"tolerant\"\nkind = \"script\"\nscript = \"restart.sh\"\nfail_on_error = false\n[[workflows.steps]]\nid = \"strict\"\nkind = \"script\"\nscript = \"restart.sh\"\n";
+    let section = section(text);
+    assert!(
+        workflow_errors(&section).is_empty(),
+        "{:?}",
+        workflow_errors(&section)
+    );
+    let workflows = crate::services::workflow::decoded_workflows(&section);
+    let switches: Vec<bool> = workflows[0]
+        .steps
+        .iter()
+        .map(|step| match &step.kind {
+            StepKind::Script { fail_on_error, .. } => *fail_on_error,
+            other => panic!("{other:?}"),
+        })
+        .collect();
+    assert_eq!(switches, vec![false, true]);
+}

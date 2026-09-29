@@ -3,7 +3,7 @@ use std::time::Duration;
 use time::OffsetDateTime;
 
 use super::{Streams, TraceEntry};
-use crate::types::{EntryEnd, StepLog};
+use crate::types::{EntryEnd, StepLog, StepOutcome};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Trace {
@@ -46,6 +46,20 @@ impl Trace {
         entry.shape = end.shape;
         entry.streams = streams;
         entry.duration = Duration::try_from(now - entry.started_at).unwrap_or_default();
+    }
+
+    pub fn progress(&mut self, index: usize, values: Option<StepLog>, wait_seconds: Option<u64>) {
+        let Some(entry) = self.entries.get_mut(index) else {
+            return;
+        };
+        if entry.outcome != StepOutcome::Running {
+            return;
+        }
+        if let Some(values) = values {
+            entry.log.values = values.values;
+            entry.log.values_dropped = values.values_dropped;
+        }
+        entry.wait_seconds = wait_seconds.or(entry.wait_seconds);
     }
 
     fn budgeted(&mut self, streams: Streams) -> Streams {

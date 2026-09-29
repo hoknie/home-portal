@@ -39,6 +39,7 @@ pub async fn run_automation(
         )
         .logged(queued);
     }
+    runner.publish(frame, None);
     let waited = runner
         .budget
         .guard(async {

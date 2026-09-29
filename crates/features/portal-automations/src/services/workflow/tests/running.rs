@@ -56,6 +56,17 @@ pub async fn run_prepared(
     scripts: &[(&str, &str)],
     secrets: Secrets,
 ) -> Outcome {
+    run_peeking(text, (actions, stop), scripts, (secrets, None))
+        .await
+        .0
+}
+
+pub async fn run_peeking(
+    text: &str,
+    (actions, stop): (Arc<FakeActions>, watch::Receiver<bool>),
+    scripts: &[(&str, &str)],
+    (secrets, peek): (Secrets, Option<Duration>),
+) -> (Outcome, Option<Trace>) {
     let folder = tempfile::tempdir().unwrap();
     let root = folder.path().join("scripts");
     std::fs::create_dir(&root).unwrap();
@@ -98,16 +109,28 @@ pub async fn run_prepared(
         .unwrap(),
         Arc::new(secrets),
     );
-    let ending = runner.run(&workflow, &mut frame).await;
+    let peeked = async {
+        match peek {
+            Some(after) => {
+                tokio::time::sleep(after).await;
+                Some(runner.trace().clone())
+            }
+            None => None,
+        }
+    };
+    let (ending, seen) = tokio::join!(runner.run(&workflow, &mut frame), peeked);
     let trace = runner.trace().clone();
     drop(folder);
-    Outcome {
-        ending,
-        trace,
-        actions,
-        starter,
-        frame,
-    }
+    (
+        Outcome {
+            ending,
+            trace,
+            actions,
+            starter,
+            frame,
+        },
+        seen,
+    )
 }
 
 pub async fn run(text: &str) -> Outcome {

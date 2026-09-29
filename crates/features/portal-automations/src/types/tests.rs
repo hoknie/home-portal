@@ -241,6 +241,7 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
             env: Vec::new(),
             stdin: None,
             timeout: crate::types::NumberSetting::Fixed(1),
+            fail_on_error: true,
         },
         StepKind::Notify {
             channel: None,

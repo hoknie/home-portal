@@ -305,6 +305,7 @@ pub fn traced(entries: &[Entry]) -> TraceResponse {
                     log_dropped: 0,
                     item: iteration.map(|index| format!("\"try {}\"", index + 1)),
                     level: (*kind == "log").then(|| "warning".to_string()),
+                    wait_seconds: (*kind == "wait").then_some(20),
                 },
             )
             .collect(),

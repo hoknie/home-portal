@@ -252,7 +252,8 @@
             "stdout": null,
             "step": "first_probe",
             "values": [],
-            "values_dropped": 0
+            "values_dropped": 0,
+            "wait_seconds": null
           },
           {
             "budget_reached": false,
@@ -283,7 +284,8 @@
                 "value": "\"down\""
               }
             ],
-            "values_dropped": 0
+            "values_dropped": 0,
+            "wait_seconds": null
           },
           {
             "budget_reached": false,
@@ -306,7 +308,8 @@
             "stdout": null,
             "step": "retry",
             "values": [],
-            "values_dropped": 0
+            "values_dropped": 0,
+            "wait_seconds": null
           },
           {
             "budget_reached": false,
@@ -329,7 +332,8 @@
             "stdout": null,
             "step": "restart",
             "values": [],
-            "values_dropped": 0
+            "values_dropped": 0,
+            "wait_seconds": null
           },
           {
             "budget_reached": false,
@@ -352,7 +356,8 @@
             "stdout": null,
             "step": "settle",
             "values": [],
-            "values_dropped": 0
+            "values_dropped": 0,
+            "wait_seconds": 20
           }
         ]
       },

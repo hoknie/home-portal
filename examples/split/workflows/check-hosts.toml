@@ -28,6 +28,7 @@ script = "echo-event.sh"
 args = ["hosts"]
 env = { HOSTS = "{{steps.names.value | join(' ')}}" }
 stdin = "{{vars.report}}"
+fail_on_error = false
 
 # An automation step queues an automation as "Run now" would; its fields replace the event's.
 # With wait = true it waits for the outcome. A workflow cannot start the automation that

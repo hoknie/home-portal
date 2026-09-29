@@ -47,6 +47,7 @@ pub async fn run_wait(
         Ok(seconds) => seconds,
         Err(message) => return StepReport::failed(message),
     };
+    runner.publish(frame, Some(seconds));
     match runner.budget.pause(Duration::from_secs(seconds)).await {
         Ok(()) => StepReport::done(Value::Null, format!("{seconds} s"))
             .logged(format!("waited {seconds} s")),

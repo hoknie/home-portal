@@ -9,9 +9,12 @@ import { operatorName, parsePath } from "@/entities/workflow";
 
 import { useEditor } from "../../model/editor-context";
 import { summaryOf } from "../../model/summary";
+import { partsOf, valuesOf, withValues } from "../../model/values-on-nodes";
 import { FALLBACK_ICON, GROUP_TONE, KIND_ICONS, OUTCOME_DOT, OUTCOME_TINT } from "./kind-style";
 import type { CanvasNode } from "./node-data";
+import { LiveBadge } from "./live-badge";
 import { NodeMenu } from "./node-menu";
+import { NodeSummary } from "./node-summary";
 
 const HIDDEN_HANDLE = "!size-1 !min-w-0 !border-0 !bg-transparent";
 
@@ -35,10 +38,13 @@ export function StepNode({ id, data, selected }: NodeProps<CanvasNode>) {
   const errors = own.filter((problem) => problem.severity === "error").length;
   const warnings = own.length - errors;
   const run = editor.overlay.get(id);
-  const summary = summaryOf(step, editor.sources.workflows, editor.sources.automations, (operator) =>
+  const running = run?.running ? [...run.entries].reverse().find((entry) => entry.outcome === "running") : undefined;
+  const valued = withValues(step, run && editor.readOnly && editor.showValues ? valuesOf(run.entries) : []);
+  const summary = summaryOf(valued.step, editor.sources.workflows, editor.sources.automations, (operator) =>
     operators.has(operatorName(operator) as "equals") ? operators(operatorName(operator) as "equals") : operator,
   );
   const summaryText = "text" in summary ? summary.text : t(summary.key as "summaries.wait", summary.params);
+  const parts = partsOf(summaryText, valued.shown);
   const kindName = help.has(`kinds.${step.kind}.name` as "kinds.if.name") ? help(`kinds.${step.kind}.name` as "kinds.if.name") : step.kind;
   return (
     <div
@@ -95,8 +101,10 @@ export function StepNode({ id, data, selected }: NodeProps<CanvasNode>) {
           </span>
         </div>
         <div className="flex min-w-0 items-center gap-2">
-          <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground">{summaryText}</span>
-          {run ? (
+          <NodeSummary parts={parts} />
+          {running ? (
+            <LiveBadge entry={running} receivedAt={editor.runReceivedAt} />
+          ) : run ? (
             <span className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-1.5 text-[11px] tabular-nums text-muted-foreground">
               <span className={cn("size-1.5 rounded-full", OUTCOME_DOT[run.running ? "running" : run.outcome])} aria-hidden />
               {run.passes > 1 ? t("run.passes", { count: run.passes, milliseconds: run.durationMilliseconds }) : t("run.duration", { milliseconds: run.durationMilliseconds })}

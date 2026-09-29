@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 function entry(path: string, step: string, kind: string, outcome: TraceEntry["outcome"], output: string | null = null): TraceEntry {
-  return { path, step, label: step, kind, iteration: null, outcome, started_at: "2026-09-25T03:00:00Z", duration_milliseconds: 20, detail: "", output, shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null };
+  return { path, step, label: step, kind, iteration: null, outcome, started_at: "2026-09-25T03:00:00Z", duration_milliseconds: 20, detail: "", output, shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null, wait_seconds: null };
 }
 
 function workflowRun(entries: TraceEntry[], result: Run["outcome"]["result"]): Run {
@@ -82,4 +82,13 @@ it("the log from the journal: a script entry opens its log from Details instead 
   const dialog = await screen.findByRole("dialog", { name: "Log of restart" });
   expect(within(dialog).getByText("restart.sh 'jellyfin'")).toBeInTheDocument();
   expect(within(dialog).getByText("Standard error").parentElement).toHaveTextContent("container not found");
+});
+
+it("the detail under a step's name stays on one line, with the whole text on hover", () => {
+  const long = `restart.sh exited 1: ${"x".repeat(200)}`;
+  renderWithProviders(<TraceTimeline trace={{ entries: [{ ...entry("steps[0].then[0]", "restart", "script", "failed"), detail: long }], dropped: 0 }} indent={false} />);
+  const detail = document.querySelector("[data-detail]")!;
+  expect(detail.className).toContain("truncate");
+  expect(detail).toHaveAttribute("title", long);
+  expect(detail.closest("li")).not.toHaveAttribute("style");
 });

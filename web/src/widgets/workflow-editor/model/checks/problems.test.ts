@@ -32,7 +32,7 @@ function context(extra: Partial<ProblemContext> = {}): ProblemContext {
     server: {},
     secrets: [{ name: "calendar_password", set: false }],
     lastRun: {
-      entries: [{ path: "steps[0]", step: "ping", label: "ping", kind: "http", iteration: null, outcome: "succeeded", started_at: "", duration_milliseconds: 1, detail: "", output: '{"state":"up"}', shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null }],
+      entries: [{ path: "steps[0]", step: "ping", label: "ping", kind: "http", iteration: null, outcome: "succeeded", started_at: "", duration_milliseconds: 1, detail: "", output: '{"state":"up"}', shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null, wait_seconds: null }],
       dropped: 0,
     },
     workflow: { ...note, used_by: [] },

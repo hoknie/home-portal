@@ -1400,7 +1400,15 @@
       "chooseStep": "Elige un paso en el lienzo o en la lista para ver sus valores y su registro.",
       "stepDetails": "Datos del paso",
       "allRuns": "Todas las ejecuciones",
-      "notFound": "Esta ejecución no es de este flujo, o ya no se conserva."
+      "notFound": "Esta ejecución no es de este flujo, o ya no se conserva.",
+      "seconds": "{seconds} s",
+      "secondsLeft": "Quedan {seconds} segundos",
+      "runningFor": "En curso desde hace {seconds} segundos",
+      "valuesLabel": "Qué mostrar en los nodos",
+      "showValues": "Valores",
+      "showTemplates": "Plantillas",
+      "stepsCount": "{count, plural, one {# paso} other {# pasos}}",
+      "moreBelow": "Hay más pasos abajo"
     },
     "summaries": {
       "wait": "esperar {seconds} s",
@@ -1545,6 +1553,15 @@
       "failed": "Fin: con error",
       "break": "Salir del bucle",
       "continue": "Siguiente pasada"
+    },
+    "card": {
+      "title": "Paso {label}",
+      "label": "Etiqueta",
+      "id": "Id",
+      "yes": "sí",
+      "no": "no",
+      "byDefault": "(predeterminado)",
+      "settings": "Ajustes"
     }
   },
   "templateInput": {
@@ -1799,6 +1816,10 @@
         "stdin": {
           "label": "Entrada estándar",
           "help": "Un valor que el script recibe por su entrada estándar como JSON, en lugar de los campos del evento; por ejemplo '{{'vars.report'}}'."
+        },
+        "fail_on_error": {
+          "label": "Continuar la ejecución si el script falla",
+          "help": "Activado, la ejecución sigue tras un código de salida distinto de cero, con exit_code, stdout y stderr para los pasos siguientes. Desactivado, ese código hace fallar la ejecución."
         }
       },
       "notify": {

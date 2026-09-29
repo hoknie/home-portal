@@ -149,6 +149,7 @@ pub const KINDS: &[Kind] = &[
                 .between(1, 3600)
                 .templated()
                 .defaulting("60"),
+            Field::of("fail_on_error", Boolean).defaulting("true"),
         ],
         results: &["exit_code", "stdout", "stderr"],
         exclusive: &[],

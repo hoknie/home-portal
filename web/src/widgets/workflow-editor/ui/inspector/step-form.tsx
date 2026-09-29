@@ -20,13 +20,14 @@ import { TransformChain } from "./transform/transform-chain";
 import { VALUE_FIELDS, ValueField, headerSuggestions } from "./value-field";
 
 export const NESTED_TYPES = ["steps", "branches"];
+export const INVERTED_FIELDS = ["script.fail_on_error"];
 export const MULTILINE_FIELDS = ["text", "body"];
 export const MOST_BRANCHES = 4;
 export const FEWEST_BRANCHES = 2;
 
 const UNSET = "-";
 
-function useFieldText(kind: string, field: KindField) {
+export function useFieldText(kind: string, field: KindField) {
   const t = useTranslations("workflowHelp.fields");
   const label = `${kind}.${field.name}.label` as Parameters<typeof t>[0];
   const help = `${kind}.${field.name}.help` as Parameters<typeof t>[0];
@@ -101,16 +102,25 @@ function Field({ path, step, field }: { path: Path; step: Step; field: KindField
           />
         </FormField>
       );
-    case "boolean":
+    case "boolean": {
+      const inverted = INVERTED_FIELDS.includes(`${step.kind}.${field.name}`);
       return (
         <div className="grid gap-1">
           <div className="flex items-center gap-2">
-            <Switch id={id} checked={typeof value === "boolean" ? value : field.default === "true"} onCheckedChange={(checked) => set(checked)} />
+            <Switch
+              id={id}
+              checked={(typeof value === "boolean" ? value : field.default === "true") !== inverted}
+              onCheckedChange={(checked) => {
+                const next = checked !== inverted;
+                set(String(next) === field.default ? undefined : next);
+              }}
+            />
             <Label htmlFor={id}>{text.label}</Label>
           </div>
           {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
         </div>
       );
+    }
     case "choice": {
       const current = typeof value === "string" && value !== "" ? value : (field.default ?? UNSET);
       return (

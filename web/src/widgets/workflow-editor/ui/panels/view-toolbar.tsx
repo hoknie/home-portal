@@ -16,10 +16,11 @@ export type ViewToolbarProps = {
   runDisabled: boolean;
   onRun: () => void;
   onLegend: () => void;
+  onHistory: () => void;
   remove: ReactNode;
 };
 
-export function ViewToolbar({ workflowId, historyOpen, running, runDisabled, onRun, onLegend, remove }: ViewToolbarProps) {
+export function ViewToolbar({ workflowId, historyOpen, running, runDisabled, onRun, onLegend, onHistory, remove }: ViewToolbarProps) {
   const t = useTranslations("workflowEditor.toolbar");
   return (
     <div className="glass-panel flex flex-wrap items-center gap-1 rounded-xl p-1.5" role="toolbar" aria-label={t("pageLabel")}>
@@ -30,6 +31,7 @@ export function ViewToolbar({ workflowId, historyOpen, running, runDisabled, onR
       <AddressLink
         href={historyOpen ? routes.workflow(workflowId) : routes.workflowHistory(workflowId)}
         aria-current={historyOpen ? "page" : undefined}
+        onClick={onHistory}
         className={cn(buttonVariants({ variant: historyOpen ? "secondary" : "ghost", size: "sm" }))}
       >
         <History aria-hidden />

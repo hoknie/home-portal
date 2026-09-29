@@ -29,7 +29,10 @@ export type EditorApi = {
   overlay: Overlay;
   workflowId: string | null;
   run: Run | null;
+  runReceivedAt: number;
   runMissing: boolean;
+  showValues: boolean;
+  setShowValues: (show: boolean) => void;
   readOnly: boolean;
   stale: boolean;
   selected: string | null;

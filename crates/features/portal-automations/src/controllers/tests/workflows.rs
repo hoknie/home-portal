@@ -335,3 +335,33 @@ async fn an_old_telegram_step_loads_and_is_saved_as_a_notify_step_to_telegram() 
     assert_eq!(answer["steps"][0]["kind"], "notify");
     assert_eq!(answer["steps"][0]["channel"], "telegram");
 }
+
+#[tokio::test]
+async fn a_script_that_may_fail_is_written_back_with_its_switch() {
+    let api = ready();
+    let current = revision(&api).await;
+    let body = json!({
+        "id": "revive",
+        "title": "Revive",
+        "inputs": ["service"],
+        "steps": [
+            {"id": "restart", "kind": "script", "script": "restart.sh", "fail_on_error": false},
+            {"id": "again", "kind": "script", "script": "restart.sh"}
+        ]
+    });
+    let (status, _, answer) = send(
+        &api,
+        write(
+            "PUT",
+            "/api/workflows/revive",
+            Some(&current),
+            &body.to_string(),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{answer}");
+    let saved = text(&api);
+    assert_eq!(saved.matches("fail_on_error = false").count(), 1, "{saved}");
+    assert_eq!(saved.matches("fail_on_error").count(), 1, "{saved}");
+    assert_eq!(answer["steps"][0]["fail_on_error"], false);
+}
