@@ -50,8 +50,13 @@ the configuration file says so, because anyone who can sign in could then put co
 - Hidden files and anything deeper than one subfolder are ignored.
 - A script that others can write, or that is owned by someone else, is refused, not run.
 - Scripts can only be changed from inside your own networks, never from the internet.
+- On a Mac, a script has the portal's permissions. A script that reads external disks, your
+  folders or drives other applications needs those permissions granted to the portal: see
+  [macOS permissions](host-permissions.md).
+- Browsing, creating, changing and deleting scripts each need their own right (see
+  [Users, groups and sign-in](users-and-sign-in.md)).
 
 ## See also
 
-- [Automations](automations.md), [Webhooks](webhooks.md), [Workflows](workflows.md)
+- [Automations](automations.md), [Webhooks](webhooks.md), [Workflows](workflows.md), [macOS permissions](host-permissions.md)
 - [Configuration](../CONFIGURATION.md)

@@ -14,7 +14,8 @@ program with no database.
   HTTPS through Caddy, which the portal downloads and runs, optionally behind its sign-in.
 - **[Local DNS](docs/features/local-dns.md)** — names like `jellyfin.home` that resolve on your
   networks without editing your router's records.
-- **[Users and sign-in](docs/features/users-and-sign-in.md)** — who may manage the portal.
+- **[Users, groups and sign-in](docs/features/users-and-sign-in.md)** — who may sign in, and groups with
+  rights per module and function; the built-in `admin` group may do everything.
 - **[Automations](docs/features/automations.md)**, **[webhooks](docs/features/webhooks.md)** and
   **[workflows](docs/features/workflows.md)** — run your own scripts on a schedule, on portal events or
   when another system calls, and chain steps on a canvas you can watch while they run.
@@ -22,6 +23,8 @@ program with no database.
 - **[Scripts](docs/features/scripts.md)**, **[network settings](docs/features/network-and-restart.md)**
   and **[modules](docs/features/modules.md)** — where your scripts live, the portal's own address, and
   switching the optional parts on and off.
+- **[macOS permissions](docs/features/host-permissions.md)** — the portal asks for the local network, disks,
+  folders and Automation at start, so your scripts never wait on a prompt.
 
 The settings are plain TOML files that the interface edits in place, keeping your comments.
 

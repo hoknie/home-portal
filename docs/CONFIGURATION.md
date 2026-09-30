@@ -13,13 +13,13 @@ set). The packages use `/etc/home-portal/home-portal.toml`; `HOME_PORTAL_CONFIG`
 else.
 
 The main file holds only the short settings: `[interface]`, `[network]`, `[environments.*]`,
-`[modules]`, `[storage]` and `[scripts]`. Each other part lives in its own file in the same folder:
+`[modules]`, `[storage]`, `[scripts]` and `[permissions]`. Each other part lives in its own file in the same folder:
 
 | File | What it holds | Read more |
 |---|---|---|
 | `services.toml` | `[[services]]` | [Services and their status](features/services-and-status.md) |
 | `dashboard.toml` | the home page's sections and widgets | [The home page](features/home-page.md) |
-| `users.toml` | `[[users]]` | [Users and sign-in](features/users-and-sign-in.md) |
+| `users.toml` | `[[users]]` and `[[groups]]` | [Users, groups and sign-in](features/users-and-sign-in.md) |
 | `proxy.toml` / `dns.toml` | `[proxy]` / `[dns]` | [Reverse proxy](features/reverse-proxy.md), [Local DNS](features/local-dns.md) |
 | `automations.toml` / `webhooks.toml` | `[[automations]]` / `[[webhooks]]` | [Automations](features/automations.md), [Webhooks](features/webhooks.md) |
 | `workflows/` | one file per workflow, named after its id | [Workflows](features/workflows.md) |
@@ -41,6 +41,7 @@ comments, and leaves a `.previous` copy. `[files]` moves a part elsewhere inside
 | `[interface]` `default_language` | `en`, `ru` or `es` when the visitor has not chosen one | |
 | `[scripts]` `editing` | Allows editing scripts in the browser; off unless set here | [Scripts](features/scripts.md) |
 | `[storage]` | Where the portal keeps what it writes, see below | |
+| `[permissions]` | Which macOS permissions the portal asks for at start | [macOS permissions](features/host-permissions.md) |
 
 `HOME_PORTAL_WEB` names the interface folder when it is not beside the binary or in
 `../share/home-portal/web`.

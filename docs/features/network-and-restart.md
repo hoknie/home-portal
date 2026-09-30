@@ -37,5 +37,5 @@ interface.
 
 ## See also
 
-- [Reverse proxy](reverse-proxy.md) · [Users and sign-in](users-and-sign-in.md) ·
+- [Reverse proxy](reverse-proxy.md) · [Users, groups and sign-in](users-and-sign-in.md) ·
   [Configuration](../CONFIGURATION.md) · [Install](../INSTALL.md)

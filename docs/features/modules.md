@@ -37,10 +37,13 @@ All switches live in `[modules]` in the main configuration file:
 - Older files that say `proxy.enabled` or `dns.enabled` still work; the first switch from the
   page moves the setting into `[modules]`.
 - Switching the proxy on also lets the portal trust Caddy running on the same machine.
+- Seeing which modules are on needs the right to read modules, and switching them needs the
+  right to change them (see [Users, groups and sign-in](users-and-sign-in.md)). Someone without
+  the first still finds, in the menu, every module they may read.
 
 ## See also
 
 - [Reverse proxy](reverse-proxy.md) · [Local DNS](local-dns.md) · [Automations](automations.md) ·
-  [Webhooks](webhooks.md) · [Workflows](workflows.md) · [Users and sign-in](users-and-sign-in.md) ·
+  [Webhooks](webhooks.md) · [Workflows](workflows.md) · [Users, groups and sign-in](users-and-sign-in.md) ·
   [Notifications](notifications.md)
 - The commented `[modules]` section in [`config/home-portal.example.toml`](../../config/home-portal.example.toml)

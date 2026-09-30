@@ -973,6 +973,7 @@ too.
   - `AreaGate` in `app/admin/layout.tsx` maps each admin path to its area and shows `shared/ui/no-access` without the right, before any query of the page runs;
   - action buttons are guarded inside their `features/` slices, and forms without `update` become a disabled `fieldset` without a submit;
   - the navigation filters links with `mayOpen`;
+  - `useSession` does not refetch a refused session on mount (`retryOnMount: false`). Otherwise the guest frame, whose children mount after the 401, would send the query back to pending and loop, and a visitor would see neither the public page nor "Sign in";
   - `testQueryClient()` starts with an `admin` session, and tests of other people set theirs.
 - **Webhooks can be run from the interface.** `POST /api/webhooks/{id}/run` needs `webhooks.execute` and runs exactly what a received call runs, without the token, through `services/webhook_reception.rs`, which the public receiver shares. The journal records who started it.
 

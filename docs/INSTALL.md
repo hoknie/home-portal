@@ -19,10 +19,13 @@ sha256sum --check --ignore-missing SHA256SUMS      # shasum -a 256 -c on macOS
 
 Open the `.pkg`. It installs the portal and sets it up for the user signed in:
 - the configuration in `~/.config/home-portal/home-portal.toml`;
-- the user **admin**, with a random password in `~/.config/home-portal/initial-password`;
+- the user **admin**, in the built-in `admin` group, with a random password in `~/.config/home-portal/initial-password`;
 - a LaunchAgent that starts the portal at every login.
 
-Then open http://127.0.0.1:8080. An older installation in
+Then open http://127.0.0.1:8080. At its first start the portal asks macOS for the permissions it and your
+scripts need: the local network, removable volumes, your Documents, Desktop and Downloads folders,
+and control of System Events. Answer the prompts on the Mac, or check them later under
+**Management → Permissions** (see [macOS permissions](features/host-permissions.md)). An older installation in
 `~/Library/Application Support/home-portal` is moved to `~/.config/home-portal`, and a link is
 left at the old place.
 
@@ -40,7 +43,7 @@ sudo cat /etc/home-portal/initial-password                   # the password of a
 
 The package runs the portal as the systemd service `home-portal`, under a system user of the
 same name, on http://127.0.0.1:8080:
-- the configuration is `/etc/home-portal/home-portal.toml`, with the user **admin**;
+- the configuration is `/etc/home-portal/home-portal.toml`, with the user **admin** in the `admin` group;
 - the data is kept in `/var/lib/home-portal`;
 - scripts for automations go into `/var/lib/home-portal/scripts` (owned by root, 0755).
 
@@ -61,7 +64,10 @@ cp config/home-portal.example.toml ~/.config/home-portal/home-portal.toml
 [[users]]
 name = "admin"
 password_hash = "$argon2id$..."
+group = "admin"
 ```
+
+At least one user must be in the `admin` group, or the portal refuses to start and says so.
 
 Keep the `web/` folder beside the binary: it is the interface. Without it the portal still
 runs, but its pages answer 503. The archive also holds `examples/` and systemd or launchd files

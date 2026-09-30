@@ -52,6 +52,7 @@ cat >> "$draft" <<USERS
 [[users]]
 name = "admin"
 password_hash = "$hash"
+group = "admin"
 USERS
 
 printf '%s\n' "$password" > "$secret"

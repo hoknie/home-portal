@@ -24,13 +24,19 @@ cp config/home-portal.example.toml config/home-portal.toml
 cargo run -p home-portal -- password-hash      # type a password, copy the hash
 ```
 
-Add a user to `config/home-portal.toml`, since the portal does not start without one:
+Add a user to `config/home-portal.toml`, in the built-in `admin` group, since the portal does not
+start without one:
 
 ```toml
 [[users]]
 name = "admin"
 password_hash = "$argon2id$..."
+group = "admin"
 ```
+
+On a Mac, `just run` asks for the local network, removable volumes, your folders and Automation
+at start, and the permissions go to your terminal. Set `[permissions] request_at_start = false`
+while developing if the prompts get in the way. Tests that start the portal set it already.
 
 ```sh
 just run            # http://127.0.0.1:8080, with config/home-portal.toml and web/out
@@ -85,6 +91,8 @@ Rust rules live in `bin/home-portal/tests/architecture/`. Web rules live in
   schema, or `vitest` fails.
 - A widget type served by a Rust provider needs an entry in
   `web/src/features/widget-board/model/registry.ts`.
+- Every protected route declares the right it needs in its feature's `rules()`: a route without one
+  fails `tests/architecture/rules.rs` and answers 403.
 
 ## Rules for review
 

@@ -58,7 +58,7 @@ proxy = { host = "media.home.example.com", auth = ["internet"] }
 
 ## See also
 
-- [Users and sign-in](users-and-sign-in.md): who can sign in.
+- [Users, groups and sign-in](users-and-sign-in.md): who can sign in.
 - [Local DNS](local-dns.md): make the published names resolve at home.
 - [Services and status](services-and-status.md): adding the services you publish.
 - [`examples/split/proxy.toml`](../../examples/split/proxy.toml) and

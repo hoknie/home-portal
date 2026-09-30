@@ -48,7 +48,10 @@ probe = { kind = "tcp", port = 22 }
 - Check a service from a terminal with `home-portal probe <id>` (or a URL, with `--kind tcp|icmp`):
   it runs the same check and prints the same explanation.
 - On macOS, every local service showing **down** at once usually means the portal was not allowed
-  to use the local network; `home-portal probe` confirms it.
+  to use the local network; `home-portal probe` confirms it, and **Management → Permissions** or
+  `home-portal permissions` asks again (see [macOS permissions](host-permissions.md)).
+- Everyone signed in sees the services and their status. Adding, changing (and **Probe now**) and
+  deleting services each need their own right (see [Users, groups and sign-in](users-and-sign-in.md)).
 - A failing check backs off, up to one check every 5 minutes, and returns to normal after the
   first success.
 
