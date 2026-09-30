@@ -49,3 +49,38 @@ export function withAction(rights: Rights, area: string, action: string, on: boo
   }
   return next;
 }
+
+export type Coverage = "all" | "some" | "none";
+
+function coverageOf(ticked: number, total: number): Coverage {
+  return ticked === 0 ? "none" : ticked === total ? "all" : "some";
+}
+
+export function withColumn(rights: Rights, action: string, on: boolean, matrix: MatrixRow[]): Rights {
+  return matrix.filter((row) => row.actions.includes(action)).reduce((next, row) => withAction(next, row.area, action, on, matrix), rights);
+}
+
+export function withRow(rights: Rights, area: string, on: boolean, matrix: MatrixRow[]): Rights {
+  const row = matrix.find((entry) => entry.area === area);
+  return (row?.actions ?? []).reduce((next, action) => withAction(next, area, action, on, matrix), rights);
+}
+
+export function withEverything(on: boolean, matrix: MatrixRow[]): Rights {
+  return on ? Object.fromEntries(matrix.filter((row) => row.actions.length > 0).map((row) => [row.area, [...row.actions]])) : {};
+}
+
+export function columnState(rights: Rights, action: string, matrix: MatrixRow[]): Coverage {
+  const rows = matrix.filter((row) => row.actions.includes(action));
+  return coverageOf(rows.filter((row) => rights[row.area]?.includes(action)).length, rows.length);
+}
+
+export function rowState(rights: Rights, area: string, matrix: MatrixRow[]): Coverage {
+  const actions = matrix.find((entry) => entry.area === area)?.actions ?? [];
+  return coverageOf(actions.filter((action) => rights[area]?.includes(action)).length, actions.length);
+}
+
+export function matrixState(rights: Rights, matrix: MatrixRow[]): Coverage {
+  const total = matrix.reduce((sum, row) => sum + row.actions.length, 0);
+  const ticked = matrix.reduce((sum, row) => sum + row.actions.filter((action) => rights[row.area]?.includes(action)).length, 0);
+  return coverageOf(ticked, total);
+}

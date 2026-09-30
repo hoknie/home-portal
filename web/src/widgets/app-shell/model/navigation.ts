@@ -1,6 +1,6 @@
 import { Bell, Blocks, FileCode, Globe, House, LayoutDashboard, Network, Route, Server, ShieldCheck, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
 
-import type { ModuleName } from "@/entities/module";
+import { CATEGORY_OF, MODULE_CATEGORIES, type ModuleCategory, type ModuleName } from "@/entities/module";
 import type { Area } from "@/entities/session";
 import { routes } from "@/shared/config";
 
@@ -41,6 +41,19 @@ export type SectionLink = { href: string; label: (typeof MODULE_LINKS)[number]["
 
 export function sectionLinks(enabled: ReadonlySet<ModuleName>, editing: boolean, may: MayOpen = EVERY_AREA): SectionLink[] {
   return [...moduleLinks(enabled, may), ...(editing && may("scripts") ? [SCRIPTS_LINK] : [])];
+}
+
+export type CategoryLinks = { category: ModuleCategory; links: SectionLink[] };
+
+export const SCRIPTS_CATEGORY: ModuleCategory = "automation";
+
+export function categoryLinks(enabled: ReadonlySet<ModuleName>, editing: boolean, may: MayOpen = EVERY_AREA): CategoryLinks[] {
+  const modules = moduleLinks(enabled, may);
+  const scripts = editing && may("scripts") ? [SCRIPTS_LINK] : [];
+  return MODULE_CATEGORIES.map((category) => ({
+    category,
+    links: [...modules.filter((link) => CATEGORY_OF[link.module] === category), ...(category === SCRIPTS_CATEGORY ? scripts : [])] as SectionLink[],
+  })).filter((group) => group.links.length > 0);
 }
 
 export function isActive(pathname: string, href: string) {

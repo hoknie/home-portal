@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 
 import { type Session, mayOpen } from "@/entities/session";
 
-import { MANAGEMENT, MODULE_LINKS, isActive, managementLinks, moduleLinks, sectionLinks } from "./navigation";
+import { MANAGEMENT, MODULE_LINKS, categoryLinks, isActive, managementLinks, moduleLinks, sectionLinks } from "./navigation";
 
 it("marks a management section on its own page and its subpages only", () => {
   expect(isActive("/", "/")).toBe(true);
@@ -44,4 +44,22 @@ it("a module appears only with its read right, and scripts only with scripts rea
   const may = (area: Parameters<typeof mayOpen>[1]) => mayOpen(family, area);
   expect(managementLinks(may).map((item) => item.label)).toEqual(["home", "services", "layout"]);
   expect(sectionLinks(new Set(["automations", "proxy"]), true, may).map((item) => item.label)).toEqual(["automations"]);
+});
+
+const EVERY_MODULE = new Set(MODULE_LINKS.map((link) => link.module));
+
+it("module links come grouped as network, automation with scripts last, notifications and access", () => {
+  const groups = categoryLinks(EVERY_MODULE, true);
+  expect(groups.map((group) => [group.category, group.links.map((link) => link.label)])).toEqual([
+    ["network", ["proxy", "dns"]],
+    ["automation", ["automations", "webhooks", "workflows", "scripts"]],
+    ["notifications", ["notifications"]],
+    ["access", ["users"]],
+  ]);
+});
+
+it("a category without a visible link is left out, and a guest gets none", () => {
+  expect(categoryLinks(new Set(["proxy"]), false).map((group) => group.category)).toEqual(["network"]);
+  expect(categoryLinks(new Set(), true).map((group) => group.category)).toEqual(["automation"]);
+  expect(categoryLinks(EVERY_MODULE, true, () => false)).toEqual([]);
 });

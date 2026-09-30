@@ -1120,7 +1120,15 @@
     "loadFailed": "The modules could not be loaded",
     "offNotice": "The {name} module is off. Its settings can be prepared here; it starts working once it is switched on.",
     "offNoticeLink": "Open modules",
-    "offReason": "The module is off"
+    "offReason": "The module is off",
+    "categories": {
+      "all": "All",
+      "network": "Network",
+      "automation": "Automation",
+      "notifications": "Notifications",
+      "access": "Access"
+    },
+    "categoryFilter": "Categories"
   },
   "users": {
     "title": "Users",
@@ -1214,7 +1222,11 @@
         "update": "Change",
         "delete": "Delete",
         "execute": "Run"
-      }
+      },
+      "everyArea": "Every area: {action}",
+      "everyAction": "Every action: {area}",
+      "selectAll": "Select all",
+      "clearAll": "Clear all"
     },
     "currentPassword": "Current password"
   },

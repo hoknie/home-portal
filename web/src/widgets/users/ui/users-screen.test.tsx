@@ -213,3 +213,19 @@ it("a dialog sends the revision it was opened with, and a conflict can be overwr
   await waitFor(() => expect(puts()).toHaveLength(2));
   expect(puts().map(([, init]) => (init?.headers as Record<string, string>)["If-Match"])).toEqual(['"r1"', '"r3"']);
 });
+
+it("a group given everything with one press is saved with every right of the matrix", async () => {
+  const fetch = vi.fn(async () => jsonResponse(apiSamples.groups, { headers: { ETag: '"g2"' } }));
+  vi.stubGlobal("fetch", fetch);
+  renderWith();
+  await userEvent.click(screen.getByRole("tab", { name: "Groups" }));
+  const family = screen.getAllByRole("cell", { name: /^family/ })[0].closest("tr") as HTMLElement;
+  await userEvent.click(within(family).getByRole("button", { name: "Edit" }));
+  const dialog = await screen.findByRole("dialog");
+  await userEvent.click(within(dialog).getByRole("button", { name: "Select all" }));
+  await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  const matrix = groupsSchema.parse(apiSamples.groups).matrix;
+  const sent = JSON.parse(String((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body));
+  expect(sent.rights).toEqual(Object.fromEntries(matrix.map((row) => [row.area, row.actions])));
+});

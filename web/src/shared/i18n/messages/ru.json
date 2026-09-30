@@ -1120,7 +1120,15 @@
     "loadFailed": "Не удалось загрузить модули",
     "offNotice": "Модуль «{name}» выключен. Настройки можно подготовить здесь; работать он начнёт после включения.",
     "offNoticeLink": "Открыть модули",
-    "offReason": "Модуль выключен"
+    "offReason": "Модуль выключен",
+    "categories": {
+      "all": "Все",
+      "network": "Сеть",
+      "automation": "Автоматизация",
+      "notifications": "Уведомления",
+      "access": "Доступ"
+    },
+    "categoryFilter": "Категории"
   },
   "users": {
     "title": "Пользователи",
@@ -1214,7 +1222,11 @@
         "update": "Изменение",
         "delete": "Удаление",
         "execute": "Запуск"
-      }
+      },
+      "everyArea": "Все области: {action}",
+      "everyAction": "Все действия: {area}",
+      "selectAll": "Выбрать все",
+      "clearAll": "Снять все"
     },
     "currentPassword": "Текущий пароль"
   },

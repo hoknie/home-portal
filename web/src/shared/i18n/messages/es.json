@@ -1120,7 +1120,15 @@
     "loadFailed": "No se pudieron cargar los módulos",
     "offNotice": "El módulo {name} está apagado. Sus ajustes pueden prepararse aquí; empezará a funcionar al encenderlo.",
     "offNoticeLink": "Abrir módulos",
-    "offReason": "El módulo está apagado"
+    "offReason": "El módulo está apagado",
+    "categories": {
+      "all": "Todo",
+      "network": "Red",
+      "automation": "Automatización",
+      "notifications": "Notificaciones",
+      "access": "Acceso"
+    },
+    "categoryFilter": "Categorías"
   },
   "users": {
     "title": "Usuarios",
@@ -1214,7 +1222,11 @@
         "update": "Cambiar",
         "delete": "Borrar",
         "execute": "Ejecutar"
-      }
+      },
+      "everyArea": "Todas las áreas: {action}",
+      "everyAction": "Todas las acciones: {area}",
+      "selectAll": "Seleccionar todo",
+      "clearAll": "Quitar todo"
     },
     "currentPassword": "Contraseña actual"
   },
