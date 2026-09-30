@@ -181,3 +181,16 @@ it("without the right to read modules, the menu lists the modules the person may
   expect(screen.queryByRole("link", { name: "Modules" })).toBeNull();
   expect(screen.queryByRole("link", { name: "Proxy" })).toBeNull();
 });
+
+it("a menu taller than the window scrolls its items while the collapse button stays below them", () => {
+  window.localStorage.clear();
+  shellWith(["workflows"]);
+  const menu = screen.getByRole("complementary", { name: "Menu" });
+  const items = menu.querySelector("[data-menu-scroll]") as HTMLElement;
+  expect(menu).toHaveClass("overflow-hidden");
+  expect(items).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
+  expect(within(items).getByRole("link", { name: "Services" })).toBeInTheDocument();
+  const collapse = within(menu).getByRole("button", { name: "Collapse menu" });
+  expect(items).not.toContainElement(collapse);
+  expect(collapse.parentElement).toHaveClass("shrink-0");
+});

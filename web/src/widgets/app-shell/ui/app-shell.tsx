@@ -65,7 +65,7 @@ export function AppShell({ children, redirectGuests = true }: AppShellProps) {
   );
 
   const sidebar = (
-    <div className="flex h-full flex-col gap-6 py-5">
+    <div className="flex min-h-full flex-col gap-6 py-5">
       <Brand />
       <div className="flex-1 px-3">
         <NavLinks onNavigate={() => setMenuOpen(false)} />
@@ -88,8 +88,8 @@ export function AppShell({ children, redirectGuests = true }: AppShellProps) {
 
   const expanded = (
     <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1">{sidebar}</div>
-      <div className="hidden px-3 pb-3 md:block">
+      <div className="min-h-0 flex-1 overflow-y-auto" data-menu-scroll>{sidebar}</div>
+      <div className="hidden shrink-0 border-t px-3 py-3 md:block">
         <Button type="button" variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={toggle}>
           <PanelLeftClose aria-hidden />
           {t("nav.collapseMenu")}
@@ -101,7 +101,7 @@ export function AppShell({ children, redirectGuests = true }: AppShellProps) {
   return (
     <div className={cn("min-h-svh md:grid", collapsed ? "md:grid-cols-[4.5rem_1fr]" : "md:grid-cols-[16rem_1fr]")} data-menu={collapsed ? "collapsed" : "expanded"}>
       <TooltipProvider>
-        <aside className="glass-panel sticky top-3 m-3 mr-0 hidden h-[calc(100svh-1.5rem)] overflow-y-auto rounded-xl md:block" aria-label={t("nav.menu")}>
+        <aside className={cn("glass-panel sticky top-3 m-3 mr-0 hidden h-[calc(100svh-1.5rem)] rounded-xl md:block", collapsed ? "overflow-y-auto" : "overflow-hidden")} aria-label={t("nav.menu")}>
           {collapsed ? rail : expanded}
         </aside>
       </TooltipProvider>
