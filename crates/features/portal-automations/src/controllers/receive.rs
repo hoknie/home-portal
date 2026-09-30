@@ -17,6 +17,7 @@ use crate::types::{AutomationsState, Webhook};
 pub const TOKEN_HEADER: &str = "x-webhook-token";
 pub const BEARER: &str = "Bearer ";
 pub const STOPPING: &str = "the portal is stopping";
+pub const NUL_REFUSED: &str = "must not hold a NUL character";
 
 pub async fn receive(
     State(state): State<AutomationsState>,
@@ -122,6 +123,9 @@ fn variables_of(
             })
             .or_else(|| query.get(name).cloned());
         match value {
+            Some(value) if value.contains('\0') => {
+                missing.push(FieldError::new(name.clone(), NUL_REFUSED));
+            }
             Some(value) => found.push((name.clone(), value)),
             None => missing.push(FieldError::new(name.clone(), "is required")),
         }

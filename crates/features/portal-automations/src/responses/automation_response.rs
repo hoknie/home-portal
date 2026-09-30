@@ -37,8 +37,8 @@ impl AutomationResponse {
                 .is_none()
                 .then(|| RunSettingsResponse::of(&automation.run)),
             workflow: automation.workflow.as_ref().map(WorkflowCallResponse::of),
-            last_run: last_run.map(RunResponse::of),
-            active_run: active_run.map(RunResponse::active),
+            last_run: last_run.map(|run| RunResponse::of(run).summarized()),
+            active_run: active_run.map(|run| RunResponse::active(run).summarized()),
         }
     }
 }

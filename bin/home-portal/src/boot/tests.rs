@@ -109,3 +109,77 @@ fn the_interface_is_looked_for_in_the_variable_then_beside_the_binary_then_in_sh
     assert_eq!(interface_folder(Some("".into()), Some(binary)).len(), 2);
     assert!(interface_folder(None, None).is_empty());
 }
+
+async fn listening(
+    router: axum::Router,
+    limits: super::serve::Limits,
+) -> (
+    std::net::SocketAddr,
+    tokio::sync::oneshot::Sender<()>,
+    tokio::task::JoinHandle<()>,
+) {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let (stop, stopped) = tokio::sync::oneshot::channel::<()>();
+    let serving = tokio::spawn(async move {
+        super::serve::accept_until(
+            listener,
+            router,
+            async move {
+                let _ = stopped.await;
+                Ended::Stopped
+            },
+            limits,
+        )
+        .await
+        .unwrap();
+    });
+    (address, stop, serving)
+}
+
+fn short() -> super::serve::Limits {
+    super::serve::Limits {
+        header_read: std::time::Duration::from_millis(300),
+        drain: std::time::Duration::from_millis(500),
+    }
+}
+
+#[tokio::test]
+async fn a_client_that_never_finishes_its_headers_is_dropped() {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let (address, _stop, _serving) = listening(axum::Router::new(), short()).await;
+    let mut client = tokio::net::TcpStream::connect(address).await.unwrap();
+    client
+        .write_all(b"GET / HTTP/1.1\r\nhost: x\r\n")
+        .await
+        .unwrap();
+    let mut answer = Vec::new();
+    let closed = tokio::time::timeout(
+        std::time::Duration::from_secs(3),
+        client.read_to_end(&mut answer),
+    )
+    .await;
+    assert!(closed.is_ok(), "the connection stayed open");
+}
+
+#[tokio::test]
+async fn a_stuck_request_does_not_hold_the_shutdown_past_its_deadline() {
+    use tokio::io::AsyncWriteExt;
+    let router = axum::Router::new().route(
+        "/hang",
+        axum::routing::get(|| async {
+            tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+            "never"
+        }),
+    );
+    let (address, stop, serving) = listening(router, short()).await;
+    let mut client = tokio::net::TcpStream::connect(address).await.unwrap();
+    client
+        .write_all(b"GET /hang HTTP/1.1\r\nhost: x\r\n\r\n")
+        .await
+        .unwrap();
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    stop.send(()).unwrap();
+    let finished = tokio::time::timeout(std::time::Duration::from_secs(3), serving).await;
+    assert!(finished.is_ok(), "shutdown waited for the stuck request");
+}

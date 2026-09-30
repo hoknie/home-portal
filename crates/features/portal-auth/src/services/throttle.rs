@@ -17,23 +17,48 @@ impl Throttle {
     pub const LOCK: Duration = Duration::seconds(60);
     pub const CAPACITY: usize = 10_000;
 
-    pub fn check(&self, client: IpAddr, now: OffsetDateTime) -> Result<(), u64> {
+    pub fn reserve(&self, client: IpAddr, now: OffsetDateTime) -> Result<(), u64> {
         let mut attempts = self.attempts.lock().unwrap_or_else(PoisonError::into_inner);
-        let Some(entry) = attempts.get(&client) else {
-            return Ok(());
-        };
-        match entry.locked_until {
-            Some(until) if until > now => Err((until - now).whole_seconds().max(1).unsigned_abs()),
-            Some(_) => {
-                attempts.remove(&client);
-                Ok(())
+        if let Some(entry) = attempts.get(&client) {
+            match entry.locked_until {
+                Some(until) if until > now => {
+                    return Err((until - now).whole_seconds().max(1).unsigned_abs());
+                }
+                Some(_) => {
+                    attempts.remove(&client);
+                }
+                None => {}
             }
-            None => Ok(()),
+        }
+        Self::make_room(&mut attempts, client);
+        let entry = attempts.entry(client).or_insert(Attempts {
+            failures: 0,
+            first_failure_at: now,
+            locked_until: None,
+            in_flight: 0,
+        });
+        if entry.in_flight == 0 && now - entry.first_failure_at > Self::WINDOW {
+            entry.failures = 0;
+            entry.first_failure_at = now;
+        }
+        if entry.failures + entry.in_flight >= Self::FAILURES_BEFORE_LOCK {
+            return Err(Self::LOCK.whole_seconds().unsigned_abs());
+        }
+        entry.in_flight += 1;
+        Ok(())
+    }
+
+    pub fn release(&self, client: IpAddr) {
+        let mut attempts = self.attempts.lock().unwrap_or_else(PoisonError::into_inner);
+        if let Some(entry) = attempts.get_mut(&client) {
+            entry.in_flight = entry.in_flight.saturating_sub(1);
+            if entry.in_flight == 0 && entry.failures == 0 {
+                attempts.remove(&client);
+            }
         }
     }
 
-    pub fn fail(&self, client: IpAddr, now: OffsetDateTime) {
-        let mut attempts = self.attempts.lock().unwrap_or_else(PoisonError::into_inner);
+    fn make_room(attempts: &mut HashMap<IpAddr, Attempts>, client: IpAddr) {
         if !attempts.contains_key(&client)
             && attempts.len() >= Self::CAPACITY
             && let Some(oldest) = attempts
@@ -43,11 +68,18 @@ impl Throttle {
         {
             attempts.remove(&oldest);
         }
+    }
+
+    pub fn fail(&self, client: IpAddr, now: OffsetDateTime) {
+        let mut attempts = self.attempts.lock().unwrap_or_else(PoisonError::into_inner);
+        Self::make_room(&mut attempts, client);
         let entry = attempts.entry(client).or_insert(Attempts {
             failures: 0,
             first_failure_at: now,
             locked_until: None,
+            in_flight: 0,
         });
+        entry.in_flight = entry.in_flight.saturating_sub(1);
         if now - entry.first_failure_at > Self::WINDOW {
             entry.failures = 0;
             entry.first_failure_at = now;

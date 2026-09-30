@@ -52,6 +52,13 @@ impl RunResponse {
         }
     }
 
+    pub fn summarized(mut self) -> RunResponse {
+        self.trace = None;
+        self.outcome.stdout = self.outcome.stdout.without_text();
+        self.outcome.stderr = self.outcome.stderr.without_text();
+        self
+    }
+
     pub fn active(run: &ActiveRun) -> RunResponse {
         let (started_at, duration) = match run.started {
             Some((at, instant)) => (at, instant.elapsed()),

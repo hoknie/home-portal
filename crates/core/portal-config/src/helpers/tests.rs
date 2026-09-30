@@ -166,3 +166,27 @@ mod entries {
         assert_eq!(unwrapped(&wrapped(&parsed)).to_string(), text);
     }
 }
+
+#[test]
+fn a_section_is_read_from_the_document_itself_with_its_own_errors() {
+    #[derive(serde::Deserialize, Debug, PartialEq)]
+    struct Network {
+        port: u16,
+        trusted_proxies: Vec<String>,
+    }
+    #[derive(serde::Deserialize, Debug, PartialEq)]
+    struct Section {
+        network: Network,
+    }
+    let document: toml_edit::DocumentMut = "# a comment\n[network]\nport = 8080 # keep\ntrusted_proxies = [\"127.0.0.1/32\"]\n\n[[services]]\nid = \"nas\"\n"
+        .parse()
+        .unwrap();
+    let section: Section = super::deserialize_section(&document).unwrap();
+    assert_eq!(section.network.port, 8080);
+    assert_eq!(section.network.trusted_proxies, vec!["127.0.0.1/32"]);
+    let wrong: toml_edit::DocumentMut = "[network]\nport = \"eighty\"\ntrusted_proxies = []\n"
+        .parse()
+        .unwrap();
+    let message = super::deserialize_section::<Section>(&wrong).unwrap_err();
+    assert!(message.contains("invalid type"), "{message}");
+}

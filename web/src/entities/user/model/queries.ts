@@ -53,8 +53,8 @@ export function useCreateUser() {
 }
 
 export function useChangePassword() {
-  return useAnswering(({ name, password, revision }: { name: string; password: string; revision: string | null }) =>
-    changePassword(name, password, revision),
+  return useAnswering(({ name, password, current, revision }: { name: string; password: string; current: string | null; revision: string | null }) =>
+    changePassword(name, password, current, revision),
   );
 }
 

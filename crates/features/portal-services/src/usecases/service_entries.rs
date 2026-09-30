@@ -15,6 +15,9 @@ impl ServiceEntries {
     }
 
     pub fn run(&self) -> Result<Vec<ServiceEntry>, String> {
-        ServicesSection::read(&self.configuration.read().document).map(|section| section.services)
+        self.configuration
+            .read()
+            .typed(ServicesSection::read)
+            .map(|section| section.services.clone())
     }
 }

@@ -51,16 +51,41 @@ it("shows the server's field errors next to the fields they name", async () => {
   expect(screen.getByText("must use http or https")).toBeInTheDocument();
 });
 
-it("on a conflict it says so, asks for fresh data and keeps what was typed", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => new Response("stale", { status: 409 })));
-  const onConflict = open();
+it("two people edit the same service: the second save conflicts, keeps what was typed and can overwrite", async () => {
+  const fetch = vi.fn(async () => new Response("stale", { status: 409 }));
+  vi.stubGlobal("fetch", fetch);
+  const form = (revision: string) => <ServiceForm service={nas} revision={revision} taken={["media", "nas"]} groups={["Media", "Network"]} onSaved={vi.fn()} onConflict={vi.fn()} />;
+  const view = renderWithProviders(form('"r1"'), seeded());
+  view.rerender(form('"r2"'));
   const name = screen.getByLabelText("Name");
   await userEvent.clear(name);
   await userEvent.type(name, "Storage box");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
-  expect(await screen.findByText(/The configuration was changed elsewhere/)).toBeInTheDocument();
-  expect(onConflict).toHaveBeenCalledOnce();
+  expect(await screen.findByRole("button", { name: "Overwrite" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
   expect(screen.getByLabelText("Name")).toHaveValue("Storage box");
+  const sent = (call: number) => ((fetch.mock.calls[call] as unknown as [string, RequestInit])[1].headers as Record<string, string>)["If-Match"];
+  expect(sent(0)).toBe('"r1"');
+  fetch.mockImplementation(async () => jsonResponse(apiSamples.services.services[1]));
+  await userEvent.click(screen.getByRole("button", { name: "Overwrite" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+  expect(sent(1)).toBe('"r2"');
+  expect(JSON.parse((fetch.mock.calls[1] as unknown as [string, RequestInit])[1].body as string).name).toBe("Storage box");
+});
+
+it("reloading after a conflict takes the current values once the person confirms", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => new Response("stale", { status: 409 })));
+  const form = (service: typeof nas, revision: string) => <ServiceForm service={service} revision={revision} taken={["media", "nas"]} groups={["Media", "Network"]} onSaved={vi.fn()} onConflict={vi.fn()} />;
+  const view = renderWithProviders(form(nas, '"r1"'), seeded());
+  await userEvent.clear(screen.getByLabelText("Name"));
+  await userEvent.type(screen.getByLabelText("Name"), "Storage box");
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByRole("button", { name: "Reload" });
+  view.rerender(form({ ...nas, name: "Changed by Boris" }, '"r2"'));
+  await userEvent.click(screen.getByRole("button", { name: "Reload" }));
+  await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Reload" }));
+  expect(screen.getByLabelText("Name")).toHaveValue("Changed by Boris");
+  expect(screen.queryByRole("button", { name: "Overwrite" })).not.toBeInTheDocument();
 });
 
 it("checks the fields on the client before sending", async () => {

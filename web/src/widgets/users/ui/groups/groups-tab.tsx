@@ -109,7 +109,7 @@ export function GroupsTab({ editable }: GroupsTabProps) {
       {editing !== undefined ? (
         <GroupDialog
           key={editing?.name ?? "new"}
-          group={editing}
+          group={editing && (data.groups.find((group) => group.name === editing.name) ?? editing)}
           matrix={data.matrix}
           revision={revision}
           open

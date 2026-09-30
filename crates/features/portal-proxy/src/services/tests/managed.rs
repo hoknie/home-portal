@@ -183,3 +183,21 @@ fn the_caddy_directory_is_absolute_even_when_configured_relative() {
     );
     assert!(home.binary().is_absolute());
 }
+
+#[test]
+fn release_assets_must_come_from_the_host_of_the_source() {
+    let github = CaddySource::default();
+    assert!(
+        github
+            .serves("https://github.com/caddyserver/caddy/releases/download/v2.10.0/caddy.tar.gz")
+    );
+    assert!(github.serves("https://api.github.com/assets/1"));
+    assert!(!github.serves("https://evil.example/caddy.tar.gz"));
+    assert!(!github.serves("https://com/caddy.tar.gz"));
+    let local = CaddySource {
+        base: "http://127.0.0.1:9000/releases".to_string(),
+        version: CaddyVersion::Latest,
+    };
+    assert!(local.serves("http://127.0.0.1:9000/archive"));
+    assert!(!local.serves("http://10.0.0.5/archive"));
+}

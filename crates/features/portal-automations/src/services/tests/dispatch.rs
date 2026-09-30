@@ -307,3 +307,43 @@ fn starting_from_a_workflow_refuses_a_chain_longer_than_four_and_a_disabled_auto
             .contains("no automation")
     );
 }
+
+#[test]
+fn fields_given_by_an_automation_step_are_cut_and_cleaned_like_event_fields() {
+    use crate::ports::AutomationStarter;
+    let sink = super::support::sink(
+        "[[automations]]\nid = \"child\"\ntitle = \"Child\"\nwhen = { event = \"service.status-changed\" }\nrun = { script = \"x.sh\" }\n",
+    );
+    let long = format!("{}\0{}", "e".repeat(10), "x".repeat(64 * 1024));
+    sink.start(
+        "child",
+        &[("status.error".to_string(), long)],
+        &["parent".to_string()],
+    )
+    .unwrap();
+    let queued = sink.children.take().unwrap();
+    let error = queued.event.value("status.error").unwrap();
+    assert_eq!(error.len(), portal_feature::PortalEvent::VALUE_LIMIT);
+    assert!(!error.contains('\0'));
+}
+
+#[test]
+fn a_second_skipped_start_answers_skipped_at_once_instead_of_being_lost() {
+    use crate::ports::AutomationStarter;
+    use crate::types::Outcome;
+    let sink = super::support::sink(
+        "[[automations]]\nid = \"child\"\ntitle = \"Child\"\ncooldown_seconds = 300\nwhen = { event = \"manual\" }\nrun = { script = \"x.sh\" }\n",
+    );
+    let origin = ["parent".to_string()];
+    sink.start("child", &[], &origin).unwrap();
+    let second = sink.start("child", &[], &origin).unwrap();
+    let third = sink.start("child", &[], &origin).unwrap();
+    assert_eq!(
+        sink.outcome_of(second).map(|(outcome, _)| outcome),
+        Some(Outcome::Skipped)
+    );
+    assert_eq!(
+        sink.outcome_of(third).map(|(outcome, _)| outcome),
+        Some(Outcome::Skipped)
+    );
+}

@@ -4,7 +4,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::{Extension, Json};
 use portal_config::{Revision, Revisioned};
-use portal_feature::{ApiError, Principal};
+use portal_feature::{ApiError, ClientAddress, Principal};
 
 use crate::helpers::session_token;
 use crate::requests::{GroupRequest, NewUserRequest, PasswordRequest};
@@ -44,6 +44,7 @@ pub async fn create_user(
 pub async fn change_password(
     State(state): State<AuthState>,
     Extension(principal): Extension<Principal>,
+    client: Option<Extension<ClientAddress>>,
     Path(name): Path<String>,
     headers: HeaderMap,
     Json(request): Json<PasswordRequest>,
@@ -52,10 +53,16 @@ pub async fn change_password(
     let caller = Caller {
         principal,
         token: session_token(&headers),
+        address: client.map(|Extension(ClientAddress(address))| address),
     };
     let changed = state
         .change_password
-        .run(&caller, &name, request.password, &revision)
+        .run(
+            &caller,
+            &name,
+            (request.password, request.current_password),
+            &revision,
+        )
         .await?;
     Ok(answer(StatusCode::OK, changed))
 }

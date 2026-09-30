@@ -149,14 +149,7 @@ impl Feature for ProxyFeature {
                     action: Action::Update,
                 }],
             ),
-            Rule::needs(
-                Method::PUT,
-                Self::SOURCE_PATH,
-                &[Right {
-                    area: Area::Proxy,
-                    action: Action::Update,
-                }],
-            ),
+            Rule::admin(Method::PUT, Self::SOURCE_PATH),
         ]
     }
 

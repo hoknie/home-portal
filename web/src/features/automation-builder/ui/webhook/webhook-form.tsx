@@ -14,8 +14,9 @@ import { enabledModules, useModules } from "@/entities/module";
 import { useWorkflows } from "@/entities/workflow";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { routes } from "@/shared/config";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { FormField } from "@/shared/ui/form-field";
 import { Input, Label, Switch, Button } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -63,11 +64,12 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
   const actions = WEBHOOK_FORM_ACTIONS.filter((action) => action !== "workflow" || workflowsOn || webhook?.workflow != null);
   const shown = (path: string) => shownPaths(values, (declarations ?? []).map((input) => input.name)).some((name) => path === name || path.startsWith(`${name}.`));
 
-  const submit = form.handleSubmit(async (current) => {
+  const held = useEditorRevision(revision);
+  const send = (at: string | null) => form.handleSubmit(async (current) => {
     setConflict(false);
     setLeftover([]);
     try {
-      const created = await save.mutateAsync({ id: webhook?.id ?? null, body: webhookRequestOf(current, webhook === null, declarations), revision });
+      const created = await save.mutateAsync({ id: webhook?.id ?? null, body: webhookRequestOf(current, webhook === null, declarations), revision: at });
       setSaved(true);
       toast.success(t(webhook ? "webhooks.saved" : "webhooks.created"));
       if (created) {
@@ -90,11 +92,17 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
       }
     }
   }, (invalid) => setLeftover(hiddenProblems(flatProblems(invalid), shown)));
+  const submit = send(held.revision);
+  const reload = () => {
+    held.catchUp();
+    form.reset(webhook ? webhookFormOf(webhook) : emptyWebhookForm);
+    setConflict(false);
+  };
 
   return (
     <form onSubmit={submit} className="grid gap-6" noValidate>
       <fieldset disabled={!editable} className="contents">
-        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        {conflict ? <ConflictNotice pending={held.latest === held.revision || save.isPending} onReload={reload} onOverwrite={() => void send(held.catchUp())()} /> : null}
         <SectionCard title={t("webhooks.identity")} description={t("webhooks.identityDescription")}>
           <div className="grid gap-4">
             <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">

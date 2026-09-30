@@ -6,7 +6,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { type User, useChangeUserGroup } from "@/entities/user";
-import { RequestError, ValidationError } from "@/shared/api";
+import { ConflictError, RequestError, ValidationError } from "@/shared/api";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/primitives";
 
@@ -20,11 +22,19 @@ export function ChangeGroupDialog({ user, revision, disabled }: ChangeGroupDialo
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(user.group ?? NO_GROUP);
   const [problem, setProblem] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
   const change = useChangeUserGroup();
-  const save = async () => {
+  const held = useEditorRevision(revision);
+  const reload = () => {
+    held.catchUp();
+    setValue(user.group ?? NO_GROUP);
+    setConflict(false);
+  };
+  const save = async (at: string | null = held.revision) => {
     setProblem(null);
+    setConflict(false);
     try {
-      await change.mutateAsync({ name: user.name, group: groupOf(value), revision });
+      await change.mutateAsync({ name: user.name, group: groupOf(value), revision: at });
       toast.success(t("groupChanged", { name: user.name }));
       setOpen(false);
     } catch (error) {
@@ -32,12 +42,19 @@ export function ChangeGroupDialog({ user, revision, disabled }: ChangeGroupDialo
         setProblem(error.fields.map((field) => field.message).join("; "));
         return;
       }
+      if (error instanceof ConflictError) {
+        setConflict(true);
+        return;
+      }
       setProblem(error instanceof RequestError ? error.message : String(error));
     }
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button type="button" variant="ghost" size="sm" disabled={disabled} title={disabled ? t("moduleOff") : undefined} onClick={() => setOpen(true)}>
+      <Button type="button" variant="ghost" size="sm" disabled={disabled} title={disabled ? t("moduleOff") : undefined} onClick={() => {
+          reload();
+          setOpen(true);
+        }}>
         <UsersIcon aria-hidden />
         {t("changeGroup")}
       </Button>
@@ -46,6 +63,7 @@ export function ChangeGroupDialog({ user, revision, disabled }: ChangeGroupDialo
           <DialogTitle>{t("groupTitle", { name: user.name })}</DialogTitle>
           <DialogDescription>{t("groupDescription")}</DialogDescription>
         </DialogHeader>
+        {conflict ? <ConflictNotice pending={held.latest === held.revision || change.isPending} onReload={reload} onOverwrite={() => void save(held.catchUp())} /> : null}
         <FormField id={`group-of-${user.name}`} label={t("group")} error={problem ?? undefined}>
           <GroupSelect id={`group-of-${user.name}`} value={value} onChange={setValue} />
         </FormField>

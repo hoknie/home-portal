@@ -11,7 +11,9 @@ import { useCan } from "@/entities/session";
 import { type Service, type ServiceForm as ServiceFormValues, emptyServiceForm, formOf, serviceFormSchema, useSaveService } from "@/entities/service";
 import { ConflictError, type FieldError, ValidationError } from "@/shared/api";
 import { routes } from "@/shared/config";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Input } from "@/shared/ui/primitives";
@@ -46,11 +48,13 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
   const form = useForm<ServiceFormValues>({ resolver: zodResolver(serviceFormSchema), defaultValues: service ? formOf(service) : emptyServiceForm });
   useLeaveGuard(form.formState.isDirty && !saved, t("serviceForm.leave"));
 
-  const submit = form.handleSubmit(async (values) => {
+  const held = useEditorRevision(revision);
+  const send = (at: string | null) => form.handleSubmit(async (values) => {
     setConflict(false);
     setUnplaced([]);
     try {
-      await save.mutateAsync({ id: service?.id ?? null, form: values, revision });
+      const stored = await save.mutateAsync({ id: service?.id ?? null, form: values, revision: at });
+      held.adopt(stored.revision);
       setSaved(true);
       toast.success(t(service ? "services.saved" : "services.created"));
       onSaved();
@@ -69,12 +73,18 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
       }
     }
   });
+  const submit = send(held.revision);
+  const reload = () => {
+    held.catchUp();
+    form.reset(service ? formOf(service) : emptyServiceForm);
+    setConflict(false);
+  };
 
   const errors = form.formState.errors;
   return (
     <form onSubmit={submit} className="grid gap-6" noValidate>
       <fieldset disabled={!editable} className="contents">
-        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        {conflict ? <ConflictNotice pending={held.latest === held.revision || save.isPending} onReload={reload} onOverwrite={() => void send(held.catchUp())()} /> : null}
         {unplaced.length > 0 ? (
           <ErrorNotice title={t("serviceForm.notSaved")} description={unplaced.map((error) => `${error.field}: ${error.message}`).join("\n")} />
         ) : null}

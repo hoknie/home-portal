@@ -92,6 +92,13 @@ impl StatusBoard {
         }
     }
 
+    pub fn pause(&self, id: &str, now: OffsetDateTime) {
+        let mut tracked = self.tracked.write().unwrap_or_else(PoisonError::into_inner);
+        if let Some(current) = tracked.get_mut(id) {
+            current.status = ServiceStatus::unknown(now);
+        }
+    }
+
     pub fn forget(&self, id: &str) {
         let mut tracked = self.tracked.write().unwrap_or_else(PoisonError::into_inner);
         let set_aside = tracked.remove(id);

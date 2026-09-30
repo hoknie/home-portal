@@ -6,6 +6,8 @@ use portal_model::Environment;
 use portal_public::{PublicLayout, PublicSection, PublicWidget};
 use portal_widget::{WidgetData, WidgetRegistry};
 
+pub const UNAVAILABLE: &str = "the data is unavailable";
+
 pub struct WidgetLayout {
     pub widgets: Arc<WidgetRegistry>,
 }
@@ -20,10 +22,12 @@ impl PublicLayout for WidgetLayout {
             .into_iter()
             .filter(|instance| instance.public_in(environment))
             .map(|instance| PublicWidget {
+                settings: self
+                    .widgets
+                    .public_settings(&instance.kind, &instance.settings),
                 kind: instance.kind,
                 id: instance.id,
                 title: instance.title,
-                settings: instance.settings,
                 section: instance.section,
                 size: instance.size,
             })
@@ -61,6 +65,13 @@ impl PublicLayout for WidgetLayout {
         if !public {
             return Err(ApiError::NotFound(WidgetRegistry::UNKNOWN_WIDGET));
         }
-        self.widgets.data(id, environment).await
+        match self.widgets.data(id, environment).await {
+            Ok(data) => Ok(WidgetData {
+                problem: data.problem.map(|_| UNAVAILABLE.to_string()),
+                ..data
+            }),
+            Err(ApiError::BadGateway(_)) => Err(ApiError::BadGateway(UNAVAILABLE.to_string())),
+            Err(other) => Err(other),
+        }
     }
 }

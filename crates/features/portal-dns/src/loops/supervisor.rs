@@ -51,7 +51,7 @@ impl DnsRuntime {
 
     fn refresh(&self, interfaces: &[std::net::IpAddr]) {
         let snapshot = self.configuration.read();
-        match read_settings(&snapshot.document) {
+        match snapshot.typed(read_settings) {
             Ok(settings) => {
                 let book = build(
                     &settings,
@@ -59,7 +59,7 @@ impl DnsRuntime {
                     interfaces,
                     self.sources.environments(),
                 );
-                self.library.publish(settings, book);
+                self.library.publish((*settings).clone(), book);
             }
             Err(errors) => {
                 let message = errors

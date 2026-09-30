@@ -85,11 +85,11 @@ export function openEditor(workflow: Workflow | null, options: { initial?: Draft
   const onSaved = vi.fn();
   const onCancel = vi.fn();
   const onConflict = options.onConflict ?? vi.fn();
-  const result = renderWithProviders(
+  const editor = (revision: string) => (
     <WorkflowEditor
       workflow={workflow}
       initial={options.initial ?? null}
-      revision='"r1"'
+      revision={revision}
       workflows={sampleWorkflows}
       catalogue={catalogue}
       sources={sourcesFor(options.scripts)}
@@ -98,9 +98,10 @@ export function openEditor(workflow: Workflow | null, options: { initial?: Draft
       onSaved={onSaved}
       onCancel={onCancel}
       onConflict={onConflict}
-    />,
+    />
   );
-  return { onSaved, onCancel, onConflict, client: result.client };
+  const result = renderWithProviders(editor('"r1"'));
+  return { onSaved, onCancel, onConflict, client: result.client, refreshed: (revision: string) => result.rerender(editor(revision)) };
 }
 
 export function openPage(workflow: Workflow, view: WorkflowView = "view", run: string | null = null) {

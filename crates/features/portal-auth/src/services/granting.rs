@@ -6,6 +6,8 @@ use crate::types::UsersSection;
 pub const ADMIN_ONLY: &str =
     "only members of admin may change a member of admin or put someone into admin";
 pub const TOO_MUCH: &str = "you may give only a group whose rights are all within your own";
+pub const STRONGER: &str =
+    "you may change or delete only a user whose group's rights are all within your own";
 pub const LAST_ADMIN: &str = "at least one user must stay in the admin group";
 pub const UNKNOWN_GROUP: &str = "names no group";
 pub const GROUP_FIELD: &str = "group";
@@ -26,8 +28,19 @@ pub fn admins(section: &UsersSection) -> usize {
 }
 
 pub fn may_touch(actor: &Principal, section: &UsersSection, target: &str) -> Result<(), ApiError> {
-    if in_admin(section, target) && !actor.rights.is_admin() {
+    if actor.rights.is_admin() {
+        return Ok(());
+    }
+    if in_admin(section, target) {
         return Err(ApiError::Forbidden(ADMIN_ONLY.to_string()));
+    }
+    let stronger = section
+        .find(target)
+        .and_then(|user| user.group.as_deref())
+        .and_then(|name| section.group(name))
+        .is_some_and(|group| !rights_of_group(group).within(&actor.rights));
+    if stronger {
+        return Err(ApiError::Forbidden(STRONGER.to_string()));
     }
     Ok(())
 }

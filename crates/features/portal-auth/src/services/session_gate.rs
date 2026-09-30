@@ -17,7 +17,11 @@ pub struct SessionGate {
 
 impl SessionGate {
     pub fn principal_of(&self, token: &str) -> Option<Principal> {
-        let users = UsersSection::read(&self.configuration.read().document).unwrap_or_default();
+        let users = self
+            .configuration
+            .read()
+            .typed(UsersSection::read)
+            .unwrap_or_default();
         self.sessions
             .admit(token, OffsetDateTime::now_utc(), |name| {
                 users.credential(name)

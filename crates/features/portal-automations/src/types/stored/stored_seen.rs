@@ -8,4 +8,6 @@ pub struct StoredSeen {
     #[serde(with = "time::serde::rfc3339")]
     pub last_at: OffsetDateTime,
     pub count: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub absorbed: Vec<u64>,
 }

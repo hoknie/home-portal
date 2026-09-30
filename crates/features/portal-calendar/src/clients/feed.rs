@@ -35,7 +35,10 @@ impl FeedClient {
             };
         }
         let mut response = request.send().await.map_err(|error| {
-            WidgetProblem::new(format!("the calendar could not be fetched: {error}"))
+            WidgetProblem::new(format!(
+                "the calendar could not be fetched: {}",
+                error.without_url()
+            ))
         })?;
         if !response.status().is_success() {
             return Err(WidgetProblem::new(format!(
@@ -45,7 +48,10 @@ impl FeedClient {
         }
         let mut text = String::new();
         while let Some(chunk) = response.chunk().await.map_err(|error| {
-            WidgetProblem::new(format!("the calendar could not be read: {error}"))
+            WidgetProblem::new(format!(
+                "the calendar could not be read: {}",
+                error.without_url()
+            ))
         })? {
             if text.len() + chunk.len() > Self::CEILING_BYTES {
                 return Err(WidgetProblem::new(format!(

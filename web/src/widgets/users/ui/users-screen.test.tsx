@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
@@ -29,6 +29,7 @@ function renderWith(change: (users: Users) => void = () => undefined, rights: Re
     </>,
     client,
   );
+  return client;
 }
 
 function row(name: string) {
@@ -171,4 +172,44 @@ it("an admin sees admin with every right and cannot edit it", async () => {
   const boxes = screen.getAllByRole("checkbox");
   expect(boxes.length).toBeGreaterThan(0);
   expect(boxes.every((box) => (box as HTMLInputElement).checked && (box as HTMLInputElement).disabled)).toBe(true);
+});
+
+it("changing one's own password asks for the current one and sends it", async () => {
+  const fetch = vi.fn(async () => jsonResponse(apiSamples.users));
+  vi.stubGlobal("fetch", fetch);
+  renderWith();
+  await userEvent.click(within(row("admin")).getByRole("button", { name: "Change password" }));
+  const dialog = await screen.findByRole("dialog");
+  await userEvent.type(within(dialog).getByLabelText(/^Password/), "a brand new one");
+  await userEvent.type(within(dialog).getByLabelText("Repeat the password"), "a brand new one");
+  await userEvent.click(within(dialog).getByRole("button", { name: "Save password" }));
+  expect(await within(dialog).findByText("Type your current password")).toBeInTheDocument();
+  expect(fetch).not.toHaveBeenCalled();
+  await userEvent.type(within(dialog).getByLabelText("Current password"), "secret99");
+  await userEvent.click(within(dialog).getByRole("button", { name: "Save password" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+  expect(JSON.parse(String(init.body))).toEqual({ password: "a brand new one", current_password: "secret99" });
+});
+
+it("changing another user's password does not ask for a current one", async () => {
+  renderWith();
+  await userEvent.click(within(row("anna")).getByRole("button", { name: "Change password" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).queryByLabelText("Current password")).toBeNull();
+});
+
+it("a dialog sends the revision it was opened with, and a conflict can be overwritten", async () => {
+  const puts = () => fetch.mock.calls.filter(([, init]) => init?.method === "PUT");
+  const fetch = vi.fn(async (_path: string, init?: RequestInit) =>
+    init?.method === "PUT" && puts().length === 1 ? new Response("stale", { status: 409 }) : jsonResponse(apiSamples.users, { headers: { ETag: '"r3"' } }),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const client = renderWith();
+  await userEvent.click(within(row("guest")).getByRole("button", { name: "Change group" }));
+  act(() => client.setQueryData(usersKey, { data: usersSchema.parse(apiSamples.users), revision: '"r2"' }));
+  await userEvent.click(screen.getByRole("button", { name: "Save group" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Overwrite" }));
+  await waitFor(() => expect(puts()).toHaveLength(2));
+  expect(puts().map(([, init]) => (init?.headers as Record<string, string>)["If-Match"])).toEqual(['"r1"', '"r3"']);
 });

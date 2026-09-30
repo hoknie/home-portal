@@ -18,8 +18,12 @@ impl CurrentNetwork {
     pub fn run(&self) -> NetworkReading {
         let snapshot = self.configuration.read();
         NetworkReading {
-            settings: read_network(&snapshot.document),
-            environments: read_environments(&snapshot.document),
+            settings: snapshot
+                .typed(read_network)
+                .map(|settings| (*settings).clone()),
+            environments: snapshot
+                .typed(read_environments)
+                .map(|environments| (*environments).clone()),
         }
     }
 }

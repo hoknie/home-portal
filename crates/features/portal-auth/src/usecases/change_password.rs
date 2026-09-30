@@ -1,3 +1,4 @@
+use std::net::IpAddr;
 use std::sync::Arc;
 
 use portal_config::{ConfigStore, Revision, Revisioned};
@@ -6,24 +7,32 @@ use portal_feature::ApiError;
 use crate::helpers::credential_of;
 use crate::repositories::{origin, position, set_hash};
 use crate::services::{
-    CHANGE_USERS, SessionStore, checked_password, hashed, may_touch, require_editable, users_of,
-    users_view,
+    CHANGE_USERS, PasswordChecks, SessionStore, checked_password, hashed, may_touch,
+    require_editable, users_of, users_view,
 };
 use crate::types::{Caller, UsersView};
 
 pub const UNKNOWN: &str = "no such user";
+pub const CURRENT_FIELD: &str = "current_password";
+pub const CURRENT_WRONG: &str = "must be your current password";
 
 #[derive(Clone)]
 pub struct ChangePassword {
     configuration: Arc<ConfigStore>,
     sessions: Arc<SessionStore>,
+    checks: Arc<PasswordChecks>,
 }
 
 impl ChangePassword {
-    pub fn new(configuration: Arc<ConfigStore>, sessions: Arc<SessionStore>) -> ChangePassword {
+    pub fn new(
+        configuration: Arc<ConfigStore>,
+        sessions: Arc<SessionStore>,
+        checks: Arc<PasswordChecks>,
+    ) -> ChangePassword {
         ChangePassword {
             configuration,
             sessions,
+            checks,
         }
     }
 
@@ -31,7 +40,7 @@ impl ChangePassword {
         &self,
         caller: &Caller,
         name: &str,
-        password: String,
+        (password, current): (String, Option<String>),
         revision: &Revision,
     ) -> Result<Revisioned<UsersView>, ApiError> {
         let snapshot = self.configuration.read();
@@ -43,8 +52,16 @@ impl ChangePassword {
         }
         checked_password(&password).map_err(|error| ApiError::Invalid(vec![error]))?;
         let target = origin(&snapshot, name).ok_or(ApiError::NotFound(UNKNOWN))?;
-        if !own {
-            may_touch(actor, &users_of(&snapshot.document)?, name)?;
+        let users = users_of(&snapshot.document)?;
+        if own {
+            let address = caller.address.unwrap_or(IpAddr::from([0, 0, 0, 0]));
+            let hash = users.find(name).map(|user| user.password_hash.clone());
+            let current = current.unwrap_or_default();
+            if current.is_empty() || !self.checks.verify(address, current, hash).await? {
+                return Err(ApiError::invalid(CURRENT_FIELD, CURRENT_WRONG));
+            }
+        } else {
+            may_touch(actor, &users, name)?;
         }
         let password_hash = hashed(password).await?;
         let (_, written) = self

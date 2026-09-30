@@ -15,4 +15,8 @@ pub trait WidgetProvider: Send + Sync {
     fn check(&self, settings: &Value) -> Vec<FieldError>;
 
     async fn data(&self, settings: &Value) -> Result<Value, WidgetProblem>;
+
+    fn public_settings(&self, _settings: &Value) -> Value {
+        Value::Object(serde_json::Map::new())
+    }
 }

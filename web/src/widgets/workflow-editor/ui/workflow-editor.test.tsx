@@ -210,3 +210,17 @@ it("a set node without a stray sign reads as a list of two", async () => {
   expect(set).toHaveTextContent("svc: list of 2");
   expect(set.textContent).not.toMatch(/svc =/);
 });
+
+it("a background refresh does not change the revision it sends, and a conflict can be overwritten", async () => {
+  const puts = () => fetch.mock.calls.filter(([, sent]) => sent?.method === "PUT");
+  const fetch = vi.fn(async (_path: string, init?: RequestInit) => (init?.method === "PUT" && puts().length === 1 ? new Response("stale", { status: 409 }) : jsonResponse(sampleWorkflows[0])));
+  vi.stubGlobal("fetch", fetch);
+  const { refreshed, onSaved } = openEditor(sampleWorkflows[0]);
+  refreshed('"r2"');
+  await userEvent.click(screen.getByRole("button", { name: /^Save$/ }));
+  expect(await screen.findByRole("button", { name: "Reload" })).toBeInTheDocument();
+  expect(onSaved).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole("button", { name: "Overwrite" }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  expect(puts().map(([, sent]) => (sent?.headers as Record<string, string>)["If-Match"])).toEqual(['"r1"', '"r2"']);
+});

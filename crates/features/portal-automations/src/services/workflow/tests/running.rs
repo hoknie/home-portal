@@ -214,12 +214,12 @@ async fn more_than_a_thousand_steps_fail_the_run() {
 }
 
 #[tokio::test]
-async fn parallel_branches_merge_in_branch_order() {
+async fn parallel_branches_merge_in_the_order_they_finish() {
     let outcome = run(&workflow("[[workflows.steps]]\nid = \"both\"\nkind = \"parallel\"\nbranches = [\n  [{ id = \"a\", kind = \"set\", variable = \"who\", value = \"first\" }, { id = \"slow\", kind = \"wait\", seconds = 1 }],\n  [{ id = \"b\", kind = \"set\", variable = \"who\", value = \"second\" }],\n]\n[[workflows.steps]]\nid = \"say\"\nkind = \"telegram\"\ntext = \"{{vars.who}} {{steps.a.value}} {{steps.b.value}}\"\n")).await;
     assert_eq!(outcome.ending, Ending::Succeeded(None));
     assert_eq!(
         *outcome.actions.sent.lock().unwrap(),
-        vec!["second first second"]
+        vec!["first first second"]
     );
 }
 
@@ -293,4 +293,45 @@ async fn a_notify_step_names_its_deliveries_and_an_unknown_channel_fails_it() {
         "{:?}",
         failed.ending
     );
+}
+
+#[tokio::test]
+async fn a_branch_that_changes_a_variable_is_not_undone_by_one_that_does_not() {
+    let outcome = run(
+        "[[workflows]]\nid = \"w\"\ntitle = \"W\"\ninputs = [\"service\"]\n[[workflows.steps]]\nid = \"first\"\nkind = \"set\"\nvariable = \"x\"\nvalue = \"a\"\n[[workflows.steps]]\nid = \"both\"\nkind = \"parallel\"\nbranches = [\n  [{ id = \"change\", kind = \"set\", variable = \"x\", value = \"b\" }],\n  [{ id = \"nap\", kind = \"wait\", seconds = 1 }],\n]\n[[workflows.steps]]\nid = \"done\"\nkind = \"stop\"\noutcome = \"succeeded\"\nreason = \"{{vars.x}}\"\n",
+    )
+    .await;
+    assert_eq!(outcome.ending, Ending::Succeeded(Some("b".to_string())));
+}
+
+#[tokio::test]
+async fn a_result_inside_a_loop_is_the_one_of_the_latest_pass() {
+    let outcome = run(
+        "[[workflows]]\nid = \"w\"\ntitle = \"W\"\ninputs = [\"service\"]\n[[workflows.steps]]\nid = \"again\"\nkind = \"loop\"\nrepeat = 2\n[[workflows.steps.body]]\nid = \"both\"\nkind = \"parallel\"\nbranches = [\n  [{ id = \"ping\", kind = \"set\", variable = \"seen\", value = \"pass {{loop.index}}\" }],\n  [{ id = \"idle\", kind = \"set\", variable = \"other\", value = \"x\" }],\n]\n[[workflows.steps]]\nid = \"done\"\nkind = \"stop\"\noutcome = \"succeeded\"\nreason = \"{{vars.seen}}\"\n",
+    )
+    .await;
+    assert_eq!(
+        outcome.ending,
+        Ending::Succeeded(Some("pass 1".to_string()))
+    );
+}
+
+#[tokio::test]
+async fn a_value_larger_than_the_limit_fails_its_step_and_is_not_kept() {
+    let big = "x".repeat(40 * 1024);
+    let lookup: crate::services::workflow::SecretLookup =
+        Arc::new(move |key: &str| (key == "big").then(|| big.clone()));
+    let (_sender, stop) = watch::channel(false);
+    let outcome = run_prepared(
+        "[[workflows]]\nid = \"w\"\ntitle = \"W\"\n[[workflows.steps]]\nid = \"grow\"\nkind = \"set\"\nvariable = \"both\"\nlist = [\"{{secrets.big}}\", \"{{secrets.big}}\"]\n",
+        (Arc::new(FakeActions::default()), stop),
+        &[],
+        Secrets::new(lookup),
+    )
+    .await;
+    let Ending::Failed(reason) = &outcome.ending else {
+        panic!("{:?}", outcome.ending);
+    };
+    assert!(reason.contains("both holds 81 KiB"), "{reason}");
+    assert!(!outcome.frame.vars.contains_key("both"));
 }

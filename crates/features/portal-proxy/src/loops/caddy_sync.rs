@@ -36,7 +36,11 @@ impl CaddySync {
     }
 
     pub fn settings(&self) -> ProxySettings {
-        read_settings(&self.configuration.read().document).unwrap_or_default()
+        self.configuration
+            .read()
+            .typed(read_settings)
+            .map(|settings| (*settings).clone())
+            .unwrap_or_default()
     }
 
     pub fn rendered(&self) -> Option<(ProxySettings, Value)> {

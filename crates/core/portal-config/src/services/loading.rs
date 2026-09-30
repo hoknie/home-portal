@@ -1,7 +1,6 @@
 use std::fs;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use portal_feature::FieldError;
 use toml_edit::{DocumentMut, Item};
@@ -58,11 +57,7 @@ pub fn loaded_from(sources: Vec<Source>) -> Result<Loaded, ConfigError> {
     let revision = revision_of(&sources);
     Ok(Loaded {
         sources,
-        snapshot: Snapshot {
-            document: Arc::new(merged),
-            revision,
-            origins: Arc::new(origins),
-        },
+        snapshot: Snapshot::new(merged, revision, origins),
         secrets,
     })
 }

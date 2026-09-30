@@ -22,7 +22,7 @@ export const newUserFormSchema = z
 export type NewUserForm = z.infer<typeof newUserFormSchema>;
 
 export const passwordFormSchema = z
-  .object({ password, repeat: z.string() })
+  .object({ password, repeat: z.string(), current: z.string() })
   .refine((form) => form.password === form.repeat, { path: ["repeat"], message: "validation.userPasswordsDiffer" });
 
 export type PasswordForm = z.infer<typeof passwordFormSchema>;

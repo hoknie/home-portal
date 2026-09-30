@@ -301,7 +301,8 @@
     "userName": "Un nombre de 1 a 64 caracteres, sin caracteres de control",
     "userPassword": "Usa de 8 a 1024 caracteres",
     "userPasswordsDiffer": "Las contraseñas no coinciden",
-    "automationWorkflow": "Elija un flujo"
+    "automationWorkflow": "Elija un flujo",
+    "userCurrentPassword": "Escriba su contraseña actual"
   },
   "conditions": {
     "clear": "despejado",
@@ -469,9 +470,6 @@
     "save": "Guardar la disposición",
     "saving": "Guardando…",
     "leave": "¿Salir de la página? Se perderán los cambios de disposición sin guardar.",
-    "conflict": "El archivo de configuración cambió mientras editabas. Tu disposición sigue en pantalla.",
-    "reload": "Cargar la disposición del archivo",
-    "overwrite": "Guardar encima",
     "invalid": "La disposición no se puede guardar: corrige los campos marcados.",
     "addSection": "Añadir sección",
     "sectionTitle": "Título de la sección",
@@ -1217,7 +1215,8 @@
         "delete": "Borrar",
         "execute": "Ejecutar"
       }
-    }
+    },
+    "currentPassword": "Contraseña actual"
   },
   "workflows": {
     "trace": {
@@ -1317,7 +1316,6 @@
     "fixProblems": "Corrija primero los campos marcados",
     "saved": "Flujo guardado",
     "created": "Flujo añadido",
-    "conflictKept": "Alguien cambió la configuración mientras tanto. Sus pasos se conservan; guarde de nuevo para escribirlos sobre la versión nueva.",
     "identity": "Flujo",
     "title": "Título",
     "id": "Id",
@@ -2493,5 +2491,13 @@
     "description": "Tu grupo no tiene el derecho de abrirla. Pídeselo a un administrador si lo necesitas.",
     "home": "Volver al inicio",
     "forbidden": "No tienes derecho a hacer esto."
+  },
+  "conflict": {
+    "title": "Alguien cambió la configuración mientras editabas",
+    "description": "Lo que escribiste sigue aquí. Recarga para ver los valores actuales o sobrescríbelos con los tuyos.",
+    "reload": "Recargar",
+    "overwrite": "Sobrescribir",
+    "reloadTitle": "¿Descartar lo que escribiste?",
+    "reloadDescription": "Los valores actuales sustituirán todo lo que escribiste en este formulario."
   }
 }

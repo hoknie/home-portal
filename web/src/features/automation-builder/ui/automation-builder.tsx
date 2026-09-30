@@ -13,9 +13,10 @@ import { enabledModules, useModules } from "@/entities/module";
 import { useWorkflows } from "@/entities/workflow";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { routes } from "@/shared/config";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { slugOf, uniqueId } from "@/shared/lib/slug";
-import { ErrorNotice } from "@/shared/ui/error-notice";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -66,11 +67,13 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
   const declarations = workflows.find((candidate) => candidate.id === values.workflow)?.inputs;
   const shown = (path: string) => shownPaths(values.action, (declarations ?? []).map((input) => input.name)).some((name) => path === name || path.startsWith(`${name}.`));
 
-  const submit = form.handleSubmit(async (current) => {
+  const held = useEditorRevision(revision);
+  const send = (at: string | null) => form.handleSubmit(async (current) => {
     setConflict(false);
     setLeftover([]);
     try {
-      await save.mutateAsync({ id: automation?.id ?? null, body: requestOf(current, event.filters, declarations), revision });
+      const stored = await save.mutateAsync({ id: automation?.id ?? null, body: requestOf(current, event.filters, declarations), revision: at });
+      held.adopt(stored.revision);
       setSaved(true);
       toast.success(t(automation ? "automations.saved" : "automations.created"));
       onSaved();
@@ -89,6 +92,12 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
       }
     }
   }, (invalid) => setLeftover(hiddenProblems(flatProblems(invalid), shown)));
+  const submit = send(held.revision);
+  const reload = () => {
+    held.catchUp();
+    form.reset(automation ? formOf(automation) : emptyAutomationForm);
+    setConflict(false);
+  };
 
   const errors = form.formState.errors;
   const chosen = {
@@ -103,7 +112,7 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
   return (
     <form onSubmit={submit} className="grid gap-6" noValidate>
       <fieldset disabled={!editable} className="contents">
-        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        {conflict ? <ConflictNotice pending={held.latest === held.revision || save.isPending} onReload={reload} onOverwrite={() => void send(held.catchUp())()} /> : null}
         <SectionCard title={t("automationBuilder.identity")}>
           <div className="grid gap-4 sm:grid-cols-[1fr_16rem_auto] sm:items-start">
             <FormField id="automation-title" label={t("automationBuilder.title")} error={errors.title?.message}>

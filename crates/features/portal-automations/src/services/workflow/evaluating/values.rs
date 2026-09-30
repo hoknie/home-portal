@@ -7,6 +7,17 @@ use super::rendered::record;
 use crate::helpers::{CLOSE, OPEN};
 use crate::types::{NumberSetting, Placeholder, Workflow};
 
+pub fn oversized(name: &str, value: &Value) -> Option<String> {
+    let size = serde_json::to_vec(value).map_or(0, |bytes| bytes.len());
+    (size > Workflow::LARGEST_VALUE).then(|| {
+        format!(
+            "{name} holds {} KiB, more than the {} KiB a value may hold",
+            size.div_ceil(1024),
+            Workflow::LARGEST_VALUE / 1024
+        )
+    })
+}
+
 pub fn text_of(value: &Value) -> String {
     match value {
         Value::Null => String::new(),

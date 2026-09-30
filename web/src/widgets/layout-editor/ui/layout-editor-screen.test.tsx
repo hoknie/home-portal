@@ -219,9 +219,8 @@ it("on a conflict it keeps the arrangement and offers to reload or save over", a
   await screen.findByRole("button", { name: "Move “Summary”" });
   fireEvent.keyDown(within(tileOf("riga")).getByRole("slider"), { key: "ArrowRight" });
   await userEvent.click(screen.getByRole("button", { name: "Save layout" }));
-  expect(await screen.findByText(/The configuration file changed/)).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Load the layout from the file" })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Save over it" })).toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: "Reload" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Overwrite" })).toBeInTheDocument();
   expect(document.querySelector('[data-widget="riga"]')).toHaveAttribute("data-size", "half");
 });
 

@@ -13,6 +13,7 @@ use crate::renderers::USER_HEADER;
 use crate::types::ProxyState;
 
 pub const UNKNOWN: &str = "not found";
+pub const NO_GROUP: &str = "you have no access to the published services; ask for a group";
 
 pub async fn authorize(
     State(state): State<ProxyState>,
@@ -44,6 +45,10 @@ pub async fn authorize(
             .any(|name| name == environment.as_str())
     });
     match state.ports.gate.admit(&headers) {
+        Ok(principal) if principal.group.is_none() && needs_sign_in => {
+            Err(ApiError::Forbidden(NO_GROUP.to_string()))
+        }
+        Ok(principal) if principal.group.is_none() => Ok(passed(None)),
         Ok(principal) => Ok(passed(Some(&principal.name))),
         Err(_) if !needs_sign_in => Ok(passed(None)),
         Err(_) if reads(&headers) => {

@@ -65,6 +65,18 @@ impl WidgetProvider for CalendarProvider {
         Self::KIND
     }
 
+    fn public_settings(&self, settings: &Value) -> Value {
+        let kept: serde_json::Map<String, Value> = ["days", "limit"]
+            .into_iter()
+            .filter_map(|key| {
+                settings
+                    .get(key)
+                    .map(|value| (key.to_string(), value.clone()))
+            })
+            .collect();
+        Value::Object(kept)
+    }
+
     fn refresh(&self) -> Duration {
         Self::REFRESH.max(Self::SHORTEST_REFRESH)
     }

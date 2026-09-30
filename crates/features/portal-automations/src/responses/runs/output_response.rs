@@ -17,4 +17,12 @@ impl OutputResponse {
             truncated: tail.truncated(),
         }
     }
+
+    pub fn without_text(self) -> OutputResponse {
+        OutputResponse {
+            tail: String::new(),
+            truncated: self.bytes > 0,
+            ..self
+        }
+    }
 }

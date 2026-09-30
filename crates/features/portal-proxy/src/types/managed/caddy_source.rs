@@ -87,6 +87,19 @@ impl CaddySource {
         }
     }
 
+    pub fn serves(&self, link: &str) -> bool {
+        let host = |text: &str| {
+            Url::parse(text)
+                .ok()
+                .and_then(|url| url.host_str().map(str::to_ascii_lowercase))
+        };
+        let (Some(base), Some(link)) = (host(&self.base), host(link)) else {
+            return false;
+        };
+        let parent = base.split_once('.').map(|(_, rest)| rest.to_string());
+        link == base || parent.is_some_and(|parent| parent.contains('.') && link == parent)
+    }
+
     pub fn is_default_base(&self) -> bool {
         self.base == Self::DEFAULT_BASE
     }

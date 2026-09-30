@@ -1,9 +1,9 @@
 use serde_json::Value;
 
-use super::join::{Pending, join_all};
+use super::join::{Pending, join_in_order};
 use super::runner::WorkflowRunner;
 use crate::services::workflow::evaluating::{
-    Frame, bind_inputs, holds, input_problem, judged, render_number, render_value,
+    Frame, bind_inputs, holds, input_problem, judged, oversized, render_number, render_value,
 };
 use crate::types::{
     Ending, Flow, LoopMode, Place, Step, StepKind, StepLog, StepReport, TraceEntry, Workflow,
@@ -169,10 +169,15 @@ pub async fn run_parallel(
             runner.run_steps(branch, branch_frame, branch_place)
         })
         .collect();
-    let flows = join_all(futures).await;
-    for branch_frame in frames {
-        frame.vars.extend(branch_frame.vars);
-        frame.steps.extend(branch_frame.steps);
+    let (flows, order) = join_in_order(futures).await;
+    let before = (frame.vars.clone(), frame.steps.clone());
+    let mut frames: Vec<Option<Frame>> = frames.into_iter().map(Some).collect();
+    for index in order {
+        let Some(branch_frame) = frames[index].take() else {
+            continue;
+        };
+        merge_changed(&mut frame.vars, &before.0, branch_frame.vars);
+        merge_changed(&mut frame.steps, &before.1, branch_frame.steps);
     }
     let flow = flows
         .into_iter()
@@ -181,6 +186,18 @@ pub async fn run_parallel(
     StepReport::done(Value::Null, format!("{} branches", branches.len()))
         .logged(format!("ran {} branches together", branches.len()))
         .with_flow(flow)
+}
+
+fn merge_changed(
+    into: &mut std::collections::BTreeMap<String, Value>,
+    before: &std::collections::BTreeMap<String, Value>,
+    branch: std::collections::BTreeMap<String, Value>,
+) {
+    for (key, value) in branch {
+        if before.get(&key) != Some(&value) {
+            into.insert(key, value);
+        }
+    }
 }
 
 pub async fn run_call(
@@ -228,6 +245,9 @@ pub async fn run_call(
         .run_steps(&called.steps, &mut child, &place.called(workflow))
         .await;
     let vars = Value::Object(child.vars.into_iter().collect());
+    if let Some(problem) = oversized(&format!("the variables of {workflow}"), &vars) {
+        return StepReport::failed(problem).logged(called_with);
+    }
     match flow {
         Flow::Continue | Flow::Break | Flow::NextPass | Flow::End(Ending::Succeeded(_)) => {
             StepReport::done(

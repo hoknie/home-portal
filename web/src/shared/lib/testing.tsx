@@ -21,12 +21,13 @@ export function testQueryClient({ signedIn = true }: TestClientOptions = {}) {
 export type RenderOptions = { locale?: Locale };
 
 export function renderWithProviders(element: ReactElement, client: QueryClient = testQueryClient(), options: RenderOptions = {}) {
-  const result = render(
+  const wrapped = (shown: ReactElement) => (
     <QueryClientProvider client={client}>
-      <TestIntl locale={options.locale}>{element}</TestIntl>
-    </QueryClientProvider>,
+      <TestIntl locale={options.locale}>{shown}</TestIntl>
+    </QueryClientProvider>
   );
-  return { ...result, client };
+  const result = render(wrapped(element));
+  return { ...result, client, rerender: (shown: ReactElement) => result.rerender(wrapped(shown)) };
 }
 
 export function jsonResponse(body: unknown, init: { status?: number; headers?: Record<string, string> } = {}) {

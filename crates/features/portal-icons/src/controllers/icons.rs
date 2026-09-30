@@ -9,6 +9,7 @@ use axum::response::{IntoResponse, Response};
 use portal_feature::ApiError;
 use portal_model::Environment;
 
+use crate::helpers::{SVG, extension_of, inert_headers, svg_is_inert};
 use crate::services::Icons;
 use crate::types::{IconState, StoredIcon};
 
@@ -45,8 +46,13 @@ fn answer(icon: Option<StoredIcon>, headers: &HeaderMap) -> Result<Response, Api
     {
         return Ok(StatusCode::NOT_MODIFIED.into_response());
     }
+    if icon.content_type == SVG && !svg_is_inert(&icon.bytes) {
+        return Err(ApiError::NotFound(MISSING_ICON));
+    }
+    let extension = extension_of(&icon.content_type);
     let mut response = (StatusCode::OK, icon.bytes).into_response();
     let headers = response.headers_mut();
+    inert_headers(headers, extension);
     if let Ok(content_type) = HeaderValue::from_str(&icon.content_type) {
         headers.insert(CONTENT_TYPE, content_type);
     }

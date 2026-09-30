@@ -19,6 +19,7 @@ pub struct WidgetRegistry {
 
 impl WidgetRegistry {
     pub const UNKNOWN_WIDGET: &'static str = "no such widget";
+    pub const LONGEST_FETCH: std::time::Duration = std::time::Duration::from_secs(15);
 
     pub fn new(
         configuration: Arc<ConfigStore>,
@@ -84,7 +85,15 @@ impl WidgetRegistry {
             return Ok(fresh);
         }
         let now = OffsetDateTime::now_utc();
-        match provider.data(&instance.settings).await {
+        let limit = refresh.min(Self::LONGEST_FETCH);
+        let fetched = match tokio::time::timeout(limit, provider.data(&instance.settings)).await {
+            Ok(fetched) => fetched.map_err(|problem| problem.to_string()),
+            Err(_) => Err(format!(
+                "the data took longer than {} seconds",
+                limit.as_secs()
+            )),
+        };
+        match fetched {
             Ok(data) => {
                 let cached = Cached {
                     data,
@@ -98,13 +107,20 @@ impl WidgetRegistry {
                 tracing::warn!(widget = id, %problem, "widget data could not be refreshed");
                 match self.remembered(id) {
                     Some(mut cached) => {
-                        cached.problem = Some(problem.to_string());
+                        cached.problem = Some(problem.clone());
                         self.remember(id, cached.clone());
                         Ok(answer(cached, refresh, true))
                     }
-                    None => Err(ApiError::BadGateway(problem.to_string())),
+                    None => Err(ApiError::BadGateway(problem)),
                 }
             }
+        }
+    }
+
+    pub fn public_settings(&self, kind: &str, settings: &serde_json::Value) -> serde_json::Value {
+        match self.providers.get(kind) {
+            Some(provider) => provider.public_settings(settings),
+            None => settings.clone(),
         }
     }
 

@@ -8,6 +8,6 @@ export default getRequestConfig(async () => {
   return {
     locale,
     messages: dictionaries[locale],
-    timeZone: "Europe/Moscow",
+    timeZone: "UTC",
   };
 });

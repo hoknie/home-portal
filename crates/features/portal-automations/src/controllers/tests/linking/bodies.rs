@@ -108,3 +108,29 @@ async fn run_now_fills_the_variables_the_workflow_reads() {
     let body = finished(&api, run_id).await;
     assert_eq!(body["outcome"]["reason"], "camera camera");
 }
+
+#[tokio::test]
+async fn the_runs_list_carries_no_trace_while_the_run_itself_does() {
+    let api = ready();
+    let run_id = call(&api, ALARM, "application/json", r#"{"tail":"end"}"#)
+        .await
+        .unwrap();
+    let whole = finished(&api, run_id).await;
+    assert!(
+        whole["trace"]["entries"]
+            .as_array()
+            .is_some_and(|entries| !entries.is_empty())
+    );
+    let (_, _, listed) = send(
+        &api,
+        crate::controllers::tests::automations::get("/api/automations/runs"),
+    )
+    .await;
+    let run = listed["runs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|run| run["id"].as_str().and_then(|id| id.parse::<u64>().ok()) == Some(run_id))
+        .unwrap();
+    assert!(run["trace"].is_null());
+}

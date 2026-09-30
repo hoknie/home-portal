@@ -16,12 +16,13 @@ import {
 } from "@/entities/workflow";
 import { useCan } from "@/entities/session";
 import { ConflictError, ValidationError } from "@/shared/api";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 
 import { blocksToOpen, problemsFromServer } from "../model/checks/placing";
 import { type Problem, blocking } from "../model/checks/problems";
-import { type Draft, requestOf, sameDraft } from "../model/draft";
+import { type Draft, draftOf, requestOf, sameDraft } from "../model/draft";
 import { EditorContext, type Sources } from "../model/editor-context";
 import { useEditorState } from "../model/use-editor-state";
 import { CanvasArea } from "./canvas-area";
@@ -57,7 +58,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
   const state = useEditorState({ workflow, selfId: identity, initial, workflows, catalogue, sources, tags, readOnly: false, shownRun: lastShownRun, openRun: null });
   const { editor, draft } = state;
   const [base, setBase] = useState<Draft>(draft);
-  const [savedRevision, setSavedRevision] = useState<string | null>(null);
+  const held = useEditorRevision(revision);
   const [conflict, setConflict] = useState(false);
   const [savedTo, setSavedTo] = useState<string | null>(null);
   const [problemsOpen, setProblemsOpen] = useState(false);
@@ -90,7 +91,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
     setFocusRequest(field ? fieldId(path, field) : null);
   };
 
-  const store = async (): Promise<string | null> => {
+  const store = async (at: string | null = held.revision): Promise<string | null> => {
     setConflict(false);
     if (errors > 0) {
       setProblemsOpen(true);
@@ -98,10 +99,10 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
       return null;
     }
     try {
-      const saved = await save.mutateAsync({ id: identity, body: requestOf(draft), revision: savedRevision ?? revision });
+      const saved = await save.mutateAsync({ id: identity, body: requestOf(draft), revision: at });
       setBase(draft);
       setIdentity(saved.data.id);
-      setSavedRevision(saved.revision);
+      held.adopt(saved.revision);
       state.setServer({});
       toast.success(t(identity ? "workflowEditor.saved" : "workflowEditor.created"));
       return saved.data.id;
@@ -116,7 +117,6 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
         }
       } else if (error instanceof ConflictError) {
         setConflict(true);
-        setSavedRevision(null);
         onConflict();
       } else {
         toast.error(t("errors.generic"));
@@ -125,8 +125,17 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
     }
   };
 
-  const saveAndLeave = async () => {
-    const saved = await store();
+  const reload = () => {
+    const current = draftOf(workflow);
+    held.catchUp();
+    state.replaceDraft(current);
+    setBase(current);
+    state.setServer({});
+    setConflict(false);
+  };
+
+  const saveAndLeave = async (at: string | null = held.revision) => {
+    const saved = await store(at);
     if (saved !== null) {
       setSavedTo(saved);
     }
@@ -159,7 +168,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
           void saveAndLeave();
         }}
       >
-        {conflict ? <ErrorNotice title={t("errors.conflict")} description={t("workflowEditor.conflictKept")} /> : null}
+        {conflict ? <ConflictNotice pending={held.latest === held.revision || save.isPending} onReload={reload} onOverwrite={() => void saveAndLeave(held.catchUp())} /> : null}
         <EditToolbar
           canUndo={state.history.past.length > 0}
           canRedo={state.history.future.length > 0}

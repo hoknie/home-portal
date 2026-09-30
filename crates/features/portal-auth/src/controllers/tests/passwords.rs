@@ -53,7 +53,7 @@ async fn changing_your_own_password_keeps_this_session_and_ends_the_other() {
             "/api/users/admin/password",
             &laptop,
             &revision,
-            NEW_PASSWORD,
+            r#"{"password":"a brand new one","current_password":"secret99"}"#,
         ),
     )
     .await;
@@ -96,4 +96,26 @@ async fn a_short_password_or_an_unknown_user_is_refused() {
     .await;
     assert_eq!(unknown, StatusCode::NOT_FOUND);
     assert_eq!(users_text_of(&portal), before);
+}
+
+#[tokio::test]
+async fn a_stolen_session_cannot_lock_the_owner_out() {
+    let portal = portal(format!("{ON}{}", entry("admin", "secret99")));
+    let cookie = signed_in(&portal, "admin", "secret99").await.unwrap();
+    let before = users_text_of(&portal);
+    let revision = revision(&portal, &cookie).await;
+    for body in [
+        NEW_PASSWORD,
+        r#"{"password":"a brand new one","current_password":"not it at all"}"#,
+    ] {
+        let (status, _, answer) = send(
+            &portal,
+            write("PUT", "/api/users/admin/password", &cookie, &revision, body),
+        )
+        .await;
+        assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(answer["errors"][0]["field"], "current_password");
+    }
+    assert_eq!(users_text_of(&portal), before);
+    assert!(signed_in(&portal, "admin", "secret99").await.is_some());
 }

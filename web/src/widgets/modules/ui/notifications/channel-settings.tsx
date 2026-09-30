@@ -8,7 +8,8 @@ import { Allowed, useCan } from "@/entities/session";
 import { type NotificationChannel, useChangeChannel } from "@/entities/notification";
 import { useSecretNames } from "@/entities/workflow";
 import { ConflictError, ValidationError } from "@/shared/api";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
 
@@ -25,13 +26,15 @@ export function ChannelSettings({ channel, revision }: { channel: NotificationCh
   const [draft, setDraft] = useState<Record<string, unknown>>(channel.settings);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [conflict, setConflict] = useState(false);
+  const held = useEditorRevision(revision);
   const label = (key: string) => (t.has(`notifications.settings.${key}` as "notifications.settings.secret") ? t(`notifications.settings.${key}` as "notifications.settings.secret") : key);
   const set = (key: string, value: unknown) => setDraft((current) => ({ ...current, [key]: value }));
-  const save = async () => {
+  const save = async (at: string | null = held.revision) => {
     setErrors({});
     setConflict(false);
     try {
-      const saved = await change.mutateAsync({ name: channel.name, settings: draft, revision });
+      const saved = await change.mutateAsync({ name: channel.name, settings: draft, revision: at });
+      held.adopt(saved.revision);
       setDraft(saved.data.channels.find((candidate) => candidate.name === channel.name)?.settings ?? draft);
       toast.success(t("notifications.saved"));
     } catch (error) {
@@ -55,7 +58,17 @@ export function ChannelSettings({ channel, revision }: { channel: NotificationCh
         void save();
       }}
     >
-      {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+      {conflict ? (
+        <ConflictNotice
+          pending={held.latest === held.revision || change.isPending}
+          onReload={() => {
+            held.catchUp();
+            setDraft(channel.settings);
+            setConflict(false);
+          }}
+          onOverwrite={() => void save(held.catchUp())}
+        />
+      ) : null}
       <fieldset disabled={!can("notifications", "update")} className="contents">
         {Object.entries(draft).map(([key, value]) => {
           const id = `channel-${channel.name}-${key}`;

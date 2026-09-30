@@ -17,6 +17,9 @@ impl CurrentInterface {
     }
 
     pub fn run(&self) -> Result<Language, Vec<FieldError>> {
-        read_interface(&self.configuration.read().document)
+        self.configuration
+            .read()
+            .typed(read_interface)
+            .map(|language| *language)
     }
 }

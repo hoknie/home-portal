@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { type Dashboard, fetchLayout, useSaveLayout } from "@/entities/dashboard";
 import { ConflictError, type Revisioned, ValidationError, type WidgetSize } from "@/shared/api";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { Button } from "@/shared/ui/primitives";
 
@@ -93,7 +94,10 @@ export function Editor({ loaded, kinds, environments, spanOf, renderPreview, onR
     save.mutate(
       { layout: toRequest(sent), revision: at },
       {
-        onSuccess: () => toast.success(t("saved")),
+        onSuccess: (stored) => {
+          setRevision(stored.revision);
+          toast.success(t("saved"));
+        },
         onError: (error) => {
           if (error instanceof ConflictError) {
             setConflict(true);
@@ -129,21 +133,7 @@ export function Editor({ loaded, kinds, environments, spanOf, renderPreview, onR
           </Button>
         </div>
       </div>
-      {conflict ? (
-        <ErrorNotice
-          title={t("conflict")}
-          action={
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={onReload}>
-                {t("reload")}
-              </Button>
-              <Button size="sm" onClick={() => void overwrite()}>
-                {t("overwrite")}
-              </Button>
-            </div>
-          }
-        />
-      ) : null}
+      {conflict ? <ConflictNotice pending={save.isPending} onReload={onReload} onOverwrite={() => void overwrite()} /> : null}
       {errors ? <ErrorNotice title={t("invalid")} description={errors.other.join("\n") || undefined} /> : null}
       <DndContext
         sensors={sensors}

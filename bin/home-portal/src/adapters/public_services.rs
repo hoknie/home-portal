@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use portal_icons::IconsFeature;
-use portal_model::Environment;
+use portal_model::{Environment, ServiceStatus};
 use portal_public::{PublicService, PublicServices};
 use portal_services::ServicesFeature;
 
@@ -25,7 +25,11 @@ impl PublicServices for ServiceCatalogue {
                 address: entry.shown_address(environment, self.services.publishing()),
                 status: entry
                     .public_status
-                    .then(|| self.services.status_of(&entry.id)),
+                    .then(|| self.services.status_of(&entry.id))
+                    .map(|status| ServiceStatus {
+                        last_error: None,
+                        ..status
+                    }),
                 id: entry.id,
                 name: entry.name,
                 group: entry.group,

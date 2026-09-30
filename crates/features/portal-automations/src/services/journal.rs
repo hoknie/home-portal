@@ -27,8 +27,7 @@ impl Journal {
         if let Some(latest) = latest
             .filter(|latest| !incoming_manual && !manual(latest) && latest.merges_with(&record))
         {
-            latest.seen.count += 1;
-            latest.seen.last_at = record.seen.started_at;
+            latest.seen.absorb(record.id, record.seen.started_at);
             let merged = latest.clone();
             self.unwritten
                 .lock()
@@ -76,7 +75,9 @@ impl Journal {
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .iter()
-            .map(|record| record.id)
+            .flat_map(|record| {
+                std::iter::once(record.id).chain(record.seen.absorbed.iter().copied())
+            })
             .max()
             .unwrap_or(0)
     }
@@ -104,7 +105,7 @@ impl Journal {
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .iter()
-            .find(|record| record.id == id)
+            .find(|record| record.id == id || record.seen.holds(id))
             .cloned()
     }
 

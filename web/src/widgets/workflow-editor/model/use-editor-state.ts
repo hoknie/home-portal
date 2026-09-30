@@ -77,7 +77,8 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
   const own = selfId ?? workflow?.id ?? null;
   const others = useMemo(() => workflows.filter((candidate) => candidate.id !== own), [workflows, own]);
   const taken = useMemo(() => others.map((candidate) => candidate.id), [others]);
-  const lastRun: Trace | null = liveRun?.trace ?? workflow?.last_run?.trace ?? null;
+  const lastRecord = useRun(liveRun ? null : (workflow?.last_run?.id ?? null));
+  const lastRun: Trace | null = liveRun?.trace ?? lastRecord.data?.trace ?? null;
   const visible = readOnly && shownRun !== null;
   const shownTrace = visible ? (liveRun?.trace ?? null) : null;
   const overlay = useMemo(() => overlayOf(shownTrace?.entries ?? []), [shownTrace]);

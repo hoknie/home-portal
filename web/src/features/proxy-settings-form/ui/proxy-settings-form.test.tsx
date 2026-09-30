@@ -94,3 +94,16 @@ it("sends other ports and refuses one port for both", async () => {
   expect(body).toMatchObject({ http_port: 8080, https_port: 8443 });
 });
 
+
+it("an untouched form follows a refresh together with its revision, an edited one keeps its own", async () => {
+  const fetch = vi.fn(async () => jsonResponse(apiSamples.proxy));
+  vi.stubGlobal("fetch", fetch);
+  const view = renderWithProviders(<ProxySettingsForm proxy={disabled} revision='"r1"' />);
+  view.rerender(<ProxySettingsForm proxy={{ ...disabled }} revision='"r2"' />);
+  await userEvent.type(screen.getByLabelText("Portal address"), "portal.home.example.com");
+  view.rerender(<ProxySettingsForm proxy={{ ...disabled }} revision='"r3"' />);
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+  expect((init.headers as Record<string, string>)["If-Match"]).toBe('"r2"');
+});

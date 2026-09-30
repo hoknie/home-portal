@@ -42,10 +42,11 @@ async fn a_run_in_progress_is_listed_first_with_its_output_so_far() {
     let run = &body["runs"][0];
     assert_eq!(run["id"], id);
     assert_eq!(run["outcome"]["result"], "running");
-    assert_eq!(run["outcome"]["stdout"]["tail"], "copying\n");
+    assert_eq!(run["outcome"]["stdout"]["tail"], "");
     assert_eq!(run["arguments"], serde_json::json!(["--target", "nas"]));
     let (_, _, one) = send(&api, get(&format!("/api/automations/runs/{id}"))).await;
     assert_eq!(one["outcome"]["result"], "running");
+    assert_eq!(one["outcome"]["stdout"]["tail"], "copying\n");
     let (_, _, listed) = send(&api, get(AutomationsFeature::COLLECTION)).await;
     assert_eq!(listed["automations"][0]["active_run"]["id"], id);
     assert_eq!(

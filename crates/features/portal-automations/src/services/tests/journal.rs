@@ -43,6 +43,9 @@ fn consecutive_skips_of_one_automation_merge_with_a_count() {
     assert_eq!(audit.len(), 1);
     assert_eq!(audit[0].seen.count, 50);
     assert_eq!(audit[0].seen.last_at, at(49));
+    let merged_into = audit[0].id;
+    assert_eq!(journal.find(42).map(|run| run.id), Some(merged_into));
+    assert_eq!(journal.find(42).unwrap().seen.count, 50);
     assert_eq!(journal.runs(None).len(), 2);
 }
 

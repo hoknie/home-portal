@@ -1,4 +1,5 @@
 use portal_feature::Module;
+use portal_feature::PortalEvent;
 use time::OffsetDateTime;
 
 use super::AutomationSink;
@@ -38,7 +39,7 @@ impl AutomationStarter for AutomationSink {
         let mut event = manual_event(&found, OffsetDateTime::now_utc(), &[]);
         for (name, value) in fields {
             if let Some(field) = event.fields.iter_mut().find(|(key, _)| key == name) {
-                field.1 = value.clone();
+                field.1 = PortalEvent::clean(value);
             }
         }
         Ok(self.admit(&found, event, (None, origin.to_vec())))

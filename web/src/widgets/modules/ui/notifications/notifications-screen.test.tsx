@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
@@ -24,7 +24,7 @@ function render(notifications: Notifications, answer: (path: string, init?: Requ
   client.setQueryDefaults(notificationsKey, { staleTime: Infinity });
   client.setQueryData(notificationsKey, { data: notifications, revision: '"n1"' });
   renderWithProviders(<NotificationsScreen />, client);
-  return fetch;
+  return Object.assign(fetch, { client });
 }
 
 function card() {
@@ -84,4 +84,16 @@ it("while the module is off the page says so and keeps the settings editable", (
   expect(screen.getByRole("status")).toHaveTextContent("The Notifications module is off");
   expect(within(card()).getByRole("button", { name: "Send test" })).toBeDisabled();
   expect(within(card()).getByRole("button", { name: "Save channel" })).toBeEnabled();
+});
+
+it("a background refresh does not change the revision the rules send, and a conflict can be overwritten", async () => {
+  const puts = () => fetch.mock.calls.filter(([, init]) => init?.method === "PUT");
+  const fetch = render(ready, (_path, init) => (init?.method === "PUT" && puts().length === 1 ? new Response("stale", { status: 409 }) : jsonResponse(ready, { headers: { ETag: '"n2"' } })));
+  await userEvent.click(screen.getByRole("checkbox", { name: "Slow" }));
+  act(() => fetch.client.setQueryData(notificationsKey, { data: ready, revision: '"n2"' }));
+  await userEvent.click(screen.getByRole("button", { name: "Save rules" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Overwrite" }));
+  await waitFor(() => expect(puts()).toHaveLength(2));
+  expect(puts().map(([, init]) => (init?.headers as Record<string, string>)["If-Match"])).toEqual(['"n1"', '"n2"']);
+  expect(JSON.parse(String(puts()[1][1]?.body)).states).toContain("degraded");
 });

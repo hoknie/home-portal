@@ -195,3 +195,24 @@ fn a_setting_the_provider_refuses_names_the_widget_and_the_setting() {
 fn registry_document(text: &str) -> toml_edit::DocumentMut {
     text.parse().unwrap()
 }
+
+#[tokio::test]
+async fn a_provider_that_never_answers_is_cut_off_at_its_limit() {
+    let provider = Arc::new(Counting {
+        calls: AtomicUsize::new(0),
+        failing: AtomicBool::new(false),
+        refresh: Duration::from_millis(300),
+        delay: Duration::from_secs(3600),
+    });
+    let (_directory, registry) = registry_with(ONE, provider);
+    let answered = tokio::time::timeout(
+        Duration::from_secs(3),
+        registry.data("first", &Environment::internet()),
+    )
+    .await
+    .expect("the registry waited for a provider that never answers");
+    match answered {
+        Err(ApiError::BadGateway(problem)) => assert!(problem.contains("took longer"), "{problem}"),
+        other => panic!("{other:?}"),
+    }
+}

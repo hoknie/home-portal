@@ -469,6 +469,10 @@ too.
   keeps the previous icon and records why.
 - **The interface never asks a service for its icon.** `GET /api/icons/{service}` serves the bytes
   with an `ETag`, so the browser of a visitor on the internet never touches a private address.
+- **An icon is inert.** An SVG with scripts, event handlers, `foreignObject`, external references
+  or `javascript:` is refused when fetched, uploaded or served (`helpers/sniff.rs`). Every icon
+  answer carries `helpers/inert.rs`'s headers: a sandbox CSP, `nosniff` and an inline
+  `Content-Disposition`.
 
 ### 6.6. Probe kinds and diagnosis
 
@@ -532,6 +536,8 @@ too.
   core `Gate`. `portal-services` asks whether publishing is on through its own `Publishing` port
   (`adapters/proxy_publishing.rs`), because the shown address of a published environment is
   `https://<host>`.
+- **Forward-auth checks the group.** `controllers/authorize.rs` refuses a signed-in person without a
+  group (403) on a service that needs sign-in; a service open to its environment still passes them.
 
 ### 6.9. Automations
 
@@ -704,8 +710,10 @@ too.
   - `evaluating/inputs.rs` binds them when a run or a call starts: it reads a text as its type and
     refuses the run naming the input. Callers pass templates or literals (`InputValue`).
   - A `set` step builds a `list` or an `object` from templates, each keeping the type it renders.
-  - A `script` step adds `env` variables (names checked; `PORTAL_*` and the passed-through ones are
-    reserved) and replaces its stdin with the JSON of `stdin`.
+  - A `script` step adds `env` variables and replaces its stdin with the JSON of `stdin`. A name is
+    `STEP_` plus 1 to 59 capital letters, digits and `_` (`checking/action_decoding.rs`
+    `variable_problem`), so no step sets `BASH_ENV`, `LD_PRELOAD` or any other variable an
+    interpreter reads on its own.
   - An `automation` step queues an automation through the `AutomationStarter` port
     (`services/dispatch/starter.rs`), with its `fields` overriding the manual event.
     - A run it queues carries the chain of automations that led to it (`Pending.origin`). An
@@ -993,6 +1001,13 @@ too.
   ceiling on how much it reads.
 - **Measure first.** A new dependency comes with its transitive crate count, clean build time and
   binary size.
+- **Direct `hyper` and `hyper-util` (the accept loop in `boot/serve.rs`), and `toml_edit`'s `serde`
+  feature:** 0 new crates in `Cargo.lock`. `axum` already builds `hyper` with `server` and `http1`,
+  and `hyper-util` with `tokio`, `server` and `service`; `toml` already builds `serde_core` and
+  `serde_spanned`. The feature sets compiled are unchanged, so the clean build time and binary size
+  change only by the portal's own code.
+- **Widget fetches are bounded.** `WidgetRegistry` cuts a provider's fetch at the smaller of its
+  refresh period and 15 seconds, and keeps the last data with the problem.
 
 ---
 

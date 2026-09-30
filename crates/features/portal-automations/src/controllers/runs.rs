@@ -77,8 +77,12 @@ pub async fn runs(
         .filter(|run| !recorded.contains(&run.run_id));
     Json(RunsResponse {
         runs: active
-            .map(|run| RunResponse::active(&run))
-            .chain(finished.iter().map(RunResponse::of))
+            .map(|run| RunResponse::active(&run).summarized())
+            .chain(
+                finished
+                    .iter()
+                    .map(|record| RunResponse::of(record).summarized()),
+            )
             .collect(),
     })
 }

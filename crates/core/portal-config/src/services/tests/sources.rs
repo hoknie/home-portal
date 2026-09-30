@@ -192,7 +192,7 @@ fn slow_to_check(document: &toml_edit::DocumentMut) -> Vec<portal_feature::Field
 }
 
 #[test]
-fn a_reader_arriving_while_another_reloads_a_hand_edit_gets_the_new_content() {
+fn a_reader_arriving_while_another_reloads_is_answered_at_once_with_the_last_adopted_content() {
     let portal = super::support::Portal::with(&[("home-portal.toml", "name = \"old\"\n")]);
     portal.store.adopt(vec![slow_to_check]).unwrap();
     super::support::rewrite(
@@ -202,7 +202,9 @@ fn a_reader_arriving_while_another_reloads_a_hand_edit_gets_the_new_content() {
     let first = portal.store.clone();
     let reloading = std::thread::spawn(move || first.read());
     std::thread::sleep(std::time::Duration::from_millis(100));
+    let asked = std::time::Instant::now();
     let arriving = portal.store.read();
+    assert!(asked.elapsed() < std::time::Duration::from_millis(200));
     let name = |snapshot: &crate::Snapshot| {
         snapshot
             .document
@@ -210,6 +212,28 @@ fn a_reader_arriving_while_another_reloads_a_hand_edit_gets_the_new_content() {
             .and_then(|item| item.as_str())
             .map(str::to_string)
     };
-    assert_eq!(name(&arriving).as_deref(), Some("new"));
+    assert_eq!(name(&arriving).as_deref(), Some("old"));
     assert_eq!(name(&reloading.join().unwrap()).as_deref(), Some("new"));
+    assert_eq!(name(&portal.store.read()).as_deref(), Some("new"));
+}
+
+fn panics_on_boom(document: &toml_edit::DocumentMut) -> Vec<portal_feature::FieldError> {
+    assert!(document.get("boom").is_none(), "a validator broke");
+    Vec::new()
+}
+
+#[test]
+fn a_loader_that_panics_keeps_the_last_good_configuration_and_later_edits_still_load() {
+    let portal = super::support::Portal::with(&[("home-portal.toml", "port = 1\n")]);
+    portal.store.adopt(vec![panics_on_boom]).unwrap();
+    super::support::rewrite(&portal.path("home-portal.toml"), "port = 2\nboom = true\n");
+    assert_eq!(portal.store.read().document["port"].as_integer(), Some(1));
+    assert!(portal.store.problem().is_some());
+    super::support::rewrite(&portal.path("home-portal.toml"), "port = 3\n");
+    let other = portal.store.clone();
+    let from_another_thread = std::thread::spawn(move || other.read());
+    assert_eq!(
+        from_another_thread.join().unwrap().document["port"].as_integer(),
+        Some(3)
+    );
 }

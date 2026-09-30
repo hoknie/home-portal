@@ -4,7 +4,7 @@ import { Download, Play, Square } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { Allowed } from "@/entities/session";
+import { Allowed, useSession } from "@/entities/session";
 import { CADDY_LATEST, type Caddy, type Proxy, useDownloadCaddy, useStartCaddy, useStopCaddy } from "@/entities/proxy";
 import { RequestError } from "@/shared/api";
 import { KvList, KvRow } from "@/shared/ui/kv-list";
@@ -27,6 +27,7 @@ export function CaddyControl({ proxy, revision }: CaddyControlProps) {
   const download = useDownloadCaddy();
   const start = useStartCaddy();
   const stop = useStopCaddy();
+  const admin = useSession().data?.admin === true;
   const caddy = proxy.caddy;
   const downloading = caddy.download.state === "downloading" || download.isPending;
   const busy = downloading || start.isPending || stop.isPending;
@@ -115,7 +116,7 @@ export function CaddyControl({ proxy, revision }: CaddyControlProps) {
             </pre>
           </div>
         ) : null}
-        <CaddySourceForm proxy={proxy} revision={revision} />
+        {admin ? <CaddySourceForm proxy={proxy} revision={revision} /> : null}
       </div>
     </SectionCard>
   );

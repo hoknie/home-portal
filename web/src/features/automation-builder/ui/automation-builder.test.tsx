@@ -167,3 +167,18 @@ it("an argument completes event fields after {{ with their samples", async () =>
   await userEvent.keyboard("{Enter}");
   expect(screen.getByLabelText("Argument 1")).toHaveValue("{{service.id}}");
 });
+
+it("a background refresh does not change the revision it sends, and a conflict can be overwritten", async () => {
+  const fetch = vi.fn(async (path: string, init?: RequestInit) =>
+    init?.method === "PUT" && fetch.mock.calls.filter(([, sent]) => sent?.method === "PUT").length === 1 ? new Response("stale", { status: 409 }) : path.startsWith("/api/automations/schedule") ? jsonResponse(apiSamples.automationSchedule) : jsonResponse(saved),
+  );
+  vi.stubGlobal("fetch", fetch);
+  const builder = (revision: string) => <AutomationBuilder automation={saved} revision={revision} taken={[]} catalogue={catalogue} scripts={scripts} onSaved={vi.fn()} onConflict={vi.fn()} />;
+  const view = renderWithProviders(builder('"r1"'));
+  view.rerender(builder('"r2"'));
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Overwrite" }));
+  await waitFor(() => expect(fetch.mock.calls.filter(([, sent]) => sent?.method === "PUT")).toHaveLength(2));
+  const matches = fetch.mock.calls.filter(([, sent]) => sent?.method === "PUT").map(([, sent]) => (sent?.headers as Record<string, string>)["If-Match"]);
+  expect(matches).toEqual(['"r1"', '"r2"']);
+});

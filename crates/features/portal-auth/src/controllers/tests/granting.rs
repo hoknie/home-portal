@@ -8,10 +8,11 @@ const GROUPS: &str = "[[groups]]\nname = \"family\"\npermissions = { users = [\"
 
 fn household() -> Portal {
     portal(format!(
-        "{ON}{}\n{}\n{}\n{GROUPS}",
+        "{ON}{}\n{}\n{}\n{}\n{GROUPS}",
         entry("root", "secret99"),
         member("anna", "correct horse", Some("family")),
-        member("bob", "correct horse", None)
+        member("bob", "correct horse", None),
+        member("olga", "correct horse", Some("operators"))
     ))
 }
 
@@ -91,7 +92,7 @@ async fn a_guest_changes_their_own_password_but_no_one_elses() {
         "bob",
         "PUT",
         "/api/users/bob/password",
-        r#"{"password":"a brand new one"}"#,
+        r#"{"password":"a brand new one","current_password":"correct horse"}"#,
     )
     .await;
     assert_eq!(own, StatusCode::OK);
@@ -188,4 +189,32 @@ async fn taking_over_an_admin_is_refused() {
     let deleted = status_of(&portal, "anna", "DELETE", "/api/users/root", "").await;
     assert_eq!(deleted, StatusCode::FORBIDDEN);
     assert!(signed_in(&portal, "root", "secret99").await.is_some());
+}
+
+#[tokio::test]
+async fn no_one_takes_over_or_demotes_a_stronger_colleague() {
+    let portal = household();
+    for (method, uri, body) in [
+        (
+            "PUT",
+            "/api/users/olga/password",
+            r#"{"password":"a brand new one"}"#,
+        ),
+        ("PUT", "/api/users/olga/group", r#"{"group":null}"#),
+        ("DELETE", "/api/users/olga", ""),
+    ] {
+        let status = status_of(&portal, "anna", method, uri, body).await;
+        assert_eq!(status, StatusCode::FORBIDDEN, "{method} {uri}");
+    }
+    assert!(signed_in(&portal, "olga", "correct horse").await.is_some());
+    assert!(users_text_of(&portal).contains("group = \"operators\""));
+    let weaker = status_of(
+        &portal,
+        "anna",
+        "PUT",
+        "/api/users/bob/group",
+        r#"{"group":"guests"}"#,
+    )
+    .await;
+    assert_eq!(weaker, StatusCode::OK);
 }

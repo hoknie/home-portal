@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
+use time::OffsetDateTime;
 use tokio::sync::Notify;
 use tokio::time::Instant;
 
@@ -50,19 +51,34 @@ impl Supervisor {
     }
 
     pub fn reconcile(&self) {
-        let wanted: Vec<ServiceEntry> = ServicesSection::read(&self.configuration.read().document)
-            .map(|section| section.services)
-            .unwrap_or_default()
-            .into_iter()
+        let configured: Vec<ServiceEntry> = self
+            .configuration
+            .read()
+            .typed(ServicesSection::read)
+            .map(|section| section.services.clone())
+            .unwrap_or_default();
+        let wanted: Vec<ServiceEntry> = configured
+            .iter()
             .filter(|entry| entry.probe.enabled)
+            .cloned()
+            .collect();
+        let by_id: HashMap<&str, &ServiceEntry> = configured
+            .iter()
+            .map(|entry| (entry.id.as_str(), entry))
             .collect();
         let mut running = self.running.lock().unwrap_or_else(PoisonError::into_inner);
         running.retain(|id, task| {
-            let keep = wanted.iter().any(|entry| entry.probes_like(&task.entry));
+            let entry = by_id.get(id.as_str());
+            let keep =
+                entry.is_some_and(|entry| entry.probe.enabled && entry.probes_like(&task.entry));
             if !keep {
                 task.handle.abort();
-                if !wanted.iter().any(|entry| &entry.id == id) {
-                    self.board.forget(id);
+                match entry {
+                    None => self.board.forget(id),
+                    Some(entry) if !entry.probe.enabled => {
+                        self.board.pause(id, OffsetDateTime::now_utc());
+                    }
+                    Some(_) => {}
                 }
             }
             keep

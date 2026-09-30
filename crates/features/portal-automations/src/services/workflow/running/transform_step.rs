@@ -6,7 +6,7 @@ use serde_json::{Map, Value};
 use super::runner::WorkflowRunner;
 use crate::services::workflow::checking::decode_transform;
 use crate::services::workflow::evaluating::{
-    Frame, Secrets, apply_chain, at_key, holds, order_of, render_text, render_value,
+    Frame, Secrets, apply_chain, at_key, holds, order_of, oversized, render_text, render_value,
     rendered_arguments, text_of,
 };
 use crate::types::{
@@ -39,6 +39,9 @@ pub fn run_transform(input: &str, operations: &[Operation], frame: &mut Frame) -
             operation.name(),
             StepLog::shortened(&value.to_string(), StepLog::LONGEST)
         ));
+    }
+    if let Some(problem) = oversized("the transformed value", &value) {
+        return StepReport::failed(problem);
     }
     let names: Vec<&str> = operations.iter().map(Operation::name).collect();
     StepReport {

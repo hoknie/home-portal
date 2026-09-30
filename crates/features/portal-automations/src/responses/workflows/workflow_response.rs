@@ -35,8 +35,14 @@ impl WorkflowResponse {
             steps: serde_json::to_value(&view.raw.steps).unwrap_or(Value::Array(Vec::new())),
             steps_version: workflow.version.clone(),
             used_by: view.used_by.iter().map(WorkflowUsageResponse::of).collect(),
-            last_run: view.last.as_ref().map(RunResponse::of),
-            active_run: view.active.as_ref().map(RunResponse::active),
+            last_run: view
+                .last
+                .as_ref()
+                .map(|run| RunResponse::of(run).summarized()),
+            active_run: view
+                .active
+                .as_ref()
+                .map(|run| RunResponse::active(run).summarized()),
         }
     }
 }

@@ -11,7 +11,8 @@ use crate::controllers::{RESTART_PATH, not_found, restart};
 use portal_feature::{Action, Area, Right, Rule};
 
 use crate::middlewares::{
-    decide_environment, decide_language, json_only, require_right, require_session,
+    deadline, decide_environment, decide_language, json_only, require_right, require_session,
+    same_origin, security_headers,
 };
 use crate::types::{Registry, RuleBook};
 
@@ -65,7 +66,9 @@ pub fn assemble(registry: &Registry) -> Router {
         .route(API_ROOT, any(not_found))
         .route(API_ANY_PATH, any(not_found))
         .fallback_service(portal_web::interface(registry.interface.clone()))
+        .layer(middleware::from_fn(deadline))
         .layer(middleware::from_fn(json_only))
+        .layer(middleware::from_fn(same_origin))
         .layer(middleware::from_fn_with_state(
             CurrentNetwork::new(configuration.clone()),
             decide_environment,
@@ -74,4 +77,5 @@ pub fn assemble(registry: &Registry) -> Router {
             CurrentInterface::new(configuration),
             decide_language,
         ))
+        .layer(middleware::from_fn(security_headers))
 }

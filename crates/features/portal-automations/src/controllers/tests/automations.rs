@@ -357,7 +357,10 @@ async fn run_now_queues_a_manual_run_with_samples_and_the_person() {
     assert_eq!(run["fields"]["service.id"], "jellyfin");
     assert_eq!(run["arguments"], serde_json::json!(["--", "jellyfin"]));
     assert_eq!(run["outcome"]["result"], "succeeded");
-    assert_eq!(run["outcome"]["stdout"]["tail"], "-- jellyfin\n");
+    assert_eq!(run["outcome"]["stdout"]["tail"], "");
+    assert_eq!(run["outcome"]["stdout"]["bytes"], 12);
+    let (_, _, one) = send(&api, get(&format!("/api/automations/runs/{run_id}"))).await;
+    assert_eq!(one["outcome"]["stdout"]["tail"], "-- jellyfin\n");
     let (_, _, listed) = send(&api, get(AutomationsFeature::COLLECTION)).await;
     assert_eq!(listed["automations"][0]["last_run"]["id"], run_id);
     let (status, _, _) = send(

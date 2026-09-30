@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { Allowed, useCan } from "@/entities/session";
 import { type Rules, useChangeRules } from "@/entities/notification";
 import { ConflictError, ValidationError } from "@/shared/api";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { Button, Label, Switch } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -20,19 +22,23 @@ export function RulesForm({ rules, revision }: { rules: Rules; revision: string 
   const change = useChangeRules();
   const [draft, setDraft] = useState(rules);
   const [problem, setProblem] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const held = useEditorRevision(revision);
   const toggle = (state: string, on: boolean) =>
     setDraft((current) => ({ ...current, states: on ? [...current.states, state] : current.states.filter((name) => name !== state) }));
-  const save = async () => {
+  const save = async (at: string | null = held.revision) => {
     setProblem(null);
+    setConflict(false);
     try {
-      const saved = await change.mutateAsync({ rules: draft, revision });
+      const saved = await change.mutateAsync({ rules: draft, revision: at });
+      held.adopt(saved.revision);
       setDraft(saved.data.rules);
       toast.success(t("notifications.saved"));
     } catch (error) {
       if (error instanceof ValidationError) {
         setProblem(error.fields.map((field) => field.message).join("; "));
       } else if (error instanceof ConflictError) {
-        setProblem(t("errors.conflict"));
+        setConflict(true);
       } else {
         toast.error(t("errors.generic"));
       }
@@ -41,6 +47,17 @@ export function RulesForm({ rules, revision }: { rules: Rules; revision: string 
   return (
     <SectionCard title={t("notifications.rules.title")} description={t("notifications.rules.description")}>
       <div className="grid gap-5">
+        {conflict ? (
+          <ConflictNotice
+            pending={held.latest === held.revision || change.isPending}
+            onReload={() => {
+              held.catchUp();
+              setDraft(rules);
+              setConflict(false);
+            }}
+            onOverwrite={() => void save(held.catchUp())}
+          />
+        ) : null}
         {problem ? <ErrorNotice title={t("notifications.refused")} description={problem} /> : null}
         <fieldset className="grid gap-2" disabled={!editable}>
           <legend className="mb-2 text-sm font-medium">{t("notifications.rules.states")}</legend>

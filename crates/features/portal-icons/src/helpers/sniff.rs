@@ -20,11 +20,41 @@ pub fn sniff(bytes: &[u8], declared: Option<&str>) -> Option<String> {
         })
         .filter(|value| ALLOWED_TYPES.contains(&value.as_str()));
     let seen = kind_of(bytes)?;
+    if seen == SVG && !svg_is_inert(bytes) {
+        return None;
+    }
     match declared {
         Some(declared) if same_family(&declared, seen) => Some(declared),
         Some(_) => None,
         None => Some(seen.to_string()),
     }
+}
+
+pub const SVG: &str = "image/svg+xml";
+pub const ACTIVE_SVG_PARTS: [&str; 6] = [
+    "<script",
+    "<foreignobject",
+    "javascript:",
+    "data:text/html",
+    "<iframe",
+    "<embed",
+];
+
+pub fn svg_is_inert(bytes: &[u8]) -> bool {
+    let text = String::from_utf8_lossy(bytes).to_ascii_lowercase();
+    let compact: String = text.chars().filter(|c| !c.is_whitespace()).collect();
+    let handler = text.match_indices("on").any(|(at, _)| {
+        let before = text[..at].chars().next_back();
+        let after: String = text[at + 2..]
+            .chars()
+            .take_while(|c| c.is_ascii_alphabetic())
+            .collect();
+        let rest = text[at + 2 + after.len()..].trim_start();
+        before.is_some_and(|c| c.is_whitespace() || c == '/' || c == '"' || c == '\'')
+            && !after.is_empty()
+            && rest.starts_with('=')
+    });
+    !handler && !ACTIVE_SVG_PARTS.iter().any(|part| compact.contains(part))
 }
 
 pub fn extension_of(content_type: &str) -> &'static str {

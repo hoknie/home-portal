@@ -9,7 +9,7 @@ serde.workspace = true
 sha2.workspace = true
 tokio.workspace = true
 toml.workspace = true
-toml_edit.workspace = true
+toml_edit = { workspace = true, features = ["serde"] }
 tracing.workspace = true
 portal-feature.workspace = true
 

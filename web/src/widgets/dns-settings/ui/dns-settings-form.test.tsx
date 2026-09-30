@@ -52,3 +52,17 @@ it("offers one address row per configured environment and maps server fields", (
   expect(fieldOf("dns.zones[2]")).toBe("zones");
   expect(fieldOf("dns.records[0].name")).toBeNull();
 });
+
+it("a refresh while the form is being edited keeps the revision the typed values started from", async () => {
+  const fetch = vi.fn(async () => new Response("stale", { status: 409 }));
+  vi.stubGlobal("fetch", fetch);
+  const view = renderWithProviders(<DnsSettingsForm dns={dns} revision='"r1"' />);
+  await userEvent.clear(screen.getByLabelText("Port"));
+  await userEvent.type(screen.getByLabelText("Port"), "5353");
+  view.rerender(<DnsSettingsForm dns={{ ...dns }} revision='"r2"' />);
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  expect(await screen.findByRole("button", { name: "Overwrite" })).toBeInTheDocument();
+  expect(screen.getByLabelText("Port")).toHaveValue(5353);
+  const [, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+  expect((init.headers as Record<string, string>)["If-Match"]).toBe('"r1"');
+});

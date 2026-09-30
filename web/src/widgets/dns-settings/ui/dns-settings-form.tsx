@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { useCan } from "@/entities/session";
 import { type Dns, type DnsForm, dnsFormOf, dnsFormSchema, useSaveDns } from "@/entities/dns-server";
 import { ConflictError, ValidationError } from "@/shared/api";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
@@ -47,18 +49,22 @@ export function DnsSettingsForm({ dns, revision }: DnsSettingsFormProps) {
   const [conflict, setConflict] = useState(false);
   const form = useForm<DnsForm>({ resolver: zodResolver(dnsFormSchema), defaultValues: dnsFormOf(dns) });
   const { reset, formState } = form;
+  const held = useEditorRevision(revision);
+  const { adopt } = held;
 
   useEffect(() => {
     if (!formState.isDirty) {
       reset(dnsFormOf(dns));
+      adopt(revision);
     }
-  }, [dns, formState.isDirty, reset]);
+  }, [dns, revision, formState.isDirty, reset, adopt]);
 
-  const submit = form.handleSubmit(async (values) => {
+  const send = (at: string | null) => form.handleSubmit(async (values) => {
     setProblems([]);
     setConflict(false);
     try {
-      const saved = await save.mutateAsync({ form: values, dns, revision });
+      const saved = await save.mutateAsync({ form: values, dns, revision: at });
+      adopt(saved.revision);
       reset(dnsFormOf(saved.data));
       toast.success(t("saved"));
     } catch (error) {
@@ -80,12 +86,18 @@ export function DnsSettingsForm({ dns, revision }: DnsSettingsFormProps) {
       }
     }
   });
+  const submit = send(held.revision);
+  const reload = () => {
+    reset(dnsFormOf(dns));
+    held.catchUp();
+    setConflict(false);
+  };
 
   const errors = formState.errors;
   return (
     <form onSubmit={submit} className="grid gap-5" noValidate>
       <fieldset disabled={!editable} className="contents">
-        {conflict ? <ErrorNotice title={common("errors.conflict")} /> : null}
+        {conflict ? <ConflictNotice pending={held.latest === held.revision || save.isPending} onReload={reload} onOverwrite={() => void send(held.catchUp())()} /> : null}
         {problems.length > 0 ? <ErrorNotice title={t("refused")} description={problems.join("; ")} /> : null}
         <div className="grid gap-5 sm:grid-cols-3">
           <FormField id="dns-address" label={t("address")} hint={t("addressHint")} error={errors.address?.message}>

@@ -169,6 +169,11 @@ mod run_file {
         );
         assert_eq!(restored[1].seen.count, 2);
         assert_eq!(restored[1].seen.last_at, at(3));
+        assert_eq!(restored[1].seen.absorbed, vec![3]);
+        let reloaded = Journal::default();
+        reloaded.restore(restored);
+        assert_eq!(reloaded.find(3).map(|run| run.id), Some(1));
+        assert_eq!(reloaded.highest_id(), 3);
         let mode = fs::metadata(folder.path().join("automations/runs.ndjson"))
             .unwrap()
             .permissions()

@@ -59,7 +59,7 @@ function useColumns(data: Users | undefined, revision: string | null): Column<Us
         guarded(user) && !user.you ? null : (
           <span className="inline-flex flex-wrap justify-end gap-1">
             {can("users", "update") && !guarded(user) ? <ChangeGroupDialog user={user} revision={revision} disabled={!data.editable} /> : null}
-            {user.you || can("users", "update") ? <PasswordDialog name={user.name} revision={revision} disabled={!data.editable} /> : null}
+            {user.you || can("users", "update") ? <PasswordDialog name={user.name} revision={revision} disabled={!data.editable} own={user.you} /> : null}
             {can("users", "delete") && !guarded(user) ? <DeleteUserButton user={user} users={data} revision={revision} /> : null}
           </span>
         ),

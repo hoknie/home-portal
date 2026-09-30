@@ -11,7 +11,7 @@ use toml_edit::DocumentMut;
 use super::{StatusBoard, Supervisor, check_entry, validate_services};
 use crate::fakes::{Behaviour, Upstream};
 use crate::probes::Probe;
-use crate::types::{Known, ProbeKind, ProbeSettings, ServiceEntry, Wake};
+use crate::types::{HistoryRange, Known, ProbeKind, ProbeSettings, ServiceEntry, Wake};
 
 fn entry() -> ServiceEntry {
     ServiceEntry::new("media", "Media", "http://10.0.0.5:8096")
@@ -351,4 +351,40 @@ fn a_service_that_does_not_notify_still_reports_its_changes_marked_as_silent() {
     assert!(changes.iter().all(|change| !change.notify));
     assert_eq!(changes[1].now, "down");
     assert_eq!(changes[1].diagnosis.as_deref(), Some("other"));
+}
+
+#[tokio::test]
+async fn pausing_probing_keeps_the_history_and_sets_the_status_to_unknown() {
+    let upstream = Upstream::start(Behaviour::Status {
+        code: 200,
+        delay: Duration::ZERO,
+    })
+    .await;
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("home-portal.toml");
+    write(&path, &service_text("nas", &upstream.url()));
+    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let path = path.with_file_name("services.toml");
+    let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), Vec::new()));
+    let supervisor = Supervisor::new(
+        store,
+        Environment::internet(),
+        board.clone(),
+        Arc::new(Probe::new().unwrap()),
+    );
+    supervisor.reconcile();
+    assert!(eventually(|| board.status("nas").state == ServiceState::Up).await);
+    let day = |board: &StatusBoard| {
+        let now = OffsetDateTime::now_utc();
+        board.history("nas", HistoryRange::Day, now).points.len()
+    };
+    let recorded = day(&board);
+    assert!(recorded > 0);
+    let paused =
+        service_text("nas", &upstream.url()).replace("every_seconds = 5", "enabled = false");
+    write(&path, &paused);
+    supervisor.reconcile();
+    assert!(supervisor.probing().is_empty());
+    assert_eq!(board.status("nas").state, ServiceState::Unknown);
+    assert_eq!(day(&board), recorded);
 }

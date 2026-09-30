@@ -59,6 +59,12 @@ size = "half"
 type = "host-metrics"
 id = "private-box"
 section = "shelf"
+
+[[dashboard.widgets]]
+type = "calendar"
+id = "cal"
+public = true
+settings = { url = "http://127.0.0.1:9/private-5f3a9c-token/basic.ics", days = 7 }
 "#;
 
 fn portal() -> Router {
@@ -114,7 +120,26 @@ async fn the_public_portal_answers_without_a_session() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["environment"], "local");
     assert_eq!(ids(&body, "services"), vec!["blog", "nas"]);
-    assert_eq!(ids(&body, "widgets"), vec!["box"]);
+    assert_eq!(ids(&body, "widgets"), vec!["box", "cal"]);
+}
+
+#[tokio::test]
+async fn public_answers_carry_no_private_settings_errors_or_addresses() {
+    let (_, portal) = ask("/api/public/portal", Some("203.0.113.5")).await;
+    let text = portal.to_string();
+    assert!(!text.contains("private-5f3a9c-token"), "{text}");
+    let calendar = portal["widgets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|widget| widget["id"] == "cal")
+        .unwrap();
+    assert_eq!(calendar["settings"], serde_json::json!({ "days": 7 }));
+    assert!(portal["services"][0]["status"]["last_error"].is_null());
+    let (status, data) = ask("/api/public/widgets/cal/data", Some("203.0.113.5")).await;
+    assert_eq!(status, StatusCode::BAD_GATEWAY);
+    assert!(!data.to_string().contains("private-5f3a9c-token"), "{data}");
+    assert!(!data.to_string().contains("127.0.0.1"), "{data}");
 }
 
 #[tokio::test]

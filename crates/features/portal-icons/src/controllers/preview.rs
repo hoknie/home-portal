@@ -8,6 +8,7 @@ use axum::response::{IntoResponse, Response};
 use portal_feature::{ApiError, FieldError};
 use url::Url;
 
+use crate::helpers::{SVG, extension_of, inert_headers, svg_is_inert};
 use crate::requests::PreviewRequest;
 use crate::services::Icons;
 use crate::types::IconSource;
@@ -36,14 +37,21 @@ pub async fn preview(
         .preview(&source, address.as_ref())
         .await
         .map_err(invalid)?;
+    if icon.content_type == SVG && !svg_is_inert(&icon.bytes) {
+        return Err(invalid(ACTIVE_IMAGE));
+    }
+    let extension = extension_of(&icon.content_type);
     let mut response = (StatusCode::OK, icon.bytes).into_response();
     let headers = response.headers_mut();
+    inert_headers(headers, extension);
     if let Ok(content_type) = HeaderValue::from_str(&icon.content_type) {
         headers.insert(CONTENT_TYPE, content_type);
     }
     headers.insert(CACHE_CONTROL, HeaderValue::from_static(NO_STORE));
     Ok(response)
 }
+
+pub const ACTIVE_IMAGE: &str = "the image can run script, so it is not used";
 
 fn invalid(problem: impl ToString) -> ApiError {
     ApiError::Invalid(vec![FieldError::new(FIELD, problem.to_string())])

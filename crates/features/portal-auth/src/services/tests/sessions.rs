@@ -112,12 +112,19 @@ fn the_sixth_attempt_after_five_failures_is_refused_for_a_minute() {
     let throttle = Throttle::default();
     let now = datetime!(2026-09-22 10:00 UTC);
     for _ in 0..5 {
-        assert!(throttle.check(CLIENT, now).is_ok());
+        assert!(throttle.reserve(CLIENT, now).is_ok());
         throttle.fail(CLIENT, now);
     }
-    assert_eq!(throttle.check(CLIENT, now), Err(60));
-    assert_eq!(throttle.check(CLIENT, now + Duration::seconds(59)), Err(1));
-    assert!(throttle.check(CLIENT, now + Duration::seconds(61)).is_ok());
+    assert_eq!(throttle.reserve(CLIENT, now), Err(60));
+    assert_eq!(
+        throttle.reserve(CLIENT, now + Duration::seconds(59)),
+        Err(1)
+    );
+    assert!(
+        throttle
+            .reserve(CLIENT, now + Duration::seconds(61))
+            .is_ok()
+    );
 }
 
 #[test]
@@ -129,7 +136,7 @@ fn a_success_resets_the_failures() {
     }
     throttle.succeed(CLIENT);
     throttle.fail(CLIENT, now);
-    assert!(throttle.check(CLIENT, now).is_ok());
+    assert!(throttle.reserve(CLIENT, now).is_ok());
 }
 
 #[test]
@@ -140,7 +147,11 @@ fn failures_older_than_the_window_do_not_count() {
         throttle.fail(CLIENT, now);
     }
     throttle.fail(CLIENT, now + Duration::minutes(16));
-    assert!(throttle.check(CLIENT, now + Duration::minutes(16)).is_ok());
+    assert!(
+        throttle
+            .reserve(CLIENT, now + Duration::minutes(16))
+            .is_ok()
+    );
 }
 
 #[test]

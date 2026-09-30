@@ -11,6 +11,8 @@ pub const DEPLOY: &str = "1f2e3d4c-5b6a-4978-8a6b-5c4d3e2f1a0b";
 pub const ECHO: &str = "2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d";
 pub const INPUT: &str = "5d6e7f8a-9b0c-4d1e-8f2a-3b4c5d6e7f8a";
 pub const ALARM: &str = "6e7f8a9b-0c1d-4e2f-9a3b-4c5d6e7f8a9b";
+pub const SYNC: &str = "7f8a9b0c-1d2e-4f3a-8b4c-5d6e7f8a9b0c";
+pub const SAFE_SYNC: &str = "8a9b0c1d-2e3f-4a4b-9c5d-6e7f8a9b0c1d";
 
 pub fn file() -> String {
     format!(
@@ -86,6 +88,20 @@ title = "Alarm"
 action = "script"
 workflow = "sizes"
 inputs = {{ payload = "{{{{webhook.body}}}}" }}
+
+[[webhooks]]
+id = "{SYNC}"
+title = "Sync"
+variables = ["host"]
+action = "script"
+run = {{ script = "restart.sh", args = ["{{{{webhook.host}}}}"] }}
+
+[[webhooks]]
+id = "{SAFE_SYNC}"
+title = "Safe sync"
+variables = ["host"]
+action = "script"
+run = {{ script = "restart.sh", args = ["--", "{{{{webhook.host}}}}"] }}
 
 [[webhooks]]
 id = "{DEPLOY}"

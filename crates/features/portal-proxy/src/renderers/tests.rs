@@ -117,7 +117,34 @@ fn a_service_behind_sign_in_asks_the_portal_exactly_as_caddys_forward_auth_does(
     let adapted = adapted_handlers("nas.example.com");
     let handlers = handlers_of(&rendered, "nas.example.com");
     assert_eq!(handlers[1], adapted[0]);
-    assert_eq!(handlers[2], adapted[1]);
+    assert_eq!(handlers[2], super::routes::without_session());
+    assert_eq!(handlers[3], adapted[1]);
+}
+
+#[test]
+fn the_session_cookie_is_removed_after_forward_auth_and_before_the_upstream() {
+    let mut nas = service("nas", "nas.example.com", "https://192.168.1.5:5001");
+    nas.publication.auth = vec!["internet".into()];
+    let rendered = render(&settings(), &[nas], portal());
+    let kinds: Vec<String> = handlers_of(&rendered, "nas.example.com")
+        .iter()
+        .map(|handler| handler["handler"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(
+        kinds,
+        vec!["headers", "reverse_proxy", "headers", "reverse_proxy"]
+    );
+    let stripped = &handlers_of(&rendered, "nas.example.com")[2];
+    assert_eq!(
+        stripped["request"]["replace"]["Cookie"][0]["search_regexp"],
+        "(^|;\\s*)home_portal_session=[^;]*"
+    );
+    let portal_host = handlers_of(&rendered, "portal.example.com");
+    assert!(
+        portal_host
+            .iter()
+            .all(|handler| handler["request"]["replace"].is_null())
+    );
 }
 
 #[test]
@@ -148,10 +175,10 @@ fn a_service_without_sign_in_goes_straight_to_its_upstream() {
         portal(),
     );
     assert_eq!(
-        handlers_of(&rendered, "media.example.com")[1],
+        handlers_of(&rendered, "media.example.com")[2],
         json!({ "handler": "reverse_proxy", "upstreams": [{ "dial": "192.168.1.10:8096" }] })
     );
-    assert_eq!(handlers_of(&rendered, "media.example.com").len(), 2);
+    assert_eq!(handlers_of(&rendered, "media.example.com").len(), 3);
 }
 
 #[test]
@@ -159,11 +186,11 @@ fn an_https_upstream_is_verified_unless_told_otherwise() {
     let verified = service("nas", "nas.example.com", "https://nas.lan");
     let rendered = render(&settings(), &[verified], portal());
     assert_eq!(
-        handlers_of(&rendered, "nas.example.com")[1]["transport"],
+        handlers_of(&rendered, "nas.example.com")[2]["transport"],
         json!({ "protocol": "http", "tls": {} })
     );
     assert_eq!(
-        handlers_of(&rendered, "nas.example.com")[1]["upstreams"][0]["dial"],
+        handlers_of(&rendered, "nas.example.com")[2]["upstreams"][0]["dial"],
         "nas.lan:443"
     );
 }
@@ -288,4 +315,28 @@ fn dns_over_https_on_its_own_host_is_routed_to_the_portal_before_anything_else_f
     assert_eq!(route["handle"][0]["upstreams"][0]["dial"], "127.0.0.1:8080");
     let policies = rendered["apps"]["tls"]["automation"]["policies"].to_string();
     assert!(policies.contains("dns.example.com"), "{policies}");
+}
+
+#[test]
+fn a_real_caddy_accepts_the_rendered_configuration_when_one_is_given() {
+    let Ok(caddy) = std::env::var("CADDY") else {
+        eprintln!("CADDY is not set; the rendered configuration is not checked by a real Caddy");
+        return;
+    };
+    let mut nas = service("nas", "nas.example.com", "https://192.168.1.5:5001");
+    nas.publication.auth = vec!["internet".into()];
+    let rendered = render(&settings(), &[nas], portal());
+    let folder = tempfile::tempdir().unwrap();
+    let path = folder.path().join("caddy.json");
+    std::fs::write(&path, rendered.to_string()).unwrap();
+    let checked = std::process::Command::new(caddy)
+        .args(["validate", "--config"])
+        .arg(&path)
+        .output()
+        .unwrap();
+    assert!(
+        checked.status.success(),
+        "{}",
+        String::from_utf8_lossy(&checked.stderr)
+    );
 }

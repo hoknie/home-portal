@@ -26,6 +26,17 @@ pub async fn install(
     let checksums = release
         .asset(&checksums_name)
         .ok_or_else(|| format!("Caddy {version} has no {checksums_name}"))?;
+    for link in [
+        &archive.browser_download_url,
+        &checksums.browser_download_url,
+    ] {
+        if !source.serves(link) {
+            return Err(format!(
+                "{link} is not on the host of the source {}; nothing was installed",
+                source.base
+            ));
+        }
+    }
     let listed = releases.fetch(&checksums.browser_download_url).await?;
     let expected = expected_digest(&String::from_utf8_lossy(&listed), &archive_name)
         .ok_or_else(|| format!("{checksums_name} does not list {archive_name}"))?;

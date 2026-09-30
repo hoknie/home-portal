@@ -12,8 +12,9 @@ export function createUser(name: string, password: string, group: string | null,
   return request(api.users, { method: "POST", body: { name, password, group }, revision, schema: usersSchema });
 }
 
-export function changePassword(name: string, password: string, revision: string | null) {
-  return request(api.userPassword(name), { method: "PUT", body: { password }, revision, schema: usersSchema });
+export function changePassword(name: string, password: string, current: string | null, revision: string | null) {
+  const body = current === null ? { password } : { password, current_password: current };
+  return request(api.userPassword(name), { method: "PUT", body, revision, schema: usersSchema });
 }
 
 export function changeUserGroup(name: string, group: string | null, revision: string | null) {

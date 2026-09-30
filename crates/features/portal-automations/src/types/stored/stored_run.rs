@@ -32,6 +32,7 @@ impl StoredRun {
                 started_at: record.seen.started_at,
                 last_at: record.seen.last_at,
                 count: record.seen.count,
+                absorbed: record.seen.absorbed.clone(),
             },
             result: StoredResult {
                 outcome: record.result.outcome.name().to_string(),
@@ -57,6 +58,7 @@ impl StoredRun {
                 started_at: self.seen.started_at,
                 last_at: self.seen.last_at,
                 count: self.seen.count,
+                absorbed: self.seen.absorbed,
             },
             result: Finished {
                 outcome: Outcome::of(&self.result.outcome)?,

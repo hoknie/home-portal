@@ -33,13 +33,13 @@ describe("users", () => {
     const result = newUserFormSchema.safeParse({ name: "anna", password: "correct horse", repeat: "correct hors" });
     expect(result.success).toBe(false);
     expect(result.error?.issues.map((issue) => [issue.path.join("."), issue.message])).toEqual([["repeat", "validation.userPasswordsDiffer"]]);
-    expect(passwordFormSchema.safeParse({ password: "correct horse", repeat: "correct horse" }).success).toBe(true);
+    expect(passwordFormSchema.safeParse({ password: "correct horse", repeat: "correct horse", current: "" }).success).toBe(true);
   });
 
   it("a name is trimmed and a password needs 8 to 1024 characters", () => {
     expect(newUserFormSchema.parse({ name: "  anna ", password: "12345678", repeat: "12345678" }).name).toBe("anna");
     expect(newUserFormSchema.safeParse({ name: "", password: "12345678", repeat: "12345678" }).success).toBe(false);
-    expect(passwordFormSchema.safeParse({ password: "1234567", repeat: "1234567" }).success).toBe(false);
+    expect(passwordFormSchema.safeParse({ password: "1234567", repeat: "1234567", current: "" }).success).toBe(false);
     expect(passwordFormSchema.safeParse({ password: "p".repeat(1025), repeat: "p".repeat(1025) }).success).toBe(false);
   });
 });

@@ -301,7 +301,8 @@
     "userName": "Give a name of 1 to 64 characters, without control characters",
     "userPassword": "Use 8 to 1024 characters",
     "userPasswordsDiffer": "The passwords do not match",
-    "automationWorkflow": "Choose a workflow"
+    "automationWorkflow": "Choose a workflow",
+    "userCurrentPassword": "Type your current password"
   },
   "conditions": {
     "clear": "clear",
@@ -469,9 +470,6 @@
     "save": "Save layout",
     "saving": "Saving…",
     "leave": "Leave the page? Unsaved layout changes will be lost.",
-    "conflict": "The configuration file changed while you were editing. Your layout is still on screen.",
-    "reload": "Load the layout from the file",
-    "overwrite": "Save over it",
     "invalid": "The layout cannot be saved: fix the marked fields.",
     "addSection": "Add section",
     "sectionTitle": "Section title",
@@ -1217,7 +1215,8 @@
         "delete": "Delete",
         "execute": "Run"
       }
-    }
+    },
+    "currentPassword": "Current password"
   },
   "workflows": {
     "trace": {
@@ -1317,7 +1316,6 @@
     "fixProblems": "Fix the marked fields first",
     "saved": "Workflow saved",
     "created": "Workflow added",
-    "conflictKept": "Someone changed the configuration meanwhile. Your steps are kept; save again to write them over the new version.",
     "identity": "Workflow",
     "title": "Title",
     "id": "Id",
@@ -2493,5 +2491,13 @@
     "description": "Your group does not hold the right to open it. Ask an admin if you need it.",
     "home": "Back to home",
     "forbidden": "You do not have the right to do this."
+  },
+  "conflict": {
+    "title": "Someone changed the configuration while you were editing",
+    "description": "What you typed is still here. Reload to see the current values, or overwrite them with yours.",
+    "reload": "Reload",
+    "overwrite": "Overwrite",
+    "reloadTitle": "Discard what you typed?",
+    "reloadDescription": "The current values will replace everything you typed in this form."
   }
 }

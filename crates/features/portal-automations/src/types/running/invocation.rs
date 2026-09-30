@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
+use portal_feature::EventName;
+
 use super::{EventValues, Pending};
 use crate::types::Catalogue;
 
@@ -63,6 +65,36 @@ impl Invocation {
             input: event.input(),
             timeout,
         }
+    }
+
+    pub const SEPARATOR: &'static str = "--";
+    pub const WEBHOOK_PLACEHOLDER: &'static str = "{{webhook.";
+
+    pub fn smuggled_option(pending: &Pending, arguments: &[String]) -> Option<String> {
+        if pending.event.name != EventName::WebhookReceived {
+            return None;
+        }
+        let templates = &pending.automation.run.args;
+        let separated = |index: usize| {
+            templates[..index]
+                .iter()
+                .any(|template| template.trim() == Self::SEPARATOR)
+        };
+        templates
+            .iter()
+            .zip(arguments)
+            .enumerate()
+            .find(|(index, (template, argument))| {
+                template.trim_start().starts_with(Self::WEBHOOK_PLACEHOLDER)
+                    && argument.starts_with('-')
+                    && !separated(*index)
+            })
+            .map(|(index, (template, _))| {
+                format!(
+                    "argument {} ({template}) would start with - from the webhook's data and be read as an option; put -- before it",
+                    index + 1
+                )
+            })
     }
 
     pub fn values_of(pending: &Pending) -> EventValues {

@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 use std::env;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
-use std::sync::{Condvar, Mutex, PoisonError, RwLock};
-use std::thread::{self, ThreadId};
+use std::sync::{Mutex, PoisonError, RwLock};
 
 use portal_feature::{Check, FieldError, Validator};
 use toml_edit::DocumentMut;
@@ -22,8 +22,7 @@ pub struct ConfigStore {
     pub(super) validators: RwLock<Vec<Validator>>,
     pub(super) checks: RwLock<Vec<Check>>,
     pub(super) current: Mutex<Current>,
-    pub(super) reloading: Mutex<Option<ThreadId>>,
-    pub(super) reloaded: Condvar,
+    pub(super) reloading: Mutex<bool>,
     pub(super) secrets: RwLock<BTreeMap<String, SecretString>>,
     pub(super) writing: tokio::sync::Mutex<()>,
     pub(super) storage: BTreeMap<Storage, PathBuf>,
@@ -76,8 +75,7 @@ impl ConfigStore {
                 listing: Vec::new(),
                 problem: None,
             }),
-            reloading: Mutex::new(None),
-            reloaded: Condvar::new(),
+            reloading: Mutex::new(false),
             secrets: RwLock::new(BTreeMap::new()),
             writing: tokio::sync::Mutex::new(()),
             storage,
@@ -166,42 +164,37 @@ impl ConfigStore {
             .collect()
     }
 
+    pub const LOADER_FAILED: &'static str =
+        "loading the changed configuration failed unexpectedly; the last good one is kept";
+
     pub fn read(&self) -> Snapshot {
         if let Some(snapshot) = self.unchanged() {
             return snapshot;
         }
-        let me = thread::current().id();
         {
             let mut reloading = self
                 .reloading
                 .lock()
                 .unwrap_or_else(PoisonError::into_inner);
-            if *reloading == Some(me) {
+            if *reloading {
                 return self.snapshot_now();
-            }
-            while reloading.is_some() {
-                reloading = self
-                    .reloaded
-                    .wait(reloading)
-                    .unwrap_or_else(PoisonError::into_inner);
             }
             if let Some(snapshot) = self.unchanged() {
                 return snapshot;
             }
-            *reloading = Some(me);
+            *reloading = true;
         }
+        let _reloading = Reloading(&self.reloading);
         let seen = self.disk_state();
-        let adopted = self.reload();
+        let adopted = catch_unwind(AssertUnwindSafe(|| self.reload())).unwrap_or_else(|_| {
+            self.ignore(Self::LOADER_FAILED.to_string());
+            false
+        });
         if !adopted {
             let mut current = self.current.lock().unwrap_or_else(PoisonError::into_inner);
             current.stamps = seen.0;
             current.listing = seen.1;
         }
-        *self
-            .reloading
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner) = None;
-        self.reloaded.notify_all();
         self.snapshot_now()
     }
 
@@ -358,5 +351,13 @@ impl ConfigStore {
                 .flat_map(|check| check(document)),
         );
         errors
+    }
+}
+
+struct Reloading<'a>(&'a Mutex<bool>);
+
+impl Drop for Reloading<'_> {
+    fn drop(&mut self) {
+        *self.0.lock().unwrap_or_else(PoisonError::into_inner) = false;
     }
 }

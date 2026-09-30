@@ -14,7 +14,7 @@ use crate::controllers::{
 };
 use crate::ports::Connection;
 use crate::repositories::SessionFile;
-use crate::services::{SessionGate, SessionStore, validate_users};
+use crate::services::{PasswordChecks, SessionGate, SessionStore, validate_users};
 use crate::types::AuthState;
 use crate::usecases::{
     ChangeGroup, ChangePassword, ChangeUserGroup, CreateGroup, CreateUser, DeleteGroup, DeleteUser,
@@ -47,18 +47,27 @@ impl AuthFeature {
             OffsetDateTime::now_utc(),
         );
         let sessions = Arc::new(sessions);
+        let checks = Arc::new(PasswordChecks::default());
         let gate = SessionGate {
             configuration: configuration.clone(),
             sessions: sessions.clone(),
         };
         AuthFeature {
             state: AuthState {
-                sign_in: SignIn::new(configuration.clone(), sessions.clone(), events.clone()),
+                sign_in: SignIn::new(
+                    configuration.clone(),
+                    sessions.clone(),
+                    (events.clone(), checks.clone()),
+                ),
                 session: ShowSession::new(gate.clone()),
                 sign_out: SignOut::new(gate.clone(), events),
                 list_users: ListUsers::new(configuration.clone()),
                 create_user: CreateUser::new(configuration.clone()),
-                change_password: ChangePassword::new(configuration.clone(), sessions),
+                change_password: ChangePassword::new(
+                    configuration.clone(),
+                    sessions,
+                    checks.clone(),
+                ),
                 change_group: ChangeUserGroup::new(configuration.clone()),
                 delete_user: DeleteUser::new(configuration.clone()),
                 list_groups: ListGroups::new(configuration.clone()),

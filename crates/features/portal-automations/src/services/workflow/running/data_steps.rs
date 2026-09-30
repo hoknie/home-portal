@@ -4,7 +4,7 @@ use serde_json::Value;
 
 use super::runner::WorkflowRunner;
 use crate::services::workflow::evaluating::{
-    Frame, render_json, render_keys, render_number, render_text, render_value, text_of,
+    Frame, oversized, render_json, render_keys, render_number, render_text, render_value, text_of,
 };
 use crate::types::{Ending, NumberSetting, SetValue, StepReport, Workflow};
 
@@ -28,6 +28,9 @@ pub fn run_set(variable: &str, value: &SetValue, frame: &mut Frame) -> StepRepor
         }),
     };
     match rendered {
+        Ok(value) if oversized(variable, &value).is_some() => {
+            StepReport::failed(oversized(variable, &value).unwrap_or_default())
+        }
         Ok(value) => {
             frame.vars.insert(variable.to_string(), value.clone());
             let detail = format!("{variable} = {}", text_of(&value));

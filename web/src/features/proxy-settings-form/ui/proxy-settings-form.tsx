@@ -16,6 +16,8 @@ import {
 } from "@/entities/proxy";
 import { useCan } from "@/entities/session";
 import { ConflictError, ValidationError } from "@/shared/api";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Input } from "@/shared/ui/primitives";
@@ -45,18 +47,22 @@ export function ProxySettingsForm({ proxy, revision }: ProxySettingsFormProps) {
   const [conflict, setConflict] = useState(false);
   const form = useForm<ProxySettingsFormValues>({ resolver: zodResolver(proxySettingsFormSchema), defaultValues: proxySettingsFormOf(proxy) });
   const { reset, formState } = form;
+  const held = useEditorRevision(revision);
+  const { adopt } = held;
 
   useEffect(() => {
     if (!formState.isDirty) {
       reset(proxySettingsFormOf(proxy));
+      adopt(revision);
     }
-  }, [proxy, formState.isDirty, reset]);
+  }, [proxy, revision, formState.isDirty, reset, adopt]);
 
-  const submit = form.handleSubmit(async (values) => {
+  const send = (at: string | null) => form.handleSubmit(async (values) => {
     setProblems([]);
     setConflict(false);
     try {
-      const saved = await save.mutateAsync({ form: values, revision });
+      const saved = await save.mutateAsync({ form: values, revision: at });
+      adopt(saved.revision);
       reset(proxySettingsFormOf(saved.data));
       toast.success(t("proxy.settings.saved"));
     } catch (error) {
@@ -78,13 +84,19 @@ export function ProxySettingsForm({ proxy, revision }: ProxySettingsFormProps) {
       }
     }
   });
+  const submit = send(held.revision);
+  const reload = () => {
+    reset(proxySettingsFormOf(proxy));
+    held.catchUp();
+    setConflict(false);
+  };
 
   const errors = formState.errors;
   const mode = useWatch({ control: form.control, name: "mode" });
   return (
     <form onSubmit={submit} className="grid gap-5" noValidate>
       <fieldset disabled={!editable} className="contents">
-        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        {conflict ? <ConflictNotice pending={held.latest === held.revision || save.isPending} onReload={reload} onOverwrite={() => void send(held.catchUp())()} /> : null}
         {problems.length > 0 ? <ErrorNotice title={t("proxy.settings.refused")} description={problems.join("; ")} /> : null}
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField id="proxy-portal-host" label={t("proxy.settings.portalHost")} hint={t("proxy.settings.portalHostHint")} error={errors.portal_host?.message}>

@@ -102,3 +102,17 @@ it("editing a webhook that runs a workflow keeps the workflow", async () => {
   await waitFor(() => expect(fetch.mock.calls.some(([called]) => called === path)).toBe(true));
   expect(sentBody(fetch, path)).toMatchObject({ title: "Release from GitHub now", action: "script", run: null, workflow: "revive", inputs: { service: "{{webhook.service}}" } });
 });
+
+it("a background refresh does not change the revision it sends, and a conflict can be overwritten", async () => {
+  const webhook = webhooksSchema.parse(apiSamples.webhooks).webhooks[0];
+  const puts = () => fetch.mock.calls.filter(([, sent]) => sent?.method === "PUT");
+  const fetch = vi.fn(async (_path: string, init?: RequestInit) => (init?.method === "PUT" && puts().length === 1 ? new Response("stale", { status: 409 }) : jsonResponse(apiSamples.webhooks.webhooks[0])));
+  vi.stubGlobal("fetch", fetch);
+  const form = (revision: string) => <WebhookForm webhook={webhook} revision={revision} catalogue={catalogue} scripts={scripts} onSaved={vi.fn()} onConflict={vi.fn()} />;
+  const view = renderWithProviders(form('"r1"'));
+  view.rerender(form('"r2"'));
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Overwrite" }));
+  await waitFor(() => expect(puts()).toHaveLength(2));
+  expect(puts().map(([, sent]) => (sent?.headers as Record<string, string>)["If-Match"])).toEqual(['"r1"', '"r2"']);
+});

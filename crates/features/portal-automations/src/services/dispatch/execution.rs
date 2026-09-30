@@ -45,6 +45,24 @@ pub async fn execute(
         Ok(program) => {
             let directory = scripts.root();
             let invocation = Invocation::for_run(&pending, program, directory);
+            if let Some(reason) = Invocation::smuggled_option(&pending, &invocation.arguments) {
+                let record = RunRecord::finished(
+                    &pending,
+                    invocation.arguments,
+                    started_at,
+                    Finished {
+                        outcome: Outcome::Refused,
+                        exit_code: None,
+                        reason: Some(reason),
+                        duration: Duration::ZERO,
+                        stdout: Tail::default(),
+                        stderr: Tail::default(),
+                    },
+                );
+                sink.journal.record(record);
+                sink.active.remove(pending.run_id);
+                return;
+            }
             sink.active
                 .started(pending.run_id, invocation.arguments.clone(), started_at);
             let finished = Runner::run(&invocation, sink.groups.clone(), control).await;

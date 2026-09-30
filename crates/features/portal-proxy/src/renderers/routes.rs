@@ -6,6 +6,7 @@ use url::Url;
 use crate::types::PublishedService;
 
 pub const USER_HEADER: &str = "X-Portal-User";
+pub const SESSION_COOKIE: &str = "home_portal_session";
 pub const AUTHORIZE_PATH: &str = "/api/proxy/authorize";
 pub const DOH_PATH: &str = "/dns-query";
 pub const USER_PLACEHOLDER: &str = "{http.reverse_proxy.header.X-Portal-User}";
@@ -43,6 +44,7 @@ pub fn service_route(service: &PublishedService, portal: &str) -> Value {
     if !publication.auth.is_empty() {
         handlers.push(forward_auth(portal));
     }
+    handlers.push(without_session());
     handlers.push(upstream(&service.upstream, publication.upstream_verify));
     host_route(&publication.host, handlers)
 }
@@ -99,6 +101,20 @@ fn upstream(address: &str, verify: bool) -> Value {
         handler["transport"] = json!({ "protocol": "http", "tls": tls });
     }
     handler
+}
+
+pub fn without_session() -> Value {
+    json!({
+        "handler": "headers",
+        "request": {
+            "replace": {
+                "Cookie": [{
+                    "search_regexp": format!("(^|;\\s*){SESSION_COOKIE}=[^;]*"),
+                    "replace": ""
+                }]
+            }
+        }
+    })
 }
 
 fn delete_user() -> Value {

@@ -8,7 +8,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { type NewUserForm, newUserFormSchema, useCreateUser } from "@/entities/user";
-import { RequestError, ValidationError } from "@/shared/api";
+import { ConflictError, RequestError, ValidationError } from "@/shared/api";
+import { useEditorRevision } from "@/shared/lib/editor-revision";
+import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
 
@@ -28,10 +30,19 @@ export function AddUserDialog({ revision, disabled }: AddUserDialogProps) {
   const create = useCreateUser();
   const form = useForm<NewUserForm>({ resolver: zodResolver(newUserFormSchema), defaultValues: EMPTY });
   const errors = form.formState.errors;
-  const submit = form.handleSubmit(async (values) => {
+  const [conflict, setConflict] = useState(false);
+  const held = useEditorRevision(revision);
+  const reload = () => {
+    held.catchUp();
+    form.reset(EMPTY);
+    setGroup(NO_GROUP);
+    setConflict(false);
+  };
+  const send = (at: string | null) => form.handleSubmit(async (values) => {
+    setConflict(false);
     try {
       setGroupProblem(null);
-      await create.mutateAsync({ name: values.name, password: values.password, group: groupOf(group), revision });
+      await create.mutateAsync({ name: values.name, password: values.password, group: groupOf(group), revision: at });
       toast.success(t("users.created", { name: values.name }));
       form.reset(EMPTY);
       setOpen(false);
@@ -47,13 +58,21 @@ export function AddUserDialog({ revision, disabled }: AddUserDialogProps) {
         }
         return;
       }
+      if (error instanceof ConflictError) {
+        setConflict(true);
+        return;
+      }
       setGroupProblem(error instanceof RequestError && error.status === FORBIDDEN ? t("access.forbidden") : null);
       toast.error(t("users.refused", { message: error instanceof RequestError ? error.message : String(error) }));
     }
   });
+  const submit = send(held.revision);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button type="button" disabled={disabled} title={disabled ? t("users.moduleOff") : undefined} onClick={() => setOpen(true)}>
+      <Button type="button" disabled={disabled} title={disabled ? t("users.moduleOff") : undefined} onClick={() => {
+          reload();
+          setOpen(true);
+        }}>
         <UserPlus aria-hidden />
         {t("users.add")}
       </Button>
@@ -63,6 +82,7 @@ export function AddUserDialog({ revision, disabled }: AddUserDialogProps) {
           <DialogDescription>{t("users.addDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4" noValidate>
+          {conflict ? <ConflictNotice pending={held.latest === held.revision || create.isPending} onReload={reload} onOverwrite={() => void send(held.catchUp())()} /> : null}
           <FormField id="user-name" label={t("users.name")} error={errors.name?.message}>
             <Input id="user-name" autoComplete="off" spellCheck={false} {...form.register("name")} />
           </FormField>

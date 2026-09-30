@@ -101,6 +101,19 @@ async fn from_outside_with_a_session_the_request_passes_with_the_users_name() {
 }
 
 #[tokio::test]
+async fn a_signed_in_person_without_a_group_is_not_let_through() {
+    let portal = portal(&file("http://127.0.0.1:9"));
+    let request = authorize("nas.example.com", Some(Sessions::GUEST_COOKIE), "GET");
+    let response = send(&portal, request, CADDY, "internet").await;
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert!(response.headers().get("x-portal-user").is_none());
+    let request = authorize("nas.example.com", Some(Sessions::GUEST_COOKIE), "GET");
+    let at_home = send(&portal, request, CADDY, "local").await;
+    assert_eq!(at_home.status(), StatusCode::OK);
+    assert!(at_home.headers().get("x-portal-user").is_none());
+}
+
+#[tokio::test]
 async fn from_home_the_request_passes_without_a_user() {
     let portal = portal(&file("http://127.0.0.1:9"));
     let response = send(

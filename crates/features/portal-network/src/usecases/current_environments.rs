@@ -17,6 +17,9 @@ impl CurrentEnvironments {
     }
 
     pub fn run(&self) -> Result<Environments, Vec<FieldError>> {
-        read_environments(&self.configuration.read().document)
+        self.configuration
+            .read()
+            .typed(read_environments)
+            .map(|environments| (*environments).clone())
     }
 }

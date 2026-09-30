@@ -43,3 +43,39 @@ fn a_digest_is_short_stable_and_follows_the_source() {
     assert_ne!(digest_of("auto"), digest_of("catalog:jellyfin"));
     assert_eq!(digest_of("auto").len(), 32);
 }
+
+#[test]
+fn an_svg_that_can_run_script_is_refused_like_an_unreadable_image() {
+    let active: [&[u8]; 6] = [
+        b"<svg xmlns=\"http://www.w3.org/2000/svg\"><script>fetch('/api/users')</script></svg>",
+        b"<svg onload=\"fetch('/api/users')\"></svg>",
+        b"<svg><a href=\"javascript:alert(1)\"><circle r=\"4\"/></a></svg>",
+        b"<svg><foreignObject><iframe src=\"/\"/></foreignObject></svg>",
+        b"<svg><image\n onerror = \"x()\" href=\"\"/></svg>",
+        b"<?xml version=\"1.0\"?><svg><SCRIPT>x()</SCRIPT></svg>",
+    ];
+    for bytes in active {
+        assert!(
+            sniff(bytes, None).is_none(),
+            "{}",
+            String::from_utf8_lossy(bytes)
+        );
+    }
+    let plain = b"<svg viewBox=\"0 0 24 24\"><path d=\"M1 1h22\" stroke-width=\"2\" fill=\"none\"/><text>online</text></svg>";
+    assert_eq!(sniff(plain, None).as_deref(), Some("image/svg+xml"));
+}
+
+#[test]
+fn an_icon_answer_cannot_run_anything_when_opened_directly() {
+    let mut headers = axum::http::HeaderMap::new();
+    super::inert_headers(&mut headers, "svg");
+    assert_eq!(
+        headers["content-security-policy"],
+        "default-src 'none'; style-src 'unsafe-inline'; sandbox"
+    );
+    assert_eq!(headers["x-content-type-options"], "nosniff");
+    assert_eq!(
+        headers["content-disposition"],
+        "inline; filename=\"icon.svg\""
+    );
+}

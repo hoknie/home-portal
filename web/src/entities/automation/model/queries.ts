@@ -66,7 +66,7 @@ export function useRun(id: string | null) {
     queryKey: runKey(id),
     queryFn: () => fetchRun(id ?? ""),
     enabled: id !== null,
-    refetchInterval: (query) => runRefreshInterval(query.state.data),
+    refetchInterval: (query) => (query.state.status === "error" ? false : runRefreshInterval(query.state.data)),
   });
 }
 
