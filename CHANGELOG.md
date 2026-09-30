@@ -8,11 +8,22 @@ The versions follow [Semantic Versioning](https://semver.org/).
 
 ### Features
 
+- Added categories for modules to ui ([29c3c4b](https://github.com/hoknie/home-portal/commit/29c3c4bc7012bcd3f0cba26d8835dc38981f6d1e))
+- Imporved var autocomlete in wf ([52cc8b2](https://github.com/hoknie/home-portal/commit/52cc8b2203a19478cdd77a4f0f39b0ef813cc9c7))
+- Security updates ([5514f6c](https://github.com/hoknie/home-portal/commit/5514f6cce7863c2ea661413b724a8296780221bb))
+- Setup masks for token and others, restrict env names, forbid secret vars in workflow ([4fd8a97](https://github.com/hoknie/home-portal/commit/4fd8a97a245bc3c63292118798b5285526f53392))
+- Added data transfer from webhooks to workflows ([f7ff4c9](https://github.com/hoknie/home-portal/commit/f7ff4c993017d02c3ef5776b91c4e21b509d26e1))
 - Added macos permission ask and user groups ([58304ae](https://github.com/hoknie/home-portal/commit/58304aef9605c93e3565fd6c50d4215c8f197ae1))
 
 ### Fixes
 
+- Updated collapse menu item ([b7d3722](https://github.com/hoknie/home-portal/commit/b7d3722b53ea7215fc785df51f61b787ba2a63eb))
 - Updated crashed test ([f8819c7](https://github.com/hoknie/home-portal/commit/f8819c70a763ea9d9a7dcdaa3c560b799c58647a))
+
+### Other
+
+- Updated arch doc ([f2ab0af](https://github.com/hoknie/home-portal/commit/f2ab0afbb0442cf07058150617a34a83a9c5c3a4))
+- Updated docs ([8b3346e](https://github.com/hoknie/home-portal/commit/8b3346ebeef9926e84fa26fb41d952474b660be0))
 
 [Full diff](https://github.com/hoknie/home-portal/compare/v0.1.9...HEAD)
 
