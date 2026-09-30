@@ -1423,8 +1423,7 @@
       "notStarted": "No automation or webhook starts this workflow yet",
       "unknownSampleKey": "The answer structure of {step} has no key {key}",
       "inputDefault": "The default is not of the input's type",
-      "variableName": "Capital letters, digits and _, starting with a letter",
-      "variableReserved": "Set by the portal; choose another name",
+      "variableName": "STEP_ followed by capital letters, digits and _",
       "numberOrTemplate": "Must be a whole number or a template such as '{{'inputs.seconds'}}'",
       "neverRuns": "This step never runs: an earlier step ends this branch",
       "needsLoop": "Needs an enclosing loop: works only inside a loop body, not through parallel"
@@ -1895,7 +1894,7 @@
         },
         "env": {
           "label": "Environment",
-          "help": "Variables the script reads from its environment, such as $TARGET; each value is a template."
+          "help": "Variables the script reads from its environment; each name starts with STEP_ (such as $STEP_TARGET) and each value is a template."
         },
         "stdin": {
           "label": "Standard input",
@@ -2064,7 +2063,8 @@
       "filterType": "{filter} takes {takes} and got {got}",
       "notInPortal": "{name} is not a value the portal offers",
       "unknownEventField": "{name} is not a field any event carries",
-      "undeclaredWebhookVariable": "no webhook that starts this workflow sends {name}"
+      "undeclaredWebhookVariable": "no webhook that starts this workflow sends {name}",
+      "secretThroughFilter": "{name}: a secret cannot pass through a filter, so its value never reaches the trace in another form"
     },
     "edges": {
       "then": "then",

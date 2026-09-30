@@ -102,7 +102,11 @@ pub async fn execute_workflow(
             let ending = runner.run(&workflow, &mut frame).await;
             let elapsed = began.elapsed();
             match ending {
-                Ending::Succeeded(reason) => finished_as(Outcome::Succeeded, reason, elapsed),
+                Ending::Succeeded(reason) => finished_as(
+                    Outcome::Succeeded,
+                    reason.map(|reason| secrets.mask(&reason)),
+                    elapsed,
+                ),
                 Ending::Failed(reason) => {
                     finished_as(Outcome::Failed, Some(secrets.mask(&reason)), elapsed)
                 }

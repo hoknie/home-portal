@@ -21,6 +21,7 @@ export const REASONS = [
   "filterType",
   "unknownEventField",
   "undeclaredWebhookVariable",
+  "secretThroughFilter",
 ] as const;
 
 export const WARNING_REASONS: readonly Reason[] = ["undeclaredWebhookVariable"];
@@ -104,11 +105,19 @@ function filterReason(found: TemplateName, scope: Scope): { reason: Reason; para
   return chainProblem(certainType(found.name, scope), found.filters);
 }
 
+const SECRETS = "secrets.";
+
+function secretFiltered(found: TemplateName) {
+  const filters = found.filters ?? [];
+  return (found.name.startsWith(SECRETS) && filters.length > 0) || filters.some((call) => (call.names ?? []).some((named) => named.name.startsWith(SECRETS)));
+}
+
 export function checkTemplate(text: string, scope: Scope, portal: PortalValues | null = null, events: EventKnowledge | null = null): TemplateProblem[] {
   return templateNames(text).flatMap((found) => {
     const argumentProblem = (found.filters ?? []).flatMap((call) => call.names ?? []).map((named) => reasonFor(named.name, scope, portal, events)).find((reason) => reason !== null) ?? null;
+    const secretProblem = found.valid && secretFiltered(found) ? { reason: "secretThroughFilter" as const, params: { name: found.name } } : null;
     const problem = found.valid
-      ? (argumentProblem ?? reasonFor(found.name, scope, portal, events) ?? filterReason(found, scope))
+      ? (secretProblem ?? argumentProblem ?? reasonFor(found.name, scope, portal, events) ?? filterReason(found, scope))
       : found.name.includes(".")
         ? { reason: "notAValue" as const, params: { name: found.name } }
         : null;

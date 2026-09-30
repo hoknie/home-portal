@@ -7,7 +7,7 @@ use axum::{Extension, Json};
 use portal_config::{Revision, Revisioned};
 use portal_feature::{ApiError, Principal};
 
-use super::runs::name_of;
+use super::runs::{name_of, rights_of};
 use crate::requests::{WorkflowRequest, WorkflowRunRequest};
 use crate::responses::{
     QueuedResponse, WorkflowCatalogueResponse, WorkflowResponse, WorkflowsResponse,
@@ -20,24 +20,36 @@ pub async fn list_workflows(State(state): State<AutomationsState>) -> Response {
 
 pub async fn create_workflow(
     State(state): State<AutomationsState>,
+    principal: Option<Extension<Principal>>,
     headers: HeaderMap,
     Json(request): Json<WorkflowRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
     let raw = request.into_raw().map_err(ApiError::Invalid)?;
-    let created = state.workflows.create.run(raw, &revision).await?;
+    let rights = rights_of(principal);
+    let created = state
+        .workflows
+        .create
+        .run(raw, (&revision, &rights))
+        .await?;
     Ok(one(StatusCode::CREATED, created))
 }
 
 pub async fn update_workflow(
     State(state): State<AutomationsState>,
     Path(id): Path<String>,
+    principal: Option<Extension<Principal>>,
     headers: HeaderMap,
     Json(request): Json<WorkflowRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
     let raw = request.into_raw().map_err(ApiError::Invalid)?;
-    let changed = state.workflows.change.run(&id, raw, &revision).await?;
+    let rights = rights_of(principal);
+    let changed = state
+        .workflows
+        .change
+        .run(&id, raw, (&revision, &rights))
+        .await?;
     Ok(one(StatusCode::OK, changed))
 }
 

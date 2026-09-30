@@ -33,6 +33,9 @@ pub fn record(frame: &Frame, template: &str, value: &Value) {
         collector
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
-            .push_value(template, &value.to_string());
+            .push_value(
+                &frame.secrets.mask(template),
+                &frame.secrets.mask(&value.to_string()),
+            );
     }
 }

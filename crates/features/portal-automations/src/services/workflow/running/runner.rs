@@ -108,7 +108,13 @@ impl WorkflowRunner {
         let log = match &own {
             Some(own) => {
                 let mut log = collected(own);
-                log.extend_lines(report.log.clone());
+                log.extend_lines(
+                    report
+                        .log
+                        .iter()
+                        .map(|line| frame.secrets.mask(line))
+                        .collect(),
+                );
                 log.masked(|text| frame.secrets.mask(text))
             }
             None => StepLog::default(),

@@ -13,3 +13,7 @@ pub fn fields(text: &str) -> Vec<String> {
         .map(|error| error.field)
         .collect()
 }
+
+pub fn errors(text: &str) -> Vec<portal_feature::FieldError> {
+    workflow_errors(&section(text))
+}

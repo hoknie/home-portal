@@ -52,3 +52,17 @@ fn an_event_field_must_be_one_some_event_carries() {
     );
     assert_eq!(found, vec!["workflows[0].steps[1].message"]);
 }
+
+#[test]
+fn a_secret_cannot_pass_through_a_filter() {
+    let found = one(
+        "[[workflows.steps]]\nid = \"a\"\nkind = \"log\"\nmessage = \"{{secrets.nas_token | upper}}\"\n[[workflows.steps]]\nid = \"b\"\nkind = \"log\"\nmessage = \"{{inputs.service | default(secrets.nas_token)}}\"\n[[workflows.steps]]\nid = \"c\"\nkind = \"log\"\nmessage = \"Bearer {{secrets.nas_token}}\"\n",
+    );
+    assert_eq!(
+        found,
+        vec![
+            "workflows[0].steps[0].message",
+            "workflows[0].steps[1].message"
+        ]
+    );
+}

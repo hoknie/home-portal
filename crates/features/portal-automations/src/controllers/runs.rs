@@ -126,3 +126,9 @@ pub fn name_of(principal: Option<Extension<Principal>>) -> String {
         .map(|Extension(principal)| principal.name)
         .unwrap_or_default()
 }
+
+pub fn rights_of(principal: Option<Extension<Principal>>) -> portal_feature::Rights {
+    principal
+        .map(|Extension(principal)| principal.rights)
+        .unwrap_or_default()
+}

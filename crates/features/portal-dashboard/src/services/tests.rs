@@ -97,3 +97,39 @@ fn two_sections_with_one_id_or_a_bad_id_are_refused() {
         vec!["dashboard.sections[1].id", "dashboard.sections[2].id"]
     );
 }
+
+fn calendar(url: &str, secret: &str) -> portal_widget::WidgetInstance {
+    let mut widget = portal_widget::WidgetInstance::of("calendar");
+    widget.settings = serde_json::json!({ "url": url, "secret": secret });
+    widget
+}
+
+fn edited(widgets: Vec<portal_widget::WidgetInstance>) -> crate::types::EditedLayout {
+    crate::types::EditedLayout {
+        sections: Vec::new(),
+        widgets: widgets
+            .into_iter()
+            .map(|instance| crate::types::EditedWidget {
+                key: None,
+                instance,
+            })
+            .collect(),
+    }
+}
+
+#[test]
+fn a_layout_editor_cannot_point_a_secret_somewhere_new_but_may_keep_one() {
+    use portal_feature::{Action, Area, Right, Rights};
+    let editor = Rights::of([Right::new(Area::Layout, Action::Update)]);
+    let stored = vec![calendar("https://cloud.home/cal.ics", "nas_token")];
+    let borrowed = edited(vec![calendar("https://example.net/", "nas_token")]);
+    let refused = super::secrets_allowed(&borrowed, &stored, &editor).unwrap_err();
+    assert!(
+        format!("{refused:?}").contains("widgets[0].secret"),
+        "{refused:?}"
+    );
+    let kept = edited(vec![calendar("https://cloud.home/cal.ics", "nas_token")]);
+    assert!(super::secrets_allowed(&kept, &stored, &editor).is_ok());
+    let reader = Rights::of([Right::new(Area::Secrets, Action::Read)]);
+    assert!(super::secrets_allowed(&borrowed, &stored, &reader).is_ok());
+}

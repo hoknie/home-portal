@@ -190,16 +190,16 @@ it("a script step takes named variables, marks a bad name before saving, and wri
   pressOnCanvas(await node("run"));
   const add = within(inspector()).getAllByRole("button", { name: "Add" }).find((button) => button.closest("div")?.textContent?.includes("Environment")) ?? within(inspector()).getAllByRole("button", { name: /Add/ })[1];
   await userEvent.click(add);
-  fireEvent.change(within(inspector()).getByRole("combobox", { name: "Environment: name 1" }), { target: { value: "TARGET" } });
-  fireEvent.change(within(inspector()).getByRole("combobox", { name: "Value of TARGET" }), { target: { value: "{{inputs.service}}" } });
+  fireEvent.change(within(inspector()).getByRole("combobox", { name: "Environment: name 1" }), { target: { value: "STEP_TARGET" } });
+  fireEvent.change(within(inspector()).getByRole("combobox", { name: "Value of STEP_TARGET" }), { target: { value: "{{inputs.service}}" } });
   await userEvent.click(add);
   fireEvent.change(within(inspector()).getByRole("combobox", { name: "Environment: name 2" }), { target: { value: "path" } });
-  expect(within(inspector()).getByText("Capital letters, digits and _, starting with a letter")).toBeInTheDocument();
-  fireEvent.change(within(inspector()).getByRole("combobox", { name: "Environment: name 2" }), { target: { value: "MODE" } });
+  expect(within(inspector()).getByText("STEP_ followed by capital letters, digits and _")).toBeInTheDocument();
+  fireEvent.change(within(inspector()).getByRole("combobox", { name: "Environment: name 2" }), { target: { value: "STEP_MODE" } });
   fireEvent.change(within(inspector()).getByRole("combobox", { name: "Standard input" }), { target: { value: "{{inputs.service}}" } });
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
   await waitFor(() => expect(onSaved).toHaveBeenCalled());
-  expect(sentBody(fetch).steps[0]).toMatchObject({ env: { TARGET: "{{inputs.service}}" }, stdin: "{{inputs.service}}" });
+  expect(sentBody(fetch).steps[0]).toMatchObject({ env: { STEP_TARGET: "{{inputs.service}}" }, stdin: "{{inputs.service}}" });
 });
 
 it("an automation step picks an automation, suggests its event fields and shows its title on the node", async () => {

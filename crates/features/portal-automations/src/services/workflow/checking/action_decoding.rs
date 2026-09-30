@@ -2,8 +2,7 @@ use portal_feature::FieldError;
 
 use super::names::number_setting;
 use crate::types::{
-    HttpStep, Invocation, LogLevel, METHODS, NumberSetting, RawNumber, RawStep, RunSettings,
-    StepKind,
+    HttpStep, LogLevel, METHODS, NumberSetting, RawNumber, RawStep, RunSettings, StepKind,
 };
 
 pub const URL_RULE: &str = "must be an http or https address";
@@ -135,23 +134,16 @@ pub fn decode_script(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) ->
     })
 }
 
-pub const VARIABLE_RULE: &str =
-    "must be 1 to 64 capital letters, digits and _, starting with a letter";
-pub const RESERVED_VARIABLE: &str = "is set by the portal and cannot be given";
+pub const VARIABLE_PREFIX: &str = "STEP_";
+pub const VARIABLE_RULE: &str = "must be STEP_ followed by 1 to 59 capital letters, digits and _, so a step never sets a variable an interpreter reads on its own";
 
 pub fn variable_problem(name: &str) -> Option<&'static str> {
-    let mut characters = name.chars();
-    let valid = name.len() <= 64
-        && characters
-            .next()
-            .is_some_and(|first| first.is_ascii_uppercase())
-        && characters.all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_');
-    if !valid {
-        return Some(VARIABLE_RULE);
-    }
-    let reserved =
-        name.starts_with(Invocation::VARIABLE_PREFIX) || Invocation::PASSED_THROUGH.contains(&name);
-    reserved.then_some(RESERVED_VARIABLE)
+    let rest = name.strip_prefix(VARIABLE_PREFIX).unwrap_or_default();
+    let valid = (1..=59).contains(&rest.len())
+        && rest
+            .chars()
+            .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_');
+    (!valid).then_some(VARIABLE_RULE)
 }
 
 pub fn decode_notify(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> Option<StepKind> {

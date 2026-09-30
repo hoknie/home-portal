@@ -3,10 +3,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use portal_config::{ConfigStore, Revision, Revisioned, Section};
-use portal_feature::ApiError;
+use portal_feature::{ApiError, Rights};
 
 use crate::repositories::write_layout;
-use crate::services::{check_edited, layout_view, renamed_for_the_editor};
+use crate::services::{check_edited, layout, layout_view, renamed_for_the_editor, secrets_allowed};
 use crate::types::{EditedLayout, LayoutView};
 
 #[derive(Clone)]
@@ -26,12 +26,16 @@ impl ChangeLayout {
     pub async fn run(
         &self,
         edited: &EditedLayout,
-        revision: &Revision,
+        (revision, rights): (&Revision, &Rights),
     ) -> Result<Revisioned<LayoutView>, ApiError> {
         let errors = check_edited(edited);
         if !errors.is_empty() {
             return Err(ApiError::Invalid(errors));
         }
+        let stored = layout(&self.configuration.read().document)
+            .map(|layout| layout.widgets)
+            .unwrap_or_default();
+        secrets_allowed(edited, &stored, rights)?;
         let target = self.target_file()?;
         let written = self
             .configuration

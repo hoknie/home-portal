@@ -82,3 +82,47 @@ async fn secrets_stay_masked_in_the_log() {
         entry.log.lines
     );
 }
+
+async fn masked_value(secret: &'static str, template: &str) -> String {
+    let lookup: SecretLookup =
+        Arc::new(move |key: &str| (key == "token").then(|| secret.to_string()));
+    let (_sender, stop) = watch::channel(false);
+    let outcome = run_prepared(
+        &workflow(&format!(
+            "[[workflows.steps]]\nid = \"auth\"\nkind = \"set\"\nvariable = \"header\"\nvalue = \"{template}\"\n"
+        )),
+        (Arc::new(FakeActions::default()), stop),
+        &[],
+        Secrets::new(lookup),
+    )
+    .await;
+    let entry = entry(&outcome.trace.entries, "auth", None);
+    entry.log.values[0].value.clone()
+}
+
+#[tokio::test]
+async fn a_secret_across_the_cut_is_masked_before_the_value_is_cut() {
+    let padding = "x".repeat(285);
+    let value = masked_value(
+        "abcdefghijklmnopqrst",
+        &format!("{padding}{{{{secrets.token}}}}"),
+    )
+    .await;
+    assert!(!value.contains("abcdefgh"), "{value}");
+    assert!(value.contains("***"), "{value}");
+}
+
+#[tokio::test]
+async fn a_secret_with_a_quote_is_masked_in_its_escaped_form() {
+    let value = masked_value("pa\"ss\\word", "Bearer {{secrets.token}}").await;
+    assert_eq!(value, "\"Bearer ***\"");
+}
+
+#[test]
+fn the_edge_of_a_cut_output_hides_the_part_of_a_secret_it_holds() {
+    let secrets = Secrets::new(Arc::new(|_: &str| Some("0123456789abcdef".to_string())));
+    secrets.reveal("token").unwrap();
+    assert_eq!(secrets.mask("9abcdef and more"), "*** and more");
+    assert_eq!(secrets.mask("text then 012345"), "text then ***");
+    assert_eq!(secrets.mask("tail 0123456789abcdef"), "tail ***");
+}

@@ -26,7 +26,7 @@ id = "log"
 kind = "script"
 script = "echo-event.sh"
 args = ["hosts"]
-env = { HOSTS = "{{steps.names.value | join(' ')}}" }
+env = { STEP_HOSTS = "{{steps.names.value | join(' ')}}" }
 stdin = "{{vars.report}}"
 fail_on_error = false
 

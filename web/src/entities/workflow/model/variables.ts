@@ -1,12 +1,7 @@
-export const PASSED_THROUGH = ["PATH", "HOME", "LANG", "TZ"];
+export const VARIABLE_PREFIX = "STEP_";
 
-export const VARIABLE_PREFIX = "PORTAL_";
+const VARIABLE_NAME = /^STEP_[A-Z0-9_]{1,59}$/;
 
-const VARIABLE_NAME = /^[A-Z][A-Z0-9_]{0,63}$/;
-
-export function variableProblem(name: string): "variableName" | "variableReserved" | null {
-  if (!VARIABLE_NAME.test(name)) {
-    return "variableName";
-  }
-  return name.startsWith(VARIABLE_PREFIX) || PASSED_THROUGH.includes(name) ? "variableReserved" : null;
+export function variableProblem(name: string): "variableName" | null {
+  return VARIABLE_NAME.test(name) ? null : "variableName";
 }

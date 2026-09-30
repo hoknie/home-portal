@@ -56,6 +56,12 @@ fn answer(mut stream: std::net::TcpStream) {
             "content-type: application/json\r\n",
             br#"{"state":"up","disks":[{"health":"ok"}]}"#,
         )
+    } else if path == "/metadata" {
+        reply(
+            "302 Found",
+            "location: http://169.254.169.254/latest/meta-data\r\n",
+            b"",
+        )
     } else if path == "/fail" {
         reply("503 Service Unavailable", "", b"down for maintenance")
     } else if let Some(left) = path.strip_prefix("/redirect/") {
@@ -218,4 +224,50 @@ async fn a_long_answer_keeps_its_shape_while_its_body_is_cut() {
     assert_eq!(disks.len(), 3);
     assert_eq!(disks[0]["name"], json!("sd0"));
     assert_eq!(disks[0]["note"].as_str().unwrap().len(), 150);
+}
+
+fn request(url: &str) -> crate::types::HttpRequest {
+    crate::types::HttpRequest {
+        method: "POST".to_string(),
+        url: url.to_string(),
+        headers: Vec::new(),
+        body: None,
+        timeout: Duration::from_secs(2),
+    }
+}
+
+#[tokio::test]
+async fn a_request_to_the_portal_host_is_refused_before_it_is_sent() {
+    let client = crate::clients::HttpClient::new().unwrap();
+    let refused = client
+        .send(&request("http://127.0.0.1:2019/load"))
+        .await
+        .unwrap_err();
+    assert!(
+        refused.contains("127.0.0.1 is a loopback address"),
+        "{refused}"
+    );
+    let named = client
+        .send(&request("http://localhost:2019/load"))
+        .await
+        .unwrap_err();
+    assert!(named.contains("loopback"), "{named}");
+    let link_local = client
+        .send(&request("http://[fe80::1]/"))
+        .await
+        .unwrap_err();
+    assert!(link_local.contains("link-local"), "{link_local}");
+}
+
+#[tokio::test]
+async fn a_redirect_into_the_metadata_address_is_not_followed() {
+    let port = serve();
+    let outcome = run(&workflow(port, "url = \"http://127.0.0.1:PORT/metadata\"")).await;
+    let Ending::Failed(reason) = &outcome.ending else {
+        panic!("{:?}", outcome.ending);
+    };
+    assert!(
+        reason.contains("169.254.169.254 is a link-local address"),
+        "{reason}"
+    );
 }

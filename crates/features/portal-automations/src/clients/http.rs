@@ -2,22 +2,44 @@ use reqwest::header::{CONTENT_TYPE, HeaderName, HeaderValue};
 use reqwest::redirect::Policy;
 use reqwest::{Client, Method, Url};
 
+use super::destinations::Destinations;
 use crate::types::{HttpAnswer, HttpRequest};
 
 #[derive(Clone)]
 pub struct HttpClient {
     client: Client,
+    destinations: Destinations,
 }
 
 impl HttpClient {
     pub const JSON: &'static str = "application/json";
 
     pub fn new() -> Result<HttpClient, String> {
+        Self::reaching(Destinations::guarded())
+    }
+
+    pub fn reaching(destinations: Destinations) -> Result<HttpClient, String> {
+        let policy = Policy::custom(move |attempt| {
+            if attempt.previous().len() > HttpAnswer::MOST_REDIRECTS {
+                return attempt.error(format!(
+                    "more than {} redirects",
+                    HttpAnswer::MOST_REDIRECTS
+                ));
+            }
+            match destinations.url_problem(attempt.url()) {
+                Some(problem) => attempt.error(problem),
+                None => attempt.follow(),
+            }
+        });
         let client = Client::builder()
-            .redirect(Policy::limited(HttpAnswer::MOST_REDIRECTS))
+            .redirect(policy)
+            .dns_resolver(destinations.resolver())
             .build()
             .map_err(|error| error.to_string())?;
-        Ok(HttpClient { client })
+        Ok(HttpClient {
+            client,
+            destinations,
+        })
     }
 
     pub async fn send(&self, request: &HttpRequest) -> Result<HttpAnswer, String> {
@@ -25,6 +47,9 @@ impl HttpClient {
             Url::parse(request.url.trim()).map_err(|error| format!("{}: {error}", request.url))?;
         if !matches!(url.scheme(), "http" | "https") {
             return Err(format!("{url} is not an http or https address"));
+        }
+        if let Some(problem) = self.destinations.url_problem(&url) {
+            return Err(problem);
         }
         let method =
             Method::from_bytes(request.method.as_bytes()).map_err(|error| error.to_string())?;
@@ -83,7 +108,9 @@ fn describe(error: &reqwest::Error) -> String {
         return "the request timed out".to_string();
     }
     if error.is_redirect() {
-        return format!("more than {} redirects", HttpAnswer::MOST_REDIRECTS);
+        return std::error::Error::source(error)
+            .map(ToString::to_string)
+            .unwrap_or_else(|| format!("more than {} redirects", HttpAnswer::MOST_REDIRECTS));
     }
     let mut text = error.to_string();
     let mut source = std::error::Error::source(error);

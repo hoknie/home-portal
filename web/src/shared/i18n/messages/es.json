@@ -1423,8 +1423,7 @@
       "notStarted": "Ninguna automatización ni webhook inicia este flujo todavía",
       "unknownSampleKey": "La estructura de la respuesta de {step} no tiene la clave {key}",
       "inputDefault": "El valor por defecto no es del tipo de la entrada",
-      "variableName": "Mayúsculas, dígitos y _, empezando por una letra",
-      "variableReserved": "Lo fija el portal; elija otro nombre",
+      "variableName": "STEP_ seguido de mayúsculas, dígitos y _",
       "numberOrTemplate": "Debe ser un número entero o una plantilla como '{{'inputs.seconds'}}'",
       "neverRuns": "Este paso nunca se ejecuta: un paso anterior termina esta rama",
       "needsLoop": "Necesita un bucle que lo contenga: solo funciona dentro del cuerpo de un bucle, no a través de parallel"
@@ -1895,7 +1894,7 @@
         },
         "env": {
           "label": "Entorno",
-          "help": "Variables que el script lee de su entorno, como $TARGET; cada valor es una plantilla."
+          "help": "Variables que el script lee de su entorno; cada nombre empieza por STEP_ (como $STEP_TARGET) y cada valor es una plantilla."
         },
         "stdin": {
           "label": "Entrada estándar",
@@ -2064,7 +2063,8 @@
       "filterType": "{filter} recibe {takes} y obtuvo {got}",
       "notInPortal": "{name} no es un valor que ofrezca el portal",
       "unknownEventField": "{name} no es un campo de ningún evento",
-      "undeclaredWebhookVariable": "ningún webhook que inicia este flujo envía {name}"
+      "undeclaredWebhookVariable": "ningún webhook que inicia este flujo envía {name}",
+      "secretThroughFilter": "{name}: un secreto no puede pasar por un filtro, para que su valor nunca llegue a la traza de otra forma"
     },
     "edges": {
       "then": "entonces",

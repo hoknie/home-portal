@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use portal_config::{ConfigStore, Revision, Revisioned};
-use portal_feature::ApiError;
+use portal_feature::{ApiError, Rights};
 
 use super::checked;
 use crate::repositories::{replace_workflow, workflow_origin, workflow_position};
-use crate::services::{Views, decode_workflow};
+use crate::services::{Views, decode_workflow, secrets_allowed};
 use crate::types::{RawWorkflow, Workflow, WorkflowView};
 
 #[derive(Clone)]
@@ -26,9 +26,10 @@ impl ChangeWorkflow {
         &self,
         id: &str,
         raw: RawWorkflow,
-        revision: &Revision,
+        (revision, rights): (&Revision, &Rights),
     ) -> Result<Revisioned<WorkflowView>, ApiError> {
         let workflow = decode_workflow(&raw).map_err(ApiError::Invalid)?;
+        secrets_allowed(&workflow, rights)?;
         let current = self.configuration.read();
         let target = workflow_origin(&current, id).ok_or(ApiError::NotFound(Workflow::UNKNOWN))?;
         let renamed = workflow.id != id;

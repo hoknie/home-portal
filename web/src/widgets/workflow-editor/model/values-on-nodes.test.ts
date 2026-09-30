@@ -25,7 +25,7 @@ describe("values on nodes", () => {
   });
 
   it("list and table entries are matched one by one, and child steps are left alone", () => {
-    const step: Step = { id: "run", kind: "script", script: "restart.sh", args: ["--id", "{{inputs.host}}"], env: { HOST: "{{inputs.host}}" } };
+    const step: Step = { id: "run", kind: "script", script: "restart.sh", args: ["--id", "{{inputs.host}}"], env: { STEP_HOST: "{{inputs.host}}" } };
     const { step: shown, shown: values } = withValues(step, [{ template: "{{inputs.host}}", value: '"nas"' }]);
     expect((shown as { args: string[] }).args[1]).toBe(`${MARK_OPEN}0nas${MARK_CLOSE}`);
     expect(values).toHaveLength(2);

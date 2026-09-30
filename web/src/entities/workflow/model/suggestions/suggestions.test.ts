@@ -116,6 +116,13 @@ describe("template checks", () => {
     expect(checkTemplate(text, scopeOf("steps[1]"))).toEqual([{ start: 7, end: 29, name: "steps.after.status", reason: "unknownStep", params: { name: "after" }, warning: false }]);
   });
 
+  it("a secret cannot pass through a filter, as the server refuses it", () => {
+    const scope = scopeOf("steps[1]");
+    expect(checkTemplate("{{secrets.nas_token | upper}}", scope)[0].reason).toBe("secretThroughFilter");
+    expect(checkTemplate("{{inputs.service | default(secrets.nas_token)}}", scope)[0].reason).toBe("secretThroughFilter");
+    expect(checkTemplate("Bearer {{secrets.nas_token}}", scope)).toEqual([]);
+  });
+
   it("an event field is checked against every event and the webhooks that start the workflow", () => {
     const scope = scopeOf("steps[1]");
     const events = { fields: ["event.name", "service.id", "webhook.id"], variables: ["branch"] };

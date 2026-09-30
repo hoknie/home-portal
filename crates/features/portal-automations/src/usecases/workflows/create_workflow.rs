@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use portal_config::{ConfigStore, Revision, Revisioned};
-use portal_feature::ApiError;
+use portal_feature::{ApiError, Rights};
 
 use super::checked;
 use crate::repositories::{append_workflow, workflow_origin, workflow_position};
-use crate::services::{Views, decode_workflow};
+use crate::services::{Views, decode_workflow, secrets_allowed};
 use crate::types::{RawWorkflow, Workflow, WorkflowView};
 
 #[derive(Clone)]
@@ -25,9 +25,10 @@ impl CreateWorkflow {
     pub async fn run(
         &self,
         raw: RawWorkflow,
-        revision: &Revision,
+        (revision, rights): (&Revision, &Rights),
     ) -> Result<Revisioned<WorkflowView>, ApiError> {
         let workflow = decode_workflow(&raw).map_err(ApiError::Invalid)?;
+        secrets_allowed(&workflow, rights)?;
         let target = self.configuration.workflow_file(&workflow.id);
         if target.exists() || workflow_origin(&self.configuration.read(), &workflow.id).is_some() {
             return Err(ApiError::invalid("id", Workflow::TAKEN_ID));

@@ -90,7 +90,10 @@ pub async fn run_peeking(
     let runner = WorkflowRunner {
         workflows,
         actions: actions.clone(),
-        http: crate::clients::HttpClient::new().unwrap(),
+        http: crate::clients::HttpClient::reaching(crate::clients::Destinations {
+            allow_loopback: true,
+        })
+        .unwrap(),
         scripts: Arc::new(crate::fakes::FakeScripts::at(root)),
         groups: Arc::new(Groups::default()),
         budget: Budget::new(Duration::from_secs(workflow.timeout_seconds), stop),

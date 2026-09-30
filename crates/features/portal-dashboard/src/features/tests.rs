@@ -6,14 +6,22 @@ use axum::http::header::ETAG;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
 use portal_config::ConfigStore;
-use portal_feature::Feature;
-use portal_model::Environment;
+use portal_feature::{Feature, Principal, Rights};
+use portal_model::{DetectedEnvironment, Environment, Environments};
 use serde_json::Value;
 use tower::ServiceExt;
 
 use super::DashboardFeature;
 
 async fn ask(text: &str, uri: &str) -> (StatusCode, bool, Value) {
+    ask_as(text, uri, (Principal::admin("admin"), "local")).await
+}
+
+async fn ask_as(
+    text: &str,
+    uri: &str,
+    (principal, detected): (Principal, &str),
+) -> (StatusCode, bool, Value) {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     fs::write(&path, text).unwrap();
@@ -22,6 +30,11 @@ async fn ask(text: &str, uri: &str) -> (StatusCode, bool, Value) {
     request
         .extensions_mut()
         .insert(Environment::parse("local").unwrap());
+    request.extensions_mut().insert(principal);
+    request.extensions_mut().insert(DetectedEnvironment::new(
+        Environment::parse(detected).unwrap(),
+        &Environments::default(),
+    ));
     let response = feature.router().oneshot(request).await.unwrap();
     let status = response.status();
     let tagged = response.headers().contains_key(ETAG);
@@ -60,4 +73,19 @@ async fn a_widget_of_another_environment_is_not_served_here_but_the_editor_sees_
     let widgets = all["widgets"].as_array().unwrap();
     assert_eq!(widgets.len(), 2);
     assert_eq!(widgets[0]["environments"], serde_json::json!(["vpn"]));
+}
+
+#[tokio::test]
+async fn the_whole_layout_is_only_for_layout_editors_who_are_inside() {
+    let text = "[[dashboard.widgets]]\ntype = \"status-summary\"\nenvironments = [\"vpn\"]\n\n[[dashboard.widgets]]\ntype = \"services\"\n";
+    let reader = Principal::member("anna", Some("family".into()), Rights::none());
+    let (_, _, body) = ask_as(text, "/api/dashboard?all=true", (reader, "local")).await;
+    assert_eq!(body["widgets"].as_array().unwrap().len(), 1);
+    let (_, _, outside) = ask_as(
+        text,
+        "/api/dashboard?all=true",
+        (Principal::admin("admin"), "internet"),
+    )
+    .await;
+    assert_eq!(outside["widgets"].as_array().unwrap().len(), 1);
 }

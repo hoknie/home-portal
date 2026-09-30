@@ -4,6 +4,10 @@ use portal_feature::FieldError;
 
 use super::filter_checks::chain_problem;
 use super::templates::templates_of;
+
+pub const SECRETS: &str = "secrets.";
+pub const SECRET_THROUGH_FILTER: &str =
+    "a secret cannot pass through a filter, so its value never reaches the trace in another form";
 use crate::services::workflow::evaluating::children_of;
 use crate::services::workflow::evaluating::placeholders_in;
 use portal_feature::Module;
@@ -109,7 +113,16 @@ impl Scope {
                             )
                         })
                     });
-                    let problem = argument_problem
+                    let filtered_secret = (placeholder.name.starts_with(SECRETS)
+                        && placeholder
+                            .filters
+                            .as_ref()
+                            .is_ok_and(|calls| !calls.is_empty()))
+                        || named.clone().any(|(_, name)| name.starts_with(SECRETS));
+                    let secret_problem = filtered_secret
+                        .then(|| format!("{{{{{}}}}}: {SECRET_THROUGH_FILTER}", placeholder.name));
+                    let problem = secret_problem
+                        .or(argument_problem)
                         .or_else(|| self.allows(placeholder.name).err())
                         .or_else(|| {
                             match &placeholder.filters {

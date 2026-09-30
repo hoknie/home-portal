@@ -82,8 +82,8 @@ async fn a_missing_script_fails_with_the_refusal() {
 #[tokio::test]
 async fn a_script_reads_named_variables_and_a_value_on_its_standard_input() {
     let outcome = scripted(
-        "[[workflows]]\nid = \"w\"\ntitle = \"W\"\ninputs = [\"service\"]\n[[workflows.steps]]\nid = \"report\"\nkind = \"set\"\nvariable = \"report\"\nobject = { host = \"{{inputs.service}}\" }\n[[workflows.steps]]\nid = \"run\"\nkind = \"script\"\nscript = \"read.sh\"\nenv = { TARGET = \"{{inputs.service}}\" }\nstdin = \"{{vars.report}}\"\n",
-        &[("read.sh", "echo \"target=$TARGET\"; cat")],
+        "[[workflows]]\nid = \"w\"\ntitle = \"W\"\ninputs = [\"service\"]\n[[workflows.steps]]\nid = \"report\"\nkind = \"set\"\nvariable = \"report\"\nobject = { host = \"{{inputs.service}}\" }\n[[workflows.steps]]\nid = \"run\"\nkind = \"script\"\nscript = \"read.sh\"\nenv = { STEP_TARGET = \"{{inputs.service}}\" }\nstdin = \"{{vars.report}}\"\n",
+        &[("read.sh", "echo \"target=$STEP_TARGET\"; cat")],
     )
     .await;
     assert_eq!(outcome.ending, Ending::Succeeded(None));
@@ -94,19 +94,26 @@ async fn a_script_reads_named_variables_and_a_value_on_its_standard_input() {
 }
 
 #[test]
-fn reserved_and_malformed_variable_names_are_refused() {
+fn a_step_sets_only_step_variables_so_no_interpreter_variable_can_be_given() {
     let found = super::support::fields(&workflow(
         30,
-        "script = \"say.sh\"\nenv = { PORTAL_SERVICE_ID = \"x\", PATH = \"/tmp\", lower = \"y\", GOOD_ONE = \"z\" }",
+        "script = \"say.sh\"\nenv = { BASH_ENV = \"/dev/stdin\", PORTAL_SERVICE_ID = \"x\", PATH = \"/tmp\", STEP_ = \"e\", step_low = \"y\", STEP_GOOD_ONE = \"z\" }",
     ));
     assert_eq!(
         found,
         vec![
+            "workflows[0].steps[0].env.BASH_ENV",
             "workflows[0].steps[0].env.PATH",
             "workflows[0].steps[0].env.PORTAL_SERVICE_ID",
-            "workflows[0].steps[0].env.lower",
+            "workflows[0].steps[0].env.STEP_",
+            "workflows[0].steps[0].env.step_low",
         ]
     );
+    let message = super::support::errors(&workflow(
+        30,
+        "script = \"say.sh\"\nenv = { BASH_ENV = \"/dev/stdin\" }",
+    ));
+    assert!(message[0].message.contains("STEP_"), "{:?}", message);
 }
 
 #[tokio::test]

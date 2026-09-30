@@ -25,6 +25,7 @@ const SERVER_PHRASES: Record<(typeof REASONS)[number], string> = {
   filterType: "takes",
   unknownEventField: "is not a field any event carries",
   undeclaredWebhookVariable: "no webhook that starts this workflow sends",
+  secretThroughFilter: "a secret cannot pass through a filter",
 };
 
 type Tree = Record<string, unknown>;

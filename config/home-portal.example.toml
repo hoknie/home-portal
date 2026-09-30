@@ -101,7 +101,7 @@ trusted_proxies = []
 # workflow = "ping-nas" and inputs = { service = "{{service.id}}" } in place of run.
 # An input is a name, or a table with type (text, number, boolean, list, object), default and
 # description; a set step builds a list or a dictionary from rows (list = [...], object = {...});
-# a script step passes env = { NAME = "..." } and stdin; an automation step starts an automation.
+# a script step passes env = { STEP_NAME = "..." } and stdin; an automation step starts an automation.
 # [[workflows]]
 # id = "ping-nas"
 # title = "Ping the NAS"
