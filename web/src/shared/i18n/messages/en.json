@@ -1643,6 +1643,11 @@
       "no": "no",
       "byDefault": "(default)",
       "settings": "Settings"
+    },
+    "panelHandle": {
+      "label": "Width of the side panel",
+      "value": "{width} px",
+      "hint": "Drag to change the width; double-click to reset it"
     }
   },
   "templateInput": {
@@ -2023,7 +2028,7 @@
       "input": "Input {name} of this workflow",
       "variable": "Variable {name}, set by step {step}",
       "calledVariable": "Variable {name} of the called workflow {workflow}",
-      "jsonKey": "Key {key} of the answer of {step}, as seen in the last run",
+      "jsonKey": "From the last run of {step}",
       "event": "Field {name} of the event",
       "secret": "Secret {name}, sent as it is and shown as *** in the journal",
       "secretUnset": "This secret is not set yet; the step will fail",
@@ -2031,7 +2036,7 @@
         "item": "The current item of the loop",
         "index": "The number of the current pass, from 0"
       },
-      "sampleKey": "Key {key} of the answer of {step}, from its answer structure",
+      "sampleKey": "From the answer structure of {step}",
       "item": {
         "value": "The current item of the list",
         "index": "Its position, from 0",

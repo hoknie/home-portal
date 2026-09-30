@@ -11,6 +11,7 @@ import { START_ID, at, parsePath } from "@/entities/workflow";
 import { AddressLink } from "@/shared/ui/address-link";
 import { buttonVariants } from "@/shared/ui/primitives";
 
+import { PANEL_WIDTH_CLASS } from "../resizing/panel-row";
 import { useEditor } from "../../model/editor-context";
 import { StepCard } from "../inspector/step-card";
 import { CloseLink } from "./side-column";
@@ -174,7 +175,7 @@ export function RunPanel({ run, title, stale, missing, historyHref, closeHref, e
     editor.reveal(entries[index].path);
   };
   return (
-    <aside aria-label={t("title")} className="glass-panel flex max-h-[45%] min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl md:max-h-full md:w-[26rem]">
+    <aside aria-label={t("title")} className={cn("glass-panel flex max-h-[45%] min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl md:max-h-full", PANEL_WIDTH_CLASS)}>
       <header className="grid gap-2 border-b border-glass-edge p-4">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <h2 className="text-base font-semibold">{t("title")}</h2>

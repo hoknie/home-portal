@@ -23,9 +23,11 @@ import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { blocksToOpen, problemsFromServer } from "../model/checks/placing";
 import { type Problem, blocking } from "../model/checks/problems";
 import { type Draft, draftOf, requestOf, sameDraft } from "../model/draft";
+import { filledSteps } from "../model/edits/filling";
 import { EditorContext, type Sources } from "../model/editor-context";
 import { useEditorState } from "../model/use-editor-state";
 import { CanvasArea } from "./canvas-area";
+import { PanelRow } from "./resizing/panel-row";
 import { fieldId } from "./inspector/template-field";
 import { Inspector } from "./inspector/inspector";
 import { EditToolbar } from "./panels/edit-toolbar";
@@ -99,8 +101,12 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
       return null;
     }
     try {
-      const saved = await save.mutateAsync({ id: identity, body: requestOf(draft), revision: at });
-      setBase(draft);
+      const filled: Draft = { ...draft, steps: filledSteps(draft.steps) };
+      const saved = await save.mutateAsync({ id: identity, body: requestOf(filled), revision: at });
+      if (!sameDraft(filled, draft)) {
+        state.replaceDraft(filled);
+      }
+      setBase(filled);
       setIdentity(saved.data.id);
       held.adopt(saved.revision);
       state.setServer({});
@@ -183,8 +189,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
           onLegend={() => setLegendOpen(true)}
           onCancel={onCancel}
         />
-        <div className="flex h-[calc(100dvh-13rem)] min-h-[34rem] flex-col gap-3 md:flex-row">
-          <CanvasArea legendOpen={legendOpen} onLegendClosed={() => setLegendOpen(false)} />
+        <PanelRow canvas={<CanvasArea legendOpen={legendOpen} onLegendClosed={() => setLegendOpen(false)} />} narrow={editor.narrow}>
           {problemsOpen ? (
             <SideColumn title={t("workflowEditor.problemsPanel.title")}>
               <ProblemsPanel onChoose={choose} />
@@ -192,7 +197,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
           ) : editor.selected ? (
             <Inspector />
           ) : null}
-        </div>
+        </PanelRow>
         <Palette
           target={state.palette}
           onClose={() => state.setPalette(null)}

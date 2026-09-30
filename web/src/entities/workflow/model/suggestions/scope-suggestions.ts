@@ -56,7 +56,7 @@ function stepSuggestions(context: SuggestionContext, step: { id: string; kind: s
       ...jsonKeys(called?.response_sample ?? lastOutput(context.lastRun, step.id)).map<Suggestion>((key) => ({
         value: `steps.${step.id}.json.${key.path}`,
         group: "steps",
-        description: { key: called?.response_sample ? "suggestions.sampleKey" : "suggestions.jsonKey", params: { step: step.id, key: key.path } },
+        description: { key: called?.response_sample ? "suggestions.sampleKey" : "suggestions.jsonKey", params: { step: step.id } },
         example: key.example,
       })),
     );

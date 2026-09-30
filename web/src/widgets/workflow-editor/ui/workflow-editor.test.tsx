@@ -224,3 +224,25 @@ it("a background refresh does not change the revision it sends, and a conflict c
   await waitFor(() => expect(onSaved).toHaveBeenCalled());
   expect(puts().map(([, sent]) => (sent?.headers as Record<string, string>)["If-Match"])).toEqual(['"r1"', '"r2"']);
 });
+
+it("saving fills an empty branch with a step that does nothing, shows it and leaves nothing unsaved", async () => {
+  const fetch = vi.fn(async () => jsonResponse(sampleWorkflows[1]));
+  vi.stubGlobal("fetch", fetch);
+  const { onSaved } = openEditor(withSteps([{ id: "check", kind: "if", condition: { left: "{{inputs.target}}", op: "==", right: "nas" }, then: [{ id: "done", kind: "stop", outcome: "succeeded" }] }], { inputs: [plainInput("target")] }));
+  await userEvent.click(screen.getByRole("button", { name: /^Save$/ }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  expect(sentBody(fetch).steps[0].else).toEqual([{ id: "nothing", kind: "nothing" }]);
+  expect(await node("nothing")).toHaveTextContent("Do nothing");
+  const leaving = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(leaving);
+  expect(leaving.defaultPrevented).toBe(false);
+});
+
+it("an empty workflow is still refused and gets no step that does nothing", async () => {
+  const fetch = vi.fn();
+  vi.stubGlobal("fetch", fetch);
+  openEditor(null, { initial: { id: "empty", title: "Empty", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [] } });
+  await userEvent.click(screen.getByRole("button", { name: /^Save/ }));
+  expect(await screen.findByText("Add at least one step")).toBeInTheDocument();
+  expect(fetch).not.toHaveBeenCalled();
+});

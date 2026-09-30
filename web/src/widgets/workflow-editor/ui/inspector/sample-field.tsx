@@ -96,9 +96,11 @@ export function SampleField({ path, step, label, hint }: { path: Path; step: Ste
           <p className="text-xs text-muted-foreground">{t("keys", { count: keys.length })}</p>
           <ul className="flex flex-wrap gap-1">
             {keys.map((key) => (
-              <li key={key.path} className="rounded-full border border-glass-edge bg-glass-tint px-2 py-0.5 font-mono text-[11px]">
-                {key.path}
-                <span className="ms-1 text-muted-foreground">{key.example}</span>
+              <li key={key.path} data-key={key.path} className="flex max-w-full min-w-0 items-baseline gap-1 rounded-xl border border-glass-edge bg-glass-tint px-2 py-0.5 font-mono text-[11px]">
+                <span className="min-w-0 break-all">{key.path}</span>
+                <span title={key.example} className="max-w-32 shrink-0 truncate text-muted-foreground">
+                  {key.example}
+                </span>
               </li>
             ))}
           </ul>

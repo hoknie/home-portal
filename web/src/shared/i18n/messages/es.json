@@ -1643,6 +1643,11 @@
       "no": "no",
       "byDefault": "(predeterminado)",
       "settings": "Ajustes"
+    },
+    "panelHandle": {
+      "label": "Ancho del panel lateral",
+      "value": "{width} px",
+      "hint": "Arrastra para cambiar el ancho; doble clic para restablecerlo"
     }
   },
   "templateInput": {
@@ -2023,7 +2028,7 @@
       "input": "Entrada {name} de este flujo",
       "variable": "Variable {name}, la asigna el paso {step}",
       "calledVariable": "Variable {name} del flujo llamado {workflow}",
-      "jsonKey": "Clave {key} de la respuesta de {step}, vista en la última ejecución",
+      "jsonKey": "De la última ejecución de {step}",
       "event": "Campo {name} del evento",
       "secret": "Secreto {name}: se envía tal cual y se muestra como *** en el registro",
       "secretUnset": "Este secreto aún no está definido; el paso fallará",
@@ -2031,7 +2036,7 @@
         "item": "El elemento actual del bucle",
         "index": "El número de la pasada actual, desde 0"
       },
-      "sampleKey": "Clave {key} de la respuesta de {step}, de su estructura de respuesta",
+      "sampleKey": "De la estructura de respuesta de {step}",
       "item": {
         "value": "El elemento actual de la lista",
         "index": "Su posición, desde 0",

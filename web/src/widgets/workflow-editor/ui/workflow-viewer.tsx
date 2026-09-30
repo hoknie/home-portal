@@ -14,6 +14,7 @@ import { Skeleton } from "@/shared/ui/primitives";
 import { EditorContext, type Sources } from "../model/editor-context";
 import { useEditorState } from "../model/use-editor-state";
 import { CanvasArea } from "./canvas-area";
+import { PanelRow } from "./resizing/panel-row";
 import { StepCard } from "./inspector/step-card";
 import { legendDismissed } from "./panels/legend";
 import { RunDialog } from "./panels/run-dialog";
@@ -100,8 +101,7 @@ export function WorkflowViewer({ workflow, view, run, revision, workflows, catal
           onHistory={() => editor.select(null)}
           remove={<DeleteWorkflowButton workflow={workflow} revision={revision} labelled onDeleted={() => pushAddress(routes.adminWorkflows)} />}
         />
-        <div className="flex h-[calc(100dvh-13rem)] min-h-[34rem] flex-col gap-3 md:flex-row">
-          <CanvasArea legendOpen={legendOpen} onLegendClosed={() => setLegendOpen(false)} />
+        <PanelRow canvas={<CanvasArea legendOpen={legendOpen} onLegendClosed={() => setLegendOpen(false)} />} narrow={editor.narrow}>
           {view !== "run" && card ? (
             card
           ) : view === "history" ? (
@@ -119,7 +119,7 @@ export function WorkflowViewer({ workflow, view, run, revision, workflows, catal
               empty={<Skeleton className="h-24" aria-busy="true" />}
             />
           ) : null}
-        </div>
+        </PanelRow>
         <RunDialog key={runOpen ? "open" : "closed"} open={runOpen} title={workflow.title} inputs={namedInputs(workflow.inputs)} pending={runWorkflow.isPending} onClose={() => setRunOpen(false)} onRun={(inputs) => void start(inputs)} />
       </div>
     </EditorContext.Provider>

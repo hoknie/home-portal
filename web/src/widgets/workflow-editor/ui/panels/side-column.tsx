@@ -2,8 +2,11 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
+import { cn } from "@/shared/lib/cn";
 import { AddressLink } from "@/shared/ui/address-link";
 import { buttonVariants } from "@/shared/ui/primitives";
+
+import { PANEL_WIDTH_CLASS } from "../resizing/panel-row";
 
 export type SideColumnProps = { title: string; actions?: ReactNode; closeHref?: string; children: ReactNode };
 
@@ -27,7 +30,7 @@ export function CloseButton({ onClose }: { onClose: () => void }) {
 
 export function SideColumn({ title, actions, closeHref, children }: SideColumnProps) {
   return (
-    <aside aria-label={title} className="glass-panel flex max-h-[45%] min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl md:max-h-full md:w-[26rem]">
+    <aside aria-label={title} className={cn("glass-panel flex max-h-[45%] min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl md:max-h-full", PANEL_WIDTH_CLASS)}>
       <header className="flex flex-wrap items-center gap-2 border-b border-glass-edge p-4">
         <h2 className="text-base font-semibold">{title}</h2>
         {actions || closeHref ? (

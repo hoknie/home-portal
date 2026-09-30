@@ -96,6 +96,7 @@ describe("workflow suggestions", () => {
       ["steps.list.json.disk", "{…}"],
       ["steps.list.json.disk.free", "12G"],
     ]);
+    expect(found[3].description).toEqual({ key: "suggestions.jsonKey", params: { step: "list" } });
   });
 });
 

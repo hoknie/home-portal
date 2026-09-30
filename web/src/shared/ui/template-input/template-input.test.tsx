@@ -180,3 +180,28 @@ it("inside a filter call, after ( or a comma, the names in scope are completed w
   expect(argumentCompletionAt("{{a.b | get(x) | up", 19)).toBeNull();
   expect(argumentCompletionAt("{{steps.x", 9)).toBeNull();
 });
+
+describe("long suggestions", () => {
+  const value = `steps.lights.json.${"data.items[0].attributes.".repeat(4)}display_name`;
+  const example = "Living room ceiling light, second floor, above the sofa by the window";
+
+  function Long() {
+    const [text, setText] = useState("");
+    return (
+      <TestIntl>
+        <TemplateInput aria-label="Text" value={text} onChange={setText} suggestions={[{ value, group: "Steps", description: "From the answer structure of lights", example }]} />
+      </TestIntl>
+    );
+  }
+
+  it("a long value is shown whole and a long example keeps its whole text on hover", async () => {
+    render(<Long />);
+    await userEvent.click(screen.getByRole("combobox", { name: "Text" }));
+    await userEvent.keyboard("{{{{");
+    const option = screen.getByRole("option");
+    expect(value.length).toBeGreaterThan(100);
+    expect(option.querySelector('[data-part="value"]')).toHaveTextContent(value);
+    expect(option.querySelector('[data-part="value"]')).not.toHaveClass("truncate");
+    expect(option.querySelector('[data-part="example"]')).toHaveAttribute("title", example);
+  });
+});

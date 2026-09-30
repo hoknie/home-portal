@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import type { Workflow } from "@/entities/workflow";
 import { routes } from "@/shared/config";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 
@@ -10,6 +11,10 @@ import { WorkflowFrame } from "./workflow-frame";
 import { type WorkflowView, WorkflowViewer } from "./workflow-viewer";
 
 export type WorkflowPageProps = { id: string; view: WorkflowView; run: string | null; onRunShown: (workflow: string, run: string) => void };
+
+export function contentOf(workflow: Workflow) {
+  return JSON.stringify([workflow.title, workflow.inputs, workflow.steps]);
+}
 
 export function WorkflowPage({ id, view, run, onRunShown }: WorkflowPageProps) {
   const t = useTranslations();
@@ -29,7 +34,7 @@ export function WorkflowPage({ id, view, run, onRunShown }: WorkflowPageProps) {
     <WorkflowFrame crumbs={crumbs} title={name} description={workflow?.description ?? t("workflowEditor.pageDescription")} data={data} missing={workflow === null}>
       {workflow && data.catalogue ? (
         <WorkflowViewer
-          key={workflow.id}
+          key={`${workflow.id}:${contentOf(workflow)}`}
           workflow={workflow}
           view={view}
           run={run}

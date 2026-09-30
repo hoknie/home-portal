@@ -6,8 +6,10 @@ import type { ReactNode } from "react";
 
 import { TraceTimeline } from "@/entities/automation";
 import { START_ID, at, parsePath } from "@/entities/workflow";
+import { cn } from "@/shared/lib/cn";
 import { Button, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/shared/ui/primitives";
 
+import { PANEL_WIDTH_CLASS } from "../resizing/panel-row";
 import { useEditor } from "../../model/editor-context";
 import { FALLBACK_ICON, GROUP_TONE, KIND_ICONS } from "../nodes/kind-style";
 import { HeaderForm } from "./header-form";
@@ -68,7 +70,7 @@ function Frame({ narrow, title, description, icon, children, onClose }: { narrow
     );
   }
   return (
-    <aside aria-label={title} className="glass-panel flex max-h-full min-h-0 w-[26rem] shrink-0 flex-col overflow-hidden rounded-2xl">
+    <aside aria-label={title} className={cn("glass-panel flex max-h-full min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl", PANEL_WIDTH_CLASS)}>
       <header className="flex items-start gap-3 border-b border-glass-edge p-4">
         {icon}
         <div className="grid min-w-0 flex-1 gap-0.5">

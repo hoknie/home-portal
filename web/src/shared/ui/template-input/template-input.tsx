@@ -253,15 +253,21 @@ export function TemplateInput({
                   onMouseEnter={() => setActive(index)}
                   onClick={() => choose(suggestion)}
                   className={cn(
-                    "grid cursor-pointer grid-cols-[1fr_auto] items-baseline gap-x-3 rounded-md px-2 py-1.5",
+                    "grid min-w-0 cursor-pointer gap-0.5 rounded-md px-2 py-1.5",
                     index === active && "bg-accent",
                     suggestion.disabled && "cursor-not-allowed opacity-50",
                   )}
                 >
-                  <span className="min-w-0 truncate font-mono text-xs">{suggestion.label ?? suggestion.value}</span>
-                  {suggestion.example ? <span className="max-w-40 truncate font-mono text-xs text-muted-foreground">{suggestion.example}</span> : <span />}
-                  {suggestion.description ? <span className="col-span-2 text-xs text-muted-foreground">{suggestion.description}</span> : null}
-                  {suggestion.warning ? <span className="col-span-2 text-xs text-status-degraded">{suggestion.warning}</span> : null}
+                  <span data-part="value" className="font-mono text-xs break-all">
+                    {suggestion.label ?? suggestion.value}
+                  </span>
+                  {suggestion.example ? (
+                    <span data-part="example" title={suggestion.example} className="truncate font-mono text-xs text-muted-foreground">
+                      {suggestion.example}
+                    </span>
+                  ) : null}
+                  {suggestion.description ? <span className="text-xs text-muted-foreground">{suggestion.description}</span> : null}
+                  {suggestion.warning ? <span className="text-xs text-status-degraded">{suggestion.warning}</span> : null}
                 </div>
               ))}
             </div>

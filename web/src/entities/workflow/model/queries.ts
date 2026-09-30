@@ -1,9 +1,11 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import type { Revisioned } from "@/shared/api";
 
 import { STATUS_REFRESH_MILLISECONDS } from "@/shared/config";
 
 import { createWorkflow, deleteWorkflow, fetchPortalValues, fetchSecretNames, fetchWorkflowCatalogue, fetchWorkflows, runWorkflow, updateWorkflow } from "../api/workflows";
-import type { WorkflowRequest } from "./schema";
+import type { Workflow, WorkflowRequest } from "./schema";
 
 export const workflowsKey = ["workflows"] as const;
 export const workflowCatalogueKey = ["workflow-catalogue"] as const;
@@ -45,10 +47,25 @@ function useInvalidating<T, R>(run: (input: T) => Promise<R>) {
   });
 }
 
+export function rememberSaved(client: QueryClient, previous: string | null, saved: Revisioned<Workflow>) {
+  client.setQueryData<Revisioned<{ workflows: Workflow[] }>>(workflowsKey, (list) => {
+    if (list === undefined) {
+      return list;
+    }
+    const others = list.data.workflows.filter((workflow) => workflow.id !== previous && workflow.id !== saved.data.id);
+    const at = list.data.workflows.findIndex((workflow) => workflow.id === (previous ?? saved.data.id));
+    const workflows = at < 0 ? [...others, saved.data] : [...others.slice(0, at), saved.data, ...others.slice(at)];
+    return { data: { ...list.data, workflows }, revision: saved.revision ?? list.revision };
+  });
+}
+
 export function useSaveWorkflow() {
-  return useInvalidating(({ id, body, revision }: { id: string | null; body: WorkflowRequest; revision: string | null }) =>
-    id === null ? createWorkflow(body, revision) : updateWorkflow(id, body, revision),
-  );
+  const client = useQueryClient();
+  return useInvalidating(async ({ id, body, revision }: { id: string | null; body: WorkflowRequest; revision: string | null }) => {
+    const saved = await (id === null ? createWorkflow(body, revision) : updateWorkflow(id, body, revision));
+    rememberSaved(client, id, saved);
+    return saved;
+  });
 }
 
 export function useDeleteWorkflow() {

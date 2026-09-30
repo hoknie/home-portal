@@ -105,6 +105,11 @@ it("an answer structure typed on an http step feeds the key suggestions of later
   const structure = within(inspector()).getByRole("region", { name: "Answer structure" });
   fireEvent.change(within(structure).getByRole("textbox"), { target: { value: '{"state":"up","disks":[{"name":"sda"}]}' } });
   expect(within(structure).getByText("state")).toBeInTheDocument();
+  const long = "living_room_ceiling_light_second_floor_display_name";
+  fireEvent.change(within(structure).getByRole("textbox"), { target: { value: JSON.stringify({ [long]: "Ceiling light above the sofa by the window, second floor" }) } });
+  const chip = structure.querySelector(`[data-key="${long}"]`) as HTMLElement;
+  expect(within(chip).getByText(long)).toHaveClass("break-all");
+  expect(within(chip).getByTitle(/^Ceiling light above the sofa/)).toHaveClass("truncate");
   fireEvent.change(within(structure).getByRole("textbox"), { target: { value: "<html>" } });
   expect(within(structure).getByRole("alert")).toHaveTextContent("This is not JSON");
   fireEvent.change(within(structure).getByRole("textbox"), { target: { value: '{"state":"up"}' } });

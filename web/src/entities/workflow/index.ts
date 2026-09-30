@@ -4,6 +4,7 @@ export {
   usePortalValues,
   useDeleteWorkflow,
   useRunWorkflow,
+  rememberSaved,
   useSaveWorkflow,
   useSecretNames,
   useWorkflowCatalogue,

@@ -1,13 +1,13 @@
-import { screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { automationsKey, automationsSchema, catalogueKey, catalogueSchema, scriptsKey, scriptsSchema } from "@/entities/automation";
 import { notificationsKey, notificationsSchema } from "@/entities/notification";
-import { secretNamesKey, workflowCatalogueKey, workflowCatalogueSchema, workflowsKey, workflowsSchema } from "@/entities/workflow";
+import { type Workflow, rememberSaved, secretNamesKey, workflowCatalogueKey, workflowCatalogueSchema, workflowsKey, workflowsSchema } from "@/entities/workflow";
 import { apiSamples } from "@/shared/api";
 import { renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
-import { stubCanvasDom } from "./testing-support";
+import { node, stubCanvasDom } from "./testing-support";
 import { WorkflowEditorScreen } from "./workflow-editor-screen";
 import { WorkflowPage } from "./workflow-page";
 
@@ -73,4 +73,25 @@ it("a new workflow and an unknown id have their own last item, and the unknown o
   renderWithProviders(<WorkflowPage id="nope" view="history" run={null} onRunShown={vi.fn()} />, primed());
   expect(trailText()).toBe("HomeWorkflowsnopeHistory");
   expect(screen.getByRole("link", { name: "Back to workflows" })).toHaveAttribute("href", "/admin/workflows/");
+});
+
+it("a saved workflow is shown as saved, even when the page opens before the list is fetched again", async () => {
+  const client = primed();
+  renderWithProviders(<WorkflowPage id="revive" view="view" run={null} onRunShown={vi.fn()} />, client);
+  await node("tell");
+  const revive = workflowsSchema.parse(apiSamples.workflows).workflows[0];
+  act(() => rememberSaved(client, "revive", { data: { ...revive, steps: [...revive.steps, { id: "added", kind: "nothing" }] }, revision: '"r2"' }));
+  expect(await node("added")).toBeInTheDocument();
+  const list = client.getQueryData<{ data: { workflows: Workflow[] }; revision: string }>(workflowsKey);
+  expect(list?.revision).toBe('"r2"');
+  expect(list?.data.workflows.map((workflow) => workflow.id)).toEqual(["revive", "note"]);
+});
+
+it("a renamed workflow keeps its place in the list, and a new one is added at the end", () => {
+  const client = primed();
+  const [revive, note] = workflowsSchema.parse(apiSamples.workflows).workflows;
+  rememberSaved(client, "revive", { data: { ...revive, id: "revive-all" }, revision: '"r2"' });
+  rememberSaved(client, null, { data: { ...note, id: "fresh" }, revision: '"r3"' });
+  const list = client.getQueryData<{ data: { workflows: Workflow[] } }>(workflowsKey);
+  expect(list?.data.workflows.map((workflow) => workflow.id)).toEqual(["revive-all", "note", "fresh"]);
 });
