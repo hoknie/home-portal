@@ -76,7 +76,7 @@ export { orderOf, overlayOf, runPath } from "./model/flow/overlay";
 export type { NodeRun, Overlay, RunPath, RunState } from "./model/flow/overlay";
 export { CARD, EMPTY, END, GAP_X, GAP_Y, JOIN, MARKER, TERMINAL } from "./model/flow/sizes";
 export type { Box } from "./model/flow/sizes";
-export { REASONS, checkTemplate, templateNames } from "./model/suggestions/check";
+export { type EventKnowledge, REASONS, WARNING_REASONS, checkTemplate, templateNames } from "./model/suggestions/check";
 export type { Reason, TemplateName, TemplateProblem } from "./model/suggestions/check";
 export { templatesOf } from "./model/suggestions/fields";
 export type { TemplateField } from "./model/suggestions/fields";

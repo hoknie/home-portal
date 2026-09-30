@@ -9,13 +9,29 @@ import { RequestError, ValidationError } from "@/shared/api";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
 
+const TEXTAREA =
+  "min-h-28 w-full rounded-md border border-input bg-glass-tint px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+
 export type RunWebhookDialogProps = { webhook: Webhook };
+
+function bodyOf(text: string): { value?: unknown; invalid: boolean } {
+  if (text.trim() === "") {
+    return { invalid: false };
+  }
+  try {
+    return { value: JSON.parse(text) as unknown, invalid: false };
+  } catch {
+    return { invalid: true };
+  }
+}
 
 export function RunWebhookDialog({ webhook }: RunWebhookDialogProps) {
   const t = useTranslations("webhooks.run");
   const common = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
+  const [bodyText, setBodyText] = useState("");
+  const body = bodyOf(bodyText);
   const [problems, setProblems] = useState<Record<string, string>>({});
   const [refusal, setRefusal] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
@@ -26,7 +42,7 @@ export function RunWebhookDialog({ webhook }: RunWebhookDialogProps) {
     setRefusal(null);
     setOutcome(null);
     try {
-      const answer = await run.mutateAsync({ id: webhook.id, variables: values });
+      const answer = await run.mutateAsync({ id: webhook.id, variables: values, body: body.value });
       setOutcome(answer.run_id ? t("queued", { id: answer.run_id }) : t("published"));
     } catch (error) {
       if (error instanceof ValidationError) {
@@ -58,6 +74,15 @@ export function RunWebhookDialog({ webhook }: RunWebhookDialogProps) {
               />
             </FormField>
           ))}
+          <FormField id={`run-${webhook.id}-body`} label={t("body")} hint={t("bodyHint")} optional error={body.invalid ? t("bodyInvalid") : undefined}>
+            <textarea
+              id={`run-${webhook.id}-body`}
+              className={TEXTAREA}
+              spellCheck={false}
+              value={bodyText}
+              onChange={(event) => setBodyText(event.target.value)}
+            />
+          </FormField>
           {outcome ? (
             <p role="status" className="text-sm">
               {outcome}
@@ -70,7 +95,7 @@ export function RunWebhookDialog({ webhook }: RunWebhookDialogProps) {
           ) : null}
         </div>
         <DialogFooter>
-          <Button type="button" disabled={run.isPending || missing.length > 0} onClick={() => void start()}>
+          <Button type="button" disabled={run.isPending || missing.length > 0 || body.invalid} onClick={() => void start()}>
             {t("submit")}
           </Button>
         </DialogFooter>

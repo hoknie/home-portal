@@ -142,7 +142,7 @@ async fn the_list_carries_each_workflow_with_its_users_and_the_revision() {
     assert_eq!(revive["steps"][0]["kind"], "probe");
     assert_eq!(
         revive["used_by"],
-        json!([{"kind": "automation", "id": "nas-down", "title": "NAS down"}])
+        json!([{"kind": "automation", "id": "nas-down", "title": "NAS down", "variables": []}])
     );
     assert_eq!(revive["last_run"], Value::Null);
     assert_eq!(body["workflows"][1]["enabled"], false);

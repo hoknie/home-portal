@@ -57,7 +57,7 @@ it("a workflow in use names who starts it, and delete is disabled with the reaso
   expect(within(row).getByText("NAS down")).toBeInTheDocument();
   const remove = within(row).getByRole("button", { name: "Delete" });
   expect(remove).toBeDisabled();
-  expect(remove.parentElement).toHaveAttribute("title", "Used by NAS down; change them first");
+  expect(remove.parentElement).toHaveAttribute("title", "Used by NAS down, Release from GitHub; change them first");
   expect(within(rowOf("Note")).getByRole("button", { name: "Delete" })).toBeEnabled();
 });
 

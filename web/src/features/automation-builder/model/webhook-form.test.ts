@@ -31,6 +31,27 @@ describe("webhook form", () => {
     expect(issues({ ...valid, args: [{ value: "{{webhook.commit}}" }] })).toEqual(["args.0.value"]);
     expect(issues({ ...valid, script: "../x" })).toEqual(["script"]);
     expect(issues({ ...valid, action: "event", script: "" })).toEqual([]);
+    expect(issues({ ...valid, variables: ["branch", "body"] })).toEqual(["variables"]);
+    expect(issues({ ...valid, args: [{ value: "{{webhook.body.ref}}" }] })).toEqual([]);
+    const workflow = { ...valid, action: "workflow" as const, script: "", workflow: "revive", inputs: { service: { template: true, text: "{{webhook.brnch}}", value: null } } };
+    expect(issues(workflow)).toEqual(["inputs.service"]);
+    expect(issues({ ...workflow, workflow: "" , inputs: {} })).toEqual(["workflow"]);
+  });
+
+  it("a workflow webhook round-trips into a script action with the workflow and no run", () => {
+    const release = webhooksSchema.parse(apiSamples.webhooks).webhooks[2];
+    const form = webhookFormOf(release);
+    expect(form.action).toBe("workflow");
+    expect(webhookRequestOf(form, false)).toEqual({
+      title: "Release from GitHub",
+      enabled: true,
+      tags: ["ci"],
+      variables: ["service"],
+      action: "script",
+      run: null,
+      workflow: "revive",
+      inputs: { service: "{{webhook.service}}" },
+    });
   });
 
   it("an event webhook sends no run, and only a new one asks for a token", () => {

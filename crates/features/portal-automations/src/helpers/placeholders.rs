@@ -1,5 +1,6 @@
 pub const OPEN: &str = "{{";
 pub const CLOSE: &str = "}}";
+pub const BODY: &str = "webhook.body";
 
 pub fn placeholders_of(template: &str) -> Vec<&str> {
     let mut found = Vec::new();
@@ -17,7 +18,7 @@ pub fn placeholders_of(template: &str) -> Vec<&str> {
     found
 }
 
-pub fn render<'a>(template: &str, lookup: impl Fn(&str) -> Option<&'a str>) -> String {
+pub fn render<S: AsRef<str>>(template: &str, lookup: impl Fn(&str) -> Option<S>) -> String {
     let mut rendered = String::with_capacity(template.len());
     let mut rest = template;
     while let Some(start) = rest.find(OPEN) {
@@ -25,7 +26,7 @@ pub fn render<'a>(template: &str, lookup: impl Fn(&str) -> Option<&'a str>) -> S
         match placeholder_at(after).and_then(|name| lookup(name).map(|value| (name, value))) {
             Some((name, value)) => {
                 rendered.push_str(&rest[..start]);
-                rendered.push_str(value);
+                rendered.push_str(value.as_ref());
                 rest = &after[name.len() + CLOSE.len()..];
             }
             None => {
@@ -41,14 +42,34 @@ pub fn render<'a>(template: &str, lookup: impl Fn(&str) -> Option<&'a str>) -> S
 pub fn unknown_placeholders(template: &str, allowed: &[&str]) -> Vec<String> {
     placeholders_of(template)
         .into_iter()
-        .filter(|name| !allowed.contains(name))
+        .filter(|name| {
+            !allowed.contains(name) && !(allowed.contains(&BODY) && body_path(name).is_some())
+        })
         .map(str::to_string)
         .collect()
+}
+
+pub fn body_path(name: &str) -> Option<Vec<&str>> {
+    let rest = name.strip_prefix(BODY)?;
+    if rest.is_empty() {
+        return Some(Vec::new());
+    }
+    rest.strip_prefix('.').map(|path| path.split('.').collect())
+}
+
+fn body_segment(part: &str) -> bool {
+    !part.is_empty()
+        && part
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
 }
 
 fn placeholder_at(text: &str) -> Option<&str> {
     let end = text.find(CLOSE)?;
     let name = &text[..end];
+    if let Some(path) = body_path(name) {
+        return path.iter().all(|part| body_segment(part)).then_some(name);
+    }
     let valid = !name.is_empty()
         && name.split('.').all(|part| {
             part.starts_with(|c: char| c.is_ascii_lowercase() || c == '_')

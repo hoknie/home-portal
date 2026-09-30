@@ -1,7 +1,7 @@
 use portal_feature::{EventName, FieldError, PortalEvent};
 
-use crate::helpers::placeholders_of;
-use crate::types::{Automation, Catalogue, Webhook};
+use crate::helpers::{body_path, placeholders_of};
+use crate::types::{Automation, Catalogue, Webhook, WebhookAction};
 
 pub fn webhook_placeholder_errors(
     automation: &Automation,
@@ -13,26 +13,34 @@ pub fn webhook_placeholder_errors(
     let chosen = &automation.trigger.filters.webhooks;
     let scope: Vec<&Webhook> = webhooks
         .iter()
-        .filter(|webhook| chosen.is_empty() || chosen.contains(&webhook.id))
+        .filter(|webhook| {
+            if chosen.is_empty() {
+                webhook.action == WebhookAction::Event
+            } else {
+                chosen.contains(&webhook.id)
+            }
+        })
         .collect();
     let fixed = Catalogue::fields_of(EventName::WebhookReceived);
-    let mut errors = Vec::new();
     let declared_by_all = |variable: &str| {
         !scope.is_empty()
             && scope
                 .iter()
                 .all(|webhook| webhook.variables.iter().any(|name| name == variable))
     };
-    for (index, argument) in automation.run.args.iter().enumerate() {
-        let missing = placeholders_of(argument).into_iter().find(|name| {
+    let run = Some(automation.run.clone());
+    let mut errors = Vec::new();
+    for (field, template) in Automation::templates_of(&run, automation.workflow.as_ref()) {
+        let missing = placeholders_of(template).into_iter().find(|name| {
             !fixed.contains(name)
+                && body_path(name).is_none()
                 && name
                     .strip_prefix(PortalEvent::VARIABLE_PREFIX)
                     .is_some_and(|variable| !declared_by_all(variable))
         });
         if let Some(name) = missing {
             errors.push(FieldError::new(
-                format!("run.args[{index}]"),
+                field,
                 format!("names {{{{{name}}}}}, which not every chosen webhook declares"),
             ));
         }

@@ -4,7 +4,7 @@ use portal_config::{ConfigStore, Revision, Revisioned};
 use portal_feature::ApiError;
 
 use crate::repositories::replace_webhook;
-use crate::services::{Views, WebhookWriter};
+use crate::services::{Views, WebhookWriter, webhook_problems};
 use crate::types::{AutomationsSection, RawWebhook, Webhook, WebhookView};
 
 #[derive(Clone)]
@@ -39,6 +39,10 @@ impl ChangeWebhook {
             .ok_or(ApiError::NotFound(Webhook::UNKNOWN))?
             .token_sha256;
         let webhook = Webhook::decode(&raw).map_err(ApiError::Invalid)?;
+        let problems = webhook_problems(&self.configuration.read().document, &webhook);
+        if !problems.is_empty() {
+            return Err(ApiError::Invalid(problems));
+        }
         let snapshot = self
             .writer
             .write(id, revision, |document, index| {

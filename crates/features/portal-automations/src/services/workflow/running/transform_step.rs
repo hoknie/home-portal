@@ -10,8 +10,8 @@ use crate::services::workflow::evaluating::{
     rendered_arguments, text_of,
 };
 use crate::types::{
-    Ending, Flow, Operation, RawOperation, RawStep, StepKind, StepLog, StepReport, TraceEntry,
-    ValueType,
+    Ending, EventValues, Flow, Operation, RawOperation, RawStep, StepKind, StepLog, StepReport,
+    TraceEntry, ValueType,
 };
 
 pub fn run_transform(input: &str, operations: &[Operation], frame: &mut Frame) -> StepReport {
@@ -70,7 +70,7 @@ pub fn transform_sample(input: Value, operations: &[RawOperation]) -> Result<Val
         return Err(messages.join("; "));
     };
     let mut frame = Frame::new(
-        Arc::new(Vec::new()),
+        Arc::new(EventValues::default()),
         BTreeMap::new(),
         Arc::new(Secrets::new(Arc::new(|_| None))),
     );

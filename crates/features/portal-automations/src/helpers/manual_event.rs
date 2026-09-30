@@ -1,10 +1,11 @@
 use portal_feature::{EventName, PortalEvent};
+use serde_json::{Map, Value};
 use time::OffsetDateTime;
 
 use super::sample_of;
 use crate::types::Automation;
 
-pub fn manual_event(automation: &Automation, at: OffsetDateTime) -> PortalEvent {
+pub fn manual_event(automation: &Automation, at: OffsetDateTime, read: &[String]) -> PortalEvent {
     let filters = &automation.trigger.filters;
     let first = |list: &[String]| list.first().cloned();
     let chosen = |field: &str| -> Option<String> {
@@ -50,8 +51,23 @@ pub fn manual_event(automation: &Automation, at: OffsetDateTime) -> PortalEvent 
         )
         .flat_map(super::placeholders_of)
         .filter_map(|name| name.strip_prefix(PortalEvent::VARIABLE_PREFIX))
-        .filter(|name| !["id", "title"].contains(name))
-        .map(|name| (name.to_string(), name.to_string()))
+        .filter(|name| !["id", "title"].contains(name) && name.split('.').next() != Some("body"))
+        .map(str::to_string)
+        .chain(read.iter().cloned())
+        .collect::<std::collections::BTreeSet<String>>()
+        .into_iter()
+        .map(|name| (name.clone(), name))
         .collect();
-    manual.with_variables(&variables)
+    let body = Value::Object(
+        variables
+            .iter()
+            .map(|(name, value)| (name.clone(), Value::String(value.clone())))
+            .collect::<Map<String, Value>>(),
+    );
+    let manual = manual.with_variables(&variables);
+    if event == EventName::WebhookReceived {
+        manual.with_body(body)
+    } else {
+        manual
+    }
 }

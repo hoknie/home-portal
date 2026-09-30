@@ -6,7 +6,6 @@ use serde_json::Value;
 use time::OffsetDateTime;
 
 use super::AutomationSink;
-use crate::helpers::render;
 use crate::ports::ScriptLibrary;
 use crate::services::{
     Budget, Frame, Secrets, WorkflowRunner, WorkflowTools, bind_inputs, input_problem,
@@ -47,7 +46,7 @@ pub async fn execute_workflow(
             Some(_) => None,
         }
     };
-    let fields = Invocation::fields_of(&pending);
+    let event = Arc::new(Invocation::values_of(&pending));
     let finished = match (refusal, workflow) {
         (Some(reason), _) => finished_as(Outcome::Refused, Some(reason), Duration::ZERO),
         (None, None) => finished_as(
@@ -56,18 +55,12 @@ pub async fn execute_workflow(
             Duration::ZERO,
         ),
         (None, Some(workflow)) => {
-            let lookup = |name: &str| {
-                fields
-                    .iter()
-                    .find(|(key, _)| key == name)
-                    .map(|(_, value)| value.as_str())
-            };
             let given: Vec<(String, Value)> = call
                 .inputs
                 .iter()
                 .map(|(name, value)| {
                     let value = match value {
-                        InputValue::Template(template) => Value::String(render(template, lookup)),
+                        InputValue::Template(template) => event.resolve(template),
                         InputValue::Literal(literal) => literal.clone(),
                     };
                     (name.clone(), value)
@@ -89,7 +82,7 @@ pub async fn execute_workflow(
                 }
             };
             let secrets = Arc::new(Secrets::new(tools.secrets.clone()));
-            let mut frame = Frame::new(Arc::new(fields.clone()), inputs, secrets.clone());
+            let mut frame = Frame::new(event.clone(), inputs, secrets.clone());
             let runner = WorkflowRunner {
                 workflows: sink.cache.workflows(),
                 actions: tools.actions.clone(),

@@ -130,7 +130,7 @@ export const automationSchema = z.object({
   tags: z.array(z.string()).default([]),
   cooldown_seconds: z.number(),
   when: whenSchema,
-  run: z.object({ script: z.string(), args: z.array(z.string()), timeout_seconds: z.number() }),
+  run: z.object({ script: z.string(), args: z.array(z.string()), timeout_seconds: z.number() }).nullable().default(null),
   workflow: z.object({ id: z.string(), inputs: z.record(z.string(), z.unknown()) }).nullable().default(null),
   last_run: runSchema.nullable().default(null),
   active_run: runSchema.nullable().default(null),
@@ -155,7 +155,7 @@ export const catalogueSchema = z.object({
     services: z.array(z.object({ id: z.string(), name: z.string() })),
     users: z.array(z.string()),
     environments: z.array(z.string()),
-    webhooks: z.array(z.object({ id: z.string(), name: z.string(), variables: z.array(z.string()) })).default([]),
+    webhooks: z.array(z.object({ id: z.string(), name: z.string(), variables: z.array(z.string()), action: z.enum(["event", "script", "workflow"]).catch("event") })).default([]),
     tags: z.array(z.string()).default([]),
   }),
 });

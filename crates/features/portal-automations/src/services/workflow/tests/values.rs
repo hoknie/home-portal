@@ -15,7 +15,7 @@ fn frame_with(
             .map(|(_, value)| value.clone())
     });
     let mut frame = super_workflow::Frame::new(
-        std::sync::Arc::new(vec![("service.id".to_string(), "nas".to_string())]),
+        std::sync::Arc::new(vec![("service.id".to_string(), "nas".to_string())].into()),
         [("service".to_string(), serde_json::json!("jellyfin"))].into(),
         std::sync::Arc::new(super_workflow::Secrets::new(lookup)),
     );
@@ -145,4 +145,29 @@ fn a_group_of_any_holds_when_one_does() {
         right: Some("499".into()),
     };
     assert!(super_workflow::holds(&numeric, &frame).unwrap());
+}
+
+#[test]
+fn the_event_is_read_by_its_short_names_and_the_webhook_body_by_path() {
+    let event = crate::types::EventValues::new(
+        vec![
+            ("event.name".to_string(), "webhook.received".to_string()),
+            ("event.at".to_string(), "2026-01-01T00:00:00Z".to_string()),
+            ("webhook.branch".to_string(), "main".to_string()),
+        ],
+        Some(serde_json::json!({"pusher": {"name": "ann"}})),
+    );
+    let frame = super_workflow::Frame::new(
+        std::sync::Arc::new(event),
+        std::collections::BTreeMap::new(),
+        std::sync::Arc::new(super_workflow::Secrets::new(std::sync::Arc::new(|_| None))),
+    );
+    assert_eq!(
+        super_workflow::render_text(
+            "{{event.name}} at {{event.at}} = {{event.event.name}}; {{event.webhook.branch}} by {{event.webhook.body.pusher.name}}",
+            &frame
+        )
+        .unwrap(),
+        "webhook.received at 2026-01-01T00:00:00Z = webhook.received; main by ann"
+    );
 }

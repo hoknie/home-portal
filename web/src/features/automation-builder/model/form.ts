@@ -2,8 +2,11 @@ import { z } from "zod";
 
 import { type Automation, type AutomationRequest, EVENT_NAMES, type FilterName } from "@/entities/automation";
 
+import type { InputDeclaration } from "@/entities/workflow";
+
 import { unknownPlaceholders } from "./placeholders";
 import { ACTIONS } from "./run-fields";
+import { entriesOf, inputEntrySchema, inputPlaceholderIssues, inputsRequest } from "./workflow-call";
 
 export const ID_PATTERN = /^[a-z0-9-]{1,63}$/;
 export const RESERVED_IDS = ["runs", "catalogue", "scripts", "schedule"] as const;
@@ -41,13 +44,9 @@ const baseSchema = z.object({
   action: z.enum(ACTIONS),
   script: z.string().trim(),
   workflow: z.string().trim(),
-  inputs: z.record(z.string(), z.string().optional()),
+  inputs: z.record(z.string(), inputEntrySchema),
   args: z.array(z.object({ value: z.string() })),
-  timeout_seconds: z
-    .number({ error: "validation.automationTimeout" })
-    .int("validation.automationTimeout")
-    .min(1, "validation.automationTimeout")
-    .max(LONGEST_TIMEOUT, "validation.automationTimeout"),
+  timeout_seconds: z.number({ error: "validation.automationTimeout" }),
 });
 
 export type AutomationForm = z.infer<typeof baseSchema>;
@@ -65,12 +64,13 @@ export function automationFormSchema(fieldsOf: (event: string, webhooks: string[
       if (form.workflow === "") {
         context.addIssue({ code: "custom", path: ["workflow"], message: "validation.automationWorkflow" });
       }
-      for (const [name, value] of Object.entries(form.inputs)) {
-        if (unknownPlaceholders(value ?? "", allowed).length > 0) {
-          context.addIssue({ code: "custom", path: ["inputs", name], message: "validation.automationPlaceholder" });
-        }
+      for (const name of inputPlaceholderIssues(form.inputs, allowed)) {
+        context.addIssue({ code: "custom", path: ["inputs", name], message: "validation.automationPlaceholder" });
       }
       return;
+    }
+    if (!Number.isInteger(form.timeout_seconds) || form.timeout_seconds < 1 || form.timeout_seconds > LONGEST_TIMEOUT) {
+      context.addIssue({ code: "custom", path: ["timeout_seconds"], message: "validation.automationTimeout" });
     }
     if (!scriptAccepted(form.script)) {
       context.addIssue({ code: "custom", path: ["script"], message: "validation.automationScript" });
@@ -124,15 +124,15 @@ export function formOf(automation: Automation): AutomationForm {
     environments: [...when.environments],
     webhooks: [...when.webhooks],
     action: automation.workflow ? "workflow" : "script",
-    script: run.script,
-    args: run.args.map((value) => ({ value })),
-    timeout_seconds: run.timeout_seconds,
+    script: run?.script ?? "",
+    args: (run?.args ?? []).map((value) => ({ value })),
+    timeout_seconds: run?.timeout_seconds ?? DEFAULT_TIMEOUT,
     workflow: automation.workflow?.id ?? "",
-    inputs: Object.fromEntries(Object.entries(automation.workflow?.inputs ?? {}).map(([name, value]) => [name, typeof value === "string" ? value : JSON.stringify(value)])),
+    inputs: entriesOf(automation.workflow?.inputs),
   };
 }
 
-export function requestOf(form: AutomationForm, filters: readonly string[]): AutomationRequest {
+export function requestOf(form: AutomationForm, filters: readonly string[], declarations?: readonly InputDeclaration[]): AutomationRequest {
   const when: Record<string, unknown> = { event: form.event };
   const lists = {
     services: form.services,
@@ -161,7 +161,7 @@ export function requestOf(form: AutomationForm, filters: readonly string[]): Aut
     cooldown_seconds: form.cooldown_seconds,
     when,
     ...(form.action === "workflow"
-      ? { workflow: form.workflow, inputs: Object.fromEntries(Object.entries(form.inputs).flatMap(([name, value]) => (value === undefined || value === "" ? [] : [[name, value] as const]))) }
+      ? { workflow: form.workflow, inputs: inputsRequest(form.inputs, declarations) }
       : { run: { script: form.script.trim(), args: form.args.map((argument) => argument.value), timeout_seconds: form.timeout_seconds } }),
   };
 }

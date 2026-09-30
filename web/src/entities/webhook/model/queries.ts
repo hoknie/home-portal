@@ -42,5 +42,5 @@ export function useRemoveToken() {
 }
 
 export function useRunWebhook() {
-  return useInvalidating(({ id, variables }: { id: string; variables: Record<string, string> }) => runWebhook(id, variables));
+  return useInvalidating(({ id, variables, body }: { id: string; variables: Record<string, string>; body?: unknown }) => runWebhook(id, variables, body));
 }

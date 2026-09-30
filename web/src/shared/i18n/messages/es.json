@@ -833,7 +833,12 @@
     "chooseWorkflow": "Elija un flujo",
     "workflowInput": "Entrada {name}",
     "noWorkflowInputs": "Este flujo no tiene entradas.",
-    "typedInput": "{type}: escríbalo como JSON, por ejemplo [\"nas\", \"router\"], o con un marcador que lo dé."
+    "problems": "No se pudo guardar:",
+    "templateMode": "Escribir {name} como plantilla",
+    "inputType": "Tipo: {type}",
+    "inputDefault": "Por defecto: {value}",
+    "neverPublishes": "{name} (nunca publica este evento)",
+    "problemLine": "{path}: {message}"
   },
   "automationEvents": {
     "schedule": {
@@ -918,7 +923,8 @@
     "configuration_revision": "Revisión",
     "configuration_previous_revision": "Revisión anterior",
     "webhook_id": "Identificador del webhook",
-    "webhook_title": "Título del webhook"
+    "webhook_title": "Título del webhook",
+    "webhook_body": "Cuerpo de la solicitud (JSON)"
   },
   "scriptHelp": {
     "unrunnable": "Scripts que no se pueden ejecutar: {count}",
@@ -979,11 +985,13 @@
     "action": "Qué hacer al recibir una llamada",
     "actions": {
       "script": "Ejecutar un script",
-      "event": "Publicar un evento"
+      "event": "Publicar un evento",
+      "workflow": "Ejecutar un flujo"
     },
     "actionHints": {
       "script": "El script recibe las variables como '{{'webhook.branch'}}', PORTAL_WEBHOOK_BRANCH y JSON por la entrada estándar.",
-      "event": "Se publica el evento «Webhook recibido»; cualquier automatización puede reaccionar a él."
+      "event": "Se publica el evento «Webhook recibido»; cualquier automatización puede reaccionar a él.",
+      "workflow": "Sus pasos se ejecutan con las entradas de abajo; pueden leer las variables y el cuerpo de la llamada."
     },
     "withToken": "Exigir un token",
     "withTokenHint": "El portal crea un token y lo muestra una vez. Sin token, cualquiera que conozca la dirección puede llamar al webhook.",
@@ -1009,7 +1017,10 @@
       "description": "Ejecuta el webhook como si lo hubieran llamado, sin su token.",
       "submit": "Ejecutar",
       "queued": "La ejecución {id} está en cola",
-      "published": "El evento se publicó"
+      "published": "El evento se publicó",
+      "body": "Cuerpo",
+      "bodyHint": "JSON que el flujo o el script leen como webhook.body. Si se deja vacío, son las variables de arriba.",
+      "bodyInvalid": "Esto no es JSON"
     }
   },
   "tags": {
@@ -2051,7 +2062,9 @@
       "filterArguments": "{filter} recibe {wanted} argumentos y obtuvo {got}",
       "filterArgument": "el argumento {argument} de {filter} debe ser texto entre comillas o un número, según su tipo",
       "filterType": "{filter} recibe {takes} y obtuvo {got}",
-      "notInPortal": "{name} no es un valor que ofrezca el portal"
+      "notInPortal": "{name} no es un valor que ofrezca el portal",
+      "unknownEventField": "{name} no es un campo de ningún evento",
+      "undeclaredWebhookVariable": "ningún webhook que inicia este flujo envía {name}"
     },
     "edges": {
       "then": "entonces",

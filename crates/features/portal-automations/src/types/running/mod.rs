@@ -1,5 +1,6 @@
 mod active_run;
 mod admission;
+mod event_values;
 mod finished;
 mod invocation;
 mod pending;
@@ -12,6 +13,7 @@ mod tail;
 
 pub use active_run::ActiveRun;
 pub use admission::Admission;
+pub use event_values::EventValues;
 pub use finished::Finished;
 pub use invocation::Invocation;
 pub use pending::Pending;

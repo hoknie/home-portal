@@ -1,10 +1,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use serde_json::{Map, Value};
-
-use super::Pending;
-use crate::helpers::render;
+use super::{EventValues, Pending};
 use crate::types::Catalogue;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -22,51 +19,26 @@ impl Invocation {
     pub const VARIABLE_PREFIX: &'static str = "PORTAL_";
 
     pub fn for_run(pending: &Pending, program: PathBuf, directory: PathBuf) -> Invocation {
-        let fields = Self::fields_of(pending);
-        let lookup = |name: &str| {
-            fields
-                .iter()
-                .find(|(key, _)| key == name)
-                .map(|(_, value)| value.as_str())
-        };
+        let event = Self::values_of(pending);
         let arguments = pending
             .automation
             .run
             .args
             .iter()
-            .map(|template| render(template, lookup))
+            .map(|template| event.render(template))
             .collect();
-        let mut environment: Vec<(String, String)> = Self::PASSED_THROUGH
-            .iter()
-            .filter_map(|name| {
-                std::env::var(name)
-                    .ok()
-                    .map(|value| (name.to_string(), value))
-            })
-            .collect();
-        environment.extend(
-            fields
-                .iter()
-                .map(|(key, value)| (Self::variable_of(key), value.clone())),
-        );
-        let input: Map<String, Value> = fields
-            .iter()
-            .map(|(key, value)| (key.clone(), Value::String(value.clone())))
-            .collect();
-        Invocation {
-            program,
-            directory,
+        Self::for_step(
+            (program, directory),
             arguments,
-            environment,
-            input: Value::Object(input).to_string(),
-            timeout: Duration::from_secs(pending.automation.run.timeout_seconds),
-        }
+            &event,
+            Duration::from_secs(pending.automation.run.timeout_seconds),
+        )
     }
 
     pub fn for_step(
         (program, directory): (PathBuf, PathBuf),
         arguments: Vec<String>,
-        fields: &[(String, String)],
+        event: &EventValues,
         timeout: Duration,
     ) -> Invocation {
         let mut environment: Vec<(String, String)> = Self::PASSED_THROUGH
@@ -78,22 +50,23 @@ impl Invocation {
             })
             .collect();
         environment.extend(
-            fields
+            event
+                .fields
                 .iter()
                 .map(|(key, value)| (Self::variable_of(key), value.clone())),
         );
-        let input: Map<String, Value> = fields
-            .iter()
-            .map(|(key, value)| (key.clone(), Value::String(value.clone())))
-            .collect();
         Invocation {
             program,
             directory,
             arguments,
             environment,
-            input: Value::Object(input).to_string(),
+            input: event.input(),
             timeout,
         }
+    }
+
+    pub fn values_of(pending: &Pending) -> EventValues {
+        EventValues::new(Self::fields_of(pending), pending.event.body.clone())
     }
 
     pub fn fields_of(pending: &Pending) -> Vec<(String, String)> {

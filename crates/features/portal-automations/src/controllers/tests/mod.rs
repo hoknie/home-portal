@@ -1,6 +1,7 @@
 mod automation_steps;
 mod automations;
 mod inputs;
+mod linking;
 mod modules;
 mod runs;
 mod scripts;

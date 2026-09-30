@@ -3,6 +3,7 @@ pub struct WorkflowUsage {
     pub kind: &'static str,
     pub id: String,
     pub title: String,
+    pub variables: Vec<String>,
 }
 
 impl WorkflowUsage {

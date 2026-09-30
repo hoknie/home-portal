@@ -1,4 +1,4 @@
-use super::{render, unknown_placeholders};
+use super::{placeholders_of, render, unknown_placeholders};
 
 fn lookup(name: &str) -> Option<&'static str> {
     match name {
@@ -98,4 +98,43 @@ fn trailing_blank_lines_are_skipped_and_nothing_gives_no_line() {
     );
     assert_eq!(super::last_line("\n\n"), None);
     assert_eq!(super::last_line(""), None);
+}
+
+#[test]
+fn a_body_path_may_name_indexes_and_keys_of_any_case() {
+    assert_eq!(
+        placeholders_of("{{webhook.body.commits.0.headCommit}} {{webhook.body}}"),
+        vec!["webhook.body.commits.0.headCommit", "webhook.body"]
+    );
+    assert!(placeholders_of("{{webhook.Body}}").is_empty());
+    assert!(placeholders_of("{{webhook.body.}}").is_empty());
+    assert_eq!(
+        unknown_placeholders("{{webhook.body.a.1}}", &["webhook.body"]),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        unknown_placeholders("{{webhook.body.a}}", &["webhook.id"]),
+        vec!["webhook.body.a".to_string()]
+    );
+}
+
+#[test]
+fn event_values_render_the_body_as_text_and_resolve_a_whole_placeholder_as_a_value() {
+    let event = crate::types::EventValues::new(
+        vec![("webhook.id".to_string(), "x".to_string())],
+        Some(serde_json::json!({"zones": [1, 3], "name": "gate"})),
+    );
+    assert_eq!(
+        event.render("{{webhook.body.name}} {{webhook.body.zones}} {{webhook.body.none}}!"),
+        "gate [1,3] !"
+    );
+    assert_eq!(
+        event.resolve(" {{webhook.body.zones}} "),
+        serde_json::json!([1, 3])
+    );
+    assert_eq!(event.resolve("{{webhook.id}}"), serde_json::json!("x"));
+    assert_eq!(
+        event.resolve("zones: {{webhook.body.zones}}"),
+        serde_json::json!("zones: [1,3]")
+    );
 }

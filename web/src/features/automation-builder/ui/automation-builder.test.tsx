@@ -118,16 +118,33 @@ it("a title that would give an id the interface reserves gets another id", async
   expect(screen.getByLabelText("Id")).toHaveValue("schedule-2");
 });
 
-it("a webhook event offers the variables of the chosen webhook as fields", async () => {
+it("a webhook event offers only event webhooks, their variables and the body as fields", async () => {
   network();
   open();
   await userEvent.selectOptions(screen.getByLabelText(/^Event/), "webhook.received");
   expect(screen.getByRole("button", { name: "webhook.title" })).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "webhook.camera" })).not.toBeInTheDocument();
-  await userEvent.click(within(group("Webhooks")).getByLabelText("Deploy from CI"));
-  expect(screen.getByRole("button", { name: "webhook.branch" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "webhook.body" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "webhook.camera" })).toBeInTheDocument();
+  expect(within(group("Webhooks")).queryByLabelText(/Deploy from CI/)).not.toBeInTheDocument();
   await userEvent.click(within(group("Webhooks")).getByLabelText("Motion at the door"));
-  expect(screen.queryByRole("button", { name: "webhook.branch" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "webhook.camera" })).toBeInTheDocument();
+});
+
+it("a chosen webhook that never publishes the event is marked", () => {
+  network();
+  const automation = automationsSchema.parse(apiSamples.automations).automations[0];
+  renderWithProviders(
+    <AutomationBuilder
+      automation={{ ...automation, when: { ...automation.when, event: "webhook.received", services: [], to: [], webhooks: ["7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d"] } }}
+      revision='"r1"'
+      taken={[]}
+      catalogue={catalogue}
+      scripts={scripts}
+      onSaved={vi.fn()}
+      onConflict={vi.fn()}
+    />,
+  );
+  expect(within(group("Webhooks")).getByLabelText("Deploy from CI (never publishes this event)")).toBeChecked();
 });
 
 it("a manual automation has no filters and no fields of its own", async () => {

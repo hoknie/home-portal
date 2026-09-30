@@ -34,8 +34,8 @@ pub use progress::{
     StepReport, Streams, Trace, TraceEntry,
 };
 pub use running::{
-    ActiveRun, Admission, Finished, Invocation, Pending, Refusal, RefusalCode, RunControl,
-    ScriptEntry, StopAnswer, Tail,
+    ActiveRun, Admission, EventValues, Finished, Invocation, Pending, Refusal, RefusalCode,
+    RunControl, ScriptEntry, StopAnswer, Tail,
 };
 pub use schedule::Schedule;
 pub use stepping::{

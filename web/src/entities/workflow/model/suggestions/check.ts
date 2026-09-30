@@ -19,13 +19,34 @@ export const REASONS = [
   "filterArguments",
   "filterArgument",
   "filterType",
+  "unknownEventField",
+  "undeclaredWebhookVariable",
 ] as const;
+
+export const WARNING_REASONS: readonly Reason[] = ["undeclaredWebhookVariable"];
+
+export type EventKnowledge = { fields: string[]; variables: string[] | null };
+
+const WEBHOOK = "webhook.";
+const BODY = "webhook.body";
+const VARIABLE = /^[a-z][a-z0-9_]*$/;
+
+function eventReason(field: string, events: EventKnowledge): { reason: Reason; params: Record<string, string> } | null {
+  if (field === "name" || field === "at" || field === BODY || field.startsWith(`${BODY}.`) || events.fields.includes(field)) {
+    return null;
+  }
+  const variable = field.startsWith(WEBHOOK) ? field.slice(WEBHOOK.length) : null;
+  if (variable !== null && VARIABLE.test(variable)) {
+    return events.variables === null || events.variables.includes(variable) ? null : { reason: "undeclaredWebhookVariable", params: { name: variable } };
+  }
+  return { reason: "unknownEventField", params: { name: `event.${field}` } };
+}
 
 export type Reason = (typeof REASONS)[number];
 
 export type TemplateName = { start: number; end: number; name: string; valid: boolean; filters: FilterCall[] | null; filterError: string | null };
 
-export type TemplateProblem = { start: number; end: number; name: string; reason: Reason; params: Record<string, string> };
+export type TemplateProblem = { start: number; end: number; name: string; reason: Reason; params: Record<string, string>; warning: boolean };
 
 export function templateNames(text: string): TemplateName[] {
   const found: TemplateName[] = [];
@@ -51,10 +72,11 @@ export function templateNames(text: string): TemplateName[] {
   }
 }
 
-function reasonFor(name: string, scope: Scope, portal: PortalValues | null): { reason: Reason; params: Record<string, string> } | null {
+function reasonFor(name: string, scope: Scope, portal: PortalValues | null, events: EventKnowledge | null): { reason: Reason; params: Record<string, string> } | null {
   const [namespace, first = "", second = ""] = name.split(".");
   switch (namespace) {
     case "event":
+      return events === null ? null : eventReason(name.slice("event.".length), events);
     case "secrets":
       return null;
     case "inputs":
@@ -82,14 +104,14 @@ function filterReason(found: TemplateName, scope: Scope): { reason: Reason; para
   return chainProblem(certainType(found.name, scope), found.filters);
 }
 
-export function checkTemplate(text: string, scope: Scope, portal: PortalValues | null = null): TemplateProblem[] {
+export function checkTemplate(text: string, scope: Scope, portal: PortalValues | null = null, events: EventKnowledge | null = null): TemplateProblem[] {
   return templateNames(text).flatMap((found) => {
-    const argumentProblem = (found.filters ?? []).flatMap((call) => call.names ?? []).map((named) => reasonFor(named.name, scope, portal)).find((reason) => reason !== null) ?? null;
+    const argumentProblem = (found.filters ?? []).flatMap((call) => call.names ?? []).map((named) => reasonFor(named.name, scope, portal, events)).find((reason) => reason !== null) ?? null;
     const problem = found.valid
-      ? (argumentProblem ?? reasonFor(found.name, scope, portal) ?? filterReason(found, scope))
+      ? (argumentProblem ?? reasonFor(found.name, scope, portal, events) ?? filterReason(found, scope))
       : found.name.includes(".")
         ? { reason: "notAValue" as const, params: { name: found.name } }
         : null;
-    return problem ? [{ start: found.start, end: found.end, name: found.name, ...problem }] : [];
+    return problem ? [{ start: found.start, end: found.end, name: found.name, ...problem, warning: WARNING_REASONS.includes(problem.reason) }] : [];
   });
 }

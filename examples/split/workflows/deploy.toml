@@ -1,0 +1,20 @@
+# Deploy what a push sent: a webhook runs this workflow directly. The webhook's variables and
+# the whole request body reach it twice: as inputs the webhook fills ({{webhook.branch}},
+# {{webhook.body.head_commit.id}}) and as {{event.webhook.*}} inside the steps.
+id = "deploy"
+title = "Deploy a push"
+description = "Log who pushed what, then run the deploy script"
+tags = ["ci"]
+inputs = ["branch", { name = "commit", type = "text", description = "The commit to deploy" }]
+
+[[steps]]
+id = "who"
+kind = "log"
+message = "{{event.name}}: {{inputs.branch}} at {{inputs.commit}} by {{event.webhook.body.pusher.name | default('someone')}}"
+level = "info"
+
+[[steps]]
+id = "run"
+kind = "script"
+script = "echo-event.sh"
+args = ["deploy", "--", "{{inputs.branch}}", "{{inputs.commit}}"]

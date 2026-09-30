@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 
 import type { Run, Trace } from "@/entities/automation";
 import type { HeaderProblem, ScriptArgument } from "@/entities/script";
-import type { FilterOffer, Kind, KnownContext, PortalValues, Overlay, Path, Step, Suggestion, Target, Usage, Workflow, WorkflowCatalogue } from "@/entities/workflow";
+import type { EventKnowledge, FilterOffer, Kind, KnownContext, PortalValues, Overlay, Path, Step, Suggestion, Target, Usage, Workflow, WorkflowCatalogue } from "@/entities/workflow";
 
 import type { Draft } from "./draft";
 import type { Problem } from "./checks/problems";
@@ -17,6 +17,7 @@ export type Sources = {
   portal: PortalValues | null;
   automations: { id: string; title: string; event: string; enabled: boolean }[];
   eventFields: { name: string; sample: string }[];
+  eventKnowledge: EventKnowledge;
 };
 
 export type EditorApi = {

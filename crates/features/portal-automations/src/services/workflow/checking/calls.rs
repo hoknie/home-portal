@@ -155,7 +155,7 @@ pub fn automation_errors(
                 ));
                 return;
             };
-            let offered = Catalogue::fields_of(target.trigger.event);
+            let offered = Catalogue::carried_by(target.trigger.event);
             for (name, _) in fields {
                 if !offered.contains(&name.as_str()) {
                     errors.push(FieldError::new(

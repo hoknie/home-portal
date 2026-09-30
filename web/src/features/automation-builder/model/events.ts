@@ -35,7 +35,7 @@ export function withVariables(catalogue: Catalogue, name: string, chosen: string
   if (name !== WEBHOOK_EVENT) {
     return event;
   }
-  const webhooks = catalogue.choices.webhooks.filter((webhook) => chosen.length === 0 || chosen.includes(webhook.id));
+  const webhooks = catalogue.choices.webhooks.filter((webhook) => (chosen.length === 0 ? webhook.action === "event" : chosen.includes(webhook.id)));
   const variables = webhooks.length === 0 ? [] : webhooks[0].variables.filter((variable) => webhooks.every((webhook) => webhook.variables.includes(variable)));
   return { ...event, fields: [...event.fields, ...variables.map((variable) => ({ name: `${VARIABLE_PREFIX}${variable}`, sample: variable }))] };
 }

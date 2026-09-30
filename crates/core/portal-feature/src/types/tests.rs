@@ -189,6 +189,22 @@ fn webhook_variables_are_named_under_webhook_and_cleaned() {
 }
 
 #[test]
+fn a_body_travels_beside_the_fields_without_their_limit() {
+    let large = "x".repeat(PortalEvent::VALUE_LIMIT * 4);
+    let fields = PortalEvent::of(EventName::WebhookReceived, OffsetDateTime::UNIX_EPOCH, &[])
+        .fields
+        .clone();
+    let event = PortalEvent::of(EventName::WebhookReceived, OffsetDateTime::UNIX_EPOCH, &[])
+        .with_body(serde_json::json!({ "text": large }));
+    assert_eq!(event.fields, fields);
+    assert!(event.variables.is_empty());
+    assert_eq!(
+        event.body.unwrap()["text"].as_str().unwrap().len(),
+        PortalEvent::VALUE_LIMIT * 4
+    );
+}
+
+#[test]
 fn a_notification_joins_its_title_and_text_and_skips_an_empty_part() {
     use super::Notification;
     assert_eq!(

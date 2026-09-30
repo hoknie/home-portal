@@ -91,9 +91,10 @@ pub async fn run_webhook(
     Path(id): Path<String>,
     Json(request): Json<RunWebhookRequest>,
 ) -> Result<(StatusCode, Json<AcceptedResponse>), ApiError> {
-    let run_id = state
-        .run_webhook
-        .run(&id, &request.variables, &name_of(principal))?;
+    let run_id =
+        state
+            .run_webhook
+            .run(&id, (&request.variables, request.body), &name_of(principal))?;
     Ok((
         StatusCode::ACCEPTED,
         Json(AcceptedResponse {

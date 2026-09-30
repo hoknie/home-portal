@@ -101,7 +101,7 @@ pub async fn run_peeking(
         logging: crate::types::StepLogging::On,
     };
     let mut frame = Frame::new(
-        Arc::new(vec![("automation.id".to_string(), "w".to_string())]),
+        Arc::new(vec![("automation.id".to_string(), "w".to_string())].into()),
         crate::services::workflow::bind_inputs(
             &workflow,
             vec![("service".to_string(), serde_json::json!("nas"))],

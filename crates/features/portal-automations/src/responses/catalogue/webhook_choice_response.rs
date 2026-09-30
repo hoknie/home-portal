@@ -5,4 +5,5 @@ pub struct WebhookChoiceResponse {
     pub id: String,
     pub name: String,
     pub variables: Vec<String>,
+    pub action: String,
 }

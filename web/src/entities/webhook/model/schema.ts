@@ -12,6 +12,7 @@ export const webhookSchema = z.object({
   variables: z.array(z.string()),
   action: z.enum(WEBHOOK_ACTIONS).catch("event"),
   run: z.object({ script: z.string(), args: z.array(z.string()), timeout_seconds: z.number() }).nullable(),
+  workflow: z.object({ id: z.string(), inputs: z.record(z.string(), z.unknown()) }).nullable().default(null),
   last_received: z.object({ at: z.string(), status: z.number() }).nullable(),
 });
 

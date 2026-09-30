@@ -8,7 +8,7 @@ use crate::services::workflow::{Frame, Secrets, render_text, render_value, workf
 
 fn frame() -> Frame {
     let mut frame = Frame::new(
-        Arc::new(Vec::new()),
+        Arc::new(Vec::new().into()),
         [("which".to_string(), json!("nas"))].into(),
         Arc::new(Secrets::none()),
     );

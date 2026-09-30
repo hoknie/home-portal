@@ -9,7 +9,7 @@ use crate::types::{Ending, FILTERS, filter_named};
 
 fn frame() -> Frame {
     let mut frame = Frame::new(
-        Arc::new(Vec::new()),
+        Arc::new(Vec::new().into()),
         [("service".to_string(), serde_json::json!("nas"))].into(),
         Arc::new(Secrets::none()),
     );

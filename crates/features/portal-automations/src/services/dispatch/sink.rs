@@ -8,7 +8,7 @@ use time::OffsetDateTime;
 
 use super::{ActiveRuns, Gatekeeper, RunQueue, RunningGroups};
 use crate::helpers::manual_event;
-use crate::services::{AutomationCache, Journal, matching};
+use crate::services::{AutomationCache, Journal, matching, webhook_variables_read};
 use crate::types::{Automation, Pending, RunRecord, SkipReason, StopAnswer, Webhook};
 
 pub struct AutomationSink {
@@ -59,7 +59,13 @@ impl AutomationSink {
     }
 
     pub fn run_now(&self, automation: &Automation, by: &str) -> u64 {
-        let event = manual_event(automation, OffsetDateTime::now_utc());
+        let read = automation
+            .workflow
+            .as_ref()
+            .and_then(|call| self.cache.workflow(&call.id))
+            .map(|workflow| webhook_variables_read(&workflow))
+            .unwrap_or_default();
+        let event = manual_event(automation, OffsetDateTime::now_utc(), &read);
         self.admit(automation, event, (Some(by.to_string()), Vec::new()))
     }
 

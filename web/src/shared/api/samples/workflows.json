@@ -226,7 +226,16 @@
         {
           "id": "nas-down",
           "kind": "automation",
-          "title": "NAS down"
+          "title": "NAS down",
+          "variables": []
+        },
+        {
+          "id": "3c1d9e7f-2a4b-4c6d-8e0f-1a2b3c4d5e6f",
+          "kind": "webhook",
+          "title": "Release from GitHub",
+          "variables": [
+            "service"
+          ]
         }
       ]
     },

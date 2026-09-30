@@ -833,7 +833,12 @@
     "chooseWorkflow": "Choose a workflow",
     "workflowInput": "Input {name}",
     "noWorkflowInputs": "This workflow takes no inputs.",
-    "typedInput": "A {type}: write it as JSON, such as [\"nas\", \"router\"], or a placeholder that gives one."
+    "problems": "Saving did not go through:",
+    "templateMode": "Write {name} as a template",
+    "inputType": "Type: {type}",
+    "inputDefault": "Default: {value}",
+    "neverPublishes": "{name} (never publishes this event)",
+    "problemLine": "{path}: {message}"
   },
   "automationEvents": {
     "schedule": {
@@ -918,7 +923,8 @@
     "configuration_revision": "Revision",
     "configuration_previous_revision": "Previous revision",
     "webhook_id": "Webhook id",
-    "webhook_title": "Webhook title"
+    "webhook_title": "Webhook title",
+    "webhook_body": "Request body (JSON)"
   },
   "scriptHelp": {
     "unrunnable": "Scripts that cannot run: {count}",
@@ -979,11 +985,13 @@
     "action": "What to do on a call",
     "actions": {
       "script": "Run a script",
-      "event": "Publish an event"
+      "event": "Publish an event",
+      "workflow": "Run a workflow"
     },
     "actionHints": {
       "script": "The script gets the variables as '{{'webhook.branch'}}', PORTAL_WEBHOOK_BRANCH and JSON on standard input.",
-      "event": "The event “Webhook received” is published; any automation can react to it."
+      "event": "The event “Webhook received” is published; any automation can react to it.",
+      "workflow": "Its steps run with the inputs below; they may read the call's variables and body."
     },
     "withToken": "Require a token",
     "withTokenHint": "The portal creates a token and shows it once. Without a token anyone who knows the address can call the webhook.",
@@ -1009,7 +1017,10 @@
       "description": "Runs the webhook as if it had been called, without its token.",
       "submit": "Run",
       "queued": "Run {id} was queued",
-      "published": "The event was published"
+      "published": "The event was published",
+      "body": "Body",
+      "bodyHint": "JSON the workflow or script reads as webhook.body. Left empty, it is the variables above.",
+      "bodyInvalid": "This is not JSON"
     }
   },
   "tags": {
@@ -2051,7 +2062,9 @@
       "filterArguments": "{filter} takes {wanted} arguments and got {got}",
       "filterArgument": "the argument {argument} of {filter} must be quoted text or a number, as its type says",
       "filterType": "{filter} takes {takes} and got {got}",
-      "notInPortal": "{name} is not a value the portal offers"
+      "notInPortal": "{name} is not a value the portal offers",
+      "unknownEventField": "{name} is not a field any event carries",
+      "undeclaredWebhookVariable": "no webhook that starts this workflow sends {name}"
     },
     "edges": {
       "then": "then",

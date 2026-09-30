@@ -44,3 +44,11 @@ fn a_while_condition_may_read_the_loop_index() {
     );
     assert!(found.is_empty(), "{found:?}");
 }
+
+#[test]
+fn an_event_field_must_be_one_some_event_carries() {
+    let found = one(
+        "[[workflows.steps]]\nid = \"a\"\nkind = \"log\"\nmessage = \"{{event.name}} {{event.at}} {{event.event.name}} {{event.service.id}} {{event.run.by}} {{event.webhook.branch}} {{event.webhook.body.commits.0.id}}\"\n[[workflows.steps]]\nid = \"b\"\nkind = \"log\"\nmessage = \"{{event.servce.id}}\"\n",
+    );
+    assert_eq!(found, vec!["workflows[0].steps[1].message"]);
+}

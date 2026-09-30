@@ -19,3 +19,14 @@ id = "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d"
 title = "Motion at the door"
 variables = ["camera"]
 action = "event"
+
+# A webhook that runs a workflow directly: action = "script" with workflow and inputs instead
+# of run. Placeholders read the declared variables and {{webhook.body}}, the whole JSON body,
+# with a path into it; a placeholder that is the whole value gives a list or an object as it is.
+[[webhooks]]
+id = "3c1d9e7f-2a4b-4c6d-8e0f-1a2b3c4d5e6f"
+title = "Push from GitHub"
+variables = ["branch"]
+action = "script"
+workflow = "deploy"
+inputs = { branch = "{{webhook.branch}}", commit = "{{webhook.body.head_commit.id}}" }

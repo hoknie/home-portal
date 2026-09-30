@@ -1,4 +1,5 @@
 import {
+  type EventKnowledge,
   type PortalValues,
   type Step,
   type Workflow,
@@ -32,6 +33,7 @@ export type ProblemContext = {
   secrets: { name: string; set: boolean }[];
   lastRun: Trace | null;
   portal?: PortalValues | null;
+  events?: EventKnowledge | null;
   workflow: Workflow | null;
 };
 
@@ -53,8 +55,8 @@ function templateProblems(context: ProblemContext): Problem[] {
     for (const { field, text } of templatesOf(step)) {
       const at = `${pathText(path)}.${field}`;
       const scope = scopeAt(context.draft.steps, path, inputs, field);
-      for (const problem of checkTemplate(text, scope, context.portal ?? null)) {
-        found.push({ at, severity: "error", key: `workflowHelp.reasons.${problem.reason}`, params: problem.params, text: null });
+      for (const problem of checkTemplate(text, scope, context.portal ?? null, context.events ?? null)) {
+        found.push({ at, severity: problem.warning ? "warning" : "error", key: `workflowHelp.reasons.${problem.reason}`, params: problem.params, text: null });
       }
       for (const name of templateNames(text).filter((entry) => entry.valid).map((entry) => entry.name.split("."))) {
         if (name[0] === "secrets" && unset.has(name[1])) {

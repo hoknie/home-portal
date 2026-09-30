@@ -13,13 +13,14 @@ import { SectionCard } from "@/shared/ui/section-card";
 import type { Workflow } from "@/entities/workflow";
 
 import { ACTIONS, type RunFields } from "../model/run-fields";
+import type { WorkflowCallFields } from "../model/workflow-call";
 import { ArgumentList } from "./argument-list";
 import { SELECT } from "./select";
-import { WorkflowAction } from "./workflow-action";
+import { WorkflowCall } from "./workflow-call/workflow-call";
 
-export type RunCardProps = { form: UseFormReturn<RunFields>; event: CatalogueEvent; scripts: Scripts; workflows?: Workflow[]; offerWorkflow?: boolean };
+export type RunCardProps = { form: UseFormReturn<RunFields>; event: CatalogueEvent; scripts: Scripts; workflows?: Workflow[]; offerWorkflow?: boolean; idPrefix?: string; showChoice?: boolean };
 
-export function RunCard({ form, event, scripts, workflows, offerWorkflow = false }: RunCardProps) {
+export function RunCard({ form, event, scripts, workflows, offerWorkflow = false, idPrefix = "automation", showChoice = true }: RunCardProps) {
   const t = useTranslations("automationBuilder");
   const errors = form.formState.errors;
   const chosen = form.watch("script");
@@ -27,7 +28,7 @@ export function RunCard({ form, event, scripts, workflows, offerWorkflow = false
   const picked = scripts.scripts.find((script) => script.path === chosen);
   const known = picked !== undefined;
   const choice =
-    workflows && (offerWorkflow || action === "workflow") ? (
+    showChoice && workflows && (offerWorkflow || action === "workflow") ? (
       <div role="radiogroup" aria-label={t("action")} className="flex w-fit gap-1 rounded-lg border border-glass-edge p-1">
         {ACTIONS.map((name) => (
           <Button
@@ -49,7 +50,7 @@ export function RunCard({ form, event, scripts, workflows, offerWorkflow = false
       <SectionCard title={t("run")} description={t("runWorkflowDescription")}>
         <div className="grid gap-5">
           {choice}
-          <WorkflowAction form={form} event={event} workflows={workflows} />
+          <WorkflowCall form={form as unknown as UseFormReturn<WorkflowCallFields>} event={event} workflows={workflows} idPrefix={idPrefix} />
         </div>
       </SectionCard>
     );

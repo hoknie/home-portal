@@ -68,7 +68,7 @@ fn accept(
         &state.sink,
         &state.webhooks,
         webhook,
-        &variables,
+        (&variables, body_of(body)),
         (client, None),
     )?;
     Ok((
@@ -78,6 +78,14 @@ fn accept(
             run_id: run_id.map(|id| id.to_string()),
         }),
     ))
+}
+
+fn body_of(body: &Bytes) -> Value {
+    if body.is_empty() {
+        return Value::String(String::new());
+    }
+    serde_json::from_slice::<Value>(body)
+        .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(body).replace('\0', "")))
 }
 
 fn presented_token(headers: &HeaderMap) -> Option<String> {

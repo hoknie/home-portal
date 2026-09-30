@@ -59,6 +59,7 @@ impl CatalogueResponse {
                         id: webhook.id.clone(),
                         name: webhook.title.clone(),
                         variables: webhook.variables.clone(),
+                        action: webhook.action.kind().to_string(),
                     })
                     .collect(),
                 tags,

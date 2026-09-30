@@ -67,3 +67,12 @@ id = "motion-alert"
 title = "Motion at the door"
 when = { event = "webhook.received", webhooks = ["0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d"] }
 run = { script = "echo-event.sh", args = ["motion", "--", "{{webhook.camera}}"] }
+
+# An event webhook's data reaches a workflow through an automation: a declared variable, and a
+# list taken whole from the request body for the typed input hosts.
+[[automations]]
+id = "motion-check"
+title = "Check the hosts a camera names"
+when = { event = "webhook.received", webhooks = ["0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d"] }
+workflow = "check-hosts"
+inputs = { hosts = "{{webhook.body.hosts}}", note = "{{webhook.camera}}" }

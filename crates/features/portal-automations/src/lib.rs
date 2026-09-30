@@ -35,7 +35,7 @@ pub use responses::{
 };
 pub use services::validate_automations;
 pub use types::{
-    Choice, PortalService, PortalState, ProbeResult, RawMarks, RawOperation, RawRun, RawWebhook,
-    Refusal, RefusalCode, Schedule, ScriptEntry, StatusResult, StepLogging, Webhook,
+    Choice, InputValue, PortalService, PortalState, ProbeResult, RawMarks, RawOperation, RawRun,
+    RawWebhook, Refusal, RefusalCode, Schedule, ScriptEntry, StatusResult, StepLogging, Webhook,
 };
 pub use usecases::{TransformValue, WorkflowCatalogue};

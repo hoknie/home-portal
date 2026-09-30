@@ -130,7 +130,7 @@ export const stepSchema: z.ZodType<Step> = z.lazy(() =>
 
 export const USAGE_KINDS = ["automation", "webhook", "workflow"] as const;
 
-export const usageSchema = z.object({ kind: z.string(), id: z.string(), title: z.string() });
+export const usageSchema = z.object({ kind: z.string(), id: z.string(), title: z.string(), variables: z.array(z.string()).default([]) });
 
 export type Usage = z.infer<typeof usageSchema>;
 

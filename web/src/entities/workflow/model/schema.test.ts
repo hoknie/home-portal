@@ -12,7 +12,10 @@ describe("workflow schema", () => {
     expect(revive.steps[1].then?.[0].kind).toBe("loop");
     expect(Array.isArray(revive.steps[1].then?.[0].body)).toBe(true);
     expect(revive.steps[2].branches).toHaveLength(2);
-    expect(revive.used_by).toEqual([{ kind: "automation", id: "nas-down", title: "NAS down" }]);
+    expect(revive.used_by).toEqual([
+      { kind: "automation", id: "nas-down", title: "NAS down", variables: [] },
+      { kind: "webhook", id: "3c1d9e7f-2a4b-4c6d-8e0f-1a2b3c4d5e6f", title: "Release from GitHub", variables: ["service"] },
+    ]);
     expect(revive.last_run?.workflow).toBe("revive");
     expect(revive.last_run?.trace?.entries.map((entry) => entry.step)).toEqual(["first_probe", "down", "restart"]);
     expect(parsed.workflows[1].enabled).toBe(false);

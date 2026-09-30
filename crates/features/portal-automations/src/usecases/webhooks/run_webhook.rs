@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use portal_feature::{ApiError, FieldError};
+use serde_json::{Map, Value};
 
 use crate::services::{AutomationSink, WebhookBook, received};
 use crate::types::Webhook;
@@ -24,7 +25,7 @@ impl RunWebhook {
     pub fn run(
         &self,
         id: &str,
-        given: &BTreeMap<String, String>,
+        (given, body): (&BTreeMap<String, String>, Option<Value>),
         by: &str,
     ) -> Result<Option<u64>, ApiError> {
         let cache = &self.sink.cache;
@@ -39,11 +40,19 @@ impl RunWebhook {
             return Err(ApiError::ServiceUnavailable(STOPPING.to_string()));
         }
         let variables = declared(&webhook, given)?;
+        let body = body.unwrap_or_else(|| {
+            Value::Object(
+                variables
+                    .iter()
+                    .map(|(name, value)| (name.clone(), Value::String(value.clone())))
+                    .collect::<Map<String, Value>>(),
+            )
+        });
         let answer = received(
             &self.sink,
             &self.book,
             &webhook,
-            &variables,
+            (&variables, body),
             (FROM_INTERFACE, Some(by.to_string())),
         );
         let status = match &answer {

@@ -6,7 +6,7 @@ import { acceptedSchema, createdWebhookSchema, curlExample, shortAddress, tokenS
 
 it("the webhook samples parse", () => {
   const listed = webhooksSchema.parse(apiSamples.webhooks);
-  expect(listed.webhooks.map((webhook) => webhook.action)).toEqual(["script", "event"]);
+  expect(listed.webhooks.map((webhook) => webhook.action)).toEqual(["script", "event", "script"]);
   expect(listed.webhooks[0]).toMatchObject({ protected: true, variables: ["branch", "commit"], last_received: { status: 202 } });
   expect(createdWebhookSchema.parse(apiSamples.webhookCreated).token).toHaveLength(64);
   expect(acceptedSchema.parse(apiSamples.webhookAccepted).run_id).toBe("42");

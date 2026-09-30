@@ -67,6 +67,28 @@ pub fn validate_automations(document: &DocumentMut) -> Vec<FieldError> {
     errors
 }
 
+pub fn automation_problems(document: &DocumentMut, automation: &Automation) -> Vec<FieldError> {
+    let Ok(section) = AutomationsSection::read(document) else {
+        return Vec::new();
+    };
+    let mut errors = Vec::new();
+    let webhooks = webhooks_of(&section, &mut errors);
+    let mut problems = webhook_placeholder_errors(automation, &webhooks);
+    if let Some(call) = &automation.workflow {
+        problems.extend(call_problems(call, &decoded_workflows(&section)));
+    }
+    problems
+}
+
+pub fn webhook_problems(document: &DocumentMut, webhook: &Webhook) -> Vec<FieldError> {
+    let WebhookAction::Workflow(call) = &webhook.action else {
+        return Vec::new();
+    };
+    AutomationsSection::read(document)
+        .map(|section| call_problems(call, &decoded_workflows(&section)))
+        .unwrap_or_default()
+}
+
 pub fn decoded(document: &DocumentMut) -> Vec<Automation> {
     AutomationsSection::read(document)
         .map(|section| {

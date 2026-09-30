@@ -8,7 +8,7 @@ use crate::services::workflow::evaluating::children_of;
 use crate::services::workflow::evaluating::placeholders_in;
 use portal_feature::Module;
 
-use crate::types::{PortalState, Step, StepKind, ValueType, Workflow, result_type};
+use crate::types::{Catalogue, PortalState, Step, StepKind, ValueType, Workflow, result_type};
 
 #[derive(Debug, Clone, Default)]
 pub struct Scope {
@@ -54,7 +54,8 @@ impl Scope {
         let namespace = parts.next().unwrap_or_default();
         let first = parts.next().unwrap_or_default();
         let fine = match namespace {
-            "event" | "secrets" => true,
+            "secrets" => true,
+            "event" => name.strip_prefix("event.").is_some_and(Catalogue::knows),
             "inputs" => self.inputs.contains(first),
             "vars" => self.vars.contains(first),
             "steps" => self.steps.contains(first),
@@ -80,6 +81,7 @@ impl Scope {
             "item" | "index" => format!(
                 "names {{{{{name}}}}}, which exists only inside a transform's filter and map"
             ),
+            "event" => format!("names {{{{{name}}}}}, which is not a field any event carries"),
             _ => format!("names {{{{{name}}}}}, which is not a value a workflow knows"),
         })
     }
@@ -195,6 +197,7 @@ impl Scope {
                 ValueType::Number
             }
             ["portal", "services", _, _] | ["portal", "network", _] => ValueType::Text,
+            ["event", "webhook", "body", ..] => ValueType::Any,
             ["event", ..] => ValueType::Text,
             ["loop", "index"] | ["index"] => ValueType::Number,
             ["steps", id, field] => self

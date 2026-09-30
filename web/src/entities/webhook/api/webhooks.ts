@@ -10,6 +10,8 @@ export type WebhookRequest = {
   variables: string[];
   action: "event" | "script";
   run: { script: string; args: string[]; timeout_seconds: number } | null;
+  workflow?: string;
+  inputs?: Record<string, unknown>;
   with_token?: boolean;
 };
 
@@ -37,6 +39,6 @@ export function removeToken(id: string, revision: string | null) {
   return request(api.webhookToken(id), { method: "DELETE", revision, schema: webhooksSchema });
 }
 
-export async function runWebhook(id: string, variables: Record<string, string>) {
-  return (await request(api.webhookRun(id), { method: "POST", body: { variables }, schema: acceptedSchema })).data;
+export async function runWebhook(id: string, variables: Record<string, string>, body?: unknown) {
+  return (await request(api.webhookRun(id), { method: "POST", body: body === undefined ? { variables } : { variables, body }, schema: acceptedSchema })).data;
 }

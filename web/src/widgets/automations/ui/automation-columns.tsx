@@ -46,7 +46,7 @@ export function useAutomationColumns(
       key: "script",
       header: t("automations.columns.script"),
       hideBelow: "lg",
-      cell: (automation) => <span className="font-mono text-xs">{automation.run.script}</span>,
+      cell: (automation) => <span className="font-mono text-xs">{automation.run?.script ?? automation.workflow?.id}</span>,
     },
     {
       key: "enabled",

@@ -23,6 +23,8 @@ const SERVER_PHRASES: Record<(typeof REASONS)[number], string> = {
   filterArguments: "and got",
   filterArgument: "the argument",
   filterType: "takes",
+  unknownEventField: "is not a field any event carries",
+  undeclaredWebhookVariable: "no webhook that starts this workflow sends",
 };
 
 type Tree = Record<string, unknown>;

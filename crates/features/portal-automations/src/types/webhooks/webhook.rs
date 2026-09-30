@@ -19,7 +19,7 @@ impl Webhook {
     pub const UNKNOWN: &'static str = "no such webhook";
     pub const ADDRESS_PREFIX: &'static str = "/webhook/";
     pub const LONGEST_VARIABLE: usize = 63;
-    pub const RESERVED_VARIABLES: [&'static str; 2] = ["id", "title"];
+    pub const RESERVED_VARIABLES: [&'static str; 3] = ["id", "title", "body"];
 
     pub fn decode(raw: &RawWebhook) -> Result<Webhook, Vec<FieldError>> {
         let mut errors = Vec::new();
@@ -40,7 +40,7 @@ impl Webhook {
             } else if Self::RESERVED_VARIABLES.contains(&name.as_str()) {
                 errors.push(FieldError::new(
                     format!("variables[{index}]"),
-                    "is the name of a field every webhook has; choose another",
+                    "is the name of a field every webhook has (id, title, body); choose another",
                 ));
             } else if seen.contains(&name) {
                 errors.push(FieldError::new(

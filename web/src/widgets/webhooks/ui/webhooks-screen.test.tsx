@@ -4,6 +4,7 @@ import { expect, it, vi } from "vitest";
 
 import { modulesKey, modulesSchema } from "@/entities/module";
 import { webhooksKey, webhooksSchema } from "@/entities/webhook";
+import { workflowsKey, workflowsSchema } from "@/entities/workflow";
 import { apiSamples } from "@/shared/api";
 import { renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
@@ -45,4 +46,16 @@ it("webhooks while off: the list stays and the notice says the module is off", (
   renderWithProviders(<WebhooksScreen />, client);
   expect(screen.getByRole("status")).toHaveTextContent("The Webhooks module is off");
   expect(screen.getByRole("link", { name: "Deploy from CI" })).toBeInTheDocument();
+});
+
+it("a webhook that runs a workflow shows the action with the workflow's title", () => {
+  const client = testQueryClient();
+  client.setQueryDefaults(webhooksKey, { staleTime: Infinity });
+  client.setQueryData(webhooksKey, { data: webhooksSchema.parse(apiSamples.webhooks), revision: '"r"' });
+  client.setQueryDefaults(workflowsKey, { staleTime: Infinity });
+  client.setQueryData(workflowsKey, { data: workflowsSchema.parse(apiSamples.workflows), revision: '"w"' });
+  renderWithProviders(<WebhooksScreen />, client);
+  const row = screen.getByRole("link", { name: "Release from GitHub" }).closest("tr") as HTMLElement;
+  expect(within(row).getByText("Run a workflow")).toBeInTheDocument();
+  expect(within(row).getByText("Revive a service")).toBeInTheDocument();
 });

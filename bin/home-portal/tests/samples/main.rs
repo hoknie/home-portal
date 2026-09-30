@@ -1,7 +1,6 @@
 #[path = "../support/mod.rs"]
 mod support;
 
-mod automations;
 mod catalogue;
 mod dns;
 mod fixtures;
@@ -11,6 +10,7 @@ mod notifications;
 mod permissions;
 mod proxy;
 mod public;
+mod triggers;
 mod users;
 mod widgets;
 mod workflows;

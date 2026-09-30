@@ -7,8 +7,8 @@ use portal_automations::{
 use serde_json::{Map, Value, json};
 use toml_edit::{Array, DocumentMut, InlineTable};
 
-use crate::automations::{outcome, run};
 use crate::check;
+use crate::triggers::{outcome, run};
 
 fn revive() -> WorkflowResponse {
     let mut last = run(
@@ -87,11 +87,20 @@ fn revive() -> WorkflowResponse {
             },
             {"id": "tell", "kind": "telegram", "text": "{{inputs.service}} is {{steps.nas_state.state}}"}
         ]),
-        used_by: vec![WorkflowUsageResponse {
-            kind: "automation".into(),
-            id: "nas-down".into(),
-            title: "NAS down".into(),
-        }],
+        used_by: vec![
+            WorkflowUsageResponse {
+                kind: "automation".into(),
+                id: "nas-down".into(),
+                title: "NAS down".into(),
+                variables: Vec::new(),
+            },
+            WorkflowUsageResponse {
+                kind: "webhook".into(),
+                id: "3c1d9e7f-2a4b-4c6d-8e0f-1a2b3c4d5e6f".into(),
+                title: "Release from GitHub".into(),
+                variables: vec!["service".into()],
+            },
+        ],
         last_run: Some(last),
         active_run: None,
     }

@@ -35,7 +35,7 @@ impl AutomationStarter for AutomationSink {
                 "automations start each other more than {MOST_CHAINED} deep"
             ));
         }
-        let mut event = manual_event(&found, OffsetDateTime::now_utc());
+        let mut event = manual_event(&found, OffsetDateTime::now_utc(), &[]);
         for (name, value) in fields {
             if let Some(field) = event.fields.iter_mut().find(|(key, _)| key == name) {
                 field.1 = value.clone();

@@ -1,4 +1,10 @@
-export const PLACEHOLDER = /\{\{([a-z_][a-z0-9_]*(?:\.[a-z_][a-z0-9_]*)*)\}\}/g;
+export const PLACEHOLDER = /\{\{(webhook\.body(?:\.[A-Za-z0-9_-]+)*|[a-z_][a-z0-9_]*(?:\.[a-z_][a-z0-9_]*)*)\}\}/g;
+
+export const BODY = "webhook.body";
+
+function known(name: string, allowed: readonly string[]) {
+  return allowed.includes(name) || (allowed.includes(BODY) && name.startsWith(`${BODY}.`));
+}
 
 export function placeholdersOf(template: string) {
   return [...template.matchAll(PLACEHOLDER)].map((match) => match[1]);
@@ -9,7 +15,7 @@ export function renderTemplate(template: string, values: Record<string, string>)
 }
 
 export function unknownPlaceholders(template: string, allowed: readonly string[]) {
-  return placeholdersOf(template).filter((name) => !allowed.includes(name));
+  return placeholdersOf(template).filter((name) => !known(name, allowed));
 }
 
 export function tokenOf(field: string) {
@@ -23,6 +29,6 @@ export function insertAt(text: string, cursor: number | null, token: string) {
 
 export function unknownRanges(template: string, allowed: readonly string[]) {
   return [...template.matchAll(PLACEHOLDER)]
-    .filter((match) => !allowed.includes(match[1]))
+    .filter((match) => !known(match[1], allowed))
     .map((match) => ({ start: match.index, end: match.index + match[0].length, name: match[1] }));
 }

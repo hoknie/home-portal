@@ -1,3 +1,4 @@
+use serde_json::Value;
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
@@ -10,6 +11,7 @@ pub struct PortalEvent {
     pub fields: Vec<(&'static str, String)>,
     pub target: Option<String>,
     pub variables: Vec<(String, String)>,
+    pub body: Option<Value>,
 }
 
 impl PortalEvent {
@@ -38,6 +40,7 @@ impl PortalEvent {
             fields,
             target: None,
             variables: Vec::new(),
+            body: None,
         }
     }
 
@@ -53,6 +56,11 @@ impl PortalEvent {
                 )
             })
             .collect();
+        self
+    }
+
+    pub fn with_body(mut self, body: Value) -> PortalEvent {
+        self.body = Some(body);
         self
     }
 

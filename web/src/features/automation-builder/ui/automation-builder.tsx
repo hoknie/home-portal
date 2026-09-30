@@ -23,9 +23,11 @@ import { SectionCard } from "@/shared/ui/section-card";
 import { fieldsOf, withVariables } from "../model/events";
 import { type AutomationForm, RESERVED_IDS, automationFormSchema, emptyAutomationForm, formOf, requestOf } from "../model/form";
 import type { RunFields } from "../model/run-fields";
+import { type Problem, flatProblems, hiddenProblems } from "../model/problems";
 import { byField } from "../model/server-errors";
 import { CommandPreview } from "./command-preview";
 import { FiltersCard } from "./filters-card";
+import { FormProblems } from "./form-problems";
 import { RunCard } from "./run-card";
 import { TagsField } from "./tags-field";
 import { WhenCard } from "./when-card";
@@ -60,19 +62,25 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
   const loadedModules = useModules().data?.data;
   const workflowsOn = loadedModules !== undefined && enabledModules(loadedModules).has("workflows");
   const workflows = useWorkflows().data?.data.workflows ?? [];
+  const [leftover, setLeftover] = useState<Problem[]>([]);
+  const declarations = workflows.find((candidate) => candidate.id === values.workflow)?.inputs;
+  const shown = (path: string) => shownPaths(values.action, (declarations ?? []).map((input) => input.name)).some((name) => path === name || path.startsWith(`${name}.`));
 
   const submit = form.handleSubmit(async (current) => {
     setConflict(false);
+    setLeftover([]);
     try {
-      await save.mutateAsync({ id: automation?.id ?? null, body: requestOf(current, event.filters), revision });
+      await save.mutateAsync({ id: automation?.id ?? null, body: requestOf(current, event.filters, declarations), revision });
       setSaved(true);
       toast.success(t(automation ? "automations.saved" : "automations.created"));
       onSaved();
     } catch (error) {
       if (error instanceof ValidationError) {
-        for (const { path, message } of byField(error.fields)) {
+        const problems = byField(error.fields);
+        for (const { path, message } of problems.filter((problem) => shown(problem.path))) {
           form.setError(path as Path<AutomationForm>, { message });
         }
+        setLeftover(hiddenProblems(problems, shown));
       } else if (error instanceof ConflictError) {
         setConflict(true);
         onConflict();
@@ -80,7 +88,7 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
         toast.error(t("errors.generic"));
       }
     }
-  });
+  }, (invalid) => setLeftover(hiddenProblems(flatProblems(invalid), shown)));
 
   const errors = form.formState.errors;
   const chosen = {
@@ -149,6 +157,7 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
         {values.action === "workflow" ? null : (
           <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={chosen} />
         )}
+        <FormProblems problems={leftover} />
         <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
           <Button asChild variant="outline">
             <Link href={routes.adminAutomations}>{t("common.cancel")}</Link>
@@ -162,4 +171,10 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
       </fieldset>
     </form>
   );
+}
+
+const COMMON_PATHS = ["id", "title", "enabled", "tags", "cooldown_seconds", "event", "cron", "services", "from", "to", "from_unknown", "users", "environments", "webhooks"];
+
+function shownPaths(action: AutomationForm["action"], declared: readonly string[]) {
+  return action === "workflow" ? [...COMMON_PATHS, "workflow", ...declared.map((name) => `inputs.${name}`)] : [...COMMON_PATHS, "script", "timeout_seconds", "args"];
 }

@@ -19,6 +19,7 @@ export type FiltersCardProps = { form: UseFormReturn<AutomationForm>; catalogue:
 export function FiltersCard({ form, catalogue }: FiltersCardProps) {
   const t = useTranslations();
   const filters = eventOf(catalogue, form.watch("event")).filters;
+  const chosenWebhooks = form.watch("webhooks");
   const errors = form.formState.errors;
   const states = catalogue.states.map((state) => ({ value: state, label: t(`status.${state}` as Parameters<typeof t>[0]) }));
   const options: Record<ListName, { value: string; label: string }[]> = {
@@ -27,7 +28,9 @@ export function FiltersCard({ form, catalogue }: FiltersCardProps) {
     to: states,
     users: catalogue.choices.users.map((user) => ({ value: user, label: user })),
     environments: catalogue.choices.environments.map((environment) => ({ value: environment, label: environment })),
-    webhooks: catalogue.choices.webhooks.map((webhook) => ({ value: webhook.id, label: webhook.name })),
+    webhooks: catalogue.choices.webhooks
+      .filter((webhook) => webhook.action === "event" || chosenWebhooks.includes(webhook.id))
+      .map((webhook) => ({ value: webhook.id, label: webhook.action === "event" ? webhook.name : t("automationBuilder.neverPublishes", { name: webhook.name }) })),
   };
   const lists = (["services", "from", "to", "users", "environments", "webhooks"] as const).filter((name) => filters.includes(name));
   return (

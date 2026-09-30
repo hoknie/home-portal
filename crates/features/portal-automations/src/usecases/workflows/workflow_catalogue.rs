@@ -12,7 +12,7 @@ impl WorkflowCatalogue {
             operators: Operator::ALL.to_vec(),
             events: EventName::ALL
                 .iter()
-                .map(|event| (*event, Catalogue::fields_of(*event)))
+                .map(|event| (*event, Catalogue::carried_by(*event)))
                 .collect(),
             filters: FILTERS.to_vec(),
             operations: OPERATIONS.to_vec(),

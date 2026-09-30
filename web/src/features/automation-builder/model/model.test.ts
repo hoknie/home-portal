@@ -113,3 +113,18 @@ describe("form", () => {
     expect(formPathOf("id")).toBe("id");
   });
 });
+
+describe("a workflow automation", () => {
+  const loaded = automationsSchema.parse(apiSamples.automations).automations.find((automation) => automation.workflow !== null);
+
+  it("loads with the default timeout and passes the form's checks", () => {
+    const form = formOf({ ...loaded!, run: null });
+    expect(form.timeout_seconds).toBe(60);
+    expect(automationFormSchema(() => ["webhook.camera"]).safeParse({ ...form, timeout_seconds: 0 }).success).toBe(true);
+  });
+
+  it("switching to another workflow sends only the inputs it declares", () => {
+    const form = { ...formOf(loaded!), workflow: "check-hosts", inputs: { service: { template: true, text: "{{webhook.camera}}", value: null }, hosts: { template: false, text: "", value: ["nas"] } } };
+    expect(requestOf(form, [], [{ name: "hosts", type: "list", default: null, description: null }]).inputs).toEqual({ hosts: ["nas"] });
+  });
+});

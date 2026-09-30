@@ -45,6 +45,28 @@
         "camera"
       ],
       "workflow": null
+    },
+    {
+      "action": "script",
+      "address": "/webhook/3c1d9e7f-2a4b-4c6d-8e0f-1a2b3c4d5e6f",
+      "enabled": true,
+      "id": "3c1d9e7f-2a4b-4c6d-8e0f-1a2b3c4d5e6f",
+      "last_received": null,
+      "protected": false,
+      "run": null,
+      "tags": [
+        "ci"
+      ],
+      "title": "Release from GitHub",
+      "variables": [
+        "service"
+      ],
+      "workflow": {
+        "id": "revive",
+        "inputs": {
+          "service": "{{webhook.service}}"
+        }
+      }
     }
   ]
 }

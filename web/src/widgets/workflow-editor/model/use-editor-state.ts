@@ -82,8 +82,8 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
   const shownTrace = visible ? (liveRun?.trace ?? null) : null;
   const overlay = useMemo(() => overlayOf(shownTrace?.entries ?? []), [shownTrace]);
   const problems = useMemo(
-    () => problemsFor({ draft, catalogue, taken, server, secrets: sources.secrets, lastRun, workflow, portal: sources.portal }),
-    [draft, catalogue, taken, server, sources.secrets, lastRun, workflow, sources.portal],
+    () => problemsFor({ draft, catalogue, taken, server, secrets: sources.secrets, lastRun, workflow, portal: sources.portal, events: sources.eventKnowledge }),
+    [draft, catalogue, taken, server, sources.secrets, lastRun, workflow, sources.portal, sources.eventKnowledge],
   );
 
   const setDraft = (change: (current: Draft) => Draft, key: string | null = null) => {

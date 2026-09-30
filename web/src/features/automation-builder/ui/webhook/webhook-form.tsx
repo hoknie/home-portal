@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { useCan } from "@/entities/session";
 import type { Catalogue, Scripts } from "@/entities/automation";
 import { type Webhook, useSaveWebhook } from "@/entities/webhook";
+import { enabledModules, useModules } from "@/entities/module";
+import { useWorkflows } from "@/entities/workflow";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { routes } from "@/shared/config";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
@@ -20,9 +22,11 @@ import { SectionCard } from "@/shared/ui/section-card";
 import { TagInput } from "@/shared/ui/tag-input";
 
 import type { RunFields } from "../../model/run-fields";
+import { type Problem, flatProblems, hiddenProblems } from "../../model/problems";
 import { byField } from "../../model/server-errors";
-import { type WebhookForm as WebhookFormValues, emptyWebhookForm, webhookEventOf, webhookFormOf, webhookFormSchema, webhookRequestOf } from "../../model/webhook-form";
+import { WEBHOOK_FORM_ACTIONS, type WebhookForm as WebhookFormValues, emptyWebhookForm, webhookEventOf, webhookFormOf, webhookFormSchema, webhookRequestOf } from "../../model/webhook-form";
 import { CommandPreview } from "../command-preview";
+import { FormProblems } from "../form-problems";
 import { RunCard } from "../run-card";
 import { TokenActions } from "./token-actions";
 import { TagsField } from "../tags-field";
@@ -51,11 +55,19 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
   const values = useWatch({ control: form.control }) as WebhookFormValues;
   const event = webhookEventOf(catalogue, values.variables);
   const errors = form.formState.errors;
+  const [leftover, setLeftover] = useState<Problem[]>([]);
+  const loadedModules = useModules().data?.data;
+  const workflowsOn = loadedModules !== undefined && enabledModules(loadedModules).has("workflows");
+  const workflows = useWorkflows().data?.data.workflows ?? [];
+  const declarations = workflows.find((candidate) => candidate.id === values.workflow)?.inputs;
+  const actions = WEBHOOK_FORM_ACTIONS.filter((action) => action !== "workflow" || workflowsOn || webhook?.workflow != null);
+  const shown = (path: string) => shownPaths(values, (declarations ?? []).map((input) => input.name)).some((name) => path === name || path.startsWith(`${name}.`));
 
   const submit = form.handleSubmit(async (current) => {
     setConflict(false);
+    setLeftover([]);
     try {
-      const created = await save.mutateAsync({ id: webhook?.id ?? null, body: webhookRequestOf(current, webhook === null), revision });
+      const created = await save.mutateAsync({ id: webhook?.id ?? null, body: webhookRequestOf(current, webhook === null, declarations), revision });
       setSaved(true);
       toast.success(t(webhook ? "webhooks.saved" : "webhooks.created"));
       if (created) {
@@ -65,9 +77,11 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
       }
     } catch (error) {
       if (error instanceof ValidationError) {
-        for (const { path, message } of byField(error.fields)) {
+        const problems = byField(error.fields);
+        for (const { path, message } of problems.filter((problem) => shown(problem.path))) {
           form.setError(path as Path<WebhookFormValues>, { message });
         }
+        setLeftover(hiddenProblems(problems, shown));
       } else if (error instanceof ConflictError) {
         setConflict(true);
         onConflict();
@@ -75,7 +89,7 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
         toast.error(t("errors.generic"));
       }
     }
-  });
+  }, (invalid) => setLeftover(hiddenProblems(flatProblems(invalid), shown)));
 
   return (
     <form onSubmit={submit} className="grid gap-6" noValidate>
@@ -114,7 +128,7 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
               <Label asChild>
                 <span id="webhook-action-label">{t("webhooks.action")}</span>
               </Label>
-              {(["script", "event"] as const).map((action) => (
+              {actions.map((action) => (
                 <label key={action} className="flex items-start gap-2 text-sm">
                   <input type="radio" className="mt-1 accent-primary" value={action} {...form.register("action")} />
                   <span className="grid gap-0.5">
@@ -137,12 +151,16 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
             )}
           </div>
         </SectionCard>
+        {values.action === "workflow" ? (
+          <RunCard form={form as unknown as UseFormReturn<RunFields>} event={event} scripts={scripts} workflows={workflows} idPrefix="webhook" showChoice={false} />
+        ) : null}
         {values.action === "script" ? (
           <>
             <RunCard form={form as unknown as UseFormReturn<RunFields>} event={event} scripts={scripts} />
             <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={{ "webhook.id": webhook?.id, "webhook.title": values.title || undefined }} />
           </>
         ) : null}
+        <FormProblems problems={leftover} />
         <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
           <Button asChild variant="outline">
             <Link href={routes.adminWebhooks}>{t("common.cancel")}</Link>
@@ -165,4 +183,12 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
       </fieldset>
     </form>
   );
+}
+
+function shownPaths(values: WebhookFormValues, declared: readonly string[]) {
+  const common = ["title", "enabled", "tags", "variables", "action", "with_token"];
+  if (values.action === "workflow") {
+    return [...common, "workflow", ...declared.map((name) => `inputs.${name}`)];
+  }
+  return values.action === "script" ? [...common, "script", "timeout_seconds", "args"] : common;
 }

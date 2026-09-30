@@ -1,3 +1,5 @@
+use portal_feature::EventName;
+
 use super::every_step;
 use crate::types::{Automation, StepKind, Webhook, WebhookAction, Workflow, WorkflowUsage};
 
@@ -17,6 +19,7 @@ pub fn users_of(
             kind: WorkflowUsage::AUTOMATION,
             id: automation.id.clone(),
             title: automation.title.clone(),
+            variables: shared_variables(automation, webhooks),
         });
     let webhooks = webhooks
         .iter()
@@ -25,6 +28,7 @@ pub fn users_of(
             kind: WorkflowUsage::WEBHOOK,
             id: webhook.id.clone(),
             title: webhook.title.clone(),
+            variables: webhook.variables.clone(),
         });
     let workflows = workflows
         .iter()
@@ -33,6 +37,7 @@ pub fn users_of(
             kind: WorkflowUsage::WORKFLOW,
             id: workflow.id.clone(),
             title: workflow.title.clone(),
+            variables: Vec::new(),
         });
     automations.chain(webhooks).chain(workflows).collect()
 }
@@ -45,4 +50,30 @@ fn calls(workflow: &Workflow, id: &str) -> bool {
         }
     });
     found
+}
+
+fn shared_variables(automation: &Automation, webhooks: &[Webhook]) -> Vec<String> {
+    if automation.trigger.event != EventName::WebhookReceived {
+        return Vec::new();
+    }
+    let chosen = &automation.trigger.filters.webhooks;
+    let scope: Vec<&Webhook> = webhooks
+        .iter()
+        .filter(|webhook| {
+            if chosen.is_empty() {
+                webhook.action == WebhookAction::Event
+            } else {
+                chosen.contains(&webhook.id)
+            }
+        })
+        .collect();
+    let Some((first, rest)) = scope.split_first() else {
+        return Vec::new();
+    };
+    first
+        .variables
+        .iter()
+        .filter(|name| rest.iter().all(|webhook| webhook.variables.contains(name)))
+        .cloned()
+        .collect()
 }

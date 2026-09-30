@@ -4,7 +4,7 @@ use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::ApiError;
 
 use crate::repositories::{append, position};
-use crate::services::AutomationSink;
+use crate::services::{AutomationSink, automation_problems};
 use crate::types::{Automation, AutomationView, RawAutomation};
 
 #[derive(Clone)]
@@ -27,6 +27,10 @@ impl CreateAutomation {
         revision: &Revision,
     ) -> Result<Revisioned<AutomationView>, ApiError> {
         let automation = Automation::decode(raw).map_err(ApiError::Invalid)?;
+        let problems = automation_problems(&self.configuration.read().document, &automation);
+        if !problems.is_empty() {
+            return Err(ApiError::Invalid(problems));
+        }
         let target = self.configuration.home_of(Section::Automations);
         let (_, snapshot) = self
             .configuration

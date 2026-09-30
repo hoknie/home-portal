@@ -10,6 +10,7 @@ import { TokenActions } from "@/features/automation-builder";
 import { StopRunButton } from "@/features/stop-run";
 import { RunTable, useAutomations, useRuns } from "@/entities/automation";
 import { absoluteAddress, useWebhooks } from "@/entities/webhook";
+import { useWorkflows } from "@/entities/workflow";
 import { routes } from "@/shared/config";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
@@ -32,6 +33,7 @@ export function WebhookDetailsScreen() {
   const webhooks = useWebhooks();
   const automations = useAutomations();
   const runs = useRuns({ webhook: id }, true, id !== "");
+  const workflows = useWorkflows().data?.data.workflows ?? [];
   const trail = useTrail();
   const named = webhooks.data?.data.webhooks.find((candidate) => candidate.id === id)?.title ?? id;
   const crumbs = trail.of(trail.section("webhooks"), { label: named });
@@ -125,8 +127,23 @@ export function WebhookDetailsScreen() {
         </SectionCard>
         <SectionCard title={t("webhooks.action")}>
           <div className="grid gap-3 text-sm">
-            <p className="font-medium">{t(`webhooks.actions.${webhook.action}`)}</p>
-            {webhook.run ? (
+            <p className="font-medium">{t(`webhooks.actions.${webhook.workflow ? "workflow" : webhook.action}`)}</p>
+            {webhook.workflow ? (
+              <div className="grid gap-2">
+                <Link href={routes.workflow(webhook.workflow.id)} className="w-fit hover:underline">
+                  {workflows.find((workflow) => workflow.id === webhook.workflow?.id)?.title ?? webhook.workflow.id}
+                </Link>
+                {Object.keys(webhook.workflow.inputs).length > 0 ? (
+                  <KvList>
+                    {Object.entries(webhook.workflow.inputs).map(([name, value]) => (
+                      <KvRow key={name} label={name}>
+                        <span className="font-mono text-xs break-all">{typeof value === "string" ? value : JSON.stringify(value)}</span>
+                      </KvRow>
+                    ))}
+                  </KvList>
+                ) : null}
+              </div>
+            ) : webhook.run ? (
               <pre className="overflow-x-auto rounded-md border border-glass-edge bg-glass-tint p-3 font-mono text-xs whitespace-pre-wrap break-all">
                 {[webhook.run.script, ...webhook.run.args].join(" ")}
               </pre>

@@ -12,7 +12,7 @@ export type AutomationRequest = {
   when: Record<string, unknown>;
   run?: { script: string; args: string[]; timeout_seconds: number };
   workflow?: string;
-  inputs?: Record<string, string>;
+  inputs?: Record<string, unknown>;
 };
 
 export function fetchAutomations() {

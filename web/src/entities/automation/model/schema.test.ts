@@ -20,7 +20,7 @@ import { exitCodeOf, scriptLogOf } from "./script-log";
 describe("automation", () => {
   it("the automations sample parses with its last run", () => {
     const parsed = automationsSchema.parse(apiSamples.automations);
-    expect(parsed.automations.map((automation) => automation.id)).toEqual(["restart-media", "backup"]);
+    expect(parsed.automations.map((automation) => automation.id)).toEqual(["restart-media", "backup", "motion-alarm"]);
     expect(parsed.automations[0].when).toMatchObject({ event: "service.status-changed", services: ["jellyfin"], to: ["down", "unreadable"] });
     expect(parsed.automations[0].last_run?.outcome).toMatchObject({ result: "skipped", reason: "cooldown", count: 9 });
     expect(parsed.automations[1].when.cron).toBe("0 3 * * *");

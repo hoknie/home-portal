@@ -9,6 +9,7 @@ import { Allowed } from "@/entities/session";
 import { DeleteWebhookButton } from "@/features/delete-webhook";
 import { enabledModules, useModules } from "@/entities/module";
 import { type Webhook, absoluteAddress, shortAddress, useWebhooks } from "@/entities/webhook";
+import { useWorkflows } from "@/entities/workflow";
 import { routes } from "@/shared/config";
 import { type Column, DataTable } from "@/shared/ui/data-table";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -27,6 +28,8 @@ import { RunWebhookDialog } from "./run-webhook-dialog";
 function useColumns(revision: string | null): Column<Webhook>[] {
   const t = useTranslations();
   const origin = typeof window === "undefined" ? "" : window.location.origin;
+  const workflows = useWorkflows().data?.data.workflows ?? [];
+  const titleOf = (id: string) => workflows.find((workflow) => workflow.id === id)?.title ?? id;
   return [
     {
       key: "title",
@@ -61,8 +64,9 @@ function useColumns(revision: string | null): Column<Webhook>[] {
       hideBelow: "md",
       cell: (webhook) => (
         <span className="grid gap-0.5">
-          <span>{t(`webhooks.actions.${webhook.action}`)}</span>
+          <span>{t(`webhooks.actions.${webhook.workflow ? "workflow" : webhook.action}`)}</span>
           {webhook.run ? <span className="font-mono text-xs text-muted-foreground">{webhook.run.script}</span> : null}
+          {webhook.workflow ? <span className="text-xs text-muted-foreground">{titleOf(webhook.workflow.id)}</span> : null}
         </span>
       ),
     },

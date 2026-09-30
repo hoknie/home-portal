@@ -17,6 +17,7 @@ pub fn sample_of(field: &str) -> &'static str {
         "sign_in.reason" => "credentials",
         "webhook.id" => "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d",
         "webhook.title" => "Deploy from CI",
+        "webhook.body" => "{\"ref\":\"main\"}",
         "configuration.revision" => "6f1ed002ab5595859014ebf0951522d9",
         "configuration.previous_revision" => "0cc175b9c0f1b6a831c399e269772661",
         _ => "",

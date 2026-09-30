@@ -5,10 +5,12 @@ use serde_json::Value;
 
 use super::rendered::Collector;
 use super::secrets::Secrets;
+pub use crate::helpers::walk;
+use crate::types::EventValues;
 
 #[derive(Clone)]
 pub struct Frame {
-    pub event: Arc<Vec<(String, String)>>,
+    pub event: Arc<EventValues>,
     pub inputs: BTreeMap<String, Value>,
     pub vars: BTreeMap<String, Value>,
     pub steps: BTreeMap<String, Value>,
@@ -22,7 +24,7 @@ pub struct Frame {
 
 impl Frame {
     pub fn new(
-        event: Arc<Vec<(String, String)>>,
+        event: Arc<EventValues>,
         inputs: BTreeMap<String, Value>,
         secrets: Arc<Secrets>,
     ) -> Frame {
@@ -61,9 +63,8 @@ impl Frame {
                 let field = rest.join(".");
                 return Ok(self
                     .event
-                    .iter()
-                    .find(|(name, _)| *name == field)
-                    .map(|(_, value)| Value::String(value.clone()))
+                    .value(&field)
+                    .or_else(|| self.event.value(&format!("event.{field}")))
                     .unwrap_or(Value::Null));
             }
             "inputs" => self.inputs.get(*first).cloned(),
@@ -79,27 +80,6 @@ impl Frame {
         };
         Ok(found.map_or(Value::Null, |value| walk(value, path)))
     }
-}
-
-pub fn walk(value: Value, path: &[&str]) -> Value {
-    path.iter().fold(value, |current, part| match current {
-        Value::Object(mut map) => map
-            .remove(*part)
-            .or_else(|| {
-                let lowered = part.to_ascii_lowercase();
-                map.into_iter()
-                    .find(|(key, _)| key.to_ascii_lowercase() == lowered)
-                    .map(|(_, value)| value)
-            })
-            .unwrap_or(Value::Null),
-        Value::Array(mut items) => part
-            .parse::<usize>()
-            .ok()
-            .filter(|index| *index < items.len())
-            .map(|index| items.swap_remove(index))
-            .unwrap_or(Value::Null),
-        _ => Value::Null,
-    })
 }
 
 fn portal_lookup(portal: Option<&Value>, path: &[&str]) -> Value {

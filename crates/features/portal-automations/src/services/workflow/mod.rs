@@ -1,5 +1,6 @@
 mod checking;
 mod evaluating;
+mod reading;
 mod running;
 mod usage;
 
@@ -12,5 +13,6 @@ pub use evaluating::{Frame, Secrets, bind_inputs, every_step, input_problem};
 pub use evaluating::{
     SecretLookup, apply_chain, compare, holds, render_json, render_text, render_value,
 };
+pub use reading::webhook_variables_read;
 pub use running::{Budget, WorkflowRunner, WorkflowTools, transform_sample};
 pub use usage::users_of;

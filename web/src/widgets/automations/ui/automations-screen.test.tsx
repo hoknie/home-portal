@@ -101,7 +101,7 @@ afterEach(() => {
 it("filters the automations by their shared tags", async () => {
   renderWith(apiSamples.automations);
   const table = () => screen.getAllByRole("table")[0];
-  expect(within(table()).getAllByRole("row")).toHaveLength(3);
+  expect(within(table()).getAllByRole("row")).toHaveLength(4);
   await userEvent.click(within(screen.getByRole("group", { name: "Tags:" })).getByRole("button", { name: "backup" }));
   expect(within(table()).getAllByRole("row")).toHaveLength(2);
   expect(within(table()).getByText("Nightly backup")).toBeInTheDocument();

@@ -5,7 +5,7 @@ use portal_feature::ApiError;
 
 use crate::helpers::{new_token, new_webhook_id, token_hash};
 use crate::repositories::append_webhook;
-use crate::services::AutomationSink;
+use crate::services::{AutomationSink, webhook_problems};
 use crate::types::{CreatedWebhook, RawWebhook, Webhook, WebhookView};
 
 #[derive(Clone)]
@@ -32,6 +32,10 @@ impl CreateWebhook {
         raw.id = new_webhook_id();
         raw.token_sha256 = token.as_deref().map(token_hash);
         let webhook = Webhook::decode(&raw).map_err(ApiError::Invalid)?;
+        let problems = webhook_problems(&self.configuration.read().document, &webhook);
+        if !problems.is_empty() {
+            return Err(ApiError::Invalid(problems));
+        }
         let target = self.configuration.home_of(Section::Webhooks);
         let (_, snapshot) = self
             .configuration

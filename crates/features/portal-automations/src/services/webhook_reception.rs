@@ -1,6 +1,7 @@
 use std::time::Instant;
 
 use portal_feature::{ApiError, EventName, EventSink, PortalEvent};
+use serde_json::Value;
 use time::OffsetDateTime;
 
 use super::{AutomationSink, WebhookBook};
@@ -10,7 +11,7 @@ pub fn received(
     sink: &AutomationSink,
     book: &WebhookBook,
     webhook: &Webhook,
-    variables: &[(String, String)],
+    (variables, body): (&[(String, String)], Value),
     (client, by): (&str, Option<String>),
 ) -> Result<Option<u64>, ApiError> {
     book.allow(&webhook.id, Instant::now())
@@ -26,7 +27,8 @@ pub fn received(
             ("client.address", client),
         ],
     )
-    .with_variables(variables);
+    .with_variables(variables)
+    .with_body(body);
     Ok(match webhook.action {
         WebhookAction::Event => {
             sink.emit(event);

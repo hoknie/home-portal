@@ -113,7 +113,18 @@ describe("template checks", () => {
 
   it("an unknown name in the text is found with its range and reason", () => {
     const text = "status {{steps.after.status}} ok";
-    expect(checkTemplate(text, scopeOf("steps[1]"))).toEqual([{ start: 7, end: 29, name: "steps.after.status", reason: "unknownStep", params: { name: "after" } }]);
+    expect(checkTemplate(text, scopeOf("steps[1]"))).toEqual([{ start: 7, end: 29, name: "steps.after.status", reason: "unknownStep", params: { name: "after" }, warning: false }]);
+  });
+
+  it("an event field is checked against every event and the webhooks that start the workflow", () => {
+    const scope = scopeOf("steps[1]");
+    const events = { fields: ["event.name", "service.id", "webhook.id"], variables: ["branch"] };
+    const reasons = (text: string) => checkTemplate(text, scope, null, events).map((problem) => [problem.reason, problem.warning]);
+    expect(reasons("{{event.name}} {{event.at}} {{event.service.id}} {{event.webhook.id}} {{event.webhook.branch}} {{event.webhook.body.commits.0.id}}")).toEqual([]);
+    expect(reasons("{{event.servce.id}}")).toEqual([["unknownEventField", false]]);
+    expect(reasons("{{event.webhook.tag}}")).toEqual([["undeclaredWebhookVariable", true]]);
+    expect(checkTemplate("{{event.webhook.tag}}", scope, null, { ...events, variables: null })).toEqual([]);
+    expect(checkTemplate("{{event.servce.id}}", scope)).toEqual([]);
   });
 
   it("each reason mirrors the server's scope check", () => {

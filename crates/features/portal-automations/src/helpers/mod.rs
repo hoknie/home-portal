@@ -6,13 +6,16 @@ mod shape;
 mod tags;
 mod terminal_line;
 mod tokens;
+mod value_path;
 
 #[cfg(test)]
 mod tests;
 
 pub use instants::offset_of;
 pub use manual_event::manual_event;
-pub use placeholders::{CLOSE, OPEN, placeholders_of, render, unknown_placeholders};
+pub use placeholders::{
+    BODY, CLOSE, OPEN, body_path, placeholders_of, render, unknown_placeholders,
+};
 pub use samples::sample_of;
 #[cfg(test)]
 pub use shape::LARGEST_SHAPE;
@@ -20,3 +23,4 @@ pub use shape::shape_of;
 pub use tags::check_tags;
 pub use terminal_line::last_line;
 pub use tokens::{new_token, new_webhook_id, same_secret, token_hash, version_of};
+pub use value_path::{text_of, walk};

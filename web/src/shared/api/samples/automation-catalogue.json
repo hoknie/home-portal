@@ -27,6 +27,7 @@
     ],
     "webhooks": [
       {
+        "action": "script",
         "id": "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d",
         "name": "Deploy from CI",
         "variables": [
@@ -35,10 +36,19 @@
         ]
       },
       {
+        "action": "event",
         "id": "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d",
         "name": "Motion at the door",
         "variables": [
           "camera"
+        ]
+      },
+      {
+        "action": "workflow",
+        "id": "3c1d9e7f-2a4b-4c6d-8e0f-1a2b3c4d5e6f",
+        "name": "Release from GitHub",
+        "variables": [
+          "service"
         ]
       }
     ]
@@ -569,6 +579,10 @@
         {
           "name": "run.by",
           "sample": "admin"
+        },
+        {
+          "name": "webhook.body",
+          "sample": "{\"ref\":\"main\"}"
         }
       ],
       "filters": [

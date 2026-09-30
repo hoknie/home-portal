@@ -8,7 +8,7 @@ validator of the portal, so an example that stops working fails the build.
 
 | Path | What it shows |
 |---|---|
-| `split/` | A complete setup with each part in its own file: the main file with the interface, network, environments and `[modules]`; `services.toml`, with services published in every TLS mode and one behind the portal's sign-in; `dashboard.toml` with a sectioned layout using every widget type and every size; `automations.toml` with a nightly schedule, a restart when a service goes down, an audit of sign-ins from outside and a script on start-up; `webhooks.toml` with a script webhook and an event webhook; `workflows/`, one file per workflow: a retry loop around a restart API, parallel status checks, a script, a call, transforms and leaving a loop early; `notifications.toml` with Telegram; `proxy.toml`; `secrets.example.toml` |
+| `split/` | A complete setup with each part in its own file: the main file with the interface, network, environments and `[modules]`; `services.toml`, with services published in every TLS mode and one behind the portal's sign-in; `dashboard.toml` with a sectioned layout using every widget type and every size; `automations.toml` with a nightly schedule, a restart when a service goes down, an audit of sign-ins from outside and a script on start-up; `webhooks.toml` with a script webhook, an event webhook and a webhook that runs a workflow with a value from the request body; `workflows/`, one file per workflow: a retry loop around a restart API, parallel status checks, a script, a call, transforms, leaving a loop early and a deploy that reads the webhook that started it; `notifications.toml` with Telegram; `proxy.toml`; `secrets.example.toml` |
 | `split/scripts/echo-event.sh` | A POSIX `sh` script that prints the arguments and the `PORTAL_*` variables it received and the event from standard input — a starting point for your own |
 | `services/media.toml` | Jellyfin, Plex, qBittorrent, Transmission, Immich |
 | `services/home.toml` | Home Assistant, Nextcloud, Grafana |
@@ -98,9 +98,15 @@ you press **Run now**. Build one under
    command that fixes it.
 5. **Webhooks** (**Management → Webhooks**) give other systems an address `POST /webhook/<id>`:
    with a token the portal generates and shows once, required variables from the JSON body or
-   the query string, and either a script of their own or the event `webhook.received` for
-   automations. `split/automations.toml` has one of each.
-6. Scripts run as the portal's user and inherit its permissions — see the notes in
+   the query string, and either a script or a workflow of their own, or the event
+   `webhook.received` for automations. `split/automations.toml` and `split/webhooks.toml` have
+   one of each, including a workflow started both ways.
+6. The whole request body travels with the call as `{{webhook.body}}`, with a path into it:
+   `{{webhook.body.head_commit.id}}`, `{{webhook.body.commits.0.id}}`. A placeholder that is a
+   workflow input's whole value gives the value itself, so `hosts = "{{webhook.body.hosts}}"`
+   passes a list to a list input. A script gets the body on standard input under
+   `"webhook.body"`, not as a `PORTAL_*` variable.
+7. Scripts run as the portal's user and inherit its permissions — see the notes in
    `deploy/home-portal.plist` and `deploy/home-portal.service`.
 
 ## Workflows in two minutes
@@ -115,7 +121,9 @@ Switch workflows on with `[modules] workflows = true` in `home-portal.toml` (the
 automations).
 
 Every text is a template: {{inputs.x}}, {{vars.x}}, {{steps.<id>.<field>}} (for example
-{{steps.ping.json.state}}), {{event.<field>}}, {{loop.item}}, {{loop.index}},
+{{steps.ping.json.state}}), {{event.<field>}} (the event that started the run: {{event.name}},
+{{event.at}}, {{event.service.id}}, and for a webhook {{event.webhook.<variable>}} and
+{{event.webhook.body.<path>}}), {{loop.item}}, {{loop.index}},
 {{secrets.<key>}}, which is sent as it is but shown as *** in the journal, and the portal's
 own values, read when the step starts: {{portal.services.<id>.<field>}} (name, group, url,
 address, state, since, latency_milliseconds, public), {{portal.services}} as a list,

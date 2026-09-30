@@ -72,6 +72,7 @@ function sourcesFor(scripts?: Sources["scripts"]): Omit<Sources, "workflows"> {
           { name: "sms", readiness: "missing" },
         ],
         eventFields: [{ name: "service.id", sample: "nas" }],
+        eventKnowledge: { fields: ["event.name", "event.at", "service.id", "service.name"], variables: null },
         portal: portalValuesSchema.parse(apiSamples.workflowPortal),
         automations: [
           { id: "restart-media", title: "Restart media", event: "service.status-changed", enabled: true },
