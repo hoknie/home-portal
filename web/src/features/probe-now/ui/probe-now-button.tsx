@@ -3,12 +3,13 @@
 import { LoaderCircle, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { useCan } from "@/entities/session";
 import type { Service } from "@/entities/service";
 import { Button } from "@/shared/ui/primitives";
 
 import { useProbeNow } from "../model/use-probe-now";
 
-export function ProbeNowButton({ service }: { service: Service }) {
+function ProbeNowButtonAllowed({ service }: { service: Service }) {
   const t = useTranslations("probeNow");
   const probe = useProbeNow(service);
   return (
@@ -30,4 +31,9 @@ export function ProbeNowButton({ service }: { service: Service }) {
       ) : null}
     </div>
   );
+}
+
+export function ProbeNowButton(props: { service: Service }) {
+  const can = useCan();
+  return can("services", "update") ? <ProbeNowButtonAllowed {...props} /> : null;
 }

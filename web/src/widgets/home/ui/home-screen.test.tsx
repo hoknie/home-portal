@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { apiSamples } from "@/shared/api";
-import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
+import { TEST_ADMIN, jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { HomeScreen } from "./home-screen";
 
@@ -14,7 +14,7 @@ function serve(answers: Answers, signedIn: boolean) {
   const fetch = vi.fn(async (input: RequestInfo | URL) => {
     const path = String(input);
     if (path === "/api/session") {
-      return signedIn ? jsonResponse({ name: "admin" }) : new Response("sign in required", { status: 401 });
+      return signedIn ? jsonResponse(TEST_ADMIN) : new Response("sign in required", { status: 401 });
     }
     if (path.includes("/widgets/")) {
       return jsonResponse(apiSamples.widgetWeather);
@@ -23,7 +23,7 @@ function serve(answers: Answers, signedIn: boolean) {
     return found ? jsonResponse(found[1], { headers: { ETag: '"r"' } }) : new Response("missing", { status: 404 });
   });
   vi.stubGlobal("fetch", fetch);
-  renderWithProviders(<HomeScreen />);
+  renderWithProviders(<HomeScreen />, testQueryClient({ signedIn: false }));
   return fetch;
 }
 

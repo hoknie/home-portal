@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Allowed } from "@/entities/session";
 import { type NotificationChannel, useSendTest } from "@/entities/notification";
 import { ConflictError } from "@/shared/api";
 import { KvList, KvRow } from "@/shared/ui/kv-list";
@@ -35,9 +36,11 @@ export function ChannelCard({ channel, revision, moduleOn }: ChannelCardProps) {
       title={t.has(`channels.${channel.name}` as "channels.telegram") ? t(`channels.${channel.name}` as "channels.telegram") : channel.name}
       badge={<Badge variant={BADGE[channel.readiness]}>{t(`readiness.${channel.readiness}`)}</Badge>}
       actions={
-        <Button type="button" variant="outline" size="sm" onClick={() => void send()} disabled={!ready || test.isPending} title={ready ? undefined : t("test.unavailable")}>
-          {t("test.send")}
-        </Button>
+        <Allowed area="notifications" action="update">
+          <Button type="button" variant="outline" size="sm" onClick={() => void send()} disabled={!ready || test.isPending} title={ready ? undefined : t("test.unavailable")}>
+            {t("test.send")}
+          </Button>
+        </Allowed>
       }
     >
       <div className="grid gap-5">

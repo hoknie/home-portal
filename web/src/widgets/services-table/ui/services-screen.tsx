@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
+import { Allowed } from "@/entities/session";
 import { useServices } from "@/entities/service";
 import { routes } from "@/shared/config";
 import { DataTable } from "@/shared/ui/data-table";
@@ -34,12 +35,14 @@ export function ServicesScreen() {
   const revision = services.data?.revision ?? null;
   const columns = useServiceColumns(revision);
   const add = (
-    <Button asChild>
-      <Link href={routes.newService}>
-        <Plus aria-hidden />
-        {t("services.add")}
-      </Link>
-    </Button>
+    <Allowed area="services" action="create">
+      <Button asChild>
+        <Link href={routes.newService}>
+          <Plus aria-hidden />
+          {t("services.add")}
+        </Link>
+      </Button>
+    </Allowed>
   );
   return (
     <div className="grid gap-8">

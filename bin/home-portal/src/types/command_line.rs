@@ -45,6 +45,10 @@ impl CommandLine {
                         "home-portal proxy render > caddy.json",
                         "print the Caddy configuration",
                     ),
+                    (
+                        "home-portal permissions",
+                        "ask macOS for the permissions the portal needs",
+                    ),
                 ],
             ),
             examples(

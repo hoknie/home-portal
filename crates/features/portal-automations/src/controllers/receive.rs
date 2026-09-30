@@ -1,19 +1,18 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::time::Instant;
 
 use axum::body::Bytes;
 use axum::extract::rejection::QueryRejection;
 use axum::extract::{ConnectInfo, Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::{Extension, Json};
-use portal_feature::{ApiError, ClientAddress, EventName, EventSink, FieldError, PortalEvent};
+use portal_feature::{ApiError, ClientAddress, FieldError};
 use serde_json::Value;
-use time::OffsetDateTime;
 
 use crate::helpers::{same_secret, token_hash};
 use crate::responses::AcceptedResponse;
-use crate::types::{AutomationsState, Webhook, WebhookAction};
+use crate::services::received;
+use crate::types::{AutomationsState, Webhook};
 
 pub const TOKEN_HEADER: &str = "x-webhook-token";
 pub const BEARER: &str = "Bearer ";
@@ -64,32 +63,14 @@ fn accept(
     (query, body): Request<'_>,
     client: &str,
 ) -> Result<(StatusCode, Json<AcceptedResponse>), ApiError> {
-    state
-        .webhooks
-        .allow(&webhook.id, Instant::now())
-        .map_err(|retry_after_seconds| ApiError::TooManyRequests {
-            retry_after_seconds,
-        })?;
     let variables = variables_of(webhook, query, body)?;
-    let event = PortalEvent::of(
-        EventName::WebhookReceived,
-        OffsetDateTime::now_utc(),
-        &[
-            ("webhook.id", webhook.id.as_str()),
-            ("webhook.title", webhook.title.as_str()),
-            ("client.address", client),
-        ],
-    )
-    .with_variables(&variables);
-    let run_id = match webhook.action {
-        WebhookAction::Event => {
-            state.sink.emit(event);
-            None
-        }
-        WebhookAction::Script(_) | WebhookAction::Workflow(_) => {
-            state.sink.run_webhook(webhook, event)
-        }
-    };
+    let run_id = received(
+        &state.sink,
+        &state.webhooks,
+        webhook,
+        &variables,
+        (client, None),
+    )?;
     Ok((
         StatusCode::ACCEPTED,
         Json(AcceptedResponse {

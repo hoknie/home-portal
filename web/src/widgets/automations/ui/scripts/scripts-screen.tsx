@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { useAutomations, useScripts } from "@/entities/automation";
 import { type ScriptEntry, useCreateFolder, useCreateScript, useDeleteFolder, useDeleteScript, useMoveScript, useScriptTree } from "@/entities/script";
 import { useWebhooks } from "@/entities/webhook";
@@ -55,6 +56,7 @@ export function ScriptsScreen() {
   useLeaveGuard(dirty, t("leave"));
   const onDirty = useCallback((next: boolean) => setDirty(next), []);
   const data = tree.data;
+  const can = useCan();
   const readOnly = !(data?.inside ?? false);
   const entry = data?.files.find((file) => file.path === selected) ?? null;
   const select = (path: string) => {
@@ -126,7 +128,7 @@ export function ScriptsScreen() {
       {data && !data.exists ? (
         <div role="note" className="grid justify-items-start gap-3 rounded-lg border border-glass-edge p-4 text-sm">
           <p>{t("missing", { directory: data.directory })}</p>
-          {readOnly ? null : (
+          {readOnly || !can("scripts", "create") ? null : (
             <Button type="button" size="sm" onClick={() => void attempt(() => createFolder.mutateAsync(null))}>
               {t("createDirectory")}
             </Button>
@@ -148,7 +150,7 @@ export function ScriptsScreen() {
           />
           <div className="min-w-0">
             {entry ? (
-              <ScriptEditor key={entry.path} entry={entry} userId={data.user_id} directory={data.directory} readOnly={readOnly} onDirty={onDirty} />
+              <ScriptEditor key={entry.path} entry={entry} userId={data.user_id} directory={data.directory} readOnly={readOnly || !can("scripts", "update")} onDirty={onDirty} />
             ) : (
               <EmptyState icon={FileCode} title={t("chooseTitle")} description={t("choose")} />
             )}

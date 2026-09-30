@@ -4,6 +4,7 @@ import { ExternalLink, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+import { Allowed } from "@/entities/session";
 import { type Service, ServiceIcon, iconOf } from "@/entities/service";
 import { ProbeNowButton } from "@/features/probe-now";
 import { routes } from "@/shared/config";
@@ -38,12 +39,14 @@ export function ServiceSummary({ service }: { service: Service }) {
           </a>
         </Button>
         <ProbeNowButton service={service} />
-        <Button asChild variant="ghost" size="sm">
-          <Link href={routes.editService(service.id)}>
-            <Pencil className="size-4" aria-hidden />
-            {t("edit")}
-          </Link>
-        </Button>
+        <Allowed area="services" action="update">
+          <Button asChild variant="ghost" size="sm">
+            <Link href={routes.editService(service.id)}>
+              <Pencil className="size-4" aria-hidden />
+              {t("edit")}
+            </Link>
+          </Button>
+        </Allowed>
       </div>
     </header>
   );

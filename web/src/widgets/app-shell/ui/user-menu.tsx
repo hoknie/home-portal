@@ -3,6 +3,7 @@
 import { ChevronsUpDown, UserRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { useCan } from "@/entities/session";
 import { RestartPortalItem } from "@/features/restart-portal";
 import { SignOutItem } from "@/features/sign-out";
 import { ThemeSwitch } from "@/features/theme-switch";
@@ -19,6 +20,7 @@ export type UserMenuProps = { name: string; compact?: boolean };
 
 export function UserMenu({ name, compact = false }: UserMenuProps) {
   const t = useTranslations("nav");
+  const can = useCan();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -34,7 +36,7 @@ export function UserMenu({ name, compact = false }: UserMenuProps) {
         <DropdownMenuLabel className="font-normal text-muted-foreground">{t("signedInAs", { name })}</DropdownMenuLabel>
         <ThemeSwitch />
         <DropdownMenuSeparator />
-        <RestartPortalItem />
+        {can("portal", "update") ? <RestartPortalItem /> : null}
         <SignOutItem />
       </DropdownMenuContent>
     </DropdownMenu>

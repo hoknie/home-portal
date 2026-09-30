@@ -3,13 +3,17 @@ use std::sync::{Arc, Mutex};
 
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
+use axum::http::Method;
 use axum::routing::{get, post, put};
 use portal_config::{ConfigStore, Storage};
-use portal_feature::{EventSink, Feature, Loop, StatusObserver, Validator};
+use portal_feature::{
+    Action, Area, EventSink, Feature, Loop, Right, Rule, StatusObserver, Validator,
+};
 
 use crate::controllers::{
     catalogue, create, create_webhook, delete_webhook, issue_token, list, list_webhooks, receive,
-    remove, remove_token, run, run_now, runs, schedule, scripts, stop, update, update_webhook,
+    remove, remove_token, run, run_now, run_webhook, runs, schedule, scripts, stop, update,
+    update_webhook,
 };
 use crate::controllers::{
     create_workflow, delete_workflow, list_workflows, portal_values, run_workflow, update_workflow,
@@ -27,12 +31,41 @@ use crate::services::{
 use crate::types::{AutomationsState, WorkflowCases};
 use crate::usecases::{
     ChangeAutomation, ChangeWebhook, CreateAutomation, CreateWebhook, DeleteAutomation,
-    DeleteWebhook, IssueToken, ListAutomations, ListWebhooks, RemoveToken,
+    DeleteWebhook, IssueToken, ListAutomations, ListWebhooks, RemoveToken, RunWebhook,
 };
 use crate::usecases::{
     ChangeWorkflow, CreateWorkflow, DeleteWorkflow, ListWorkflows, ReadPortalValues, RunWorkflow,
     WorkflowCatalogue,
 };
+
+const AUTOMATIONS_READ: &[Right] = &[Right::new(Area::Automations, Action::Read)];
+const AUTOMATIONS_CREATE: &[Right] = &[Right::new(Area::Automations, Action::Create)];
+const AUTOMATIONS_UPDATE: &[Right] = &[Right::new(Area::Automations, Action::Update)];
+const AUTOMATIONS_DELETE: &[Right] = &[Right::new(Area::Automations, Action::Delete)];
+const AUTOMATIONS_EXECUTE: &[Right] = &[Right::new(Area::Automations, Action::Execute)];
+const RUNS_READ: &[Right] = &[
+    Right::new(Area::Automations, Action::Read),
+    Right::new(Area::Workflows, Action::Read),
+];
+const RUNS_STOP: &[Right] = &[
+    Right::new(Area::Automations, Action::Execute),
+    Right::new(Area::Workflows, Action::Execute),
+];
+const SHARED_READ: &[Right] = &[
+    Right::new(Area::Automations, Action::Read),
+    Right::new(Area::Webhooks, Action::Read),
+    Right::new(Area::Workflows, Action::Read),
+];
+const WEBHOOKS_READ: &[Right] = &[Right::new(Area::Webhooks, Action::Read)];
+const WEBHOOKS_CREATE: &[Right] = &[Right::new(Area::Webhooks, Action::Create)];
+const WEBHOOKS_UPDATE: &[Right] = &[Right::new(Area::Webhooks, Action::Update)];
+const WEBHOOKS_EXECUTE: &[Right] = &[Right::new(Area::Webhooks, Action::Execute)];
+const WEBHOOKS_DELETE: &[Right] = &[Right::new(Area::Webhooks, Action::Delete)];
+const WORKFLOWS_READ: &[Right] = &[Right::new(Area::Workflows, Action::Read)];
+const WORKFLOWS_CREATE: &[Right] = &[Right::new(Area::Workflows, Action::Create)];
+const WORKFLOWS_UPDATE: &[Right] = &[Right::new(Area::Workflows, Action::Update)];
+const WORKFLOWS_DELETE: &[Right] = &[Right::new(Area::Workflows, Action::Delete)];
+const WORKFLOWS_EXECUTE: &[Right] = &[Right::new(Area::Workflows, Action::Execute)];
 
 pub struct AutomationsFeature {
     pub(crate) state: AutomationsState,
@@ -56,6 +89,7 @@ impl AutomationsFeature {
     pub const WEBHOOKS: &'static str = "/api/webhooks";
     pub const WEBHOOK: &'static str = "/api/webhooks/{id}";
     pub const WEBHOOK_TOKEN: &'static str = "/api/webhooks/{id}/token";
+    pub const WEBHOOK_RUN: &'static str = "/api/webhooks/{id}/run";
     pub const RECEIVE: &'static str = "/webhook/{id}";
     pub const WORKFLOWS: &'static str = "/api/workflows";
     pub const WORKFLOW: &'static str = "/api/workflows/{id}";
@@ -110,6 +144,7 @@ impl AutomationsFeature {
                 delete_webhook: DeleteWebhook::new(webhook_writer.clone(), views.clone()),
                 issue_token: IssueToken::new(webhook_writer.clone()),
                 remove_token: RemoveToken::new(webhook_writer, views),
+                run_webhook: RunWebhook::new(sink.clone(), webhooks.clone()),
                 sink,
                 directory,
                 scripts,
@@ -154,12 +189,43 @@ impl Feature for AutomationsFeature {
             .route(Self::WEBHOOKS, get(list_webhooks).post(create_webhook))
             .route(Self::WEBHOOK, put(update_webhook).delete(delete_webhook))
             .route(Self::WEBHOOK_TOKEN, post(issue_token).delete(remove_token))
+            .route(Self::WEBHOOK_RUN, post(run_webhook))
             .route(Self::WORKFLOWS, get(list_workflows).post(create_workflow))
             .route(Self::WORKFLOW, put(update_workflow).delete(delete_workflow))
             .route(Self::WORKFLOW_RUN, post(run_workflow))
             .route(Self::WORKFLOW_CATALOGUE, get(workflow_catalogue))
             .route(Self::WORKFLOW_PORTAL, get(portal_values))
             .with_state(self.state.clone())
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::needs(Method::GET, Self::COLLECTION, AUTOMATIONS_READ),
+            Rule::needs(Method::POST, Self::COLLECTION, AUTOMATIONS_CREATE),
+            Rule::needs(Method::PUT, Self::ITEM, AUTOMATIONS_UPDATE),
+            Rule::needs(Method::DELETE, Self::ITEM, AUTOMATIONS_DELETE),
+            Rule::needs(Method::POST, Self::RUN, AUTOMATIONS_EXECUTE),
+            Rule::needs(Method::GET, Self::RUNS, RUNS_READ),
+            Rule::needs(Method::GET, Self::RUN_ITEM, RUNS_READ),
+            Rule::needs(Method::POST, Self::RUN_STOP, RUNS_STOP),
+            Rule::needs(Method::GET, Self::CATALOGUE, SHARED_READ),
+            Rule::needs(Method::GET, Self::SCRIPTS, SHARED_READ),
+            Rule::needs(Method::GET, Self::SCHEDULE, AUTOMATIONS_READ),
+            Rule::needs(Method::GET, Self::WEBHOOKS, WEBHOOKS_READ),
+            Rule::needs(Method::POST, Self::WEBHOOKS, WEBHOOKS_CREATE),
+            Rule::needs(Method::PUT, Self::WEBHOOK, WEBHOOKS_UPDATE),
+            Rule::needs(Method::DELETE, Self::WEBHOOK, WEBHOOKS_DELETE),
+            Rule::needs(Method::POST, Self::WEBHOOK_TOKEN, WEBHOOKS_UPDATE),
+            Rule::needs(Method::DELETE, Self::WEBHOOK_TOKEN, WEBHOOKS_UPDATE),
+            Rule::needs(Method::POST, Self::WEBHOOK_RUN, WEBHOOKS_EXECUTE),
+            Rule::needs(Method::GET, Self::WORKFLOWS, WORKFLOWS_READ),
+            Rule::needs(Method::POST, Self::WORKFLOWS, WORKFLOWS_CREATE),
+            Rule::needs(Method::PUT, Self::WORKFLOW, WORKFLOWS_UPDATE),
+            Rule::needs(Method::DELETE, Self::WORKFLOW, WORKFLOWS_DELETE),
+            Rule::needs(Method::POST, Self::WORKFLOW_RUN, WORKFLOWS_EXECUTE),
+            Rule::needs(Method::GET, Self::WORKFLOW_CATALOGUE, WORKFLOWS_READ),
+            Rule::needs(Method::GET, Self::WORKFLOW_PORTAL, WORKFLOWS_READ),
+        ]
     }
 
     fn public_router(&self) -> Router {

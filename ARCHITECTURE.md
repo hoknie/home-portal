@@ -263,8 +263,8 @@ pub trait Feature: Send + Sync {
   Routes stay mounted while a module is off; each checks its switch and the settings stay editable.
 - Two features claiming one path make axum panic at assembly; assembly runs in a test, so the
   conflict fails `just check`.
-- **When roles arrive**, `Feature` gains a method returning its routes as data (method, path,
-  required permission), and the gate reads that data.
+- **Every protected route declares the right it needs.** `Feature::rules()` returns its routes as
+  data (method, path, requirement), and one middleware checks them (§6.15).
 
 ---
 
@@ -911,6 +911,70 @@ too.
   limit; its text area is `shared/ui/code-area`, which paints a small in-house highlight
   (`highlight.ts`) under a transparent `<textarea>`, so no editor library is needed. The navigation adds "Scripts" after the modules
   from `editing` in the automations listing (`widgets/app-shell/model/navigation.ts#sectionLinks`).
+
+### 6.14. Host permissions
+
+- **The feature `portal-permissions` asks macOS for its privacy permissions.** It is always on and is not a module. The permissions are:
+  - `local-network`;
+  - `removable-volumes`;
+  - `folder:<name>` for each folder in `[permissions] folders`;
+  - `automation:<application>` for each application in `[permissions] automation`;
+  - `full-disk-access`.
+- **There is no silent check.** For every permission except Full Disk Access, macOS shows its prompt on the first access the owner has not decided. So asking and checking are the same act: one harmless action per permission, one file per kind in `clients/`, with `std` only and no `unsafe`:
+  - an mDNS query to `224.0.0.251:5353`;
+  - `read_dir` of each removable volume under `/Volumes`, filtered with `diskutil info -plist`;
+  - `read_dir` of each named folder;
+  - `osascript` with `tell application (item 1 of argv) to get name`.
+
+  Full Disk Access has no prompt. It is only read, by opening `TCC.db`, and its advice says to add the process by hand.
+- **A blocked read stays pending.** A file read waits in the kernel until the owner answers. So `services/asking.rs` runs every check in `spawn_blocking`, waits up to the limit (`types/limits.rs`: 60 s for prompts, 10 s for the network, 5 s for `diskutil`), records `pending`, and leaves the task running to record the answer later.
+  - At most one check per permission is in flight (`PermissionBoard::begin`).
+  - One request runs at a time. `RequestPermissions` holds a `try_lock`, and a second request is `409`.
+  - States live in memory only and are learned again at each start.
+- **At start** the request runs through `Feature::loops()`, which `boot/run.rs` spawns right after the listener is bound, so start-up never waits for an answer. `[permissions] request_at_start = false` leaves only Full Disk Access checked. The process tests and `tests/modules.rs` set it, so `cargo test` on a Mac shows no prompt.
+- **Who owns a permission.** macOS gives a process the permissions of its *responsible* process:
+  - from a terminal, the terminal application (`TERM_PROGRAM`);
+  - under launchd, the `home-portal` binary.
+
+  Every script the portal runs inherits them. `Owner` names that process in the log, in `home-portal permissions` and on `/admin/permissions`. macOS keys an unsigned binary by its code hash, so a rebuilt binary loses its grants: run launchd from an installed copy, and run `home-portal permissions` after each upgrade.
+- **Entry points:**
+  - `GET /api/permissions` gives the states with an `advice` and a `pane` code, which the interface turns into text;
+  - `POST /api/permissions/request` answers 202, or 403 from `internet`;
+  - `home-portal permissions` (`cli/permissions.rs`) asks, waits and prints `<code>\t<state>` lines when piped, and exits 1 when anything is denied.
+- **Web:** `entities/permission` holds the schema, the queries (a 2 s poll while anything is `pending`) and the state badge. The page lives in `widgets/modules/ui/permissions/`, because `features/` and `widgets/` are at steiger's slice limit. The menu lists it after the modules.
+
+### 6.15. Access control
+
+- **Groups hold rights.** `[[groups]]` live in the users' home beside `[[users]]` (`Section::Users` owns both tables). Each group has a `name` and `permissions = { <area> = [<actions>] }`. A user names at most one group in `group`.
+  - `admin` is built in: it is never declared, it holds every right, and at least one user must be in it, or the start fails with a message naming `group = "admin"`.
+  - A user without a group holds no rights.
+- **The matrix is one list.** `portal_feature::Area` gives each area the actions it accepts (`Area::actions`):
+  - modules: `proxy`, `dns`, `notifications`, `automations`, `webhooks`, `users`, `workflows`, with `execute` for the three that run things;
+  - functions outside modules: `services`, `layout`, `network`, `modules`, `scripts`, `secrets`, `host-permissions`, `portal`, each only with the actions that mean something for it.
+
+  `GET /api/groups` answers the same matrix, so the interface draws the editor without a list of its own. `Rights::update` never implies `read`.
+- **Rights are resolved per request.** `SessionGate::admit` reads `[[users]]` and `[[groups]]` on every request and builds `Principal { name, group, rights }` (`portal-auth/src/services/groups.rs`), so a change of group or rights applies at once, without signing in again. Sessions store no rights.
+- **Routes declare what they need.** `Feature::rules()` lists `Rule { method, path, requirement }`, where the requirement is:
+  - `Signed`, for what the home page and the service page need;
+  - `AnyOf(&[Right])`;
+  - `Admin`, for writing groups.
+
+  `boot/router.rs` collects every rule, plus those of the widgets router and `POST /api/portal/restart`, into a `RuleBook`. `middlewares/require_right.rs` runs inside `require_session`: it finds the rule by `MatchedPath` and method, answers 403 `needs <area>.<action>`, and fails closed for a route without a rule. Handlers stay as they were.
+- **Checks that depend on the target live in use cases** (`services/granting.rs`):
+  - one's own password needs no right;
+  - only `admin` touches a member of `admin` or gives `admin`;
+  - anyone else may give only a group whose rights are within their own;
+  - the last member of `admin` cannot leave it or be deleted.
+- **Tests keep the table complete:**
+  - `tests/architecture/rules.rs` reads every `.route(…)` in `router()`, `widgets_router()` and `assemble()` with `syn`, and compares both directions with the `RuleBook`;
+  - `tests/rights.rs` sends one request per rule as a user without a group, and every `GET` as `admin`.
+- **Web:**
+  - `entities/session` carries `group`, `admin` and `rights`, with `useCan()`, `mayOpen()`, `<Allowed>` and `<RequireRight>`;
+  - `AreaGate` in `app/admin/layout.tsx` maps each admin path to its area and shows `shared/ui/no-access` without the right, before any query of the page runs;
+  - action buttons are guarded inside their `features/` slices, and forms without `update` become a disabled `fieldset` without a submit;
+  - the navigation filters links with `mayOpen`;
+  - `testQueryClient()` starts with an `admin` session, and tests of other people set theirs.
+- **Webhooks can be run from the interface.** `POST /api/webhooks/{id}/run` needs `webhooks.execute` and runs exactly what a received call runs, without the token, through `services/webhook_reception.rs`, which the public receiver shares. The journal records who started it.
 
 ## 7. Async and cost
 

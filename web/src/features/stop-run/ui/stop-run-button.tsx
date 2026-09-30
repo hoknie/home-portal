@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { type Run, isActive, useStopRun } from "@/entities/automation";
 import { ConflictError, RequestError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
@@ -14,7 +15,7 @@ export const NOT_FOUND = 404;
 
 export type StopRunButtonProps = { run: Run; title?: string; labelled?: boolean };
 
-export function StopRunButton({ run, title, labelled = false }: StopRunButtonProps) {
+function StopRunButtonAllowed({ run, title, labelled = false }: StopRunButtonProps) {
   const t = useTranslations("automations");
   const stop = useStopRun();
   const [open, setOpen] = useState(false);
@@ -60,4 +61,9 @@ export function StopRunButton({ run, title, labelled = false }: StopRunButtonPro
       />
     </>
   );
+}
+
+export function StopRunButton(props: StopRunButtonProps) {
+  const can = useCan();
+  return can("automations", "execute") || can("workflows", "execute") ? <StopRunButtonAllowed {...props} /> : null;
 }

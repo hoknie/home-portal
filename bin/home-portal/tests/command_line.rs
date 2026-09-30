@@ -70,6 +70,7 @@ fn help_lists_every_command_with_examples_without_a_configuration() {
         "password-hash",
         "probe",
         "proxy",
+        "permissions",
         "--version",
         "Examples:",
         "proxy render",
@@ -107,7 +108,7 @@ fn probe_help_lists_the_kinds_and_an_example() {
 
 #[test]
 fn every_command_has_help_with_an_example() {
-    for command in ["password-hash", "probe", "proxy"] {
+    for command in ["password-hash", "probe", "proxy", "permissions"] {
         let output = run(&[command, "--help"]);
         assert!(output.status.success(), "{command}");
         assert!(text(&output.stdout).contains("Examples:"), "{command}");

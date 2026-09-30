@@ -4,7 +4,7 @@ use time::Duration;
 use time::macros::datetime;
 use toml_edit::DocumentMut;
 
-use super::{SessionStore, Throttle, checked_name, checked_password, validate_users};
+use super::super::{SessionStore, Throttle, checked_name, checked_password, validate_users};
 use crate::helpers::hash_password;
 use crate::types::UsersSection;
 
@@ -27,7 +27,7 @@ fn a_configuration_without_users_is_refused_with_the_command_to_run() {
 fn duplicate_names_and_foreign_hashes_are_refused_by_entry() {
     let hash = hash_password("secret").unwrap();
     let text = format!(
-        "[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[[users]]\nname = \"admin\"\npassword_hash = \"plain\"\n"
+        "[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[[users]]\nname = \"admin\"\npassword_hash = \"plain\"\n"
     );
     let fields: Vec<String> = validate_users(&document(&text))
         .into_iter()
@@ -39,7 +39,8 @@ fn duplicate_names_and_foreign_hashes_are_refused_by_entry() {
 #[test]
 fn a_valid_user_passes() {
     let hash = hash_password("secret").unwrap();
-    let text = format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n");
+    let text =
+        format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n");
     assert!(validate_users(&document(&text)).is_empty());
 }
 

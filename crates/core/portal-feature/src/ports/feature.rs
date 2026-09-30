@@ -3,7 +3,7 @@ use axum::Router;
 use std::sync::Arc;
 
 use crate::ports::WidgetProvider;
-use crate::types::{Loop, Validator};
+use crate::types::{Loop, Rule, Validator};
 
 pub trait Feature: Send + Sync {
     fn name(&self) -> &'static str;
@@ -16,6 +16,10 @@ pub trait Feature: Send + Sync {
 
     fn validator(&self) -> Option<Validator> {
         None
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        Vec::new()
     }
 
     fn loops(&self) -> Vec<Loop> {

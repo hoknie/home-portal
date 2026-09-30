@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Allowed } from "@/entities/session";
 import { StopRunButton } from "@/features/stop-run";
 import { RunDetails, useAutomations, useCatalogue } from "@/entities/automation";
 import { enabledModules, useModules } from "@/entities/module";
@@ -31,12 +32,14 @@ export function AutomationsScreen() {
   const [opened, setOpened] = useState<string | null>(null);
   const columns = useAutomationColumns(automations.data?.revision ?? null, catalogue.data, setOpened);
   const add = (
-    <Button asChild>
-      <Link href={routes.newAutomation}>
-        <Plus aria-hidden />
-        {t("automations.add")}
-      </Link>
-    </Button>
+    <Allowed area="automations" action="create">
+      <Button asChild>
+        <Link href={routes.newAutomation}>
+          <Plus aria-hidden />
+          {t("automations.add")}
+        </Link>
+      </Button>
+    </Allowed>
   );
   const [picked, setChosen] = useState<string[]>([]);
   const list = automations.data?.data.automations ?? [];

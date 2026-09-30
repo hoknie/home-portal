@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { Allowed } from "@/entities/session";
 import { DeleteServiceButton } from "@/features/delete-service";
 import { type Service, ServiceIcon, diagnosisMessage, iconOf } from "@/entities/service";
 import { routes } from "@/shared/config";
@@ -74,11 +75,13 @@ export function useServiceColumns(revision: string | null): Column<Service>[] {
       align: "end",
       cell: (service) => (
         <div className="flex justify-end gap-1">
-          <Button asChild variant="ghost" size="icon">
-            <Link href={routes.editService(service.id)} aria-label={t("common.edit")}>
-              <Pencil aria-hidden />
-            </Link>
-          </Button>
+          <Allowed area="services" action="update">
+            <Button asChild variant="ghost" size="icon">
+              <Link href={routes.editService(service.id)} aria-label={t("common.edit")}>
+                <Pencil aria-hidden />
+              </Link>
+            </Button>
+          </Allowed>
           <DeleteServiceButton service={service} revision={revision} />
         </div>
       ),

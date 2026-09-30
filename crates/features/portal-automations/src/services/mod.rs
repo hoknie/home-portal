@@ -8,6 +8,7 @@ mod validation;
 mod views;
 mod webhook_book;
 mod webhook_checks;
+mod webhook_reception;
 mod webhook_writer;
 mod workflow;
 
@@ -24,6 +25,7 @@ pub use validation::{decoded, decoded_webhooks, validate_automations};
 pub use views::Views;
 pub use webhook_book::WebhookBook;
 pub use webhook_checks::webhook_placeholder_errors;
+pub use webhook_reception::received;
 pub use webhook_writer::WebhookWriter;
 pub use workflow::{
     Budget, Frame, Secrets, WorkflowRunner, WorkflowTools, bind_inputs, decode_workflow,

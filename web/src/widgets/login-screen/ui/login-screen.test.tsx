@@ -2,7 +2,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
+import { TEST_ADMIN, jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { LoginScreen } from "./login-screen";
 
@@ -22,7 +22,7 @@ vi.mock("@/shared/lib/navigation", async (original) => ({
 
 function signedOutUntilSignIn() {
   return vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
-    init?.method === "POST" ? jsonResponse({ name: "admin" }) : new Response("sign in required", { status: 401 }),
+    init?.method === "POST" ? jsonResponse(TEST_ADMIN) : new Response("sign in required", { status: 401 }),
   );
 }
 
@@ -45,7 +45,7 @@ afterEach(() => {
 it("returns to the page that was asked for after signing in", async () => {
   search = "next=%2Fservices%2F";
   vi.stubGlobal("fetch", signedOutUntilSignIn());
-  renderWithProviders(<LoginScreen />);
+  renderWithProviders(<LoginScreen />, testQueryClient({ signedIn: false }));
   expect(screen.getByText("Sign in")).toBeInTheDocument();
   await signIn();
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/services/"));
@@ -55,7 +55,7 @@ it("returns to the page that was asked for after signing in", async () => {
 it("returns to a published service through the portal's check, never directly", async () => {
   search = "return=https%3A%2F%2Fnas.example.com%2Fphotos";
   vi.stubGlobal("fetch", signedOutUntilSignIn());
-  renderWithProviders(<LoginScreen />);
+  renderWithProviders(<LoginScreen />, testQueryClient({ signedIn: false }));
   await signIn();
   await waitFor(() => expect(leaveTo).toHaveBeenCalledWith("/api/proxy/continue?to=https%3A%2F%2Fnas.example.com%2Fphotos"));
   expect(leaveTo).not.toHaveBeenCalledWith("https://nas.example.com/photos");
@@ -64,8 +64,8 @@ it("returns to a published service through the portal's check, never directly", 
 
 it("continues at once without the form when a session already exists", async () => {
   search = "return=%2Fadmin%2Fservices%2F";
-  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ name: "admin" })));
-  renderWithProviders(<LoginScreen />);
+  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(TEST_ADMIN)));
+  renderWithProviders(<LoginScreen />, testQueryClient({ signedIn: false }));
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin/services/"));
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
 });
@@ -74,8 +74,8 @@ it("stops instead of looping when a published service sends the visitor straight
   search = "return=https%3A%2F%2Ftorrent.portal.home%2F";
   const href = "/api/proxy/continue?to=https%3A%2F%2Ftorrent.portal.home%2F";
   window.sessionStorage.setItem("portal_left_to", JSON.stringify({ href, at: Date.now() }));
-  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ name: "admin" })));
-  renderWithProviders(<LoginScreen />);
+  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(TEST_ADMIN)));
+  renderWithProviders(<LoginScreen />, testQueryClient({ signedIn: false }));
   expect(await screen.findByText("The sign-in does not reach torrent.portal.home")).toBeInTheDocument();
   expect(leaveTo).not.toHaveBeenCalled();
   await userEvent.click(screen.getByRole("button", { name: "Try again" }));
@@ -86,15 +86,15 @@ it("an old departure does not count as a loop", async () => {
   search = "return=https%3A%2F%2Ftorrent.portal.home%2F";
   const href = "/api/proxy/continue?to=https%3A%2F%2Ftorrent.portal.home%2F";
   window.sessionStorage.setItem("portal_left_to", JSON.stringify({ href, at: Date.now() - 60_000 }));
-  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ name: "admin" })));
-  renderWithProviders(<LoginScreen />);
+  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse(TEST_ADMIN)));
+  renderWithProviders(<LoginScreen />, testQueryClient({ signedIn: false }));
   await waitFor(() => expect(leaveTo).toHaveBeenCalledWith(href));
 });
 
 it("offers the language switcher to a visitor without a session", async () => {
   search = "";
   vi.stubGlobal("fetch", signedOutUntilSignIn());
-  renderWithProviders(<LoginScreen />);
+  renderWithProviders(<LoginScreen />, testQueryClient({ signedIn: false }));
   expect(await screen.findByLabelText("User name")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Language: English" })).toBeInTheDocument();
 });
@@ -102,7 +102,7 @@ it("offers the language switcher to a visitor without a session", async () => {
 it("is shown in the chosen language", async () => {
   search = "";
   vi.stubGlobal("fetch", signedOutUntilSignIn());
-  renderWithProviders(<LoginScreen />, undefined, { locale: "es" });
+  renderWithProviders(<LoginScreen />, testQueryClient({ signedIn: false }), { locale: "es" });
   expect(await screen.findByLabelText("Nombre de usuario")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Idioma: Español" })).toBeInTheDocument();
 });

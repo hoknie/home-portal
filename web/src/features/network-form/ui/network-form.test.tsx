@@ -3,8 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { networkSchema } from "@/entities/network";
+import { sessionKey } from "@/entities/session";
 import { apiSamples } from "@/shared/api";
-import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
+import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { NetworkForm } from "./network-form";
 
@@ -36,4 +37,12 @@ it("maps a server error on one proxy to the proxies field", async () => {
   await userEvent.type(port, "9191");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
   expect(await screen.findByText("bad range")).toBeInTheDocument();
+});
+
+it("without the right to change the network the form is read-only and has no Save", () => {
+  const client = testQueryClient();
+  client.setQueryData(sessionKey, { name: "anna", group: "family", admin: false, rights: { network: ["read"] } });
+  renderWithProviders(<NetworkForm configured={network.configured} revision='"r1"' />, client);
+  expect(screen.getByLabelText("Port")).toBeDisabled();
+  expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
 });

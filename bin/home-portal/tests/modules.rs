@@ -26,7 +26,7 @@ fn free_port() -> u16 {
 fn configuration(port: u16) -> String {
     let hash = hash_password("secret").unwrap();
     format!(
-        "# parts\n[modules]\nproxy = true\ndns = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nportal_host = \"portal.home\"\nadmin = \"http://127.0.0.1:{}\"\n\n[dns]\naddress = \"127.0.0.1\"\nport = {port}\nzones = [\"home\"]\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n",
+        "# parts\n[modules]\nproxy = true\ndns = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nportal_host = \"portal.home\"\nadmin = \"http://127.0.0.1:{}\"\n\n[dns]\naddress = \"127.0.0.1\"\nport = {port}\nzones = [\"home\"]\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[permissions]\nrequest_at_start = false\n",
         free_port()
     )
 }

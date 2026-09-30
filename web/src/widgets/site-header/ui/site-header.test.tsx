@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { apiSamples } from "@/shared/api";
-import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
+import { TEST_ADMIN, jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { SiteHeader } from "./site-header";
 
@@ -12,7 +12,7 @@ function serve(signedIn: boolean, portal: unknown = apiSamples.publicPortal, env
   const fetch = vi.fn(async (input: RequestInfo | URL) => {
     const path = String(input);
     if (path === "/api/session") {
-      return signedIn ? jsonResponse({ name: "admin" }) : new Response("sign in required", { status: 401 });
+      return signedIn ? jsonResponse(TEST_ADMIN) : new Response("sign in required", { status: 401 });
     }
     if (path === "/api/environment") {
       return jsonResponse(environment);
@@ -20,7 +20,7 @@ function serve(signedIn: boolean, portal: unknown = apiSamples.publicPortal, env
     return jsonResponse(portal);
   });
   vi.stubGlobal("fetch", fetch);
-  renderWithProviders(<SiteHeader />);
+  renderWithProviders(<SiteHeader />, testQueryClient({ signedIn: false }));
   return fetch;
 }
 

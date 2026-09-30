@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 use portal_auth::hash_password;
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
+const QUIET: &str = "[permissions]\nrequest_at_start = false\n\n";
 
 fn free_port() -> u16 {
     TcpListener::bind("127.0.0.1:0")
@@ -69,7 +70,9 @@ fn configuration(directory: &Path) -> std::path::PathBuf {
     let hash = hash_password("secret").unwrap();
     fs::write(
         &path,
-        format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n"),
+        format!(
+            "{QUIET}[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"
+        ),
     )
     .unwrap();
     path

@@ -19,6 +19,7 @@ export const SECTIONS = {
   workflows: routes.adminWorkflows,
   notifications: routes.adminNotifications,
   scripts: routes.adminScripts,
+  permissions: routes.adminPermissions,
 } as const;
 
 export type Section = keyof typeof SECTIONS;

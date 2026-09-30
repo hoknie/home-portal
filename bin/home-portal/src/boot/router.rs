@@ -1,15 +1,36 @@
+use std::sync::Arc;
+
 use axum::Router;
+use axum::http::Method;
 use axum::middleware;
 use axum::routing::{any, post};
 use portal_network::CurrentNetwork;
 use portal_web::CurrentInterface;
 
 use crate::controllers::{RESTART_PATH, not_found, restart};
-use crate::middlewares::{decide_environment, decide_language, json_only, require_session};
-use crate::types::Registry;
+use portal_feature::{Action, Area, Right, Rule};
+
+use crate::middlewares::{
+    decide_environment, decide_language, json_only, require_right, require_session,
+};
+use crate::types::{Registry, RuleBook};
 
 pub const API_ROOT: &str = "/api";
 pub const API_ANY_PATH: &str = "/api/{*rest}";
+pub const RESTART_RIGHTS: &[Right] = &[Right::new(Area::Portal, Action::Update)];
+
+pub fn rule_book(registry: &Registry) -> RuleBook {
+    RuleBook::of(
+        registry
+            .features
+            .iter()
+            .flat_map(|feature| feature.rules())
+            .chain([
+                Rule::signed(Method::GET, portal_widget::DATA_PATH),
+                Rule::needs(Method::POST, RESTART_PATH, RESTART_RIGHTS),
+            ]),
+    )
+}
 
 pub fn assemble(registry: &Registry) -> Router {
     let configuration = registry.configuration.clone();
@@ -25,6 +46,10 @@ pub fn assemble(registry: &Registry) -> Router {
                 .route(RESTART_PATH, post(restart))
                 .with_state(registry.restart.clone()),
         )
+        .route_layer(middleware::from_fn_with_state(
+            Arc::new(rule_book(registry)),
+            require_right,
+        ))
         .route_layer(middleware::from_fn_with_state(
             registry.gate.clone(),
             require_session,

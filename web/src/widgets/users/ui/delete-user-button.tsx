@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { type User, type Users, deletable, useDeleteUser } from "@/entities/user";
+import { type User, type Users, deletable, lastAdmin, useDeleteUser } from "@/entities/user";
 import { RequestError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Button } from "@/shared/ui/primitives";
@@ -22,7 +22,9 @@ export function DeleteUserButton({ user, users, revision }: DeleteUserButtonProp
       ? t("cannotDeleteYourself")
       : users.users.length <= 1
         ? t("cannotDeleteLast")
-        : undefined;
+        : lastAdmin(user, users)
+          ? t("cannotDeleteLastAdmin")
+          : undefined;
   const confirm = async () => {
     try {
       await remove.mutateAsync({ name: user.name, revision });

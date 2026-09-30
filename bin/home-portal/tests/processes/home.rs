@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 use portal_auth::hash_password;
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
+const QUIET: &str = "[permissions]\nrequest_at_start = false\n\n";
 
 #[test]
 fn a_file_left_in_the_working_directory_is_named_when_the_default_is_missing() {
@@ -42,7 +43,9 @@ fn without_the_variable_the_portal_reads_and_writes_in_the_home_configuration_fo
     let hash = hash_password("secret").unwrap();
     fs::write(
         folder.join("home-portal.toml"),
-        format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n"),
+        format!(
+            "{QUIET}[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"
+        ),
     )
     .unwrap();
     let working = tempfile::tempdir().unwrap();

@@ -4,6 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 
 import { automationsSchema } from "@/entities/automation";
 import { modulesKey, modulesSchema } from "@/entities/module";
+import { sessionKey } from "@/entities/session";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
@@ -73,4 +74,11 @@ it("nothing can be run while the automations module is off", () => {
   const button = screen.getByRole("button", { name: "Run now" });
   expect(button).toBeDisabled();
   expect(button).toHaveAttribute("title", "The module is off");
+});
+
+it("is not shown without the right to run automations", () => {
+  const client = seeded();
+  client.setQueryData(sessionKey, { name: "anna", group: "family", admin: false, rights: { automations: ["read"] } });
+  renderWithProviders(<RunAutomationButton automation={backup} />, client);
+  expect(screen.queryByRole("button")).toBeNull();
 });

@@ -3,6 +3,7 @@
 import { FileCode, Folder, FolderPlus, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { useCan } from "@/entities/session";
 import type { ScriptEntry, ScriptTree } from "@/entities/script";
 import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
@@ -28,6 +29,7 @@ function FileRow({
   onDelete,
 }: { entry: ScriptEntry } & Pick<ScriptTreePaneProps, "selected" | "readOnly" | "onSelect" | "onRename" | "onDelete">) {
   const t = useTranslations("scripts");
+  const can = useCan();
   return (
     <li className="flex items-center gap-1">
       <button
@@ -46,7 +48,7 @@ function FileRow({
           </Badge>
         )}
       </button>
-      {readOnly ? null : (
+      {readOnly || !(can("scripts", "update") || can("scripts", "delete")) ? null : (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button type="button" variant="ghost" size="icon" aria-label={`${entry.path}: ${t("rename")}, ${t("delete")}`}>
@@ -54,10 +56,10 @@ function FileRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem disabled={entry.revision === null} onSelect={() => onRename(entry)}>
+            <DropdownMenuItem disabled={entry.revision === null || !can("scripts", "update")} onSelect={() => onRename(entry)}>
               {t("rename")}
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={entry.revision === null} onSelect={() => onDelete(entry)}>
+            <DropdownMenuItem disabled={entry.revision === null || !can("scripts", "delete")} onSelect={() => onDelete(entry)}>
               {t("delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -70,8 +72,9 @@ function FileRow({
 export function ScriptTreePane(props: ScriptTreePaneProps) {
   const { tree, readOnly, onNewScript, onNewFolder, onDeleteFolder } = props;
   const t = useTranslations("scripts");
+  const can = useCan();
   const top = tree.files.filter((entry) => entry.folder === null);
-  const actions = readOnly ? null : (
+  const actions = readOnly || !can("scripts", "create") ? null : (
     <div className="flex gap-2">
       <Button type="button" size="sm" className="flex-1" onClick={onNewScript}>
         <Plus aria-hidden />
@@ -101,7 +104,7 @@ export function ScriptTreePane(props: ScriptTreePaneProps) {
                       <Folder className="size-4 text-amber-600 dark:text-amber-300" aria-hidden />
                       <span className="font-mono font-medium">{folder}</span>
                       <span className="text-xs text-muted-foreground">{inside.length}</span>
-                      {!readOnly && inside.length === 0 ? (
+                      {!readOnly && can("scripts", "delete") && inside.length === 0 ? (
                         <Button
                           type="button"
                           variant="ghost"

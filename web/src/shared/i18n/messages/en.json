@@ -42,7 +42,8 @@
     "collapseMenu": "Collapse menu",
     "expandMenu": "Expand menu",
     "menu": "Menu",
-    "scripts": "Scripts"
+    "scripts": "Scripts",
+    "permissions": "Permissions"
   },
   "theme": {
     "label": "Theme",
@@ -1001,7 +1002,15 @@
     "address": "Address",
     "noVariables": "No required variables",
     "noListeners": "No automation answers this webhook yet.",
-    "lastRuns": "Last {count} runs"
+    "lastRuns": "Last {count} runs",
+    "run": {
+      "button": "Run now",
+      "title": "Run {title}",
+      "description": "Runs the webhook as if it had been called, without its token.",
+      "submit": "Run",
+      "queued": "Run {id} was queued",
+      "published": "The event was published"
+    }
   },
   "tags": {
     "label": "Tags",
@@ -1132,7 +1141,71 @@
     "refused": "Not saved: {message}",
     "columns": {
       "name": "Name",
-      "actions": "Actions"
+      "actions": "Actions",
+      "group": "Group"
+    },
+    "noGroup": "No group",
+    "adminGroup": "admin",
+    "group": "Group",
+    "changeGroup": "Change group",
+    "groupTitle": "Group of {name}",
+    "groupDescription": "The group decides what the person may do. It applies from their next request.",
+    "saveGroup": "Save group",
+    "groupChanged": "{name} is in a new group",
+    "cannotDeleteLastAdmin": "At least one admin is required",
+    "tabs": {
+      "label": "Users and groups",
+      "users": "Users",
+      "groups": "Groups"
+    },
+    "groups": {
+      "add": "Add group",
+      "addTitle": "Add a group",
+      "editTitle": "Edit {name}",
+      "dialogDescription": "Tick what the members may do in each area. Only admins change groups.",
+      "name": "Name",
+      "builtin": "built in",
+      "admin": "admin",
+      "members": "Members",
+      "noMembers": "No members",
+      "actionsColumn": "Actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete {name}?",
+      "deleteDescription": "The group {name} is removed from the configuration.",
+      "deleted": "{name} was deleted",
+      "created": "{name} was added",
+      "saved": "{name} was saved",
+      "refused": "Not saved: {message}",
+      "hasMembers": "Move its members to another group first",
+      "loadFailed": "Could not load the groups",
+      "rightsOf": "Rights of {name}",
+      "area": "Area",
+      "cell": "{area}: {action}",
+      "areas": {
+        "services": "Services",
+        "layout": "Home layout",
+        "network": "Network",
+        "modules": "Modules",
+        "scripts": "Scripts",
+        "secrets": "Secrets",
+        "host-permissions": "Mac permissions",
+        "portal": "Portal (restart)",
+        "proxy": "Proxy",
+        "dns": "DNS",
+        "automations": "Automations",
+        "webhooks": "Webhooks",
+        "users": "Users and groups",
+        "workflows": "Workflows",
+        "notifications": "Notifications"
+      },
+      "actions": {
+        "read": "Read",
+        "create": "Create",
+        "update": "Change",
+        "delete": "Delete",
+        "execute": "Run"
+      }
     }
   },
   "workflows": {
@@ -2355,5 +2428,57 @@
       "rules": "Types are text, number, flag, or choices such as a|b. The header ends at the first line that is not a comment; at most 64 lines and 32 arguments are read.",
       "insert": "Insert an example header"
     }
+  },
+  "permissions": {
+    "title": "Permissions",
+    "subtitle": "macOS asks the owner once before the portal and its scripts may reach the local network, removable volumes, your folders or other applications. The portal asks at start; here you see the answers.",
+    "listTitle": "What the portal may do",
+    "owner": {
+      "terminal": "The portal runs in {name}, so these permissions belong to {name}.",
+      "binary": "These permissions belong to {name}, and every script it runs has them too."
+    },
+    "elsewhere": "These permissions exist only on macOS; on this system nothing needs to be granted.",
+    "learned": "Checked",
+    "loadFailed": "Could not load the permissions",
+    "requestAgain": "Ask again",
+    "requestErrors": {
+      "busy": "The portal is already asking; wait for the answers on the Mac.",
+      "outside": "Permissions can be asked for only from inside your networks.",
+      "failed": "Could not ask for the permissions."
+    },
+    "states": {
+      "granted": "Allowed",
+      "denied": "Denied",
+      "pending": "Waiting for an answer",
+      "not-applicable": "Not needed here",
+      "unknown": "Unknown"
+    },
+    "names": {
+      "local-network": "Local network",
+      "removable-volumes": "Removable volumes",
+      "full-disk-access": "Full Disk Access",
+      "folder": "Folder {name}",
+      "automation": "Control {name}"
+    },
+    "panes": {
+      "local-network": "Privacy & Security › Local Network",
+      "files-and-folders": "Privacy & Security › Files and Folders",
+      "automation": "Privacy & Security › Automation",
+      "full-disk-access": "Privacy & Security › Full Disk Access"
+    },
+    "advice": {
+      "allow-in-settings": "Allow {owner} in System Settings › {pane}.",
+      "answer-the-prompt": "Answer the prompt on the Mac, or allow {owner} in System Settings › {pane}.",
+      "connect-a-volume": "Connect a removable volume and ask again.",
+      "grant-full-disk-access": "macOS never asks for this one: add {owner} in System Settings › {pane} yourself.",
+      "application-not-found": "The application was not found or did not start; check its name in [permissions] automation.",
+      "check-failed": "The check did not finish; ask again."
+    }
+  },
+  "access": {
+    "title": "You have no access to this page",
+    "description": "Your group does not hold the right to open it. Ask an admin if you need it.",
+    "home": "Back to home",
+    "forbidden": "You do not have the right to do this."
   }
 }

@@ -1,4 +1,10 @@
 export { fetchSession, signIn, signOut } from "./api/session";
+export { useCan, useMayOpen } from "./model/can";
 export { sessionKey, useSession } from "./model/queries";
+export { ACTIONS, AREAS, allows, canFor, mayOpen } from "./model/rights";
+export type { Action, Area, Can } from "./model/rights";
 export { credentialsSchema, sessionSchema } from "./model/schema";
 export type { Credentials, Session } from "./model/schema";
+export { Allowed } from "./ui/allowed";
+export type { AllowedProps } from "./ui/allowed";
+export { RequireRight } from "./ui/require-right";

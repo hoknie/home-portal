@@ -6,6 +6,6 @@ mod features;
 mod middlewares;
 mod types;
 
-pub use boot::{adopt, assemble, parse_address, resolve_address, run, start};
+pub use boot::{adopt, assemble, parse_address, resolve_address, rule_book, run, start};
 pub use features::{channels, registered};
-pub use types::{BootError, Registry, Restart, Wiring};
+pub use types::{BootError, Registry, Restart, RuleBook, Wiring};

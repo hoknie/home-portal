@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use axum::Router;
+use axum::http::Method;
 use axum::routing::{get, post};
 use portal_config::ConfigStore;
-use portal_feature::{Feature, Loop, Validator};
+use portal_feature::{Action, Area, Feature, Loop, Right, Rule, Validator};
 
 use crate::controllers::{preview, serve_icon, serve_public_icon, state};
 use crate::loops::refresh_forever;
@@ -42,6 +43,21 @@ impl Feature for IconsFeature {
             .route(Self::STATE_PATH, get(state))
             .route(Self::PREVIEW_PATH, post(preview))
             .with_state(self.icons.clone())
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::signed(Method::GET, Self::PATH),
+            Rule::signed(Method::GET, Self::STATE_PATH),
+            Rule::needs(
+                Method::POST,
+                Self::PREVIEW_PATH,
+                &[Right {
+                    area: Area::Services,
+                    action: Action::Update,
+                }],
+            ),
+        ]
     }
 
     fn public_router(&self) -> Router {

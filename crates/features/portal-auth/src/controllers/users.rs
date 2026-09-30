@@ -7,7 +7,7 @@ use portal_config::{Revision, Revisioned};
 use portal_feature::{ApiError, Principal};
 
 use crate::helpers::session_token;
-use crate::requests::{NewUserRequest, PasswordRequest};
+use crate::requests::{GroupRequest, NewUserRequest, PasswordRequest};
 use crate::responses::UsersResponse;
 use crate::types::{AuthState, Caller, UsersView};
 
@@ -30,7 +30,13 @@ pub async fn create_user(
     let revision = Revision::from_headers(&headers)?;
     let created = state
         .create_user
-        .run(&principal.name, &request.name, request.password, &revision)
+        .run(
+            &principal,
+            &request.name,
+            request.password,
+            request.group,
+            &revision,
+        )
         .await?;
     Ok(answer(StatusCode::CREATED, created))
 }
@@ -44,7 +50,7 @@ pub async fn change_password(
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
     let caller = Caller {
-        name: principal.name,
+        principal,
         token: session_token(&headers),
     };
     let changed = state
@@ -61,11 +67,23 @@ pub async fn delete_user(
     headers: HeaderMap,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let deleted = state
-        .delete_user
-        .run(&principal.name, &name, &revision)
-        .await?;
+    let deleted = state.delete_user.run(&principal, &name, &revision).await?;
     Ok(answer(StatusCode::OK, deleted))
+}
+
+pub async fn change_group(
+    State(state): State<AuthState>,
+    Extension(principal): Extension<Principal>,
+    Path(name): Path<String>,
+    headers: HeaderMap,
+    Json(request): Json<GroupRequest>,
+) -> Result<Response, ApiError> {
+    let revision = Revision::from_headers(&headers)?;
+    let changed = state
+        .change_group
+        .run(&principal, &name, request.group, &revision)
+        .await?;
+    Ok(answer(StatusCode::OK, changed))
 }
 
 fn answer(status: StatusCode, view: Revisioned<UsersView>) -> Response {

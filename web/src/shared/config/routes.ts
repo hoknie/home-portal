@@ -21,6 +21,7 @@ export const routes = {
   workflowRun: (id: string, run: string) => `/admin/workflows/${encodeURIComponent(id)}/history/${encodeURIComponent(run)}/`,
   adminNotifications: "/admin/notifications/",
   adminScripts: "/admin/scripts/",
+  adminPermissions: "/admin/permissions/",
   newWebhook: "/admin/webhooks/new/",
   editWebhook: (id: string) => `/admin/webhooks/edit/?id=${encodeURIComponent(id)}`,
   webhookDetails: (id: string) => `/admin/webhooks/details/?id=${encodeURIComponent(id)}`,
@@ -54,6 +55,10 @@ export const api = {
   users: "/api/users",
   user: (name: string) => `/api/users/${encodeURIComponent(name)}`,
   userPassword: (name: string) => `/api/users/${encodeURIComponent(name)}/password`,
+  userGroup: (name: string) => `/api/users/${encodeURIComponent(name)}/group`,
+  groups: "/api/groups",
+  group: (name: string) => `/api/groups/${encodeURIComponent(name)}`,
+  webhookRun: (id: string) => `/api/webhooks/${encodeURIComponent(id)}/run`,
   proxyApply: "/api/proxy/apply",
   proxyContinue: (to: string) => `/api/proxy/continue?to=${encodeURIComponent(to)}`,
   proxyRootCertificate: "/api/proxy/root-certificate",
@@ -95,6 +100,8 @@ export const api = {
   scriptFile: (path?: string) => (path === undefined ? "/api/scripts/file" : `/api/scripts/file?path=${encodeURIComponent(path)}`),
   scriptFolder: (name?: string) => (name === undefined ? "/api/scripts/folder" : `/api/scripts/folder?name=${encodeURIComponent(name)}`),
   scriptMove: "/api/scripts/move",
+  permissions: "/api/permissions",
+  permissionsRequest: "/api/permissions/request",
 } as const;
 
 export const MODULE_PAGES = {

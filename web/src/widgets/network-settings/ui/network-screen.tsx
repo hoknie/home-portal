@@ -3,6 +3,7 @@
 import { Info, RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { Allowed } from "@/entities/session";
 import { NetworkForm } from "@/features/network-form";
 import { RestartPortalButton } from "@/features/restart-portal";
 import { useNetwork } from "@/entities/network";
@@ -30,7 +31,9 @@ export function NetworkScreen() {
             <div role="status" className="flex flex-wrap items-start gap-3 rounded-xl border border-status-degraded/40 bg-status-degraded/10 p-4 text-sm">
               <RotateCcw className="mt-0.5 size-4 shrink-0" aria-hidden />
               <span className="min-w-0 flex-1">{t("network.restartRequired")}</span>
-              <RestartPortalButton network={data} />
+              <Allowed area="portal" action="update">
+                <RestartPortalButton network={data} />
+              </Allowed>
             </div>
           ) : null}
           <SectionCard title={t("network.effective")}>

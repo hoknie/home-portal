@@ -63,12 +63,17 @@ impl AutomationSink {
         self.admit(automation, event, (Some(by.to_string()), Vec::new()))
     }
 
-    pub fn run_webhook(&self, webhook: &Webhook, event: PortalEvent) -> Option<u64> {
+    pub fn run_webhook_by(
+        &self,
+        webhook: &Webhook,
+        event: PortalEvent,
+        by: Option<String>,
+    ) -> Option<u64> {
         let automation = webhook.as_automation()?;
         Some(self.admit(
             &automation,
             event.aimed_at(webhook.id.clone()),
-            (None, Vec::new()),
+            (by, Vec::new()),
         ))
     }
 

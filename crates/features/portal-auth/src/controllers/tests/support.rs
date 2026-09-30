@@ -51,6 +51,7 @@ pub struct Portal {
     pub router: Router,
     pub folder: TempDir,
     pub main: PathBuf,
+    pub gate: Arc<dyn Gate>,
 }
 
 async fn require(gate: Arc<dyn Gate>, mut request: Request<Body>, next: Next) -> Response {
@@ -64,8 +65,13 @@ async fn require(gate: Arc<dyn Gate>, mut request: Request<Body>, next: Next) ->
 }
 
 pub fn entry(name: &str, password: &str) -> String {
+    member(name, password, Some("admin"))
+}
+
+pub fn member(name: &str, password: &str, group: Option<&str>) -> String {
+    let group = group.map_or(String::new(), |group| format!("group = \"{group}\"\n"));
     format!(
-        "[[users]]\nname = \"{name}\"\npassword_hash = \"{}\"\n",
+        "[[users]]\nname = \"{name}\"\npassword_hash = \"{}\"\n{group}",
         hash_password(password).unwrap()
     )
 }
@@ -85,16 +91,18 @@ pub fn portal_with(files: &[(&str, String)]) -> Portal {
         ])
         .unwrap();
     let gate = feature.gate();
+    let checking = gate.clone();
     let router = feature
         .router()
         .route_layer(middleware::from_fn(move |request, next| {
-            require(gate.clone(), request, next)
+            require(checking.clone(), request, next)
         }))
         .merge(feature.public_router());
     Portal {
         router,
         folder,
         main,
+        gate,
     }
 }
 
@@ -138,6 +146,12 @@ pub async fn signed_in(portal: &Portal, name: &str, password: &str) -> Option<St
             .unwrap()
             .to_string()
     })
+}
+
+pub fn cookie_headers(cookie: &str) -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    headers.insert(COOKIE, cookie.parse().unwrap());
+    headers
 }
 
 pub fn get(uri: &str, cookie: &str) -> Request<Body> {

@@ -4,4 +4,6 @@ use serde::Deserialize;
 pub struct User {
     pub name: String,
     pub password_hash: String,
+    #[serde(default)]
+    pub group: Option<String>,
 }

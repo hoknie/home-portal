@@ -79,6 +79,19 @@ fn an_all_in_one_file_is_split_at_the_first_start() {
 }
 
 #[test]
+fn the_permissions_table_stays_in_the_main_file() {
+    let text = format!("[permissions]\nrequest_at_start = false\n\n{ALL_IN_ONE}");
+    let portal = Portal::with(&[("home-portal.toml", &text)]);
+    let main = portal.text("home-portal.toml");
+    assert!(
+        main.starts_with("[permissions]\nrequest_at_start = false\n"),
+        "{main}"
+    );
+    assert!(!portal.text("services.toml").contains("permissions"));
+    assert!(crate::Section::MAIN_KEYS.contains(&"permissions"));
+}
+
+#[test]
 fn a_second_start_rewrites_nothing() {
     let portal = Portal::with(&[("home-portal.toml", ALL_IN_ONE)]);
     let stamp = |name: &str| fs::metadata(portal.path(name)).unwrap().modified().unwrap();
@@ -193,5 +206,22 @@ fn the_comment_above_a_workflow_opens_its_file_and_new_homes_start_without_blank
         portal.text("proxy.toml").starts_with("[proxy]"),
         "{}",
         portal.text("proxy.toml")
+    );
+}
+
+#[test]
+fn groups_move_into_the_home_of_the_users() {
+    let portal = Portal::with(&[(
+        "home-portal.toml",
+        "[network]\nport = 8080\n\n# the family\n[[groups]]\nname = \"family\"\npermissions = { automations = [\"read\"] }\n",
+    )]);
+    assert_eq!(
+        portal.text("home-portal.toml").trim(),
+        "[network]\nport = 8080"
+    );
+    let users = portal.text("users.toml");
+    assert!(
+        users.contains("# the family\n[[groups]]\nname = \"family\""),
+        "{users}"
     );
 }

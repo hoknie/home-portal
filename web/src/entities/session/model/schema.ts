@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export const sessionSchema = z.object({ name: z.string() });
+export const sessionSchema = z.object({
+  name: z.string(),
+  group: z.string().nullable(),
+  admin: z.boolean(),
+  rights: z.record(z.string(), z.array(z.string())),
+});
 
 export type Session = z.infer<typeof sessionSchema>;
 

@@ -4,6 +4,7 @@ import { LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+import { Allowed } from "@/entities/session";
 import { useDashboard } from "@/entities/dashboard";
 import { useServices } from "@/entities/service";
 import { BoardGrid } from "@/features/widget-board";
@@ -29,9 +30,11 @@ export function SignedInBoard() {
             title={t("empty")}
             description={t("emptyHint")}
             action={
-              <Button asChild>
-                <Link href={routes.adminLayout}>{t("editLayout")}</Link>
-              </Button>
+              <Allowed area="layout" action="update">
+                <Button asChild>
+                  <Link href={routes.adminLayout}>{t("editLayout")}</Link>
+                </Button>
+              </Allowed>
             }
           />
         )

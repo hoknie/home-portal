@@ -3,11 +3,11 @@ use std::sync::Arc;
 
 use axum::http::StatusCode;
 use portal_config::{ConfigStore, Revision};
-use portal_feature::ApiError;
+use portal_feature::{ApiError, Principal};
 
 use super::support::{
-    OFF, ON, entry, get, portal, portal_with, revision, send, signed_in, text_of, users_text_of,
-    write,
+    OFF, ON, entry, get, member, portal, portal_with, revision, send, signed_in, text_of,
+    users_text_of, write,
 };
 use crate::features::AuthFeature;
 use crate::usecases::DeleteUser;
@@ -88,7 +88,7 @@ async fn the_list_marks_you_and_holds_no_hash() {
     let portal = portal(format!(
         "{}\n{}",
         entry("admin", "secret99"),
-        entry("anna", "correct horse")
+        member("anna", "correct horse", None)
     ));
     let cookie = signed_in(&portal, "admin", "secret99").await.unwrap();
     let (status, etag, body) = send(&portal, get(AuthFeature::USERS, &cookie)).await;
@@ -96,7 +96,9 @@ async fn the_list_marks_you_and_holds_no_hash() {
     assert!(etag.is_some());
     assert_eq!(body["users"][0]["name"], "admin");
     assert_eq!(body["users"][0]["you"], true);
+    assert_eq!(body["users"][0]["group"], "admin");
     assert_eq!(body["users"][1]["you"], false);
+    assert_eq!(body["users"][1]["group"], serde_json::Value::Null);
     assert_eq!(body["editable"], false);
     assert!(!body.to_string().contains("$argon2id$"));
 }
@@ -164,7 +166,7 @@ async fn the_last_user_cannot_be_deleted() {
     let store = Arc::new(ConfigStore::open(&path).unwrap());
     let revision: Revision = store.read().revision;
     let refused = DeleteUser::new(store)
-        .run("someone-else", "admin", &revision)
+        .run(&Principal::admin("someone-else"), "admin", &revision)
         .await;
     assert!(
         matches!(refused, Err(ApiError::Conflict(message)) if message.contains("at least one user"))

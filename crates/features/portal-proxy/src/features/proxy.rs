@@ -2,9 +2,10 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use axum::Router;
+use axum::http::Method;
 use axum::routing::{get, post, put};
 use portal_config::{ConfigStore, Storage};
-use portal_feature::{Feature, FieldError, Loop, Validator};
+use portal_feature::{Action, Area, Feature, FieldError, Loop, Right, Rule, Validator};
 use toml_edit::DocumentMut;
 
 use crate::controllers::{
@@ -96,6 +97,67 @@ impl Feature for ProxyFeature {
             .route(Self::STOP_PATH, post(stop))
             .route(Self::SOURCE_PATH, put(change_source))
             .with_state(self.state.clone())
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::needs(
+                Method::GET,
+                Self::PATH,
+                &[Right {
+                    area: Area::Proxy,
+                    action: Action::Read,
+                }],
+            ),
+            Rule::needs(
+                Method::PUT,
+                Self::PATH,
+                &[Right {
+                    area: Area::Proxy,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::APPLY_PATH,
+                &[Right {
+                    area: Area::Proxy,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::DOWNLOAD_PATH,
+                &[Right {
+                    area: Area::Proxy,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::START_PATH,
+                &[Right {
+                    area: Area::Proxy,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::STOP_PATH,
+                &[Right {
+                    area: Area::Proxy,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::PUT,
+                Self::SOURCE_PATH,
+                &[Right {
+                    area: Area::Proxy,
+                    action: Action::Update,
+                }],
+            ),
+        ]
     }
 
     fn public_router(&self) -> Router {

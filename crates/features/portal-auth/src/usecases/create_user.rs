@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
 use portal_config::{ConfigStore, Revision, Revisioned, Section};
-use portal_feature::ApiError;
+use portal_feature::{ApiError, Principal};
 
 use crate::repositories::{append, last_origin};
 use crate::services::{
-    checked_name, checked_password, hashed, require_editable, users_of, users_view,
+    checked_name, checked_password, hashed, may_give, require_editable, unknown_group, users_of,
+    users_view,
 };
 use crate::types::UsersView;
 
@@ -21,9 +22,10 @@ impl CreateUser {
 
     pub async fn run(
         &self,
-        you: &str,
+        actor: &Principal,
         name: &str,
         password: String,
+        group: Option<String>,
         revision: &Revision,
     ) -> Result<Revisioned<UsersView>, ApiError> {
         let snapshot = self.configuration.read();
@@ -36,21 +38,23 @@ impl CreateUser {
         if let Err(error) = checked_password(&password) {
             errors.push(error);
         }
+        errors.extend(unknown_group(&users, group.as_deref()));
         let Some(name) = name.filter(|_| errors.is_empty()) else {
             return Err(ApiError::Invalid(errors));
         };
+        may_give(actor, &users, group.as_deref())?;
         let target =
             last_origin(&snapshot).unwrap_or_else(|| self.configuration.home_of(Section::Users));
         let password_hash = hashed(password).await?;
         let (_, written) = self
             .configuration
             .update(&target, revision, |document| {
-                append(document, &name, &password_hash);
+                append(document, &name, &password_hash, group.as_deref());
                 Ok(())
             })
             .await?;
         Ok(Revisioned::new(
-            users_view(&written.document, you)?,
+            users_view(&written.document, &actor.name)?,
             written.revision,
         ))
     }

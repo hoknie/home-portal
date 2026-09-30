@@ -7,7 +7,8 @@ use crate::services::{AutomationSink, WebhookBook};
 use crate::usecases::{
     ChangeAutomation, ChangeWebhook, ChangeWorkflow, CreateAutomation, CreateWebhook,
     CreateWorkflow, DeleteAutomation, DeleteWebhook, DeleteWorkflow, IssueToken, ListAutomations,
-    ListWebhooks, ListWorkflows, ReadPortalValues, RemoveToken, RunWorkflow, WorkflowCatalogue,
+    ListWebhooks, ListWorkflows, ReadPortalValues, RemoveToken, RunWebhook, RunWorkflow,
+    WorkflowCatalogue,
 };
 
 #[derive(Clone)]
@@ -22,6 +23,7 @@ pub struct AutomationsState {
     pub delete_webhook: DeleteWebhook,
     pub issue_token: IssueToken,
     pub remove_token: RemoveToken,
+    pub run_webhook: RunWebhook,
     pub sink: Arc<AutomationSink>,
     pub directory: Arc<dyn Directory>,
     pub scripts: Arc<dyn ScriptLibrary>,

@@ -9,6 +9,7 @@ use std::time::Duration;
 use portal_auth::hash_password;
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
+const QUIET: &str = "[permissions]\nrequest_at_start = false\n\n";
 
 fn listening_port(stdout: ChildStdout) -> mpsc::Receiver<u16> {
     let (sender, receiver) = mpsc::channel();
@@ -46,7 +47,9 @@ fn the_serve_command_starts_the_portal_and_stops_on_a_signal() {
     let hash = hash_password("secret").unwrap();
     fs::write(
         &path,
-        format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n"),
+        format!(
+            "{QUIET}[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"
+        ),
     )
     .unwrap();
     let mut child = Command::new(BINARY)

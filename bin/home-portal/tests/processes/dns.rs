@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 use portal_auth::hash_password;
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
+const QUIET: &str = "[permissions]\nrequest_at_start = false\n\n";
 const TYPE_A: u16 = 1;
 const TYPE_SOA: u16 = 6;
 const SERIAL_FROM_END: usize = 20;
@@ -63,7 +64,7 @@ fn serial_of(answer: &[u8]) -> u32 {
 
 fn configuration(dns: u16, admin: u16, hash: &str, photos: &str) -> String {
     format!(
-        "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.home\"\nadmin = \"http://127.0.0.1:{admin}\"\n\n[dns]\nenabled = true\naddress = \"127.0.0.1\"\nport = {dns}\nzones = [\"home\"]\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[[services]]\nid = \"photos\"\nname = \"Photos\"\nurl = \"http://192.168.1.7\"\n{photos}"
+        "{QUIET}[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.home\"\nadmin = \"http://127.0.0.1:{admin}\"\n\n[dns]\nenabled = true\naddress = \"127.0.0.1\"\nport = {dns}\nzones = [\"home\"]\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[[services]]\nid = \"photos\"\nname = \"Photos\"\nurl = \"http://192.168.1.7\"\n{photos}"
     )
 }
 

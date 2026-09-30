@@ -9,11 +9,11 @@ use super::automations::{Api, api, get, revision, send, write};
 use crate::features::tests::{eventually, start, write_script};
 use crate::helpers::token_hash;
 
-const DEPLOY: &str = "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d";
-const MOTION: &str = "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d";
+pub const DEPLOY: &str = "7d3f2a4e-5b1c-4e8f-9a2d-6c0b1e3f4a5d";
+pub const MOTION: &str = "0b9e8c2a-1d3f-4a5b-8c7d-9e0f1a2b3c4d";
 const TOKEN: &str = "secret-token";
 
-fn file() -> String {
+pub fn file() -> String {
     format!(
         r#"[[webhooks]]
 id = "{DEPLOY}"
@@ -44,7 +44,7 @@ run = {{ script = "deploy.sh" }}
     )
 }
 
-fn ready() -> Api {
+pub fn ready() -> Api {
     let api = api(&file());
     write_script(
         &api.folder.path().join("scripts"),

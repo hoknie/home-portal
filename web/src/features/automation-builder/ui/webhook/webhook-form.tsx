@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { Controller, type Path, type UseFormReturn, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import type { Catalogue, Scripts } from "@/entities/automation";
 import { type Webhook, useSaveWebhook } from "@/entities/webhook";
 import { ConflictError, ValidationError } from "@/shared/api";
@@ -38,6 +39,8 @@ export type WebhookFormProps = {
 
 export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, onConflict }: WebhookFormProps) {
   const t = useTranslations();
+  const can = useCan();
+  const editable = can("webhooks", webhook === null ? "create" : "update");
   const save = useSaveWebhook();
   const [conflict, setConflict] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -76,86 +79,90 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
 
   return (
     <form onSubmit={submit} className="grid gap-6" noValidate>
-      {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
-      <SectionCard title={t("webhooks.identity")} description={t("webhooks.identityDescription")}>
-        <div className="grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">
-            <FormField id="webhook-title" label={t("webhooks.titleLabel")} error={errors.title?.message}>
-              <Input id="webhook-title" autoFocus {...form.register("title")} />
-            </FormField>
-            <div className="grid gap-2">
-              <Label htmlFor="webhook-enabled">{t("webhooks.enabledLabel")}</Label>
-              <Controller control={form.control} name="enabled" render={({ field }) => <Switch id="webhook-enabled" checked={field.value} onCheckedChange={field.onChange} />} />
-            </div>
-          </div>
-          <TagsField id="webhook-tags" control={form.control} name="tags" suggestions={catalogue.choices.tags} error={errors.tags?.message ?? (Array.isArray(errors.tags) ? errors.tags.find(Boolean)?.message : undefined)} />
-          <FormField id="webhook-variables" label={t("webhooks.variables")} hint={t("webhooks.variablesHint")} optional error={errors.variables?.message}>
-            <Controller
-              control={form.control}
-              name="variables"
-              render={({ field }) => (
-                <TagInput
-                  id="webhook-variables"
-                  values={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  suggestions={[]}
-                  removeLabel={(value) => t("tagInput.remove", { value })}
-                  createLabel={(value) => t("tagInput.create", { value })}
-                />
-              )}
-            />
-          </FormField>
-          <div role="radiogroup" aria-labelledby="webhook-action-label" className="grid gap-2">
-            <Label asChild>
-              <span id="webhook-action-label">{t("webhooks.action")}</span>
-            </Label>
-            {(["script", "event"] as const).map((action) => (
-              <label key={action} className="flex items-start gap-2 text-sm">
-                <input type="radio" className="mt-1 accent-primary" value={action} {...form.register("action")} />
-                <span className="grid gap-0.5">
-                  <span className="font-medium">{t(`webhooks.actions.${action}`)}</span>
-                  <span className="text-xs text-muted-foreground">{t(`webhooks.actionHints.${action}`)}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-          {webhook ? (
-            <TokenActions webhook={webhook} revision={revision} />
-          ) : (
-            <div className="flex items-start justify-between gap-4">
-              <div className="grid gap-1">
-                <Label htmlFor="webhook-token">{t("webhooks.withToken")}</Label>
-                <p className="text-xs text-muted-foreground">{t("webhooks.withTokenHint")}</p>
+      <fieldset disabled={!editable} className="contents">
+        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        <SectionCard title={t("webhooks.identity")} description={t("webhooks.identityDescription")}>
+          <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">
+              <FormField id="webhook-title" label={t("webhooks.titleLabel")} error={errors.title?.message}>
+                <Input id="webhook-title" autoFocus {...form.register("title")} />
+              </FormField>
+              <div className="grid gap-2">
+                <Label htmlFor="webhook-enabled">{t("webhooks.enabledLabel")}</Label>
+                <Controller control={form.control} name="enabled" render={({ field }) => <Switch id="webhook-enabled" checked={field.value} onCheckedChange={field.onChange} />} />
               </div>
-              <Controller control={form.control} name="with_token" render={({ field }) => <Switch id="webhook-token" checked={field.value} onCheckedChange={field.onChange} />} />
             </div>
-          )}
+            <TagsField id="webhook-tags" control={form.control} name="tags" suggestions={catalogue.choices.tags} error={errors.tags?.message ?? (Array.isArray(errors.tags) ? errors.tags.find(Boolean)?.message : undefined)} />
+            <FormField id="webhook-variables" label={t("webhooks.variables")} hint={t("webhooks.variablesHint")} optional error={errors.variables?.message}>
+              <Controller
+                control={form.control}
+                name="variables"
+                render={({ field }) => (
+                  <TagInput
+                    id="webhook-variables"
+                    values={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    suggestions={[]}
+                    removeLabel={(value) => t("tagInput.remove", { value })}
+                    createLabel={(value) => t("tagInput.create", { value })}
+                  />
+                )}
+              />
+            </FormField>
+            <div role="radiogroup" aria-labelledby="webhook-action-label" className="grid gap-2">
+              <Label asChild>
+                <span id="webhook-action-label">{t("webhooks.action")}</span>
+              </Label>
+              {(["script", "event"] as const).map((action) => (
+                <label key={action} className="flex items-start gap-2 text-sm">
+                  <input type="radio" className="mt-1 accent-primary" value={action} {...form.register("action")} />
+                  <span className="grid gap-0.5">
+                    <span className="font-medium">{t(`webhooks.actions.${action}`)}</span>
+                    <span className="text-xs text-muted-foreground">{t(`webhooks.actionHints.${action}`)}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            {webhook ? (
+              <TokenActions webhook={webhook} revision={revision} />
+            ) : (
+              <div className="flex items-start justify-between gap-4">
+                <div className="grid gap-1">
+                  <Label htmlFor="webhook-token">{t("webhooks.withToken")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("webhooks.withTokenHint")}</p>
+                </div>
+                <Controller control={form.control} name="with_token" render={({ field }) => <Switch id="webhook-token" checked={field.value} onCheckedChange={field.onChange} />} />
+              </div>
+            )}
+          </div>
+        </SectionCard>
+        {values.action === "script" ? (
+          <>
+            <RunCard form={form as unknown as UseFormReturn<RunFields>} event={event} scripts={scripts} />
+            <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={{ "webhook.id": webhook?.id, "webhook.title": values.title || undefined }} />
+          </>
+        ) : null}
+        <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
+          <Button asChild variant="outline">
+            <Link href={routes.adminWebhooks}>{t("common.cancel")}</Link>
+          </Button>
+          {editable ? (
+            <Button type="submit" disabled={form.formState.isSubmitting || errors.args !== undefined}>
+              {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
+            </Button>
+          ) : null}
         </div>
-      </SectionCard>
-      {values.action === "script" ? (
-        <>
-          <RunCard form={form as unknown as UseFormReturn<RunFields>} event={event} scripts={scripts} />
-          <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={{ "webhook.id": webhook?.id, "webhook.title": values.title || undefined }} />
-        </>
-      ) : null}
-      <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
-        <Button asChild variant="outline">
-          <Link href={routes.adminWebhooks}>{t("common.cancel")}</Link>
-        </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting || errors.args !== undefined}>
-          {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
-        </Button>
-      </div>
-      <TokenDialog
-        token={issued?.token ?? null}
-        address={issued?.address ?? webhook?.address ?? ""}
-        variables={values.variables}
-        onClose={() => {
-          setIssued(null);
-          onSaved();
-        }}
-      />
+        <TokenDialog
+          token={issued?.token ?? null}
+          address={issued?.address ?? webhook?.address ?? ""}
+          variables={values.variables}
+          onClose={() => {
+            setIssued(null);
+            onSaved();
+          }}
+        />
+      </fieldset>
     </form>
   );
 }

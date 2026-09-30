@@ -4,9 +4,14 @@ use super::*;
 fn the_session_sample_matches_its_serializer() {
     check(
         "session",
-        serde_json::to_value(SessionResponse {
-            name: "admin".into(),
-        })
+        serde_json::to_value(SessionResponse::of(&Principal::member(
+            "anna",
+            Some("family".to_string()),
+            Rights::of([
+                Right::new(Area::Automations, Action::Execute),
+                Right::new(Area::Automations, Action::Read),
+            ]),
+        )))
         .unwrap(),
     );
 }

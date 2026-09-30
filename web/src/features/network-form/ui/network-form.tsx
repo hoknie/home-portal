@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { type Path, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { type NetworkForm as NetworkFormValues, type NetworkSettings, networkFormOf, networkFormSchema, useSaveNetwork } from "@/entities/network";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { ErrorNotice } from "@/shared/ui/error-notice";
@@ -18,6 +19,8 @@ export type NetworkFormProps = { configured: NetworkSettings; revision: string |
 
 export function NetworkForm({ configured, revision }: NetworkFormProps) {
   const t = useTranslations();
+  const can = useCan();
+  const editable = can("network", "update");
   const save = useSaveNetwork();
   const [conflict, setConflict] = useState(false);
   const form = useForm<NetworkFormValues>({ resolver: zodResolver(networkFormSchema), defaultValues: networkFormOf(configured) });
@@ -51,38 +54,42 @@ export function NetworkForm({ configured, revision }: NetworkFormProps) {
   const errors = formState.errors;
   return (
     <form onSubmit={submit} className="grid gap-5" noValidate>
-      {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
-      <div className="grid gap-5 sm:grid-cols-[1fr_10rem]">
-        <FormField id="network-address" label={t("network.address")} hint={t("network.addressHint")} error={errors.address?.message}>
-          <Input id="network-address" spellCheck={false} {...form.register("address")} />
+      <fieldset disabled={!editable} className="contents">
+        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        <div className="grid gap-5 sm:grid-cols-[1fr_10rem]">
+          <FormField id="network-address" label={t("network.address")} hint={t("network.addressHint")} error={errors.address?.message}>
+            <Input id="network-address" spellCheck={false} {...form.register("address")} />
+          </FormField>
+          <FormField id="network-port" label={t("network.port")} error={errors.port?.message}>
+            <Input id="network-port" type="number" inputMode="numeric" {...form.register("port", { valueAsNumber: true })} />
+          </FormField>
+        </div>
+        <FormField id="network-public-url" label={t("network.publicUrl")} hint={t("network.publicUrlHint")} optional error={errors.public_url?.message}>
+          <Input id="network-public-url" type="url" spellCheck={false} {...form.register("public_url")} />
         </FormField>
-        <FormField id="network-port" label={t("network.port")} error={errors.port?.message}>
-          <Input id="network-port" type="number" inputMode="numeric" {...form.register("port", { valueAsNumber: true })} />
-        </FormField>
-      </div>
-      <FormField id="network-public-url" label={t("network.publicUrl")} hint={t("network.publicUrlHint")} optional error={errors.public_url?.message}>
-        <Input id="network-public-url" type="url" spellCheck={false} {...form.register("public_url")} />
-      </FormField>
-      <FormField
-        id="network-trusted-proxies"
-        label={t("network.trustedProxies")}
-        hint={t("network.trustedProxiesHint")}
-        optional
-        error={errors.trusted_proxies?.message}
-      >
-        <textarea
+        <FormField
           id="network-trusted-proxies"
-          rows={3}
-          spellCheck={false}
-          className="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 font-mono text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          {...form.register("trusted_proxies")}
-        />
-      </FormField>
-      <div className="flex justify-end">
-        <Button type="submit" disabled={formState.isSubmitting || !formState.isDirty}>
-          {formState.isSubmitting ? t("common.saving") : t("common.save")}
-        </Button>
-      </div>
+          label={t("network.trustedProxies")}
+          hint={t("network.trustedProxiesHint")}
+          optional
+          error={errors.trusted_proxies?.message}
+        >
+          <textarea
+            id="network-trusted-proxies"
+            rows={3}
+            spellCheck={false}
+            className="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 font-mono text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            {...form.register("trusted_proxies")}
+          />
+        </FormField>
+        <div className="flex justify-end">
+          {editable ? (
+            <Button type="submit" disabled={formState.isSubmitting || !formState.isDirty}>
+              {formState.isSubmitting ? t("common.saving") : t("common.save")}
+            </Button>
+          ) : null}
+        </div>
+      </fieldset>
     </form>
   );
 }

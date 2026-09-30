@@ -3,6 +3,7 @@
 import { History, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { Allowed } from "@/entities/session";
 import { OutcomeBadge } from "@/entities/automation";
 import { DeleteWorkflowButton, type Workflow } from "@/entities/workflow";
 import { routes } from "@/shared/config";
@@ -92,11 +93,17 @@ export function useWorkflowColumns({ revision, moduleOff }: ColumnsOptions): Col
           <AddressLink href={routes.workflowHistory(workflow.id)} aria-label={t("workflows.runsOf", { title: workflow.title })} className={buttonVariants({ variant: "ghost", size: "icon" })}>
             <History aria-hidden />
           </AddressLink>
-          <RunWorkflowDialog workflow={workflow} moduleOff={moduleOff} onQueued={(runId) => pushAddress(routes.workflowRun(workflow.id, runId))} />
-          <AddressLink href={routes.workflowEdit(workflow.id)} aria-label={t("common.edit")} className={buttonVariants({ variant: "ghost", size: "icon" })}>
-            <Pencil aria-hidden />
-          </AddressLink>
-          <DeleteWorkflowButton workflow={workflow} revision={revision} />
+          <Allowed area="workflows" action="execute">
+            <RunWorkflowDialog workflow={workflow} moduleOff={moduleOff} onQueued={(runId) => pushAddress(routes.workflowRun(workflow.id, runId))} />
+          </Allowed>
+          <Allowed area="workflows" action="update">
+            <AddressLink href={routes.workflowEdit(workflow.id)} aria-label={t("common.edit")} className={buttonVariants({ variant: "ghost", size: "icon" })}>
+              <Pencil aria-hidden />
+            </AddressLink>
+          </Allowed>
+          <Allowed area="workflows" action="delete">
+            <DeleteWorkflowButton workflow={workflow} revision={revision} />
+          </Allowed>
         </div>
       ),
     },

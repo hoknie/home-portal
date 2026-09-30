@@ -4,6 +4,7 @@ import { Plus, Route } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Allowed } from "@/entities/session";
 import { enabledModules, useModules } from "@/entities/module";
 import { TemplatesGallery, useWorkflows } from "@/entities/workflow";
 import { DataTable } from "@/shared/ui/data-table";
@@ -31,10 +32,12 @@ export function WorkflowsScreen() {
   const chosen = stillChosen(picked, tags);
   const [gallery, setGallery] = useState(false);
   const add = (
-    <Button type="button" onClick={() => setGallery(true)}>
-      <Plus aria-hidden />
-      {t("workflows.add")}
-    </Button>
+    <Allowed area="workflows" action="create">
+      <Button type="button" onClick={() => setGallery(true)}>
+        <Plus aria-hidden />
+        {t("workflows.add")}
+      </Button>
+    </Allowed>
   );
   return (
     <div className="grid gap-8">

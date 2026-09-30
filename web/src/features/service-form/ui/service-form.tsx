@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Controller, type Path, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { type Service, type ServiceForm as ServiceFormValues, emptyServiceForm, formOf, serviceFormSchema, useSaveService } from "@/entities/service";
 import { ConflictError, type FieldError, ValidationError } from "@/shared/api";
 import { routes } from "@/shared/config";
@@ -35,6 +36,8 @@ export type ServiceFormProps = {
 
 export function ServiceForm({ service, revision, taken, groups, onSaved, onConflict }: ServiceFormProps) {
   const t = useTranslations();
+  const can = useCan();
+  const editable = can("services", service === null ? "create" : "update");
   const save = useSaveService();
   const [conflict, setConflict] = useState(false);
   const [unplaced, setUnplaced] = useState<FieldError[]>([]);
@@ -70,81 +73,85 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
   const errors = form.formState.errors;
   return (
     <form onSubmit={submit} className="grid gap-6" noValidate>
-      {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
-      {unplaced.length > 0 ? (
-        <ErrorNotice title={t("serviceForm.notSaved")} description={unplaced.map((error) => `${error.field}: ${error.message}`).join("\n")} />
-      ) : null}
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <SectionCard title={t("serviceForm.identity")}>
-          <div className="grid gap-4">
-            <FormField id="service-name" label={t("serviceForm.name")} error={errors.name?.message}>
-              <Input
-                id="service-name"
-                autoFocus
-                {...form.register("name", {
-                  onChange: (event: { target: { value: string } }) => {
-                    if (idFollowsName) {
-                      form.setValue("id", uniqueId(slugOf(event.target.value), taken), { shouldDirty: true });
-                    }
-                  },
-                })}
-              />
-            </FormField>
-            <FormField id="service-id" label={t("serviceForm.id")} hint={t("serviceForm.idHint")} error={errors.id?.message}>
-              <Input
-                id="service-id"
-                autoComplete="off"
-                spellCheck={false}
-                {...form.register("id", {
-                  onChange: (event: { target: { value: string } }) => setIdFollowsName(service === null && event.target.value.trim() === ""),
-                })}
-              />
-            </FormField>
-            <FormField id="service-url" label={t("serviceForm.url")} hint={t("serviceForm.urlHint")} error={errors.url?.message}>
-              <Input id="service-url" type="url" inputMode="url" spellCheck={false} {...form.register("url")} />
-            </FormField>
-            <FormField id="service-group" label={t("serviceForm.group")} hint={t("serviceForm.groupHint")} optional error={errors.group?.message}>
-              <Controller
-                control={form.control}
-                name="group"
-                render={({ field }) => (
-                  <TagInput
-                    id="service-group"
-                    values={field.value.trim() === "" ? [] : [field.value]}
-                    onChange={(values) => field.onChange(values[0] ?? "")}
-                    onBlur={field.onBlur}
-                    suggestions={groups}
-                    max={1}
-                    removeLabel={(value) => t("tagInput.remove", { value })}
-                    createLabel={(value) => t("tagInput.create", { value })}
-                  />
-                )}
-              />
-            </FormField>
-            <IconField form={form} />
-            <FormField id="service-description" label={t("serviceForm.serviceDescription")} optional error={errors.description?.message}>
-              <Input id="service-description" {...form.register("description")} />
-            </FormField>
-          </div>
+      <fieldset disabled={!editable} className="contents">
+        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        {unplaced.length > 0 ? (
+          <ErrorNotice title={t("serviceForm.notSaved")} description={unplaced.map((error) => `${error.field}: ${error.message}`).join("\n")} />
+        ) : null}
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <SectionCard title={t("serviceForm.identity")}>
+            <div className="grid gap-4">
+              <FormField id="service-name" label={t("serviceForm.name")} error={errors.name?.message}>
+                <Input
+                  id="service-name"
+                  autoFocus
+                  {...form.register("name", {
+                    onChange: (event: { target: { value: string } }) => {
+                      if (idFollowsName) {
+                        form.setValue("id", uniqueId(slugOf(event.target.value), taken), { shouldDirty: true });
+                      }
+                    },
+                  })}
+                />
+              </FormField>
+              <FormField id="service-id" label={t("serviceForm.id")} hint={t("serviceForm.idHint")} error={errors.id?.message}>
+                <Input
+                  id="service-id"
+                  autoComplete="off"
+                  spellCheck={false}
+                  {...form.register("id", {
+                    onChange: (event: { target: { value: string } }) => setIdFollowsName(service === null && event.target.value.trim() === ""),
+                  })}
+                />
+              </FormField>
+              <FormField id="service-url" label={t("serviceForm.url")} hint={t("serviceForm.urlHint")} error={errors.url?.message}>
+                <Input id="service-url" type="url" inputMode="url" spellCheck={false} {...form.register("url")} />
+              </FormField>
+              <FormField id="service-group" label={t("serviceForm.group")} hint={t("serviceForm.groupHint")} optional error={errors.group?.message}>
+                <Controller
+                  control={form.control}
+                  name="group"
+                  render={({ field }) => (
+                    <TagInput
+                      id="service-group"
+                      values={field.value.trim() === "" ? [] : [field.value]}
+                      onChange={(values) => field.onChange(values[0] ?? "")}
+                      onBlur={field.onBlur}
+                      suggestions={groups}
+                      max={1}
+                      removeLabel={(value) => t("tagInput.remove", { value })}
+                      createLabel={(value) => t("tagInput.create", { value })}
+                    />
+                  )}
+                />
+              </FormField>
+              <IconField form={form} />
+              <FormField id="service-description" label={t("serviceForm.serviceDescription")} optional error={errors.description?.message}>
+                <Input id="service-description" {...form.register("description")} />
+              </FormField>
+            </div>
+          </SectionCard>
+          <SectionCard title={t("serviceForm.probe")}>
+            <ProbeFields form={form} />
+          </SectionCard>
+        </div>
+        <SectionCard title={t("serviceForm.publication")} description={t("serviceForm.publicationDescription")}>
+          <PublicationFields form={form} />
         </SectionCard>
-        <SectionCard title={t("serviceForm.probe")}>
-          <ProbeFields form={form} />
+        <SectionCard title={t("serviceForm.details")}>
+          <DetailsFields form={form} />
         </SectionCard>
-      </div>
-      <SectionCard title={t("serviceForm.publication")} description={t("serviceForm.publicationDescription")}>
-        <PublicationFields form={form} />
-      </SectionCard>
-      <SectionCard title={t("serviceForm.details")}>
-        <DetailsFields form={form} />
-      </SectionCard>
-      <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
-        <Button asChild variant="outline">
-          <Link href={routes.adminServices}>{t("common.cancel")}</Link>
-        </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
-        </Button>
-      </div>
+        <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
+          <Button asChild variant="outline">
+            <Link href={routes.adminServices}>{t("common.cancel")}</Link>
+          </Button>
+          {editable ? (
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
+            </Button>
+          ) : null}
+        </div>
+      </fieldset>
     </form>
   );
 }

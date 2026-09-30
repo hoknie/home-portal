@@ -1,13 +1,16 @@
-use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::header::ETAG;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
+use axum::{Extension, Json};
 use portal_config::{Revision, Revisioned};
-use portal_feature::ApiError;
+use portal_feature::{ApiError, Principal};
 
-use crate::requests::WebhookRequest;
-use crate::responses::{CreatedWebhookResponse, TokenResponse, WebhookResponse, WebhooksResponse};
+use super::runs::name_of;
+use crate::requests::{RunWebhookRequest, WebhookRequest};
+use crate::responses::{
+    AcceptedResponse, CreatedWebhookResponse, TokenResponse, WebhookResponse, WebhooksResponse,
+};
 use crate::types::{AutomationsState, WebhookView};
 
 pub async fn list_webhooks(State(state): State<AutomationsState>) -> Response {
@@ -80,6 +83,24 @@ pub async fn remove_token(
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
     Ok(listing(state.remove_token.run(&id, &revision).await?))
+}
+
+pub async fn run_webhook(
+    State(state): State<AutomationsState>,
+    principal: Option<Extension<Principal>>,
+    Path(id): Path<String>,
+    Json(request): Json<RunWebhookRequest>,
+) -> Result<(StatusCode, Json<AcceptedResponse>), ApiError> {
+    let run_id = state
+        .run_webhook
+        .run(&id, &request.variables, &name_of(principal))?;
+    Ok((
+        StatusCode::ACCEPTED,
+        Json(AcceptedResponse {
+            accepted: true,
+            run_id: run_id.map(|id| id.to_string()),
+        }),
+    ))
 }
 
 fn response_of(view: &WebhookView) -> WebhookResponse {

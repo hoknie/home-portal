@@ -27,10 +27,8 @@ pub async fn sign_in(
         .sign_in
         .run(visitor, client, request.password.clone())
         .await?;
-    let mut response = Json(SessionResponse {
-        name: request.name.clone(),
-    })
-    .into_response();
+    let principal = state.session.run(Some(&token))?;
+    let mut response = Json(SessionResponse::of(&principal)).into_response();
     response.headers_mut().insert(
         SET_COOKIE,
         session_cookie(&token, &state.connection.cookie_scope(peer, &headers)),
@@ -46,10 +44,7 @@ pub async fn who_am_i(
     let token = session_token(&headers);
     let principal = state.session.run(token.as_deref())?;
     let peer = connect.map(|Extension(ConnectInfo(address))| address);
-    let mut response = Json(SessionResponse {
-        name: principal.name,
-    })
-    .into_response();
+    let mut response = Json(SessionResponse::of(&principal)).into_response();
     let scope = state.connection.cookie_scope(peer, &headers);
     if scope.domain.is_some()
         && let Some(token) = token

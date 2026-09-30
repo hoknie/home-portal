@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { type Automation, useRunAutomation } from "@/entities/automation";
 import { enabledModules, useModules } from "@/entities/module";
 import { ConflictError, ThrottledError } from "@/shared/api";
@@ -13,7 +14,7 @@ import { Button } from "@/shared/ui/primitives";
 
 export type RunAutomationButtonProps = { automation: Automation; labelled?: boolean; onQueued?: (runId: string) => void };
 
-export function RunAutomationButton({ automation, labelled = false, onQueued }: RunAutomationButtonProps) {
+function RunAutomationButtonAllowed({ automation, labelled = false, onQueued }: RunAutomationButtonProps) {
   const t = useTranslations("automations");
   const modules = useTranslations("modules");
   const loaded = useModules().data?.data;
@@ -65,4 +66,9 @@ export function RunAutomationButton({ automation, labelled = false, onQueued }: 
       />
     </>
   );
+}
+
+export function RunAutomationButton(props: RunAutomationButtonProps) {
+  const can = useCan();
+  return can("automations", "execute") ? <RunAutomationButtonAllowed {...props} /> : null;
 }

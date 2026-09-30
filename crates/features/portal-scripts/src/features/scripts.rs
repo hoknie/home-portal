@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use axum::Router;
+use axum::http::Method;
 use axum::routing::{get, post};
 use portal_config::ConfigStore;
-use portal_feature::{Feature, Validator};
+use portal_feature::{Action, Area, Feature, Right, Rule, Validator};
 
 use crate::controllers::{
     create, create_folder, move_script, read, remove, remove_folder, replace, tree,
@@ -68,6 +69,75 @@ impl Feature for ScriptsFeature {
             .route(Self::MOVE, post(move_script))
             .layer(axum::extract::DefaultBodyLimit::max(Self::LARGEST_BODY))
             .with_state(self.state.clone())
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::needs(
+                Method::GET,
+                Self::TREE,
+                &[Right {
+                    area: Area::Scripts,
+                    action: Action::Read,
+                }],
+            ),
+            Rule::needs(
+                Method::GET,
+                Self::FILE,
+                &[Right {
+                    area: Area::Scripts,
+                    action: Action::Read,
+                }],
+            ),
+            Rule::needs(
+                Method::PUT,
+                Self::FILE,
+                &[Right {
+                    area: Area::Scripts,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::FILE,
+                &[Right {
+                    area: Area::Scripts,
+                    action: Action::Create,
+                }],
+            ),
+            Rule::needs(
+                Method::DELETE,
+                Self::FILE,
+                &[Right {
+                    area: Area::Scripts,
+                    action: Action::Delete,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::FOLDER,
+                &[Right {
+                    area: Area::Scripts,
+                    action: Action::Create,
+                }],
+            ),
+            Rule::needs(
+                Method::DELETE,
+                Self::FOLDER,
+                &[Right {
+                    area: Area::Scripts,
+                    action: Action::Delete,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::MOVE,
+                &[Right {
+                    area: Area::Scripts,
+                    action: Action::Update,
+                }],
+            ),
+        ]
     }
 
     fn validator(&self) -> Option<Validator> {

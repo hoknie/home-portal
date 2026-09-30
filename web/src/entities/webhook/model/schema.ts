@@ -23,7 +23,7 @@ export const createdWebhookSchema = z.object({ webhook: webhookSchema, token: z.
 
 export const tokenSchema = z.object({ token: z.string() });
 
-export const acceptedSchema = z.object({ accepted: z.boolean(), run_id: z.string().optional() });
+export const acceptedSchema = z.object({ accepted: z.boolean(), run_id: z.string().nullish() });
 
 export function absoluteAddress(address: string, origin: string) {
   return `${origin.replace(/\/$/, "")}${address}`;

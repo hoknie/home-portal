@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+import { Allowed } from "@/entities/session";
 import { DeleteAutomationButton } from "@/features/delete-automation";
 import { RunAutomationButton } from "@/features/run-automation";
 import { StopRunButton } from "@/features/stop-run";
@@ -89,11 +90,13 @@ export function useAutomationColumns(
         <div className="flex justify-end gap-1">
           {automation.active_run ? <StopRunButton run={automation.active_run} title={automation.title} /> : null}
           <RunAutomationButton automation={automation} onQueued={onQueued} />
-          <Button asChild variant="ghost" size="icon">
-            <Link href={routes.editAutomation(automation.id)} aria-label={t("common.edit")}>
-              <Pencil aria-hidden />
-            </Link>
-          </Button>
+          <Allowed area="automations" action="update">
+            <Button asChild variant="ghost" size="icon">
+              <Link href={routes.editAutomation(automation.id)} aria-label={t("common.edit")}>
+                <Pencil aria-hidden />
+              </Link>
+            </Button>
+          </Allowed>
           <DeleteAutomationButton automation={automation} revision={revision} />
         </div>
       ),

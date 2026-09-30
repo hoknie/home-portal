@@ -1,0 +1,51 @@
+{
+  "owner": {
+    "kind": "binary",
+    "name": "/usr/local/bin/home-portal"
+  },
+  "permissions": [
+    {
+      "advice": null,
+      "code": "local-network",
+      "learned_at": "2026-09-29T19:00:00Z",
+      "pane": "local-network",
+      "state": "granted"
+    },
+    {
+      "advice": "allow-in-settings",
+      "code": "removable-volumes",
+      "learned_at": "2026-09-29T19:00:00Z",
+      "pane": "files-and-folders",
+      "state": "denied"
+    },
+    {
+      "advice": "answer-the-prompt",
+      "code": "folder:Documents",
+      "learned_at": "2026-09-29T19:00:00Z",
+      "pane": "files-and-folders",
+      "state": "pending"
+    },
+    {
+      "advice": null,
+      "code": "folder:Desktop",
+      "learned_at": "2026-09-29T19:00:00Z",
+      "pane": "files-and-folders",
+      "state": "not-applicable"
+    },
+    {
+      "advice": "application-not-found",
+      "code": "automation:System Events",
+      "learned_at": "2026-09-29T19:00:00Z",
+      "pane": "automation",
+      "state": "unknown"
+    },
+    {
+      "advice": null,
+      "code": "full-disk-access",
+      "learned_at": null,
+      "pane": "full-disk-access",
+      "state": "unknown"
+    }
+  ],
+  "platform": "macos"
+}

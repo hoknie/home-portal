@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 use portal_auth::hash_password;
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
+const QUIET: &str = "[permissions]\nrequest_at_start = false\n\n";
 
 fn free_port() -> u16 {
     TcpListener::bind("127.0.0.1:0")
@@ -33,12 +34,12 @@ fn curl(jar: &Path, arguments: &[&str]) -> (String, String) {
 }
 
 fn network(port: u16) -> String {
-    format!("[network]\naddress = \"127.0.0.1\"\nport = {port}\n")
+    format!("{QUIET}[network]\naddress = \"127.0.0.1\"\nport = {port}\n")
 }
 
 fn configuration(port: u16, hash: &str) -> String {
     format!(
-        "{}\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[[automations]]\nid = \"on-stop\"\ntitle = \"On stop\"\nwhen = {{ event = \"portal.stopping\" }}\nrun = {{ script = \"stop.sh\", timeout_seconds = 30 }}\n",
+        "{}\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[[automations]]\nid = \"on-stop\"\ntitle = \"On stop\"\nwhen = {{ event = \"portal.stopping\" }}\nrun = {{ script = \"stop.sh\", timeout_seconds = 30 }}\n",
         network(port)
     )
 }

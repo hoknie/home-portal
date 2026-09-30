@@ -12,6 +12,10 @@ import { RequestError, ValidationError } from "@/shared/api";
 import { FormField } from "@/shared/ui/form-field";
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
 
+import { GroupSelect, NO_GROUP, groupOf } from "./group-select";
+
+const FORBIDDEN = 403;
+
 export type AddUserDialogProps = { revision: string | null; disabled: boolean };
 
 const EMPTY: NewUserForm = { name: "", password: "", repeat: "" };
@@ -19,12 +23,15 @@ const EMPTY: NewUserForm = { name: "", password: "", repeat: "" };
 export function AddUserDialog({ revision, disabled }: AddUserDialogProps) {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
+  const [group, setGroup] = useState(NO_GROUP);
+  const [groupProblem, setGroupProblem] = useState<string | null>(null);
   const create = useCreateUser();
   const form = useForm<NewUserForm>({ resolver: zodResolver(newUserFormSchema), defaultValues: EMPTY });
   const errors = form.formState.errors;
   const submit = form.handleSubmit(async (values) => {
     try {
-      await create.mutateAsync({ name: values.name, password: values.password, revision });
+      setGroupProblem(null);
+      await create.mutateAsync({ name: values.name, password: values.password, group: groupOf(group), revision });
       toast.success(t("users.created", { name: values.name }));
       form.reset(EMPTY);
       setOpen(false);
@@ -34,9 +41,13 @@ export function AddUserDialog({ revision, disabled }: AddUserDialogProps) {
           if (field === "name" || field === "password") {
             form.setError(field, { message });
           }
+          if (field === "group") {
+            setGroupProblem(message);
+          }
         }
         return;
       }
+      setGroupProblem(error instanceof RequestError && error.status === FORBIDDEN ? t("access.forbidden") : null);
       toast.error(t("users.refused", { message: error instanceof RequestError ? error.message : String(error) }));
     }
   });
@@ -54,6 +65,9 @@ export function AddUserDialog({ revision, disabled }: AddUserDialogProps) {
         <form onSubmit={submit} className="grid gap-4" noValidate>
           <FormField id="user-name" label={t("users.name")} error={errors.name?.message}>
             <Input id="user-name" autoComplete="off" spellCheck={false} {...form.register("name")} />
+          </FormField>
+          <FormField id="user-group" label={t("users.group")} error={groupProblem ?? undefined}>
+            <GroupSelect id="user-group" value={group} onChange={setGroup} />
           </FormField>
           <FormField id="user-password" label={t("users.password")} hint={t("users.passwordHint")} error={errors.password?.message}>
             <Input id="user-password" type="password" autoComplete="new-password" {...form.register("password")} />

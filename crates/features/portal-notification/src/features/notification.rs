@@ -1,9 +1,12 @@
 use std::sync::Arc;
 
 use axum::Router;
+use axum::http::Method;
 use axum::routing::{get, post, put};
 use portal_config::ConfigStore;
-use portal_feature::{Channel, Feature, Loop, StatusObserver, Validator};
+use portal_feature::{
+    Action, Area, Channel, Feature, Loop, Right, Rule, StatusObserver, Validator,
+};
 
 use crate::controllers::{change_channel, change_rules, list as list_route, send_test};
 use crate::loops::send_forever;
@@ -88,6 +91,43 @@ impl Feature for NotificationFeature {
             .route(Self::CHANNEL, put(change_channel))
             .route(Self::TEST, post(send_test))
             .with_state(state)
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::needs(
+                Method::GET,
+                Self::COLLECTION,
+                &[Right {
+                    area: Area::Notifications,
+                    action: Action::Read,
+                }],
+            ),
+            Rule::needs(
+                Method::PUT,
+                Self::COLLECTION,
+                &[Right {
+                    area: Area::Notifications,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::PUT,
+                Self::CHANNEL,
+                &[Right {
+                    area: Area::Notifications,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::TEST,
+                &[Right {
+                    area: Area::Notifications,
+                    action: Action::Update,
+                }],
+            ),
+        ]
     }
 
     fn validator(&self) -> Option<Validator> {

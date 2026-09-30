@@ -1,3 +1,4 @@
+mod access;
 mod api_error;
 mod check;
 mod client_address;
@@ -16,6 +17,7 @@ mod widget_problem;
 #[cfg(test)]
 mod tests;
 
+pub use access::{Action, Area, Requirement, Right, Rights, Rule};
 pub use api_error::ApiError;
 pub use check::Check;
 pub use client_address::ClientAddress;

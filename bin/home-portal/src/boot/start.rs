@@ -6,7 +6,7 @@ use std::process::{Command, ExitCode};
 use clap::Parser;
 
 use super::run;
-use crate::cli::{fail, password_hash, probe, proxy};
+use crate::cli::{fail, password_hash, permissions, probe, proxy};
 use crate::types::{Command as Invocation, CommandLine, Ended};
 
 pub async fn start() -> ExitCode {
@@ -22,6 +22,7 @@ pub async fn start() -> ExitCode {
         Invocation::PasswordHash => password_hash(),
         Invocation::Probe { target, kind } => probe(target, kind.map(Into::into)).await,
         Invocation::Proxy { action } => proxy(action),
+        Invocation::Permissions => permissions().await,
     }
 }
 

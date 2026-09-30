@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { Allowed } from "@/entities/session";
 import { TokenActions } from "@/features/automation-builder";
 import { StopRunButton } from "@/features/stop-run";
 import { RunTable, useAutomations, useRuns } from "@/entities/automation";
@@ -70,12 +71,14 @@ export function WebhookDetailsScreen() {
   );
   const titleOf = (runId: string) => automations.data?.data.automations.find((automation) => automation.id === runId)?.title ?? (runId === webhook.id ? webhook.title : runId);
   const edit = (
-    <Button asChild variant="outline">
-      <Link href={routes.editWebhook(webhook.id)}>
-        <Pencil aria-hidden />
-        {t("common.edit")}
-      </Link>
-    </Button>
+    <Allowed area="webhooks" action="update">
+      <Button asChild variant="outline">
+        <Link href={routes.editWebhook(webhook.id)}>
+          <Pencil aria-hidden />
+          {t("common.edit")}
+        </Link>
+      </Button>
+    </Allowed>
   );
   return (
     <div className="grid gap-8">
@@ -115,7 +118,9 @@ export function WebhookDetailsScreen() {
             </KvRow>
           </KvList>
           <div className="mt-4">
-            <TokenActions webhook={webhook} revision={webhooks.data.revision} />
+            <Allowed area="webhooks" action="update">
+              <TokenActions webhook={webhook} revision={webhooks.data.revision} />
+            </Allowed>
           </div>
         </SectionCard>
         <SectionCard title={t("webhooks.action")}>

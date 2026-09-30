@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use portal_feature::FieldError;
 use toml_edit::DocumentMut;
 
+use super::groups::group_errors;
 use crate::helpers::is_argon2id;
 use crate::types::UsersSection;
 
@@ -38,5 +39,6 @@ pub fn validate_users(document: &DocumentMut) -> Vec<FieldError> {
             ));
         }
     }
+    errors.extend(group_errors(&section));
     errors
 }

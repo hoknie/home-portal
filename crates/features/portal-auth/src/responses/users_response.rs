@@ -13,11 +13,12 @@ impl UsersResponse {
     pub fn of(view: UsersView) -> UsersResponse {
         UsersResponse {
             users: view
-                .names
+                .members
                 .into_iter()
-                .map(|name| UserResponse {
+                .map(|(name, group)| UserResponse {
                     you: name == view.you,
                     name,
+                    group,
                 })
                 .collect(),
             editable: view.editable,

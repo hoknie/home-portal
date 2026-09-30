@@ -30,7 +30,7 @@ function modulesWith(on: string[]): Modules {
 
 function shellWith(on: string[] | null) {
   const client = testQueryClient();
-  client.setQueryData(sessionKey, { name: "admin" });
+  client.setQueryData(sessionKey, { name: "admin", group: "admin", admin: true, rights: {} });
   client.setQueryData(environmentKey, { environment: "local", detected: "local", switchable: true, environments: ["local", "vpn", "internet"] });
   if (on) {
     client.setQueryDefaults(modulesKey, { staleTime: Infinity });
@@ -55,7 +55,7 @@ it("shows the navigation, marks the current section and names the signed-in user
 
 it("names the environment the portal placed the visitor in", () => {
   const client = testQueryClient();
-  client.setQueryData(sessionKey, { name: "admin" });
+  client.setQueryData(sessionKey, { name: "admin", group: "admin", admin: true, rights: {} });
   client.setQueryData(environmentKey, { environment: "vpn", environments: ["local", "vpn"] });
   renderWithProviders(<AppShell>content</AppShell>, client);
   expect(screen.getAllByText("vpn")[0]).toHaveAttribute("data-environment", "vpn");
@@ -64,7 +64,7 @@ it("names the environment the portal placed the visitor in", () => {
 
 it("marks a management page seen from another environment and offers going back", () => {
   const client = testQueryClient();
-  client.setQueryData(sessionKey, { name: "admin" });
+  client.setQueryData(sessionKey, { name: "admin", group: "admin", admin: true, rights: {} });
   client.setQueryData(environmentKey, { environment: "internet", detected: "local", switchable: true, environments: ["local", "vpn", "internet"] });
   renderWithProviders(<AppShell>content</AppShell>, client);
   expect(screen.getAllByText("Viewing as from “internet”; you are in “local”").length).toBeGreaterThan(0);
@@ -74,14 +74,14 @@ it("marks a management page seen from another environment and offers going back"
 it("sends a signed-out visitor to the sign-in page, remembering the page", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response("sign in required", { status: 401 })));
   Object.defineProperty(window, "location", { value: { ...window.location, pathname: "/admin/services/", search: "" }, writable: true });
-  renderWithProviders(<AppShell>content</AppShell>);
+  renderWithProviders(<AppShell>content</AppShell>, testQueryClient({ signedIn: false }));
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/login/?next=%2Fadmin%2Fservices%2F"));
   expect(screen.queryByText("content")).not.toBeInTheDocument();
 });
 
 it("the user menu offers restarting the portal", async () => {
   const client = testQueryClient();
-  client.setQueryData(sessionKey, { name: "admin" });
+  client.setQueryData(sessionKey, { name: "admin", group: "admin", admin: true, rights: {} });
   client.setQueryData(environmentKey, { environment: "local", environments: ["local"] });
   renderWithProviders(<AppShell>content</AppShell>, client);
   const menus = screen.getAllByRole("button", { name: /admin/ });
@@ -152,7 +152,7 @@ it("offers scripts after the modules while the file switches editing on, and not
   const client = testQueryClient();
   client.setQueryDefaults(scriptsKey, { staleTime: Infinity });
   client.setQueryData(scriptsKey, scriptsSchema.parse({ ...apiSamples.automationScripts, editing: true }));
-  client.setQueryData(sessionKey, { name: "admin" });
+  client.setQueryData(sessionKey, { name: "admin", group: "admin", admin: true, rights: {} });
   client.setQueryData(environmentKey, { environment: "local", detected: "local", switchable: true, environments: ["local"] });
   client.setQueryDefaults(modulesKey, { staleTime: Infinity });
   client.setQueryData(modulesKey, { data: modulesWith(["automations", "workflows"]), revision: '"m"' });
@@ -166,4 +166,18 @@ it("offers scripts after the modules while the file switches editing on, and not
 it("hides scripts while editing is off", () => {
   shellWith(["automations"]);
   expect(screen.queryByRole("link", { name: "Scripts" })).not.toBeInTheDocument();
+});
+
+it("without the right to read modules, the menu lists the modules the person may read, and not the modules page", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response("needs modules.read", { status: 403 })),
+  );
+  const client = testQueryClient();
+  client.setQueryData(sessionKey, { name: "anna", group: "family", admin: false, rights: { automations: ["read", "execute"] } });
+  client.setQueryData(environmentKey, { environment: "local", environments: ["local"] });
+  renderWithProviders(<AppShell>content</AppShell>, client);
+  expect((await screen.findAllByRole("link", { name: "Automations" }))[0]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/automations\/?$/));
+  expect(screen.queryByRole("link", { name: "Modules" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Proxy" })).toBeNull();
 });

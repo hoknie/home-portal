@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Allowed } from "@/entities/session";
 import { DeleteWebhookButton } from "@/features/delete-webhook";
 import { enabledModules, useModules } from "@/entities/module";
 import { type Webhook, absoluteAddress, shortAddress, useWebhooks } from "@/entities/webhook";
@@ -20,6 +21,8 @@ import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
 import { TagFilter, distinctTags, stillChosen, tagsMatch } from "@/shared/ui/tag-filter";
 import { TagList } from "@/shared/ui/tag-list";
+
+import { RunWebhookDialog } from "./run-webhook-dialog";
 
 function useColumns(revision: string | null): Column<Webhook>[] {
   const t = useTranslations();
@@ -83,11 +86,18 @@ function useColumns(revision: string | null): Column<Webhook>[] {
       align: "end",
       cell: (webhook) => (
         <div className="flex justify-end gap-1">
-          <Button asChild variant="ghost" size="icon">
-            <Link href={routes.editWebhook(webhook.id)} aria-label={t("common.edit")}>
-              <Pencil aria-hidden />
-            </Link>
-          </Button>
+          {webhook.enabled ? (
+            <Allowed area="webhooks" action="execute">
+              <RunWebhookDialog webhook={webhook} />
+            </Allowed>
+          ) : null}
+          <Allowed area="webhooks" action="update">
+            <Button asChild variant="ghost" size="icon">
+              <Link href={routes.editWebhook(webhook.id)} aria-label={t("common.edit")}>
+                <Pencil aria-hidden />
+              </Link>
+            </Button>
+          </Allowed>
           <DeleteWebhookButton webhook={webhook} revision={revision} />
         </div>
       ),
@@ -106,12 +116,14 @@ export function WebhooksScreen() {
   const tags = distinctTags(list.map((webhook) => webhook.tags));
   const chosen = stillChosen(picked, tags);
   const add = (
-    <Button asChild>
-      <Link href={routes.newWebhook}>
-        <Plus aria-hidden />
-        {t("webhooks.add")}
-      </Link>
-    </Button>
+    <Allowed area="webhooks" action="create">
+      <Button asChild>
+        <Link href={routes.newWebhook}>
+          <Plus aria-hidden />
+          {t("webhooks.add")}
+        </Link>
+      </Button>
+    </Allowed>
   );
   return (
     <div className="grid gap-8">

@@ -35,7 +35,7 @@ fn examples() -> PathBuf {
 
 fn user() -> String {
     let hash = hash_password("secret").unwrap();
-    format!("\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n")
+    format!("\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n")
 }
 
 fn every_error(path: &Path) -> String {

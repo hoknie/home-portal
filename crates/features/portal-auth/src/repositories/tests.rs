@@ -15,13 +15,13 @@ fn document(text: &str) -> DocumentMut {
 #[test]
 fn a_new_user_follows_the_last_entry_and_keeps_every_comment() {
     let mut people = document(PEOPLE);
-    append(&mut people, "bob", "$argon2id$bob");
+    append(&mut people, "bob", "$argon2id$bob", None);
     assert_eq!(
         people.to_string(),
         format!("{PEOPLE}\n[[users]]\nname = \"bob\"\npassword_hash = \"$argon2id$bob\"\n")
     );
     let mut empty = document("[network]\nport = 8080\n");
-    append(&mut empty, "bob", "$argon2id$bob");
+    append(&mut empty, "bob", "$argon2id$bob", None);
     assert!(
         empty
             .to_string()

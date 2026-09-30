@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use axum::Router;
+use axum::http::Method;
 use axum::routing::get;
 use portal_config::ConfigStore;
-use portal_feature::{Feature, Validator};
+use portal_feature::{Action, Area, Feature, Right, Rule, Validator};
 
 use crate::controllers::{show, update};
 use crate::services::validate_dashboard;
@@ -37,6 +38,20 @@ impl Feature for DashboardFeature {
         Router::new()
             .route(Self::PATH, get(show).put(update))
             .with_state(self.state.clone())
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::signed(Method::GET, Self::PATH),
+            Rule::needs(
+                Method::PUT,
+                Self::PATH,
+                &[Right {
+                    area: Area::Layout,
+                    action: Action::Update,
+                }],
+            ),
+        ]
     }
 
     fn validator(&self) -> Option<Validator> {

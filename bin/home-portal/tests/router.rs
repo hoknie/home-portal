@@ -5,10 +5,10 @@ use std::sync::Arc;
 use axum::Router;
 use axum::body::Body;
 use axum::http::header::{CONTENT_TYPE, COOKIE, SET_COOKIE};
-use axum::http::{HeaderMap, Request, StatusCode};
+use axum::http::{HeaderMap, Method, Request, StatusCode};
 use axum::routing::{get, post};
 use home_portal::{Registry, Restart, assemble, registered};
-use portal_feature::{ApiError, Feature, Gate, Principal};
+use portal_feature::{ApiError, Feature, Gate, Principal, Rule};
 use tower::ServiceExt;
 
 const PROBE_PATH: &str = "/api/probe";
@@ -29,6 +29,10 @@ impl Feature for ProbeFeature {
         )
     }
 
+    fn rules(&self) -> Vec<Rule> {
+        vec![Rule::signed(Method::GET, PROBE_PATH)]
+    }
+
     fn public_router(&self) -> Router {
         Router::new().route(
             OPEN_PATH,
@@ -42,9 +46,7 @@ struct Ticket;
 impl Gate for Ticket {
     fn admit(&self, headers: &HeaderMap) -> Result<Principal, ApiError> {
         match headers.get(COOKIE).and_then(|value| value.to_str().ok()) {
-            Some(TICKET) => Ok(Principal {
-                name: "tester".into(),
-            }),
+            Some(TICKET) => Ok(Principal::admin("tester")),
             _ => Err(ApiError::Unauthorized),
         }
     }

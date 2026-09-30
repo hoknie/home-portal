@@ -1,3 +1,11 @@
 {
-  "name": "admin"
+  "admin": false,
+  "group": "family",
+  "name": "anna",
+  "rights": {
+    "automations": [
+      "read",
+      "execute"
+    ]
+  }
 }

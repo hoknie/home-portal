@@ -5,6 +5,7 @@ mod folders;
 mod layers;
 mod registry;
 mod roots;
+mod rules;
 mod scanner;
 mod sizes;
 mod sources;

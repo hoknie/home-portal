@@ -23,9 +23,21 @@
 #   HOME_PORTAL_CONFIG=/path/to/split/home-portal.toml home-portal
 #
 # People who may sign in go in users.toml. Create the hash with:  home-portal password-hash
+# At least one of them must be in the built-in admin group, which may do everything.
 # [[users]]
 # name = "admin"
 # password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
+# group = "admin"
+#
+# Groups hold rights per area; a user without a group only sees the home page.
+# [[users]]
+# name = "anna"
+# password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
+# group = "family"
+#
+# [[groups]]
+# name = "family"
+# permissions = { services = ["update"], automations = ["read", "execute"], workflows = ["read", "execute"] }
 
 # Russian for visitors whose browser asks for none of en, ru, es; each visitor can still
 # switch in the header.
@@ -46,6 +58,12 @@ networks = ["192.168.1.0/24"]
 
 [environments.vpn]
 networks = ["10.8.0.0/24"]
+
+# macOS privacy permissions: asked for at start; scripts that eject disks with diskutil or
+# drive other applications through osascript need them.
+[permissions]
+automation = ["System Events", "Finder"]
+folders = ["Documents", "Downloads"]
 
 # The optional parts: the proxy is on; automations and webhooks are on by default. DNS
 # stays off. Management → Modules switches them.

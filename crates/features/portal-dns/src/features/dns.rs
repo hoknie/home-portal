@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
+use axum::http::Method;
 use axum::routing::get;
 use portal_config::ConfigStore;
-use portal_feature::{Feature, Loop, Validator};
+use portal_feature::{Action, Area, Feature, Loop, Right, Rule, Validator};
 
 use crate::controllers::{change, resolve_encoded, resolve_posted, show};
 use crate::loops::DnsRuntime;
@@ -58,6 +59,27 @@ impl Feature for DnsFeature {
         Router::new()
             .route(Self::PATH, get(show).put(change))
             .with_state(self.context.clone())
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::needs(
+                Method::GET,
+                Self::PATH,
+                &[Right {
+                    area: Area::Dns,
+                    action: Action::Read,
+                }],
+            ),
+            Rule::needs(
+                Method::PUT,
+                Self::PATH,
+                &[Right {
+                    area: Area::Dns,
+                    action: Action::Update,
+                }],
+            ),
+        ]
     }
 
     fn public_router(&self) -> Router {

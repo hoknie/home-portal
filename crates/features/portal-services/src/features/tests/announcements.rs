@@ -29,9 +29,9 @@ fn announcing() -> (Router, Arc<Recorder>, TempDir) {
     )
     .unwrap();
     store.adopt(vec![feature.validator().unwrap()]).unwrap();
-    let router = feature.router().layer(axum::Extension(Principal {
-        name: "admin".into(),
-    }));
+    let router = feature
+        .router()
+        .layer(axum::Extension(Principal::admin("admin")));
     (router, events, directory)
 }
 

@@ -8,6 +8,7 @@ import dashboard from "./dashboard.json";
 import dns from "./dns.json";
 import environment from "./environment.json";
 import fieldErrors from "./field-errors.json";
+import groups from "./groups.json";
 import history from "./history.json";
 import icons from "./icons.json";
 import modules from "./modules.json";
@@ -15,6 +16,7 @@ import network from "./network.json";
 import notificationChannelMissing from "./notification-channel-missing.json";
 import notificationTest from "./notification-test.json";
 import notifications from "./notifications.json";
+import permissions from "./permissions.json";
 import proxy from "./proxy.json";
 import publicPortal from "./public-portal.json";
 import scriptHeaders from "./script-headers.json";
@@ -50,6 +52,7 @@ export const apiSamples = {
   dns,
   environment,
   fieldErrors,
+  groups,
   history,
   icons,
   modules,
@@ -57,6 +60,7 @@ export const apiSamples = {
   notificationChannelMissing,
   notificationTest,
   notifications,
+  permissions,
   proxy,
   publicPortal,
   scriptHeaders,

@@ -6,6 +6,7 @@ mod probe_kind_choice;
 mod proxy_action;
 mod registry;
 mod restart;
+mod rule_book;
 mod signals;
 mod wiring;
 
@@ -19,5 +20,6 @@ pub use ended::Ended;
 pub use proxy_action::ProxyAction;
 pub use registry::Registry;
 pub use restart::Restart;
+pub use rule_book::RuleBook;
 pub use signals::Signals;
 pub use wiring::Wiring;

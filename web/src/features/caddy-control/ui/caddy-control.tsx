@@ -4,6 +4,7 @@ import { Download, Play, Square } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { Allowed } from "@/entities/session";
 import { CADDY_LATEST, type Caddy, type Proxy, useDownloadCaddy, useStartCaddy, useStopCaddy } from "@/entities/proxy";
 import { RequestError } from "@/shared/api";
 import { KvList, KvRow } from "@/shared/ui/kv-list";
@@ -81,29 +82,31 @@ export function CaddyControl({ proxy, revision }: CaddyControlProps) {
             </KvRow>
           ) : null}
         </KvList>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={busy || archive === null}
-            onClick={() => void run(() => download.mutateAsync(), t("downloadStarted"))}
-          >
-            <Download aria-hidden />
-            {latest ? t("downloadLatest") : t("downloadVersion", { version: caddy.version })}
-          </Button>
-          {caddy.managed ? (
-            <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void run(() => stop.mutateAsync(revision), t("stopped"))}>
-              <Square aria-hidden />
-              {t("stop")}
+        <Allowed area="proxy" action="update">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={busy || archive === null}
+              onClick={() => void run(() => download.mutateAsync(), t("downloadStarted"))}
+            >
+              <Download aria-hidden />
+              {latest ? t("downloadLatest") : t("downloadVersion", { version: caddy.version })}
             </Button>
-          ) : (
-            <Button type="button" size="sm" disabled={busy || caddy.installed === null} onClick={() => void run(() => start.mutateAsync(revision), t("started"))}>
-              <Play aria-hidden />
-              {t("start")}
-            </Button>
-          )}
-        </div>
+            {caddy.managed ? (
+              <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => void run(() => stop.mutateAsync(revision), t("stopped"))}>
+                <Square aria-hidden />
+                {t("stop")}
+              </Button>
+            ) : (
+              <Button type="button" size="sm" disabled={busy || caddy.installed === null} onClick={() => void run(() => start.mutateAsync(revision), t("started"))}>
+                <Play aria-hidden />
+                {t("start")}
+              </Button>
+            )}
+          </div>
+        </Allowed>
         {silent ? (
           <div className="grid gap-2">
             <p className="text-sm text-muted-foreground">{t("logHint")}</p>

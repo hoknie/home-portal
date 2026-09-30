@@ -12,6 +12,7 @@ use portal_metrics::MetricsFeature;
 use portal_modules::ModulesFeature;
 use portal_network::{CurrentEnvironments, CurrentNetwork, NetworkFeature, host_environment};
 use portal_notification::NotificationFeature;
+use portal_permissions::PermissionsFeature;
 use portal_proxy::{
     CheckPublication, CurrentProxySettings, PrepareProxy, ProxyFeature, ProxyPorts,
 };
@@ -135,6 +136,7 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         Arc::new(notifications),
         Arc::new(SecretsFeature::new(configuration.clone())),
         Arc::new(ScriptsFeature::new(configuration.clone(), identity)),
+        Arc::new(PermissionsFeature::new(configuration.clone())),
         Arc::new(DashboardFeature::new(configuration.clone())),
         Arc::new(ModulesFeature::new(
             configuration.clone(),

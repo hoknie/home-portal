@@ -1,9 +1,12 @@
 use std::sync::Arc;
 
 use axum::Router;
+use axum::http::Method;
 use axum::routing::{get, put};
 use portal_config::ConfigStore;
-use portal_feature::{Feature, ModulePreparer, ModuleSwitches, Validator};
+use portal_feature::{
+    Action, Area, Feature, ModulePreparer, ModuleSwitches, Right, Rule, Validator,
+};
 
 use crate::controllers::{show, switch};
 use crate::types::ModulesState;
@@ -41,6 +44,27 @@ impl Feature for ModulesFeature {
             .route(Self::PATH, get(show))
             .route(Self::ITEM, put(switch))
             .with_state(self.state.clone())
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::needs(
+                Method::GET,
+                Self::PATH,
+                &[Right {
+                    area: Area::Modules,
+                    action: Action::Read,
+                }],
+            ),
+            Rule::needs(
+                Method::PUT,
+                Self::ITEM,
+                &[Right {
+                    area: Area::Modules,
+                    action: Action::Update,
+                }],
+            ),
+        ]
     }
 
     fn validator(&self) -> Option<Validator> {

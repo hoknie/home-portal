@@ -1,7 +1,7 @@
 import { request } from "@/shared/api";
 import { api } from "@/shared/config";
 
-import { createdWebhookSchema, tokenSchema, webhookSchema, webhooksSchema } from "../model/schema";
+import { acceptedSchema, createdWebhookSchema, tokenSchema, webhookSchema, webhooksSchema } from "../model/schema";
 
 export type WebhookRequest = {
   title: string;
@@ -35,4 +35,8 @@ export async function issueToken(id: string, revision: string | null) {
 
 export function removeToken(id: string, revision: string | null) {
   return request(api.webhookToken(id), { method: "DELETE", revision, schema: webhooksSchema });
+}
+
+export async function runWebhook(id: string, variables: Record<string, string>) {
+  return (await request(api.webhookRun(id), { method: "POST", body: { variables }, schema: acceptedSchema })).data;
 }

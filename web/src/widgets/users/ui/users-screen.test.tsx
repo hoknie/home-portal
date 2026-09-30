@@ -2,19 +2,26 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
-import { type Users, usersKey, usersSchema } from "@/entities/user";
+import { sessionKey } from "@/entities/session";
+import { type Users, groupsKey, groupsSchema, usersKey, usersSchema } from "@/entities/user";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 import { Toaster } from "@/shared/ui/primitives";
 
 import { UsersScreen } from "./users-screen";
 
-function renderWith(change: (users: Users) => void = () => undefined) {
+function renderWith(change: (users: Users) => void = () => undefined, rights: Record<string, string[]> | null = null) {
   const users = usersSchema.parse(structuredClone(apiSamples.users));
   change(users);
   const client = testQueryClient();
+  if (rights !== null) {
+    client.setQueryData(sessionKey, { name: "anna", group: "family", admin: false, rights });
+    users.users = users.users.map((user) => ({ ...user, you: user.name === "anna" }));
+  }
   client.setQueryDefaults(usersKey, { staleTime: Infinity });
   client.setQueryData(usersKey, { data: users, revision: '"r1"' });
+  client.setQueryDefaults(groupsKey, { staleTime: Infinity });
+  client.setQueryData(groupsKey, { data: groupsSchema.parse(apiSamples.groups), revision: '"g1"' });
   renderWithProviders(
     <>
       <UsersScreen />
@@ -25,7 +32,7 @@ function renderWith(change: (users: Users) => void = () => undefined) {
 }
 
 function row(name: string) {
-  return screen.getByRole("cell", { name: new RegExp(`^${name}`) }).closest("tr") as HTMLElement;
+  return screen.getAllByRole("cell", { name: new RegExp(`^${name}`) })[0].closest("tr") as HTMLElement;
 }
 
 afterEach(() => {
@@ -34,7 +41,7 @@ afterEach(() => {
 
 it("adding a user sends the name and password with the loaded revision and lists them", async () => {
   const answered = usersSchema.parse(structuredClone(apiSamples.users));
-  answered.users.push({ name: "bob", you: false });
+  answered.users.push({ name: "bob", group: null, you: false });
   const fetch = vi.fn(async () => jsonResponse(answered, { status: 201, headers: { ETag: '"r2"' } }));
   vi.stubGlobal("fetch", fetch);
   renderWith();
@@ -49,7 +56,7 @@ it("adding a user sends the name and password with the loaded revision and lists
   expect(path).toBe("/api/users");
   expect(init.method).toBe("POST");
   expect((init.headers as Record<string, string>)["If-Match"]).toBe('"r1"');
-  expect(JSON.parse(String(init.body))).toEqual({ name: "bob", password: "correct horse" });
+  expect(JSON.parse(String(init.body))).toEqual({ name: "bob", password: "correct horse", group: null });
   expect(await screen.findByText("bob can now sign in")).toBeInTheDocument();
   expect(screen.getByRole("cell", { name: "bob" })).toBeInTheDocument();
 });
@@ -95,7 +102,7 @@ it("users while off: the list stays, the notice says so, and nothing can be chan
     users.editable = false;
   });
   expect(screen.getByRole("status")).toHaveTextContent("The Users module is off");
-  expect(screen.getByRole("cell", { name: "anna" })).toBeInTheDocument();
+  expect(screen.getAllByRole("cell", { name: "anna" })[0]).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Add user" })).toBeDisabled();
   for (const button of screen.getAllByRole("button", { name: "Change password" })) {
     expect(button).toBeDisabled();
@@ -119,4 +126,49 @@ it("changing a password sends it to that user's address", async () => {
   expect(path).toBe("/api/users/anna/password");
   expect(JSON.parse(String(init.body))).toEqual({ password: "a brand new one" });
   expect(await screen.findByText("The password of anna was changed")).toBeInTheDocument();
+});
+
+it("each user shows their group, and a user without one says so", () => {
+  renderWith();
+  expect(within(row("anna")).getByText("family")).toBeInTheDocument();
+  expect(within(row("guest")).getByText("No group")).toBeInTheDocument();
+});
+
+it("editing a group sends its new rights from the matrix", async () => {
+  const fetch = vi.fn(async () => jsonResponse(apiSamples.groups, { headers: { ETag: '"g2"' } }));
+  vi.stubGlobal("fetch", fetch);
+  renderWith();
+  await userEvent.click(screen.getByRole("tab", { name: "Groups" }));
+  const family = screen.getAllByRole("cell", { name: /^family/ })[0].closest("tr") as HTMLElement;
+  await userEvent.click(within(family).getByRole("button", { name: "Edit" }));
+  const dialog = await screen.findByRole("dialog");
+  await userEvent.click(within(dialog).getByRole("checkbox", { name: "Workflows: Run" }));
+  await userEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  const [path, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+  expect(path).toBe("/api/groups/family");
+  expect(init.method).toBe("PUT");
+  expect(JSON.parse(String(init.body))).toEqual({ name: "family", rights: { automations: ["read", "execute"], services: ["update"], workflows: ["execute"] } });
+});
+
+it("a users manager outside admin cannot touch admins, give more than they hold, or change groups", async () => {
+  renderWith(() => undefined, { users: ["read", "create", "update", "delete"], automations: ["read", "execute"], services: ["update"] });
+  expect(within(row("admin")).queryByRole("button")).toBeNull();
+  await userEvent.click(within(row("guest")).getByRole("button", { name: "Change group" }));
+  const dialog = await screen.findByRole("dialog");
+  const options = within(dialog).getAllByRole("option").map((option) => option.textContent);
+  expect(options).toEqual(["No group", "family", "guests"]);
+  await userEvent.keyboard("{Escape}");
+  await userEvent.click(screen.getByRole("tab", { name: "Groups" }));
+  expect(screen.queryByRole("button", { name: "Add group" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+});
+
+it("an admin sees admin with every right and cannot edit it", async () => {
+  renderWith();
+  await userEvent.click(screen.getByRole("tab", { name: "Groups" }));
+  expect(screen.getByRole("button", { name: "Add group" })).toBeInTheDocument();
+  const boxes = screen.getAllByRole("checkbox");
+  expect(boxes.length).toBeGreaterThan(0);
+  expect(boxes.every((box) => (box as HTMLInputElement).checked && (box as HTMLInputElement).disabled)).toBe(true);
 });

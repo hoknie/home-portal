@@ -1,0 +1,224 @@
+{
+  "groups": [
+    {
+      "builtin": true,
+      "members": [
+        "admin"
+      ],
+      "name": "admin",
+      "rights": {
+        "automations": [
+          "read",
+          "create",
+          "update",
+          "delete",
+          "execute"
+        ],
+        "dns": [
+          "read",
+          "update"
+        ],
+        "host-permissions": [
+          "read",
+          "update"
+        ],
+        "layout": [
+          "update"
+        ],
+        "modules": [
+          "read",
+          "update"
+        ],
+        "network": [
+          "read",
+          "update"
+        ],
+        "notifications": [
+          "read",
+          "update"
+        ],
+        "portal": [
+          "update"
+        ],
+        "proxy": [
+          "read",
+          "update"
+        ],
+        "scripts": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ],
+        "secrets": [
+          "read"
+        ],
+        "services": [
+          "create",
+          "update",
+          "delete"
+        ],
+        "users": [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ],
+        "webhooks": [
+          "read",
+          "create",
+          "update",
+          "delete",
+          "execute"
+        ],
+        "workflows": [
+          "read",
+          "create",
+          "update",
+          "delete",
+          "execute"
+        ]
+      }
+    },
+    {
+      "builtin": false,
+      "members": [
+        "anna"
+      ],
+      "name": "family",
+      "rights": {
+        "automations": [
+          "read",
+          "execute"
+        ],
+        "services": [
+          "update"
+        ]
+      }
+    },
+    {
+      "builtin": false,
+      "members": [],
+      "name": "guests",
+      "rights": {}
+    }
+  ],
+  "matrix": [
+    {
+      "actions": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "area": "services"
+    },
+    {
+      "actions": [
+        "update"
+      ],
+      "area": "layout"
+    },
+    {
+      "actions": [
+        "read",
+        "update"
+      ],
+      "area": "network"
+    },
+    {
+      "actions": [
+        "read",
+        "update"
+      ],
+      "area": "modules"
+    },
+    {
+      "actions": [
+        "read",
+        "create",
+        "update",
+        "delete"
+      ],
+      "area": "scripts"
+    },
+    {
+      "actions": [
+        "read"
+      ],
+      "area": "secrets"
+    },
+    {
+      "actions": [
+        "read",
+        "update"
+      ],
+      "area": "host-permissions"
+    },
+    {
+      "actions": [
+        "update"
+      ],
+      "area": "portal"
+    },
+    {
+      "actions": [
+        "read",
+        "update"
+      ],
+      "area": "proxy"
+    },
+    {
+      "actions": [
+        "read",
+        "update"
+      ],
+      "area": "dns"
+    },
+    {
+      "actions": [
+        "read",
+        "create",
+        "update",
+        "delete",
+        "execute"
+      ],
+      "area": "automations"
+    },
+    {
+      "actions": [
+        "read",
+        "create",
+        "update",
+        "delete",
+        "execute"
+      ],
+      "area": "webhooks"
+    },
+    {
+      "actions": [
+        "read",
+        "create",
+        "update",
+        "delete"
+      ],
+      "area": "users"
+    },
+    {
+      "actions": [
+        "read",
+        "create",
+        "update",
+        "delete",
+        "execute"
+      ],
+      "area": "workflows"
+    },
+    {
+      "actions": [
+        "read",
+        "update"
+      ],
+      "area": "notifications"
+    }
+  ]
+}

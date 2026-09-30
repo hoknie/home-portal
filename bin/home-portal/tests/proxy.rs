@@ -29,7 +29,9 @@ fn render_in(text: &str, variables: &[(&str, &str)]) -> Output {
     let hash = portal_auth::hash_password("secret").unwrap();
     fs::write(
         &path,
-        format!("{text}\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n"),
+        format!(
+            "{text}\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"
+        ),
     )
     .unwrap();
     Command::new(BINARY)

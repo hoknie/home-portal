@@ -9,11 +9,17 @@ const users = usersSchema.parse(apiSamples.users);
 
 describe("users", () => {
   it("the sample parses with the signed-in person marked", () => {
-    expect(users.users.map((user) => [user.name, user.you])).toEqual([
-      ["admin", true],
-      ["anna", false],
+    expect(users.users.map((user) => [user.name, user.group, user.you])).toEqual([
+      ["admin", "admin", true],
+      ["anna", "family", false],
+      ["guest", null, false],
     ]);
     expect(users.editable).toBe(true);
+  });
+
+  it("the last admin cannot be deleted", () => {
+    const lone = { ...users, users: [{ name: "root", group: "admin", you: false }, users.users[1]] };
+    expect(deletable(lone.users[0], lone)).toBe(false);
   });
 
   it("only another user can be deleted, and only while editable with more than one left", () => {

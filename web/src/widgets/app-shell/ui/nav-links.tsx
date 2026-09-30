@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { useScripts } from "@/entities/automation";
-import { enabledModules, useModules } from "@/entities/module";
+import { MODULE_NAMES, enabledModules, useModules } from "@/entities/module";
+import { mayOpen, useSession } from "@/entities/session";
 import { cn } from "@/shared/lib/cn";
 import { Separator, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/primitives";
 
-import { MANAGEMENT, isActive, sectionLinks } from "../model/navigation";
+import { isActive, managementLinks, sectionLinks } from "../model/navigation";
 
 export type NavLinksProps = { onNavigate?: () => void; compact?: boolean };
 
@@ -50,10 +51,13 @@ export function NavLinks({ onNavigate, compact = false }: NavLinksProps) {
   const pathname = usePathname();
   const modules = useModules();
   const scripts = useScripts();
-  const links = sectionLinks(modules.data ? enabledModules(modules.data.data) : new Set(), scripts.data?.editing ?? false);
+  const session = useSession();
+  const may = (area: Parameters<typeof mayOpen>[1]) => mayOpen(session.data, area);
+  const enabled = modules.data ? enabledModules(modules.data.data) : modules.isError ? new Set(MODULE_NAMES) : new Set<(typeof MODULE_NAMES)[number]>();
+  const links = sectionLinks(enabled, scripts.data?.editing ?? false, may);
   return (
     <nav className="grid gap-1">
-      {MANAGEMENT.map(({ href, label, icon }) => (
+      {managementLinks(may).map(({ href, label, icon }) => (
         <NavItem key={href} href={href} label={t(label)} icon={icon} pathname={pathname} onNavigate={onNavigate} compact={compact} />
       ))}
       {links.length > 0 ? (

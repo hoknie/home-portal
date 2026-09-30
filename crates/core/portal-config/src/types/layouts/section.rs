@@ -26,13 +26,14 @@ impl Section {
         Section::Workflows,
     ];
 
-    pub const MAIN_KEYS: [&'static str; 9] = [
+    pub const MAIN_KEYS: [&'static str; 10] = [
         "network",
         "environments",
         "modules",
         "storage",
         "interface",
         "scripts",
+        "permissions",
         "files",
         "include",
         "configuration",
@@ -69,7 +70,7 @@ impl Section {
             Section::Automations => &["automations", "automation_settings"],
             Section::Services => &["services"],
             Section::Dashboard => &["dashboard"],
-            Section::Users => &["users"],
+            Section::Users => &["users", "groups"],
             Section::Notifications => &["notifications"],
             Section::Proxy => &["proxy"],
             Section::Dns => &["dns"],

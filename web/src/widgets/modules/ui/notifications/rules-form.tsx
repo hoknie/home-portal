@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Allowed, useCan } from "@/entities/session";
 import { type Rules, useChangeRules } from "@/entities/notification";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { ErrorNotice } from "@/shared/ui/error-notice";
@@ -14,6 +15,8 @@ export const ANNOUNCED_STATES = ["down", "unreadable", "degraded", "up"] as cons
 
 export function RulesForm({ rules, revision }: { rules: Rules; revision: string | null }) {
   const t = useTranslations();
+  const can = useCan();
+  const editable = can("notifications", "update");
   const change = useChangeRules();
   const [draft, setDraft] = useState(rules);
   const [problem, setProblem] = useState<string | null>(null);
@@ -39,7 +42,7 @@ export function RulesForm({ rules, revision }: { rules: Rules; revision: string 
     <SectionCard title={t("notifications.rules.title")} description={t("notifications.rules.description")}>
       <div className="grid gap-5">
         {problem ? <ErrorNotice title={t("notifications.refused")} description={problem} /> : null}
-        <fieldset className="grid gap-2">
+        <fieldset className="grid gap-2" disabled={!editable}>
           <legend className="mb-2 text-sm font-medium">{t("notifications.rules.states")}</legend>
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {ANNOUNCED_STATES.map((state) => (
@@ -57,13 +60,15 @@ export function RulesForm({ rules, revision }: { rules: Rules; revision: string 
         </fieldset>
         <div className="flex items-center justify-between gap-4">
           <Label htmlFor="notifications-recovered">{t("notifications.rules.recovered")}</Label>
-          <Switch id="notifications-recovered" checked={draft.recovered} onCheckedChange={(recovered) => setDraft((current) => ({ ...current, recovered }))} />
+          <Switch id="notifications-recovered" disabled={!editable} checked={draft.recovered} onCheckedChange={(recovered) => setDraft((current) => ({ ...current, recovered }))} />
         </div>
-        <div>
-          <Button type="button" onClick={() => void save()} disabled={change.isPending}>
-            {t("notifications.rules.save")}
-          </Button>
-        </div>
+        <Allowed area="notifications" action="update">
+          <div>
+            <Button type="button" onClick={() => void save()} disabled={change.isPending}>
+              {t("notifications.rules.save")}
+            </Button>
+          </div>
+        </Allowed>
       </div>
     </SectionCard>
   );

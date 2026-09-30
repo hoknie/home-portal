@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 
-import { AppShell } from "@/widgets/app-shell";
+import { AppShell, AreaGate } from "@/widgets/app-shell";
 
 export default function ShellLayout({ children }: { children: ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppShell>
+      <AreaGate>{children}</AreaGate>
+    </AppShell>
+  );
 }

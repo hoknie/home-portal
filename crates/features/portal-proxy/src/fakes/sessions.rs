@@ -16,9 +16,7 @@ impl Gate for Sessions {
             .iter()
             .filter_map(|value| value.to_str().ok())
             .any(|value| value.contains(Self::COOKIE))
-            .then(|| Principal {
-                name: Self::USER.to_string(),
-            })
+            .then(|| Principal::admin(Self::USER))
             .ok_or(ApiError::Unauthorized)
     }
 }

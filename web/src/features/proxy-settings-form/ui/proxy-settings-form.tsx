@@ -14,6 +14,7 @@ import {
   proxySettingsFormSchema,
   useSaveProxySettings,
 } from "@/entities/proxy";
+import { useCan } from "@/entities/session";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { FormField } from "@/shared/ui/form-field";
@@ -37,6 +38,8 @@ export type ProxySettingsFormProps = { proxy: Proxy; revision: string | null };
 
 export function ProxySettingsForm({ proxy, revision }: ProxySettingsFormProps) {
   const t = useTranslations();
+  const can = useCan();
+  const editable = can("proxy", "update");
   const save = useSaveProxySettings();
   const [problems, setProblems] = useState<string[]>([]);
   const [conflict, setConflict] = useState(false);
@@ -80,60 +83,64 @@ export function ProxySettingsForm({ proxy, revision }: ProxySettingsFormProps) {
   const mode = useWatch({ control: form.control, name: "mode" });
   return (
     <form onSubmit={submit} className="grid gap-5" noValidate>
-      {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
-      {problems.length > 0 ? <ErrorNotice title={t("proxy.settings.refused")} description={problems.join("; ")} /> : null}
-      <div className="grid gap-5 sm:grid-cols-2">
-        <FormField id="proxy-portal-host" label={t("proxy.settings.portalHost")} hint={t("proxy.settings.portalHostHint")} error={errors.portal_host?.message}>
-          <Input id="proxy-portal-host" spellCheck={false} autoComplete="off" {...form.register("portal_host")} />
-        </FormField>
-        <FormField
-          id="proxy-cookie-domain"
-          label={t("proxy.settings.cookieDomain")}
-          hint={t("proxy.settings.cookieDomainHint")}
-          optional
-          error={errors.cookie_domain?.message}
-        >
-          <Input id="proxy-cookie-domain" spellCheck={false} autoComplete="off" {...form.register("cookie_domain")} />
-        </FormField>
-      </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <FormField id="proxy-https-port" label={t("proxy.settings.httpsPort")} hint={t("proxy.settings.httpsPortHint")} error={errors.https_port?.message}>
-          <Input id="proxy-https-port" type="number" inputMode="numeric" {...form.register("https_port", { valueAsNumber: true })} />
-        </FormField>
-        <FormField id="proxy-http-port" label={t("proxy.settings.httpPort")} hint={t("proxy.settings.httpPortHint")} error={errors.http_port?.message}>
-          <Input id="proxy-http-port" type="number" inputMode="numeric" {...form.register("http_port", { valueAsNumber: true })} />
-        </FormField>
-      </div>
-      <FormField id="proxy-tls" label={t("proxy.settings.tls")} hint={t(`serviceForm.publicationTlsHints.${mode}`)}>
-        <select id="proxy-tls" className={SELECT} {...form.register("mode")}>
-          {PROXY_TLS_MODES.map((value) => (
-            <option key={value} value={value}>
-              {t(`proxy.tlsModes.${value}`)}
-            </option>
-          ))}
-        </select>
-      </FormField>
-      {mode === "acme" ? (
-        <FormField id="proxy-email" label={t("serviceForm.publicationEmail")} optional error={errors.email?.message}>
-          <Input id="proxy-email" type="email" {...form.register("email")} />
-        </FormField>
-      ) : null}
-      {mode === "files" ? (
+      <fieldset disabled={!editable} className="contents">
+        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        {problems.length > 0 ? <ErrorNotice title={t("proxy.settings.refused")} description={problems.join("; ")} /> : null}
         <div className="grid gap-5 sm:grid-cols-2">
-          <FormField id="proxy-certificate" label={t("serviceForm.publicationCertificate")} error={errors.certificate?.message}>
-            <Input id="proxy-certificate" spellCheck={false} {...form.register("certificate")} />
+          <FormField id="proxy-portal-host" label={t("proxy.settings.portalHost")} hint={t("proxy.settings.portalHostHint")} error={errors.portal_host?.message}>
+            <Input id="proxy-portal-host" spellCheck={false} autoComplete="off" {...form.register("portal_host")} />
           </FormField>
-          <FormField id="proxy-key" label={t("serviceForm.publicationKey")} error={errors.key?.message}>
-            <Input id="proxy-key" spellCheck={false} {...form.register("key")} />
+          <FormField
+            id="proxy-cookie-domain"
+            label={t("proxy.settings.cookieDomain")}
+            hint={t("proxy.settings.cookieDomainHint")}
+            optional
+            error={errors.cookie_domain?.message}
+          >
+            <Input id="proxy-cookie-domain" spellCheck={false} autoComplete="off" {...form.register("cookie_domain")} />
           </FormField>
         </div>
-      ) : null}
-      <p className="text-xs text-muted-foreground">{t("proxy.settings.loopbackHint")}</p>
-      <div className="flex justify-end">
-        <Button type="submit" disabled={formState.isSubmitting || !formState.isDirty}>
-          {formState.isSubmitting ? t("common.saving") : t("common.save")}
-        </Button>
-      </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <FormField id="proxy-https-port" label={t("proxy.settings.httpsPort")} hint={t("proxy.settings.httpsPortHint")} error={errors.https_port?.message}>
+            <Input id="proxy-https-port" type="number" inputMode="numeric" {...form.register("https_port", { valueAsNumber: true })} />
+          </FormField>
+          <FormField id="proxy-http-port" label={t("proxy.settings.httpPort")} hint={t("proxy.settings.httpPortHint")} error={errors.http_port?.message}>
+            <Input id="proxy-http-port" type="number" inputMode="numeric" {...form.register("http_port", { valueAsNumber: true })} />
+          </FormField>
+        </div>
+        <FormField id="proxy-tls" label={t("proxy.settings.tls")} hint={t(`serviceForm.publicationTlsHints.${mode}`)}>
+          <select id="proxy-tls" className={SELECT} {...form.register("mode")}>
+            {PROXY_TLS_MODES.map((value) => (
+              <option key={value} value={value}>
+                {t(`proxy.tlsModes.${value}`)}
+              </option>
+            ))}
+          </select>
+        </FormField>
+        {mode === "acme" ? (
+          <FormField id="proxy-email" label={t("serviceForm.publicationEmail")} optional error={errors.email?.message}>
+            <Input id="proxy-email" type="email" {...form.register("email")} />
+          </FormField>
+        ) : null}
+        {mode === "files" ? (
+          <div className="grid gap-5 sm:grid-cols-2">
+            <FormField id="proxy-certificate" label={t("serviceForm.publicationCertificate")} error={errors.certificate?.message}>
+              <Input id="proxy-certificate" spellCheck={false} {...form.register("certificate")} />
+            </FormField>
+            <FormField id="proxy-key" label={t("serviceForm.publicationKey")} error={errors.key?.message}>
+              <Input id="proxy-key" spellCheck={false} {...form.register("key")} />
+            </FormField>
+          </div>
+        ) : null}
+        <p className="text-xs text-muted-foreground">{t("proxy.settings.loopbackHint")}</p>
+        <div className="flex justify-end">
+          {editable ? (
+            <Button type="submit" disabled={formState.isSubmitting || !formState.isDirty}>
+              {formState.isSubmitting ? t("common.saving") : t("common.save")}
+            </Button>
+          ) : null}
+        </div>
+      </fieldset>
     </form>
   );
 }

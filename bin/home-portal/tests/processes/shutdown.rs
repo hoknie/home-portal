@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 use portal_auth::hash_password;
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
+const QUIET: &str = "[permissions]\nrequest_at_start = false\n\n";
 
 fn answering_http() -> u16 {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -35,7 +36,7 @@ fn stopping_on_a_signal_writes_the_history_where_the_storage_section_points() {
     fs::write(
         &path,
         format!(
-            "[storage]\ndirectory = \"../env\"\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://127.0.0.1:{port}\"\n"
+            "{QUIET}[storage]\ndirectory = \"../env\"\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://127.0.0.1:{port}\"\n"
         ),
     )
     .unwrap();
@@ -79,7 +80,7 @@ fn portal_with_a_stop_script(body: &str) -> (tempfile::TempDir, std::process::Ch
     fs::write(
         &path,
         format!(
-            "[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[[automations]]\nid = \"on-stop\"\ntitle = \"On stop\"\nwhen = {{ event = \"portal.stopping\" }}\nrun = {{ script = \"stop.sh\", timeout_seconds = 120 }}\n"
+            "{QUIET}[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[[automations]]\nid = \"on-stop\"\ntitle = \"On stop\"\nwhen = {{ event = \"portal.stopping\" }}\nrun = {{ script = \"stop.sh\", timeout_seconds = 120 }}\n"
         ),
     )
     .unwrap();

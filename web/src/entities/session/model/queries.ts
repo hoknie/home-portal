@@ -5,5 +5,5 @@ import { fetchSession } from "../api/session";
 export const sessionKey = ["session"] as const;
 
 export function useSession() {
-  return useQuery({ queryKey: sessionKey, queryFn: fetchSession, retry: false, staleTime: 60_000 });
+  return useQuery({ queryKey: sessionKey, queryFn: fetchSession, retry: false, retryOnMount: false, staleTime: 60_000 });
 }

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { type Service, useDeleteService } from "@/entities/service";
 import { ConflictError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
@@ -12,7 +13,7 @@ import { Button } from "@/shared/ui/primitives";
 
 export type DeleteServiceButtonProps = { service: Service; revision: string | null };
 
-export function DeleteServiceButton({ service, revision }: DeleteServiceButtonProps) {
+function DeleteServiceButtonAllowed({ service, revision }: DeleteServiceButtonProps) {
   const t = useTranslations();
   const remove = useDeleteService();
   const [open, setOpen] = useState(false);
@@ -42,4 +43,9 @@ export function DeleteServiceButton({ service, revision }: DeleteServiceButtonPr
       />
     </>
   );
+}
+
+export function DeleteServiceButton(props: DeleteServiceButtonProps) {
+  const can = useCan();
+  return can("services", "delete") ? <DeleteServiceButtonAllowed {...props} /> : null;
 }

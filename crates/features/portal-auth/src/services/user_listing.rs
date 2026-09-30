@@ -26,10 +26,10 @@ pub fn users_of(document: &DocumentMut) -> Result<UsersSection, ApiError> {
 
 pub fn users_view(document: &DocumentMut, you: &str) -> Result<UsersView, ApiError> {
     Ok(UsersView {
-        names: users_of(document)?
+        members: users_of(document)?
             .users
             .into_iter()
-            .map(|user| user.name)
+            .map(|user| (user.name, user.group))
             .collect(),
         you: you.to_string(),
         editable: users_editable(document),

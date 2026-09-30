@@ -24,7 +24,7 @@ afterEach(() => {
 
 function signedIn() {
   const client = testQueryClient();
-  client.setQueryData(sessionKey, { name: "admin" });
+  client.setQueryData(sessionKey, { name: "admin", group: "admin", admin: true, rights: {} });
   client.setQueryData(environmentKey, { environment: "local", detected: "local", switchable: true, environments: ["local"] });
   client.setQueryDefaults(modulesKey, { staleTime: Infinity });
   client.setQueryData(modulesKey, { data: modulesSchema.parse(apiSamples.modules), revision: '"m"' });
@@ -52,7 +52,7 @@ it("a service page keeps the menu, collapsed as it was left", () => {
 it("a guest on the home page sees the guest header, no menu, and is not sent to sign in", async () => {
   pathname = "/";
   vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ error: "unauthorized" }, { status: 401 })));
-  renderWithProviders(<SiteFrame guest={<p>guest header</p>}>grid</SiteFrame>, testQueryClient());
+  renderWithProviders(<SiteFrame guest={<p>guest header</p>}>grid</SiteFrame>, testQueryClient({ signedIn: false }));
   expect(await screen.findByText("guest header")).toBeInTheDocument();
   expect(screen.queryByRole("complementary", { name: "Menu" })).toBeNull();
   await waitFor(() => expect(screen.getByText("grid")).toBeInTheDocument());

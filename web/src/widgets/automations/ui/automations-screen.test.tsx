@@ -4,6 +4,7 @@ import { afterEach, beforeAll, expect, it, vi } from "vitest";
 
 import { automationsKey, automationsSchema, catalogueKey, catalogueSchema, runsKey, runsSchema } from "@/entities/automation";
 import { modulesKey, modulesSchema } from "@/entities/module";
+import { sessionKey } from "@/entities/session";
 import { webhooksKey, webhooksSchema } from "@/entities/webhook";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
@@ -16,8 +17,11 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 
-function renderWith(automations: unknown, automationsOn = true) {
+function renderWith(automations: unknown, automationsOn = true, rights: Record<string, string[]> | null = null) {
   const client = testQueryClient();
+  if (rights !== null) {
+    client.setQueryData(sessionKey, { name: "anna", group: "family", admin: false, rights });
+  }
   const modules = modulesSchema.parse(structuredClone(apiSamples.modules));
   modules.modules[2].enabled = automationsOn;
   client.setQueryDefaults(modulesKey, { staleTime: Infinity });
@@ -183,4 +187,21 @@ it("the journal of one workflow asks for its runs", async () => {
   await userEvent.keyboard("{Enter}");
   await userEvent.click(await screen.findByRole("option", { name: "Revive a service" }));
   await waitFor(() => expect(fetch.mock.calls.map(([path]) => path)).toContain("/api/automations/runs?workflow=revive"));
+});
+
+it("running without editing: the list and Run now are shown, adding, editing and deleting are not", () => {
+  renderWith(apiSamples.automations, true, { automations: ["read", "execute"] });
+  const table = screen.getAllByRole("table")[0];
+  expect(within(table).getAllByRole("button", { name: /Run now/ }).length).toBeGreaterThan(0);
+  expect(screen.queryByRole("link", { name: "Add automation" })).toBeNull();
+  expect(within(table).queryByRole("link", { name: "Edit" })).toBeNull();
+  expect(within(table).queryByRole("button", { name: /Delete/ })).toBeNull();
+});
+
+it("an admin sees adding, editing and deleting", () => {
+  renderWith(apiSamples.automations);
+  const table = screen.getAllByRole("table")[0];
+  expect(screen.getByRole("link", { name: "Add automation" })).toBeInTheDocument();
+  expect(within(table).getAllByRole("link", { name: "Edit" }).length).toBeGreaterThan(0);
+  expect(within(table).getAllByRole("button", { name: /Delete/ }).length).toBeGreaterThan(0);
 });

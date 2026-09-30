@@ -14,6 +14,7 @@ import {
   pathText,
   useSaveWorkflow,
 } from "@/entities/workflow";
+import { useCan } from "@/entities/session";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ErrorNotice } from "@/shared/ui/error-notice";
@@ -50,6 +51,7 @@ const HEADER_FIELDS: Record<string, string> = { title: "workflow-title", id: "wo
 
 export function WorkflowEditor({ workflow, initial = null, revision, workflows, catalogue, sources, tags, lastShownRun = null, onSaved, onCancel, onConflict }: WorkflowEditorProps) {
   const t = useTranslations();
+  const can = useCan();
   const save = useSaveWorkflow();
   const [identity, setIdentity] = useState<string | null>(workflow?.id ?? null);
   const state = useEditorState({ workflow, selfId: identity, initial, workflows, catalogue, sources, tags, readOnly: false, shownRun: lastShownRun, openRun: null });
@@ -165,6 +167,7 @@ export function WorkflowEditor({ workflow, initial = null, revision, workflows, 
           warnings={warnings}
           problemsOpen={problemsOpen}
           saving={save.isPending}
+          canSave={can("workflows", workflow === null ? "create" : "update")}
           onUndo={state.undo}
           onRedo={state.redo}
           onProblems={() => setProblemsOpen((open) => !open)}

@@ -5,7 +5,7 @@ use portal_config::ConfigStore;
 use portal_feature::{ApiError, Gate, Principal};
 use time::OffsetDateTime;
 
-use super::SessionStore;
+use super::{SessionStore, principal_for};
 use crate::helpers::session_token;
 use crate::types::UsersSection;
 
@@ -22,7 +22,7 @@ impl SessionGate {
             .admit(token, OffsetDateTime::now_utc(), |name| {
                 users.credential(name)
             })
-            .map(|name| Principal { name })
+            .map(|name| principal_for(&users, &name))
     }
 }
 

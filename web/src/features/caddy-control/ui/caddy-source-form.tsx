@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { type Path, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { type CaddySourceForm as CaddySourceFormValues, type Proxy, caddySourceFormOf, caddySourceFormSchema, useSaveCaddySource } from "@/entities/proxy";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { ErrorNotice } from "@/shared/ui/error-notice";
@@ -21,6 +22,8 @@ export type CaddySourceFormProps = { proxy: Proxy; revision: string | null };
 
 export function CaddySourceForm({ proxy, revision }: CaddySourceFormProps) {
   const t = useTranslations();
+  const can = useCan();
+  const editable = can("proxy", "update");
   const save = useSaveCaddySource();
   const [conflict, setConflict] = useState(false);
   const form = useForm<CaddySourceFormValues>({ resolver: zodResolver(caddySourceFormSchema), defaultValues: caddySourceFormOf(proxy) });
@@ -59,20 +62,24 @@ export function CaddySourceForm({ proxy, revision }: CaddySourceFormProps) {
   const errors = formState.errors;
   return (
     <form onSubmit={submit} className="grid gap-4" noValidate aria-label={t("proxy.caddyControl.sourceTitle")}>
-      {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
-      <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
-        <FormField id="caddy-source" label={t("proxy.caddyControl.source")} hint={t("proxy.caddyControl.sourceHint")} error={errors.source?.message}>
-          <Input id="caddy-source" type="url" inputMode="url" spellCheck={false} autoComplete="off" {...form.register("source")} />
-        </FormField>
-        <FormField id="caddy-version" label={t("proxy.caddyControl.versionField")} hint={t("proxy.caddyControl.versionHint")} error={errors.version?.message}>
-          <Input id="caddy-version" spellCheck={false} autoComplete="off" {...form.register("version")} />
-        </FormField>
-      </div>
-      <div className="flex justify-end">
-        <Button type="submit" variant="outline" size="sm" disabled={formState.isSubmitting || !formState.isDirty}>
-          {formState.isSubmitting ? t("common.saving") : t("proxy.caddyControl.sourceSave")}
-        </Button>
-      </div>
+      <fieldset disabled={!editable} className="contents">
+        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
+          <FormField id="caddy-source" label={t("proxy.caddyControl.source")} hint={t("proxy.caddyControl.sourceHint")} error={errors.source?.message}>
+            <Input id="caddy-source" type="url" inputMode="url" spellCheck={false} autoComplete="off" {...form.register("source")} />
+          </FormField>
+          <FormField id="caddy-version" label={t("proxy.caddyControl.versionField")} hint={t("proxy.caddyControl.versionHint")} error={errors.version?.message}>
+            <Input id="caddy-version" spellCheck={false} autoComplete="off" {...form.register("version")} />
+          </FormField>
+        </div>
+        <div className="flex justify-end">
+          {editable ? (
+            <Button type="submit" variant="outline" size="sm" disabled={formState.isSubmitting || !formState.isDirty}>
+              {formState.isSubmitting ? t("common.saving") : t("proxy.caddyControl.sourceSave")}
+            </Button>
+          ) : null}
+        </div>
+      </fieldset>
     </form>
   );
 }

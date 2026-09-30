@@ -146,7 +146,7 @@ fn the_secrets_example_is_read_from_an_include_and_never_reaches_the_document() 
     std::fs::write(
         &path,
         format!(
-            "include = [\"secrets.toml\"]\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n\n[notifications.telegram]\nenabled = true\nsecret = \"telegram_token\"\nchat_id = \"42\"\n"
+            "include = [\"secrets.toml\"]\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[notifications.telegram]\nenabled = true\nsecret = \"telegram_token\"\nchat_id = \"42\"\n"
         ),
     )
     .unwrap();

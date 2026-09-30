@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { Controller, type Path, type UseFormReturn, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { type Automation, type Catalogue, type Scripts, useSaveAutomation } from "@/entities/automation";
 import { enabledModules, useModules } from "@/entities/module";
 import { useWorkflows } from "@/entities/workflow";
@@ -41,6 +42,8 @@ export type AutomationBuilderProps = {
 
 export function AutomationBuilder({ automation, revision, taken, catalogue, scripts, onSaved, onConflict }: AutomationBuilderProps) {
   const t = useTranslations();
+  const can = useCan();
+  const editable = can("automations", automation === null ? "create" : "update");
   const save = useSaveAutomation();
   const [conflict, setConflict] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -91,68 +94,72 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
   };
   return (
     <form onSubmit={submit} className="grid gap-6" noValidate>
-      {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
-      <SectionCard title={t("automationBuilder.identity")}>
-        <div className="grid gap-4 sm:grid-cols-[1fr_16rem_auto] sm:items-start">
-          <FormField id="automation-title" label={t("automationBuilder.title")} error={errors.title?.message}>
-            <Input
-              id="automation-title"
-              autoFocus
-              {...form.register("title", {
-                onChange: (change: { target: { value: string } }) => {
-                  if (idFollowsTitle) {
-                    form.setValue("id", uniqueId(slugOf(change.target.value), [...taken, ...RESERVED_IDS]), { shouldDirty: true, shouldValidate: true });
-                  }
-                },
-              })}
-            />
-          </FormField>
-          <FormField id="automation-id" label={t("automationBuilder.id")} hint={t("automationBuilder.idHint")} error={errors.id?.message}>
-            <Input
-              id="automation-id"
-              autoComplete="off"
-              spellCheck={false}
-              className="font-mono"
-              {...form.register("id", {
-                onChange: (change: { target: { value: string } }) => setIdFollowsTitle(automation === null && change.target.value.trim() === ""),
-              })}
-            />
-          </FormField>
-          <div className="grid gap-2 sm:pt-0.5">
-            <Label htmlFor="automation-enabled">{t("automationBuilder.enabled")}</Label>
-            <Controller
-              control={form.control}
-              name="enabled"
-              render={({ field }) => <Switch id="automation-enabled" checked={field.value} onCheckedChange={field.onChange} />}
-            />
+      <fieldset disabled={!editable} className="contents">
+        {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
+        <SectionCard title={t("automationBuilder.identity")}>
+          <div className="grid gap-4 sm:grid-cols-[1fr_16rem_auto] sm:items-start">
+            <FormField id="automation-title" label={t("automationBuilder.title")} error={errors.title?.message}>
+              <Input
+                id="automation-title"
+                autoFocus
+                {...form.register("title", {
+                  onChange: (change: { target: { value: string } }) => {
+                    if (idFollowsTitle) {
+                      form.setValue("id", uniqueId(slugOf(change.target.value), [...taken, ...RESERVED_IDS]), { shouldDirty: true, shouldValidate: true });
+                    }
+                  },
+                })}
+              />
+            </FormField>
+            <FormField id="automation-id" label={t("automationBuilder.id")} hint={t("automationBuilder.idHint")} error={errors.id?.message}>
+              <Input
+                id="automation-id"
+                autoComplete="off"
+                spellCheck={false}
+                className="font-mono"
+                {...form.register("id", {
+                  onChange: (change: { target: { value: string } }) => setIdFollowsTitle(automation === null && change.target.value.trim() === ""),
+                })}
+              />
+            </FormField>
+            <div className="grid gap-2 sm:pt-0.5">
+              <Label htmlFor="automation-enabled">{t("automationBuilder.enabled")}</Label>
+              <Controller
+                control={form.control}
+                name="enabled"
+                render={({ field }) => <Switch id="automation-enabled" checked={field.value} onCheckedChange={field.onChange} />}
+              />
+            </div>
           </div>
+          <div className="mt-4">
+            <TagsField id="automation-tags" control={form.control} name="tags" suggestions={catalogue.choices.tags} error={errors.tags?.message ?? (Array.isArray(errors.tags) ? errors.tags.find(Boolean)?.message : undefined)} />
+          </div>
+        </SectionCard>
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <WhenCard form={form} catalogue={catalogue} />
+          <FiltersCard form={form} catalogue={catalogue} />
         </div>
-        <div className="mt-4">
-          <TagsField id="automation-tags" control={form.control} name="tags" suggestions={catalogue.choices.tags} error={errors.tags?.message ?? (Array.isArray(errors.tags) ? errors.tags.find(Boolean)?.message : undefined)} />
+        <RunCard
+          form={form as unknown as UseFormReturn<RunFields>}
+          event={event}
+          scripts={scripts}
+          workflows={workflows}
+          offerWorkflow={workflowsOn || automation?.workflow != null}
+        />
+        {values.action === "workflow" ? null : (
+          <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={chosen} />
+        )}
+        <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
+          <Button asChild variant="outline">
+            <Link href={routes.adminAutomations}>{t("common.cancel")}</Link>
+          </Button>
+          {editable ? (
+            <Button type="submit" disabled={form.formState.isSubmitting || errors.args !== undefined}>
+              {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
+            </Button>
+          ) : null}
         </div>
-      </SectionCard>
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <WhenCard form={form} catalogue={catalogue} />
-        <FiltersCard form={form} catalogue={catalogue} />
-      </div>
-      <RunCard
-        form={form as unknown as UseFormReturn<RunFields>}
-        event={event}
-        scripts={scripts}
-        workflows={workflows}
-        offerWorkflow={workflowsOn || automation?.workflow != null}
-      />
-      {values.action === "workflow" ? null : (
-        <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={chosen} />
-      )}
-      <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
-        <Button asChild variant="outline">
-          <Link href={routes.adminAutomations}>{t("common.cancel")}</Link>
-        </Button>
-        <Button type="submit" disabled={form.formState.isSubmitting || errors.args !== undefined}>
-          {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
-        </Button>
-      </div>
+      </fieldset>
     </form>
   );
 }

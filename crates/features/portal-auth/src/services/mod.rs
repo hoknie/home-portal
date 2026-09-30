@@ -1,3 +1,6 @@
+mod granting;
+mod group_listing;
+mod groups;
 mod session_gate;
 mod sessions;
 mod throttle;
@@ -8,6 +11,9 @@ mod validation;
 #[cfg(test)]
 mod tests;
 
+pub use granting::{CHANGE_USERS, keeps_an_admin, may_give, may_touch, unknown_group};
+pub use group_listing::{checked_group_name, checked_rights, groups_view, require_admin};
+pub use groups::principal_for;
 pub use session_gate::SessionGate;
 pub use sessions::SessionStore;
 pub use throttle::Throttle;

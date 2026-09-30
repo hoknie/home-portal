@@ -17,6 +17,6 @@ mod tests;
 pub use address::{ADDRESS_VARIABLE, parse_address, resolve_address};
 pub use configuration::adopt;
 pub use interface::located;
-pub use router::assemble;
+pub use router::{assemble, rule_book};
 pub use run::run;
 pub use start::start;

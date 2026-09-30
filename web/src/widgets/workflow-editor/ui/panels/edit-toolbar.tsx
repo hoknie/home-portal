@@ -13,6 +13,7 @@ export type EditToolbarProps = {
   warnings: number;
   problemsOpen: boolean;
   saving: boolean;
+  canSave?: boolean;
   onUndo: () => void;
   onRedo: () => void;
   onProblems: () => void;
@@ -20,7 +21,7 @@ export type EditToolbarProps = {
   onCancel: () => void;
 };
 
-export function EditToolbar({ canUndo, canRedo, errors, warnings, problemsOpen, saving, onUndo, onRedo, onProblems, onLegend, onCancel }: EditToolbarProps) {
+export function EditToolbar({ canUndo, canRedo, errors, warnings, problemsOpen, saving, canSave = true, onUndo, onRedo, onProblems, onLegend, onCancel }: EditToolbarProps) {
   const t = useTranslations("workflowEditor.toolbar");
   const common = useTranslations("common");
   return (
@@ -43,9 +44,11 @@ export function EditToolbar({ canUndo, canRedo, errors, warnings, problemsOpen, 
         <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
           {common("cancel")}
         </Button>
-        <Button type="submit" size="sm" disabled={saving}>
-          {saving ? common("saving") : errors > 0 ? t("saveWithErrors", { count: errors }) : common("save")}
-        </Button>
+        {canSave ? (
+          <Button type="submit" size="sm" disabled={saving}>
+            {saving ? common("saving") : errors > 0 ? t("saveWithErrors", { count: errors }) : common("save")}
+          </Button>
+        ) : null}
       </span>
     </div>
   );

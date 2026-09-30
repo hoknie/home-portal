@@ -55,6 +55,15 @@
 # [scripts]
 # editing = true
 
+# macOS privacy permissions (Management → Permissions, `home-portal permissions`). At start the
+# portal asks for Local Network, removable volumes, these folders and Automation of these
+# applications, so the prompts appear once, early, and scripts never wait on one. Nothing to
+# set on other systems.
+# [permissions]
+# request_at_start = true
+# automation = ["System Events"]
+# folders = ["Documents", "Desktop", "Downloads"]
+
 # The interface's language when the visitor has not chosen one with the switcher and their
 # browser asks for none of en, ru, es. English when not set.
 # [interface]
@@ -165,9 +174,13 @@ trusted_proxies = []
 # Create a hash with:  home-portal password-hash
 # With [modules] users = true, Management → Users edits these entries too, in the file
 # they live in, keeping comments; a changed password ends that person's other sessions.
+# At least one user must be in the built-in admin group, which may do everything; the
+# portal refuses to start otherwise. Other groups are [[groups]] with permissions per area,
+# edited under Management → Users → Groups; a user without a group only sees the home page.
 # [[users]]
 # name = "admin"
 # password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
+# group = "admin"
 
 # Services shown on the home page and probed in the background. Entries written here are
 # moved to services.toml beside this file at the first start; keep adding them there.

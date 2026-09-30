@@ -14,6 +14,8 @@ pub const TARGET_HELP: &str = "A service id from the configuration, or a URL";
 pub const KIND_HELP: &str = "How to probe [default: the service's setting, or http for a URL]";
 pub const PROXY_ABOUT: &str = "Work with the Caddy reverse proxy";
 pub const ACTION_HELP: &str = "What to do with the proxy";
+pub const PERMISSIONS_ABOUT: &str = "Ask macOS for the permissions the portal and its scripts need";
+pub const PERMISSIONS_LONG_ABOUT: &str = "Ask macOS for the permissions the portal and its scripts need, wait for the answers, and print each one with what to do.\n\nA permission not yet decided shows its system prompt. Run it from the same context the portal runs in: from a terminal the permissions belong to the terminal application, under launchd to the home-portal binary. Exits 0 when nothing is denied, and 1 otherwise.";
 
 #[derive(Debug, Clone, PartialEq, Eq, Subcommand)]
 pub enum Command {
@@ -41,6 +43,12 @@ pub enum Command {
         #[arg(value_enum, value_name = "ACTION", help = ACTION_HELP)]
         action: ProxyAction,
     },
+    #[command(
+        about = PERMISSIONS_ABOUT,
+        long_about = PERMISSIONS_LONG_ABOUT,
+        after_help = Command::permissions_examples()
+    )]
+    Permissions,
 }
 
 impl Command {
@@ -86,6 +94,22 @@ impl Command {
                 (
                     "home-portal proxy render > caddy.json",
                     "save it for `caddy run --config caddy.json`",
+                ),
+            ],
+        )
+    }
+
+    pub fn permissions_examples() -> StyledStr {
+        examples(
+            "Examples",
+            &[
+                (
+                    "home-portal permissions",
+                    "ask for every permission and list the answers",
+                ),
+                (
+                    "home-portal permissions | grep denied",
+                    "plain lines for scripts",
                 ),
             ],
         )

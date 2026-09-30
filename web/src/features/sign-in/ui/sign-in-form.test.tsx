@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
-import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
+import { TEST_ADMIN, jsonResponse, renderWithProviders } from "@/shared/lib/testing";
 
 import { SignInForm } from "./sign-in-form";
 
@@ -21,7 +21,7 @@ async function submitWith(response: Response) {
 }
 
 it("signs in and reports it", async () => {
-  const onSignedIn = await submitWith(jsonResponse({ name: "admin" }));
+  const onSignedIn = await submitWith(jsonResponse(TEST_ADMIN));
   expect(onSignedIn).toHaveBeenCalledOnce();
 });
 

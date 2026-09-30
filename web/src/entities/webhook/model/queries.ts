@@ -2,7 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 
 import { STATUS_REFRESH_MILLISECONDS } from "@/shared/config";
 
-import { type WebhookRequest, createWebhook, deleteWebhook, fetchWebhooks, issueToken, removeToken, updateWebhook } from "../api/webhooks";
+import { type WebhookRequest, createWebhook, deleteWebhook, fetchWebhooks, issueToken, removeToken, runWebhook, updateWebhook } from "../api/webhooks";
 
 export const webhooksKey = ["webhooks"] as const;
 
@@ -39,4 +39,8 @@ export function useIssueToken() {
 
 export function useRemoveToken() {
   return useInvalidating(({ id, revision }: { id: string; revision: string | null }) => removeToken(id, revision));
+}
+
+export function useRunWebhook() {
+  return useInvalidating(({ id, variables }: { id: string; variables: Record<string, string> }) => runWebhook(id, variables));
 }

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Allowed, useCan } from "@/entities/session";
 import { type NotificationChannel, useChangeChannel } from "@/entities/notification";
 import { useSecretNames } from "@/entities/workflow";
 import { ConflictError, ValidationError } from "@/shared/api";
@@ -18,6 +19,7 @@ const SELECT =
 
 export function ChannelSettings({ channel, revision }: { channel: NotificationChannel; revision: string | null }) {
   const t = useTranslations();
+  const can = useCan();
   const change = useChangeChannel();
   const secrets = useSecretNames();
   const [draft, setDraft] = useState<Record<string, unknown>>(channel.settings);
@@ -54,37 +56,41 @@ export function ChannelSettings({ channel, revision }: { channel: NotificationCh
       }}
     >
       {conflict ? <ErrorNotice title={t("errors.conflict")} /> : null}
-      {Object.entries(draft).map(([key, value]) => {
-        const id = `channel-${channel.name}-${key}`;
-        if (typeof value === "boolean") {
+      <fieldset disabled={!can("notifications", "update")} className="contents">
+        {Object.entries(draft).map(([key, value]) => {
+          const id = `channel-${channel.name}-${key}`;
+          if (typeof value === "boolean") {
+            return (
+              <div key={key} className="flex items-center justify-between gap-4">
+                <Label htmlFor={id}>{label(key)}</Label>
+                <Switch id={id} checked={value} onCheckedChange={(next) => set(key, next)} />
+              </div>
+            );
+          }
           return (
-            <div key={key} className="flex items-center justify-between gap-4">
-              <Label htmlFor={id}>{label(key)}</Label>
-              <Switch id={id} checked={value} onCheckedChange={(next) => set(key, next)} />
-            </div>
+            <FormField key={key} id={id} label={label(key)} error={errors[key]}>
+              {key === SECRET_SETTING ? (
+                <select id={id} className={SELECT} value={typeof value === "string" ? value : ""} onChange={(event) => set(key, event.target.value)}>
+                  <option value="">{t("notifications.settings.noSecret")}</option>
+                  {secretNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <Input id={id} spellCheck={false} autoComplete="off" value={value === null || value === undefined ? "" : String(value)} onChange={(event) => set(key, event.target.value)} />
+              )}
+            </FormField>
           );
-        }
-        return (
-          <FormField key={key} id={id} label={label(key)} error={errors[key]}>
-            {key === SECRET_SETTING ? (
-              <select id={id} className={SELECT} value={typeof value === "string" ? value : ""} onChange={(event) => set(key, event.target.value)}>
-                <option value="">{t("notifications.settings.noSecret")}</option>
-                {secretNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <Input id={id} spellCheck={false} autoComplete="off" value={value === null || value === undefined ? "" : String(value)} onChange={(event) => set(key, event.target.value)} />
-            )}
-          </FormField>
-        );
-      })}
+        })}
+      </fieldset>
       <div>
-        <Button type="submit" disabled={change.isPending}>
-          {t("notifications.settings.save")}
-        </Button>
+        <Allowed area="notifications" action="update">
+          <Button type="submit" disabled={change.isPending}>
+            {t("notifications.settings.save")}
+          </Button>
+        </Allowed>
       </div>
     </form>
   );

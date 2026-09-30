@@ -4,8 +4,18 @@ import type { ReactElement } from "react";
 
 import { type Locale, TestIntl } from "@/shared/i18n";
 
-export function testQueryClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false, refetchInterval: false }, mutations: { retry: false } } });
+export const TEST_SESSION_KEY = ["session"] as const;
+
+export const TEST_ADMIN = { name: "admin", group: "admin", admin: true, rights: {} } as const;
+
+export type TestClientOptions = { signedIn?: boolean };
+
+export function testQueryClient({ signedIn = true }: TestClientOptions = {}) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, refetchInterval: false }, mutations: { retry: false } } });
+  if (signedIn) {
+    client.setQueryData(TEST_SESSION_KEY, TEST_ADMIN);
+  }
+  return client;
 }
 
 export type RenderOptions = { locale?: Locale };

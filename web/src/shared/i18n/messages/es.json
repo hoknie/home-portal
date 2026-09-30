@@ -42,7 +42,8 @@
     "collapseMenu": "Contraer el menú",
     "expandMenu": "Expandir el menú",
     "menu": "Menú",
-    "scripts": "Scripts"
+    "scripts": "Scripts",
+    "permissions": "Permisos"
   },
   "theme": {
     "label": "Tema",
@@ -1001,7 +1002,15 @@
     "address": "Dirección",
     "noVariables": "Sin variables obligatorias",
     "noListeners": "Ninguna automatización responde aún a este webhook.",
-    "lastRuns": "Últimas {count} ejecuciones"
+    "lastRuns": "Últimas {count} ejecuciones",
+    "run": {
+      "button": "Ejecutar ahora",
+      "title": "Ejecutar {title}",
+      "description": "Ejecuta el webhook como si lo hubieran llamado, sin su token.",
+      "submit": "Ejecutar",
+      "queued": "La ejecución {id} está en cola",
+      "published": "El evento se publicó"
+    }
   },
   "tags": {
     "label": "Etiquetas",
@@ -1132,7 +1141,71 @@
     "refused": "No se guardó: {message}",
     "columns": {
       "name": "Nombre",
-      "actions": "Acciones"
+      "actions": "Acciones",
+      "group": "Grupo"
+    },
+    "noGroup": "Sin grupo",
+    "adminGroup": "admin",
+    "group": "Grupo",
+    "changeGroup": "Cambiar grupo",
+    "groupTitle": "Grupo de {name}",
+    "groupDescription": "El grupo decide lo que la persona puede hacer. Se aplica desde su siguiente petición.",
+    "saveGroup": "Guardar grupo",
+    "groupChanged": "{name} está en otro grupo",
+    "cannotDeleteLastAdmin": "Hace falta al menos un administrador",
+    "tabs": {
+      "label": "Usuarios y grupos",
+      "users": "Usuarios",
+      "groups": "Grupos"
+    },
+    "groups": {
+      "add": "Añadir grupo",
+      "addTitle": "Nuevo grupo",
+      "editTitle": "Editar {name}",
+      "dialogDescription": "Marca lo que los miembros pueden hacer en cada área. Solo los administradores cambian los grupos.",
+      "name": "Nombre",
+      "builtin": "integrado",
+      "admin": "admin",
+      "members": "Miembros",
+      "noMembers": "Sin miembros",
+      "actionsColumn": "Acciones",
+      "edit": "Editar",
+      "delete": "Borrar",
+      "deleteTitle": "¿Borrar {name}?",
+      "deleteDescription": "El grupo {name} se quita de la configuración.",
+      "deleted": "{name} se borró",
+      "created": "{name} se añadió",
+      "saved": "{name} se guardó",
+      "refused": "No se guardó: {message}",
+      "hasMembers": "Pasa primero sus miembros a otro grupo",
+      "loadFailed": "No se pudieron cargar los grupos",
+      "rightsOf": "Derechos de {name}",
+      "area": "Área",
+      "cell": "{area}: {action}",
+      "areas": {
+        "services": "Servicios",
+        "layout": "Diseño del inicio",
+        "network": "Red",
+        "modules": "Módulos",
+        "scripts": "Scripts",
+        "secrets": "Secretos",
+        "host-permissions": "Permisos del Mac",
+        "portal": "Portal (reinicio)",
+        "proxy": "Proxy",
+        "dns": "DNS",
+        "automations": "Automatizaciones",
+        "webhooks": "Webhooks",
+        "users": "Usuarios y grupos",
+        "workflows": "Flujos",
+        "notifications": "Notificaciones"
+      },
+      "actions": {
+        "read": "Leer",
+        "create": "Crear",
+        "update": "Cambiar",
+        "delete": "Borrar",
+        "execute": "Ejecutar"
+      }
     }
   },
   "workflows": {
@@ -2355,5 +2428,57 @@
       "rules": "Los tipos son text, number, flag u opciones como a|b. El encabezado termina en la primera línea que no es un comentario; se leen como máximo 64 líneas y 32 argumentos.",
       "insert": "Insertar un encabezado de ejemplo"
     }
+  },
+  "permissions": {
+    "title": "Permisos",
+    "subtitle": "macOS pregunta una vez al propietario antes de que el portal y sus scripts accedan a la red local, a los volúmenes extraíbles, a tus carpetas o a otras aplicaciones. El portal los pide al arrancar; aquí ves las respuestas.",
+    "listTitle": "Lo que puede hacer el portal",
+    "owner": {
+      "terminal": "El portal se ejecuta en {name}, así que estos permisos pertenecen a {name}.",
+      "binary": "Estos permisos pertenecen a {name}, y cada script que ejecuta también los tiene."
+    },
+    "elsewhere": "Estos permisos solo existen en macOS; en este sistema no hay nada que conceder.",
+    "learned": "Comprobado",
+    "loadFailed": "No se pudieron cargar los permisos",
+    "requestAgain": "Pedir de nuevo",
+    "requestErrors": {
+      "busy": "El portal ya los está pidiendo; responde en el Mac.",
+      "outside": "Los permisos solo se pueden pedir desde dentro de tus redes.",
+      "failed": "No se pudieron pedir los permisos."
+    },
+    "states": {
+      "granted": "Permitido",
+      "denied": "Denegado",
+      "pending": "Esperando respuesta",
+      "not-applicable": "No hace falta aquí",
+      "unknown": "Desconocido"
+    },
+    "names": {
+      "local-network": "Red local",
+      "removable-volumes": "Volúmenes extraíbles",
+      "full-disk-access": "Acceso total al disco",
+      "folder": "Carpeta {name}",
+      "automation": "Controlar {name}"
+    },
+    "panes": {
+      "local-network": "Privacidad y seguridad › Red local",
+      "files-and-folders": "Privacidad y seguridad › Archivos y carpetas",
+      "automation": "Privacidad y seguridad › Automatización",
+      "full-disk-access": "Privacidad y seguridad › Acceso total al disco"
+    },
+    "advice": {
+      "allow-in-settings": "Permite {owner} en Ajustes del Sistema › {pane}.",
+      "answer-the-prompt": "Responde a la pregunta en el Mac o permite {owner} en Ajustes del Sistema › {pane}.",
+      "connect-a-volume": "Conecta un volumen extraíble y pide de nuevo.",
+      "grant-full-disk-access": "macOS nunca pregunta por este: añade {owner} en Ajustes del Sistema › {pane} tú mismo.",
+      "application-not-found": "La aplicación no se encontró o no arrancó; revisa su nombre en [permissions] automation.",
+      "check-failed": "La comprobación no terminó; pide de nuevo."
+    }
+  },
+  "access": {
+    "title": "No tienes acceso a esta página",
+    "description": "Tu grupo no tiene el derecho de abrirla. Pídeselo a un administrador si lo necesitas.",
+    "home": "Volver al inicio",
+    "forbidden": "No tienes derecho a hacer esto."
   }
 }

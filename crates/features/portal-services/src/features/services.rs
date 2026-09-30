@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use axum::Router;
+use axum::http::Method;
 use axum::routing::{get, post, put};
 use portal_config::{ConfigStore, Storage};
-use portal_feature::{Feature, Loop, Validator};
+use portal_feature::{Action, Area, Feature, Loop, Right, Rule, Validator};
 use portal_model::{Environment, ServiceStatus};
 use time::OffsetDateTime;
 
@@ -121,6 +122,45 @@ impl Feature for ServicesFeature {
             .route(Self::PROBE, post(probe_now))
             .route(Self::HISTORY, get(history))
             .with_state(self.state.clone())
+    }
+
+    fn rules(&self) -> Vec<Rule> {
+        vec![
+            Rule::signed(Method::GET, Self::COLLECTION),
+            Rule::needs(
+                Method::POST,
+                Self::COLLECTION,
+                &[Right {
+                    area: Area::Services,
+                    action: Action::Create,
+                }],
+            ),
+            Rule::needs(
+                Method::PUT,
+                Self::ITEM,
+                &[Right {
+                    area: Area::Services,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::needs(
+                Method::DELETE,
+                Self::ITEM,
+                &[Right {
+                    area: Area::Services,
+                    action: Action::Delete,
+                }],
+            ),
+            Rule::needs(
+                Method::POST,
+                Self::PROBE,
+                &[Right {
+                    area: Area::Services,
+                    action: Action::Update,
+                }],
+            ),
+            Rule::signed(Method::GET, Self::HISTORY),
+        ]
     }
 
     fn validator(&self) -> Option<Validator> {

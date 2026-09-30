@@ -48,9 +48,7 @@ pub fn api(text: &str) -> Api {
         .unwrap();
     let router = feature
         .router()
-        .layer(axum::Extension(Principal {
-            name: "admin".into(),
-        }))
+        .layer(axum::Extension(Principal::admin("admin")))
         .merge(feature.public_router());
     Api {
         router,

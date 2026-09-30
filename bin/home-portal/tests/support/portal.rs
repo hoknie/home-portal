@@ -17,7 +17,7 @@ pub fn with_extra(directory: &TempDir, password: &str, extra: &str) -> PathBuf {
     let path = directory.path().join("home-portal.toml");
     fs::write(
         &path,
-        format!("{example}\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n{extra}"),
+        format!("{example}\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n{extra}"),
     )
     .unwrap();
     path

@@ -2,11 +2,18 @@
   "editable": true,
   "users": [
     {
+      "group": "admin",
       "name": "admin",
       "you": true
     },
     {
+      "group": "family",
       "name": "anna",
+      "you": false
+    },
+    {
+      "group": null,
+      "name": "guest",
       "you": false
     }
   ]

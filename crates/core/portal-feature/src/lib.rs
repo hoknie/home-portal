@@ -5,7 +5,7 @@ pub use ports::{
     Channel, EventSink, Feature, Gate, ModulePreparer, SecretSource, StatusObserver, WidgetProvider,
 };
 pub use types::{
-    ApiError, ChannelReadiness, Check, ClientAddress, EventName, FieldError, Loop, Module,
-    ModuleSwitches, Notification, PortalEvent, Principal, StatusChange, Validator, Visitor,
-    WidgetProblem,
+    Action, ApiError, Area, ChannelReadiness, Check, ClientAddress, EventName, FieldError, Loop,
+    Module, ModuleSwitches, Notification, PortalEvent, Principal, Requirement, Right, Rights, Rule,
+    StatusChange, Validator, Visitor, WidgetProblem,
 };

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Allowed } from "@/entities/session";
 import { type Module, type ModuleName, type Modules, switchLock, useSwitchModule } from "@/entities/module";
 import { RequestError, ValidationError } from "@/shared/api";
 import { MODULE_PAGES } from "@/shared/config";
@@ -37,13 +38,15 @@ export function ModuleSwitch({ module, modules, revision }: ModuleSwitchProps) {
   return (
     <div className="grid gap-2">
       <div className="flex items-center gap-3">
-        <Switch
-          id={`module-${module.name}`}
-          checked={module.enabled}
-          disabled={lock !== null || switching.isPending}
-          aria-label={t("switchLabel", { name })}
-          onCheckedChange={(enabled) => void change(enabled)}
-        />
+        <Allowed area="modules" action="update">
+          <Switch
+            id={`module-${module.name}`}
+            checked={module.enabled}
+            disabled={lock !== null || switching.isPending}
+            aria-label={t("switchLabel", { name })}
+            onCheckedChange={(enabled) => void change(enabled)}
+          />
+        </Allowed>
         <span className="text-sm font-medium">{t(module.enabled ? "on" : "off")}</span>
       </div>
       {lock ? (

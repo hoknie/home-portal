@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useCan } from "@/entities/session";
 import { type Automation, useDeleteAutomation } from "@/entities/automation";
 import { ConflictError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
@@ -12,7 +13,7 @@ import { Button } from "@/shared/ui/primitives";
 
 export type DeleteAutomationButtonProps = { automation: Automation; revision: string | null };
 
-export function DeleteAutomationButton({ automation, revision }: DeleteAutomationButtonProps) {
+function DeleteAutomationButtonAllowed({ automation, revision }: DeleteAutomationButtonProps) {
   const t = useTranslations();
   const remove = useDeleteAutomation();
   const [open, setOpen] = useState(false);
@@ -41,4 +42,9 @@ export function DeleteAutomationButton({ automation, revision }: DeleteAutomatio
       />
     </>
   );
+}
+
+export function DeleteAutomationButton(props: DeleteAutomationButtonProps) {
+  const can = useCan();
+  return can("automations", "delete") ? <DeleteAutomationButtonAllowed {...props} /> : null;
 }

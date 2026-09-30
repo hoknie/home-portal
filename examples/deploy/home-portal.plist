@@ -6,21 +6,27 @@
     cp home-portal.plist ~/Library/LaunchAgents/lan.home.portal.plist
     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/lan.home.portal.plist
 
-  Local Network permission. Since macOS 15 a process may reach addresses on the local
-  network only with the owner's permission. Without it every probe of a LAN address fails
-  at once with "No route to host", and the portal reports the diagnosis
-  "local-network-denied" instead of calling the service down.
+  Permissions. macOS asks the owner once before a process may reach the local network,
+  removable volumes, the folders Documents, Desktop and Downloads, or other applications
+  (Automation). The portal asks for all of them at start ([permissions] in the configuration)
+  and lists the answers on Management > Permissions. Full Disk Access is never asked for;
+  add home-portal in System Settings > Privacy & Security > Full Disk Access by hand when a
+  script needs it.
 
-  - Started from a terminal, the portal inherits the terminal's permission: allow the
-    terminal app in System Settings > Privacy & Security > Local Network.
-  - Started by this agent, the permission belongs to home-portal itself. If probes report
-    "local-network-denied", find home-portal in the same list and allow it.
+  - Started from a terminal, the portal inherits the terminal's permissions: the prompts
+    and the System Settings entries name the terminal app.
+  - Started by this agent, the permissions belong to home-portal itself. macOS knows an
+    unsigned binary by its contents, so a new build asks again: run the agent from an
+    installed copy, and ask again after each upgrade.
 
-  Check from the same context the portal runs in:  home-portal probe <service id>
+  Ask and see the answers from the same context the portal runs in:  home-portal permissions
+  Without Local Network every probe of a LAN address fails at once with the diagnosis
+  "local-network-denied" instead of calling the service down; check with
+  home-portal probe <service id>.
 
   Automations. Scripts from the scripts directory ([storage] in the configuration, scripts/
   beside it by default) run as the portal's user and
-  inherit its permissions, Local Network included. launchd gives them a minimal PATH
+  inherit its permissions, all of the above included. launchd gives them a minimal PATH
   (/usr/bin:/bin:/usr/sbin:/sbin): call programs by their absolute path, or add a PATH
   entry to EnvironmentVariables below.
 

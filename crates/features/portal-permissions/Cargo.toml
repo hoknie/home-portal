@@ -1,0 +1,21 @@
+[package]
+name = "portal-permissions"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+axum.workspace = true
+portal-config.workspace = true
+portal-feature.workspace = true
+portal-model.workspace = true
+serde.workspace = true
+time.workspace = true
+tokio.workspace = true
+toml_edit.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+http-body-util.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+tower.workspace = true

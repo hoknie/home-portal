@@ -1,6 +1,6 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UsersView {
-    pub names: Vec<String>,
+    pub members: Vec<(String, Option<String>)>,
     pub you: String,
     pub editable: bool,
 }

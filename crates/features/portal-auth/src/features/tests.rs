@@ -98,7 +98,7 @@ fn portal_behind(connection: Arc<dyn Connection>) -> Portal {
     let hash = hash_password("secret").unwrap();
     fs::write(
         &path,
-        format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\n"),
+        format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"),
     )
     .unwrap();
     let store = Arc::new(ConfigStore::open(&path).unwrap());
@@ -182,7 +182,14 @@ async fn sign_in_who_am_i_sign_out_and_then_the_session_is_gone() {
         .await
         .unwrap();
     assert_eq!(who.status(), StatusCode::OK);
-    assert_eq!(body_of(who).await, r#"{"name":"admin"}"#);
+    let who: serde_json::Value = serde_json::from_str(&body_of(who).await).unwrap();
+    assert_eq!(who["name"], "admin");
+    assert_eq!(who["group"], "admin");
+    assert_eq!(who["admin"], true);
+    assert_eq!(
+        who["rights"]["automations"],
+        serde_json::json!(["read", "create", "update", "delete", "execute"])
+    );
 
     let out = portal
         .router

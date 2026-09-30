@@ -6,6 +6,7 @@ use toml_edit::{ArrayOfTables, DocumentMut, Item, Table, Value, value};
 pub const SECTION: &str = "users";
 pub const NAME: &str = "name";
 pub const PASSWORD_HASH: &str = "password_hash";
+pub const GROUP: &str = "group";
 
 pub fn position(document: &DocumentMut, name: &str) -> Option<usize> {
     document
@@ -15,10 +16,13 @@ pub fn position(document: &DocumentMut, name: &str) -> Option<usize> {
         .position(|table| table.get(NAME).and_then(Item::as_str) == Some(name))
 }
 
-pub fn append(document: &mut DocumentMut, name: &str, password_hash: &str) {
+pub fn append(document: &mut DocumentMut, name: &str, password_hash: &str, group: Option<&str>) {
     let mut table = Table::new();
     table[NAME] = value(name);
     table[PASSWORD_HASH] = value(password_hash);
+    if let Some(group) = group {
+        table[GROUP] = value(group);
+    }
     if let Some(entries) = document
         .get_mut(SECTION)
         .and_then(Item::as_array_of_tables_mut)
@@ -46,9 +50,32 @@ pub fn set_hash(document: &mut DocumentMut, index: usize, password_hash: &str) {
     table.insert(PASSWORD_HASH, Item::Value(fresh));
 }
 
-pub fn remove(document: &mut DocumentMut, index: usize) {
-    let Some(entries) = document
+pub fn set_group(document: &mut DocumentMut, index: usize, group: Option<&str>) {
+    let Some(table) = document
         .get_mut(SECTION)
+        .and_then(Item::as_array_of_tables_mut)
+        .and_then(|entries| entries.get_mut(index))
+    else {
+        return;
+    };
+    let Some(group) = group else {
+        table.remove(GROUP);
+        return;
+    };
+    let mut fresh = Value::from(group);
+    if let Some(existing) = table.get(GROUP).and_then(Item::as_value) {
+        *fresh.decor_mut() = existing.decor().clone();
+    }
+    table.insert(GROUP, Item::Value(fresh));
+}
+
+pub fn remove(document: &mut DocumentMut, index: usize) {
+    remove_from(document, SECTION, index);
+}
+
+pub fn remove_from(document: &mut DocumentMut, section: &str, index: usize) {
+    let Some(entries) = document
+        .get_mut(section)
         .and_then(Item::as_array_of_tables_mut)
     else {
         return;

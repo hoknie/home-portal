@@ -23,13 +23,14 @@ members = [
     "crates/features/portal-dns",
     "crates/features/portal-modules",
     "crates/features/portal-notification",
+    "crates/features/portal-permissions",
     "crates/notification/portal-telegram",
     "bin/home-portal",
 ]
 
 [workspace.package]
 edition = "2024"
-version = "0.1.9"
+version = "0.1.10"
 
 [workspace.dependencies]
 async-trait = "0.1"
@@ -91,6 +92,7 @@ portal-proxy = { path = "crates/features/portal-proxy" }
 portal-automations = { path = "crates/features/portal-automations" }
 portal-dns = { path = "crates/features/portal-dns" }
 portal-modules = { path = "crates/features/portal-modules" }
+portal-permissions = { path = "crates/features/portal-permissions" }
 
 [profile.dev.package.argon2]
 opt-level = 3
