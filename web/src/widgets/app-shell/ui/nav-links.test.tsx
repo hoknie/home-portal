@@ -46,7 +46,7 @@ const header = (name: string) => screen.getByRole("button", { name });
 it("the modules come in categories, each a header that shows or hides its links", async () => {
   menu();
   expect(screen.getAllByRole("button", { expanded: true }).map((button) => button.textContent)).toEqual(["Network", "Automation", "Notifications", "Access"]);
-  expect(within(screen.getByRole("group", { name: "Automation" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Automations", "Webhooks", "Workflows", "Scripts"]);
+  expect(within(screen.getByRole("group", { name: "Automation" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Automations", "Webhooks", "Workflows", "Run journal", "Scripts"]);
   await userEvent.click(header("Automation"));
   expect(header("Automation")).toHaveAttribute("aria-expanded", "false");
   expect(screen.queryByRole("link", { name: "Workflows" })).not.toBeInTheDocument();

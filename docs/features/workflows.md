@@ -56,7 +56,7 @@ id (`workflows/revive.toml`). The editor writes it for you.
   A script that runs past its own timeout still stops the run.
 - A workflow used by an automation, a webhook or another workflow cannot be deleted until they stop
   using it.
-- Runs appear in the automations journal as well, with the full trace.
+- Runs appear in the run journal (`/admin/runs`) as well, with the full trace.
 
 ## See also
 

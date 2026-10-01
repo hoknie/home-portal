@@ -43,7 +43,8 @@
     "expandMenu": "Expand menu",
     "menu": "Menu",
     "scripts": "Scripts",
-    "permissions": "Permissions"
+    "permissions": "Permissions",
+    "runs": "Run journal"
   },
   "theme": {
     "label": "Theme",
@@ -143,7 +144,6 @@
     "emptyHint": "Add a service: it will appear on the home page and start being checked.",
     "columns": {
       "name": "Name",
-      "group": "Group",
       "url": "Address",
       "status": "Status",
       "latency": "Response",
@@ -154,7 +154,8 @@
     "deleted": "Service deleted",
     "saved": "Service saved",
     "created": "Service added",
-    "openService": "Open {name}"
+    "openService": "Open {name}",
+    "noGroup": "No group"
   },
   "serviceForm": {
     "notSaved": "The service was not saved: the configuration has other problems",
@@ -663,14 +664,15 @@
     "columns": {
       "title": "Automation",
       "trigger": "When",
-      "script": "Script",
       "enabled": "State",
       "lastRun": "Last run",
       "actions": "Actions",
       "when": "When",
       "event": "Event",
       "outcome": "Outcome",
-      "details": "Details"
+      "details": "Details",
+      "source": "Source",
+      "action": "Action"
     },
     "enabled": "Enabled",
     "disabled": "Disabled",
@@ -2537,5 +2539,22 @@
     "overwrite": "Overwrite",
     "reloadTitle": "Discard what you typed?",
     "reloadDescription": "The current values will replace everything you typed in this form."
+  },
+  "references": {
+    "automation": "Automation",
+    "webhook": "Webhook",
+    "workflow": "Workflow",
+    "script": "Script"
+  },
+  "runJournal": {
+    "title": "Run journal",
+    "subtitle": "Runs of automations, webhooks and workflows, newest first"
+  },
+  "runPager": {
+    "page": "Page {page}",
+    "frozen": "Page {page}: older runs do not refresh themselves.",
+    "newest": "Go to the newest",
+    "newer": "Newer",
+    "older": "Older"
   }
 }

@@ -24,7 +24,7 @@ export const runResponseSchema = z.object({ "arguments": z.array(z.string()), "a
 
 export type RunResponse = z.infer<typeof runResponseSchema>;
 
-export const runsResponseSchema = z.object({ "runs": z.array(runResponseSchema) });
+export const runsResponseSchema = z.object({ "next_before": z.string().nullable(), "runs": z.array(runResponseSchema) });
 
 export type RunsResponse = z.infer<typeof runsResponseSchema>;
 

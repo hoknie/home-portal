@@ -48,7 +48,7 @@ it("webhooks while off: the list stays and the notice says the module is off", (
   expect(screen.getByRole("link", { name: "Deploy from CI" })).toBeInTheDocument();
 });
 
-it("a webhook that runs a workflow shows the action with the workflow's title", () => {
+it("a webhook that runs a workflow shows the action with the workflow's title linked to its page", () => {
   const client = testQueryClient();
   client.setQueryDefaults(webhooksKey, { staleTime: Infinity });
   client.setQueryData(webhooksKey, { data: webhooksSchema.parse(apiSamples.webhooks), revision: '"r"' });
@@ -56,6 +56,6 @@ it("a webhook that runs a workflow shows the action with the workflow's title", 
   client.setQueryData(workflowsKey, { data: workflowsSchema.parse(apiSamples.workflows), revision: '"w"' });
   renderWithProviders(<WebhooksScreen />, client);
   const row = screen.getByRole("link", { name: "Release from GitHub" }).closest("tr") as HTMLElement;
-  expect(within(row).getByText("Run a workflow")).toBeInTheDocument();
-  expect(within(row).getByText("Revive a service")).toBeInTheDocument();
+  expect(within(row).getByText("Workflow")).toBeInTheDocument();
+  expect(within(row).getByRole("link", { name: "Revive a service" }).getAttribute("href")).toMatch(/^\/admin\/workflows\/revive\/?$/);
 });

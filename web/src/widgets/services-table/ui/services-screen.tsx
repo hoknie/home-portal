@@ -2,7 +2,7 @@
 
 import { Plus, Server } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Allowed } from "@/entities/session";
 import { useServices } from "@/entities/service";
@@ -15,11 +15,13 @@ import { PageHeader } from "@/shared/ui/page-header";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 
+import { byGroup } from "../model/groups";
 import { useServiceColumns } from "./service-columns";
 
 export function ServicesScreen() {
   const trail = useTrail();
   const t = useTranslations();
+  const locale = useLocale();
   const services = useServices();
   const revision = services.data?.revision ?? null;
   const columns = useServiceColumns(revision);
@@ -39,15 +41,16 @@ export function ServicesScreen() {
       {services.error && !services.data ? (
         <ErrorNotice title={t("errors.loadFailed")} description={services.error.message} onRetry={() => void services.refetch()} />
       ) : null}
-      {services.data ? (
+      {services.data && services.data.data.services.length === 0 ? (
         <SectionCard flush>
-          <DataTable
-            columns={columns}
-            rows={services.data.data.services}
-            rowKey={(service) => service.id}
-            empty={<EmptyState icon={Server} title={t("services.empty")} description={t("services.emptyHint")} action={add} />}
-          />
+          <EmptyState icon={Server} title={t("services.empty")} description={t("services.emptyHint")} action={add} />
         </SectionCard>
+      ) : services.data ? (
+        byGroup(services.data.data.services, locale).map((group) => (
+          <SectionCard key={group.name ?? ""} title={group.name ?? t("services.noGroup")} flush>
+            <DataTable columns={columns} rows={group.items} rowKey={(service) => service.id} />
+          </SectionCard>
+        ))
       ) : services.error ? null : (
         <Skeleton className="h-64 w-full" aria-busy="true" />
       )}

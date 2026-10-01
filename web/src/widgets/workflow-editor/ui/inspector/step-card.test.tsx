@@ -15,7 +15,7 @@ const fresh = { last_run: null, active_run: null };
 beforeEach(() => {
   stubCanvasDom();
   window.localStorage.setItem("home-portal.workflow-editor.legend-dismissed", "1");
-  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ runs: [] })));
+  vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ runs: [], next_before: null })));
 });
 
 afterEach(() => {
@@ -82,7 +82,7 @@ it("on a run's address the step data has a closed Settings that opens to the car
   const [base] = runsSchema.parse(apiSamples.automationRuns).runs;
   const trace = traceSchema.parse({ entries: [{ ...TRACE_ENTRY_BLANKS, path: "steps[0]", step: "ping", label: "ping", kind: "http", iteration: null, outcome: "succeeded", started_at: "2026-09-29T10:00:00Z", duration_milliseconds: 5, detail: "GET http://nas.lan → 200", output: null }], dropped: 0 });
   const shown = { ...base, id: "9", workflow: "draft", trace };
-  vi.stubGlobal("fetch", vi.fn(async (path: string) => (path === "/api/automations/runs/9" ? jsonResponse(shown) : jsonResponse({ runs: [shown] }))));
+  vi.stubGlobal("fetch", vi.fn(async (path: string) => (path === "/api/automations/runs/9" ? jsonResponse(shown) : jsonResponse({ runs: [shown], next_before: null }))));
   openAt(withSteps([{ id: "ping", kind: "http", url: "http://nas.lan" }], fresh), "/admin/workflows/draft/history/9/");
   fireEvent.click(await node("ping"));
   const details = await screen.findByRole("region", { name: "Step details" });

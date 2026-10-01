@@ -5,7 +5,7 @@ import { ChevronDown, List } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
-import { StopRunButton } from "@/features/stop-run";
+import { StopRunButton } from "@/features/runs/stop-run";
 import { OutcomeBadge, type Run, type TraceEntry, TraceEntryView, depthOf, isActive, passRows, rowHeading } from "@/entities/automation";
 import { START_ID, at, parsePath } from "@/entities/workflow";
 import { AddressLink } from "@/shared/ui/address-link";

@@ -21,7 +21,7 @@ import { type Run, isActive } from "./schema";
 
 export const automationsKey = ["automations"] as const;
 export const runsKey = (filter: RunsFilter = {}) =>
-  ["automation-runs", filter.automation ?? null, filter.webhook ?? null, filter.workflow ?? null, filter.text ?? null] as const;
+  ["automation-runs", filter.automation ?? null, filter.webhook ?? null, filter.workflow ?? null, filter.text ?? null, filter.before ?? null, filter.limit ?? null] as const;
 export const runKey = (id: string | null) => ["automation-run", id] as const;
 export const catalogueKey = ["automation-catalogue"] as const;
 export const scriptsKey = ["automation-scripts"] as const;
@@ -55,8 +55,8 @@ export function useRuns(filter: RunsFilter = {}, live = true, enabled = true) {
     queryKey: runsKey(filter),
     queryFn: () => fetchRuns(filter),
     enabled,
-    refetchOnWindowFocus: live,
-    refetchInterval: (query) => runsRefreshInterval(query.state.data?.runs, live),
+    refetchOnWindowFocus: live && !filter.before,
+    refetchInterval: (query) => runsRefreshInterval(query.state.data?.runs, live && !filter.before),
     placeholderData: keepPreviousData,
   });
 }

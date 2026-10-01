@@ -7,8 +7,9 @@ import { useTranslations } from "next-intl";
 
 import { Allowed } from "@/entities/session";
 import { TokenActions } from "@/features/automation-builder";
-import { StopRunButton } from "@/features/stop-run";
-import { RunTable, useAutomations, useRuns } from "@/entities/automation";
+import { RunSource, useItemReferences } from "@/features/runs/item-references";
+import { StopRunButton } from "@/features/runs/stop-run";
+import { RunPager, RunTable, useAutomations, useRunPages, useRuns } from "@/entities/automation";
 import { absoluteAddress, useWebhooks } from "@/entities/webhook";
 import { useWorkflows } from "@/entities/workflow";
 import { routes } from "@/shared/config";
@@ -32,9 +33,11 @@ export function WebhookDetailsScreen() {
   const id = useSearchParams().get(ID_PARAMETER) ?? "";
   const webhooks = useWebhooks();
   const automations = useAutomations();
-  const runs = useRuns({ webhook: id }, true, id !== "");
+  const pages = useRunPages(id);
+  const runs = useRuns({ webhook: id, limit: LAST_RUNS, before: pages.before }, true, id !== "");
   const workflows = useWorkflows().data?.data.workflows ?? [];
   const trail = useTrail();
+  const references = useItemReferences();
   const named = webhooks.data?.data.webhooks.find((candidate) => candidate.id === id)?.title ?? id;
   const crumbs = trail.of(trail.section("webhooks"), { label: named });
   if (!webhooks.data) {
@@ -164,7 +167,12 @@ export function WebhookDetailsScreen() {
         </SectionCard>
       </div>
       <SectionCard title={t("webhooks.lastRuns", { count: LAST_RUNS })} flush>
-        {runs.data ? <RunTable runs={runs.data.runs.slice(0, LAST_RUNS)} titleOf={titleOf} actionsOf={(run) => <StopRunButton run={run} title={titleOf(run.automation)} />} /> : <Skeleton className="m-4 h-32" aria-busy="true" />}
+        {runs.data ? (
+          <>
+            <RunTable runs={runs.data.runs} sourceOf={(run) => <RunSource run={run} references={references} />} actionsOf={(run) => <StopRunButton run={run} title={titleOf(run.automation)} />} />
+            <RunPager pages={pages} nextBefore={runs.data.next_before} />
+          </>
+        ) : <Skeleton className="m-4 h-32" aria-busy="true" />}
       </SectionCard>
     </div>
   );

@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { Allowed } from "@/entities/session";
-import { DeleteAutomationButton } from "@/features/delete-automation";
-import { RunAutomationButton } from "@/features/run-automation";
-import { StopRunButton } from "@/features/stop-run";
+import { DeleteAutomationButton } from "@/features/runs/delete-automation";
+import { useItemReferences } from "@/features/runs/item-references";
+import { RunAutomationButton } from "@/features/runs/run-automation";
+import { StopRunButton } from "@/features/runs/stop-run";
 import { type Automation, type Catalogue, OutcomeBadge } from "@/entities/automation";
 import { routes } from "@/shared/config";
 import type { Column } from "@/shared/ui/data-table";
+import { ItemReference } from "@/shared/ui/item-reference";
 import { Badge, Button } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { TagList } from "@/shared/ui/tag-list";
@@ -23,6 +25,7 @@ export function useAutomationColumns(
   onQueued?: (runId: string) => void,
 ): Column<Automation>[] {
   const t = useTranslations();
+  const references = useItemReferences();
   return [
     {
       key: "title",
@@ -43,10 +46,13 @@ export function useAutomationColumns(
       cell: (automation) => <TriggerText automation={automation} catalogue={catalogue} />,
     },
     {
-      key: "script",
-      header: t("automations.columns.script"),
+      key: "action",
+      header: t("automations.columns.action"),
       hideBelow: "lg",
-      cell: (automation) => <span className="font-mono text-xs">{automation.run?.script ?? automation.workflow?.id}</span>,
+      cell: (automation) => {
+        const action = references.actionOf(automation);
+        return action ? <ItemReference {...action} /> : null;
+      },
     },
     {
       key: "enabled",

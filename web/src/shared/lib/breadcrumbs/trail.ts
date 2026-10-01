@@ -19,6 +19,7 @@ export const SECTIONS = {
   workflows: routes.adminWorkflows,
   notifications: routes.adminNotifications,
   scripts: routes.adminScripts,
+  runs: routes.adminRuns,
   permissions: routes.adminPermissions,
 } as const;
 

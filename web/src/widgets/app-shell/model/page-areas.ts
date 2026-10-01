@@ -3,7 +3,7 @@ import { routes } from "@/shared/config";
 
 import { isActive } from "./navigation";
 
-export const PAGE_AREAS: ReadonlyArray<{ href: string; area: Area }> = [
+export const PAGE_AREAS: ReadonlyArray<{ href: string; area: Area; or?: Area }> = [
   { href: routes.adminServices, area: "services" },
   { href: routes.adminLayout, area: "layout" },
   { href: routes.adminNetwork, area: "network" },
@@ -17,8 +17,14 @@ export const PAGE_AREAS: ReadonlyArray<{ href: string; area: Area }> = [
   { href: routes.adminWorkflows, area: "workflows" },
   { href: routes.adminNotifications, area: "notifications" },
   { href: routes.adminScripts, area: "scripts" },
+  { href: routes.adminRuns, area: "automations", or: "workflows" },
 ];
 
 export function areaOfPage(pathname: string): Area | null {
   return PAGE_AREAS.find((page) => isActive(pathname, page.href))?.area ?? null;
+}
+
+export function areasOfPage(pathname: string): Area[] {
+  const page = PAGE_AREAS.find((candidate) => isActive(pathname, candidate.href));
+  return page ? [page.area, ...(page.or ? [page.or] : [])] : [];
 }

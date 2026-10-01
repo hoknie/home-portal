@@ -3,11 +3,13 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { RequireRight } from "@/entities/session";
+import { RequireRight, mayOpen, useSession } from "@/entities/session";
 
-import { areaOfPage } from "../model/page-areas";
+import { areasOfPage } from "../model/page-areas";
 
 export function AreaGate({ children }: { children: ReactNode }) {
-  const area = areaOfPage(usePathname());
-  return area === null ? <>{children}</> : <RequireRight area={area}>{children}</RequireRight>;
+  const areas = areasOfPage(usePathname());
+  const session = useSession();
+  const area = areas.find((candidate) => mayOpen(session.data, candidate)) ?? areas[0];
+  return area === undefined ? <>{children}</> : <RequireRight area={area}>{children}</RequireRight>;
 }

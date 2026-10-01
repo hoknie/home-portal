@@ -93,7 +93,7 @@ it("the user menu offers restarting the portal", async () => {
 it("only enabled modules are listed, in a section of their own", () => {
   shellWith(["proxy", "automations"]);
   const section = screen.getAllByRole("group", { name: "Modules" })[0];
-  expect(within(section).getAllByRole("link").map((link) => link.textContent)).toEqual(["Proxy", "Automations"]);
+  expect(within(section).getAllByRole("link").map((link) => link.textContent)).toEqual(["Proxy", "Automations", "Run journal"]);
   expect(screen.getAllByRole("link", { name: "Modules" })[0]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/modules\/?$/));
   expect(screen.queryByRole("link", { name: "DNS" })).not.toBeInTheDocument();
 });
@@ -117,8 +117,8 @@ it("users appear last in the modules section while their module is on", () => {
   shellWith(["automations", "users"]);
   const section = screen.getAllByRole("group", { name: "Modules" })[0];
   const links = within(section).getAllByRole("link");
-  expect(links.map((link) => link.textContent)).toEqual(["Automations", "Users"]);
-  expect(links[1]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/users\/?$/));
+  expect(links.map((link) => link.textContent)).toEqual(["Automations", "Run journal", "Users"]);
+  expect(links[2]).toHaveAttribute("href", expect.stringMatching(/^\/admin\/users\/?$/));
 });
 
 it("the menu collapses into a rail of named icons, widens the content by the space it frees, is remembered, and expands again", async () => {
@@ -159,7 +159,7 @@ it("offers scripts after the modules while the file switches editing on, and not
   renderWithProviders(<AppShell>content</AppShell>, client);
   const group = screen.getAllByRole("group", { name: "Modules" })[0];
   const names = within(group).getAllByRole("link").map((link) => link.textContent);
-  expect(names).toEqual(["Automations", "Workflows", "Scripts"]);
+  expect(names).toEqual(["Automations", "Workflows", "Run journal", "Scripts"]);
   expect(within(group).getByRole("link", { name: "Scripts" })).toHaveAttribute("href", expect.stringMatching(/^\/admin\/scripts\/?$/));
 });
 

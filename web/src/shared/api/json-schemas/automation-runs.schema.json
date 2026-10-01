@@ -324,6 +324,12 @@
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
+    "next_before": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "runs": {
       "items": {
         "$ref": "#/$defs/RunResponse"
@@ -332,7 +338,8 @@
     }
   },
   "required": [
-    "runs"
+    "runs",
+    "next_before"
   ],
   "title": "RunsResponse",
   "type": "object"

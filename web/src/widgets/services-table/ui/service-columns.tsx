@@ -32,7 +32,6 @@ export function useServiceColumns(revision: string | null): Column<Service>[] {
         </div>
       ),
     },
-    { key: "group", header: t("services.columns.group"), hideBelow: "md", cell: (service) => service.group ?? "" },
     {
       key: "url",
       header: t("services.columns.url"),

@@ -16,14 +16,17 @@ vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(s
 
 function renderPage() {
   const client = testQueryClient();
-  for (const key of [webhooksKey, automationsKey, runsKey({ webhook: DEPLOY }), runsKey({ webhook: RELEASE })]) {
+  for (const key of [webhooksKey, automationsKey, runsKey({ webhook: DEPLOY, limit: 10 }), runsKey({ webhook: RELEASE, limit: 10 })]) {
     client.setQueryDefaults(key, { staleTime: Infinity });
   }
   client.setQueryData(webhooksKey, { data: webhooksSchema.parse(apiSamples.webhooks), revision: '"r"' });
   client.setQueryData(automationsKey, { data: automationsSchema.parse(apiSamples.automations), revision: '"r"' });
   const many = runsSchema.parse(apiSamples.automationRuns);
-  client.setQueryData(runsKey({ webhook: RELEASE }), { runs: [] });
-  client.setQueryData(runsKey({ webhook: DEPLOY }), { runs: Array.from({ length: 4 }, () => many.runs).flat().map((run, index) => ({ ...run, id: String(index) })) });
+  client.setQueryData(runsKey({ webhook: RELEASE, limit: 10 }), { runs: [], next_before: null });
+  client.setQueryData(runsKey({ webhook: DEPLOY, limit: 10 }), {
+    runs: Array.from({ length: 4 }, () => many.runs).flat().slice(0, 10).map((run, index) => ({ ...run, id: String(index) })),
+    next_before: "9",
+  });
   return renderWithProviders(<WebhookDetailsScreen />, client);
 }
 
@@ -36,6 +39,7 @@ it("shows the whole webhook and its last ten runs", () => {
   expect(screen.getByText("Token required")).toBeInTheDocument();
   expect(screen.getByText("Last 10 runs")).toBeInTheDocument();
   expect(screen.getAllByRole("row")).toHaveLength(11);
+  expect(screen.getByRole("button", { name: "Older" })).toBeEnabled();
 });
 
 it("an unknown webhook says so", () => {

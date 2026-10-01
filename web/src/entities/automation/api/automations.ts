@@ -35,7 +35,7 @@ export async function runAutomation(id: string) {
   return (await request(api.automationRun(id), { method: "POST", body: {}, schema: queuedSchema })).data;
 }
 
-export type RunsFilter = { automation?: string | null; webhook?: string | null; workflow?: string | null; text?: string | null };
+export type RunsFilter = { automation?: string | null; webhook?: string | null; workflow?: string | null; text?: string | null; before?: string | null; limit?: number | null };
 
 export async function fetchRuns(filter: RunsFilter) {
   return (await request(api.automationRuns(filter), { schema: runsSchema })).data;

@@ -19,7 +19,7 @@ automations module.
 4. Keep **Require a token** on. The portal shows the token **once**: copy it into the caller.
 5. The webhook's page shows its address, an example call, and its last runs.
 6. **Run now** (the play button on a row) runs the webhook from the browser, with a field for each
-   required variable and without the token. It shows the run it queued, and the journal records
+   required variable and without the token. It shows the run it queued, and the run journal (`/admin/runs`) records
    who started it. It needs the right to run webhooks.
 
 A call looks like this:

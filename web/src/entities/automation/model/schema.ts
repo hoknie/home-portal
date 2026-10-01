@@ -70,7 +70,7 @@ export function isActive(run: Run | null | undefined) {
   return run ? ACTIVE_OUTCOMES.includes(run.outcome.result) : false;
 }
 
-export const runsSchema = z.object({ runs: z.array(runSchema) });
+export const runsSchema = generated.automationRuns.runsResponseSchema.extend({ runs: z.array(runSchema) });
 
 export const whenSchema = served.whenResponseSchema.extend({ event: eventNameSchema });
 

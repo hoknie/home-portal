@@ -1,4 +1,4 @@
-import { Bell, Blocks, FileCode, Globe, House, LayoutDashboard, Network, Route, Server, ShieldCheck, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
+import { Bell, Blocks, History, FileCode, Globe, House, LayoutDashboard, Network, Route, Server, ShieldCheck, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
 
 import { CATEGORY_OF, MODULE_CATEGORIES, type ModuleCategory, type ModuleName } from "@/entities/module";
 import type { Area } from "@/entities/session";
@@ -37,10 +37,18 @@ export function moduleLinks(enabled: ReadonlySet<ModuleName>, may: MayOpen = EVE
 
 export const SCRIPTS_LINK = { href: routes.adminScripts, label: "scripts", icon: FileCode } as const;
 
-export type SectionLink = { href: string; label: (typeof MODULE_LINKS)[number]["label"] | typeof SCRIPTS_LINK.label; icon: LucideIcon };
+export const RUNS_LINK = { href: routes.adminRuns, label: "runs", icon: History } as const;
+
+export const RUNS_MODULES: ReadonlyArray<ModuleName> = ["automations", "webhooks", "workflows"];
+
+export function runsShown(enabled: ReadonlySet<ModuleName>, may: MayOpen) {
+  return RUNS_MODULES.some((name) => enabled.has(name)) && (may("automations") || may("workflows"));
+}
+
+export type SectionLink = { href: string; label: (typeof MODULE_LINKS)[number]["label"] | typeof SCRIPTS_LINK.label | typeof RUNS_LINK.label; icon: LucideIcon };
 
 export function sectionLinks(enabled: ReadonlySet<ModuleName>, editing: boolean, may: MayOpen = EVERY_AREA): SectionLink[] {
-  return [...moduleLinks(enabled, may), ...(editing && may("scripts") ? [SCRIPTS_LINK] : [])];
+  return [...moduleLinks(enabled, may), ...(runsShown(enabled, may) ? [RUNS_LINK] : []), ...(editing && may("scripts") ? [SCRIPTS_LINK] : [])];
 }
 
 export type CategoryLinks = { category: ModuleCategory; links: SectionLink[] };
@@ -49,7 +57,7 @@ export const SCRIPTS_CATEGORY: ModuleCategory = "automation";
 
 export function categoryLinks(enabled: ReadonlySet<ModuleName>, editing: boolean, may: MayOpen = EVERY_AREA): CategoryLinks[] {
   const modules = moduleLinks(enabled, may);
-  const scripts = editing && may("scripts") ? [SCRIPTS_LINK] : [];
+  const scripts = [...(runsShown(enabled, may) ? [RUNS_LINK] : []), ...(editing && may("scripts") ? [SCRIPTS_LINK] : [])];
   return MODULE_CATEGORIES.map((category) => ({
     category,
     links: [...modules.filter((link) => CATEGORY_OF[link.module] === category), ...(category === SCRIPTS_CATEGORY ? scripts : [])] as SectionLink[],

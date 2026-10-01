@@ -4,8 +4,9 @@ import { RefreshCw } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
-import { StopRunButton } from "@/features/stop-run";
-import { type Automation, RunTable, useRuns } from "@/entities/automation";
+import { RunSource, useItemReferences } from "@/features/runs/item-references";
+import { StopRunButton } from "@/features/runs/stop-run";
+import { type Automation, RunPager, RunTable, useRunPages, useRuns } from "@/entities/automation";
 import { useWebhooks } from "@/entities/webhook";
 import { useWorkflows } from "@/entities/workflow";
 import { Button, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Skeleton, Switch } from "@/shared/ui/primitives";
@@ -32,14 +33,17 @@ export function RunJournal({ automations, onOpen }: { automations: Automation[];
   const [text, setText] = useState("");
   const [live, setLive] = useState(true);
   const settled = useSettled(text.trim());
+  const references = useItemReferences();
   const webhooks = useWebhooks();
   const hooks = webhooks.data?.data.webhooks ?? [];
   const flows = useWorkflows().data?.data.workflows ?? [];
+  const pages = useRunPages(`${source}\n${settled}`);
   const runs = useRuns({
     automation: source.startsWith(AUTOMATION) ? source.slice(AUTOMATION.length) : null,
     webhook: source.startsWith(WEBHOOK) ? source.slice(WEBHOOK.length) : null,
     workflow: source.startsWith(WORKFLOW) ? source.slice(WORKFLOW.length) : null,
     text: settled || null,
+    before: pages.before,
   }, live);
   const format = useFormatter();
   const [lastUpdate, setLastUpdate] = useState(0);
@@ -122,7 +126,15 @@ export function RunJournal({ automations, onOpen }: { automations: Automation[];
   return (
     <SectionCard title={t("automations.journal")} description={t("automations.journalDescription")} actions={filters} flush>
       {runs.data ? (
-        <RunTable runs={runs.data.runs} titleOf={titleOf} onOpen={onOpen} actionsOf={(run) => <StopRunButton run={run} title={titleOf(run.automation)} />} />
+        <>
+          <RunTable
+            runs={runs.data.runs}
+            sourceOf={(run) => <RunSource run={run} references={references} />}
+            onOpen={onOpen}
+            actionsOf={(run) => <StopRunButton run={run} title={titleOf(run.automation)} />}
+          />
+          <RunPager pages={pages} nextBefore={runs.data.next_before} />
+        </>
       ) : <Skeleton className="m-4 h-32" aria-busy="true" />}
     </SectionCard>
   );

@@ -2,6 +2,7 @@
 
 import { FileCode } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
@@ -11,6 +12,7 @@ import { type ScriptEntry, useCreateFolder, useCreateScript, useDeleteFolder, us
 import { useWebhooks } from "@/entities/webhook";
 import { useWorkflows } from "@/entities/workflow";
 import { RequestError, ValidationError } from "@/shared/api";
+import { routes } from "@/shared/config";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
@@ -23,6 +25,8 @@ import { NEW_SCRIPT, usersOf } from "../../model/script-usage";
 import { PlaceDialog } from "./script-dialogs";
 import { ScriptEditor } from "./script-editor";
 import { ScriptTreePane } from "./script-tree";
+
+export const PATH_PARAMETER = "path";
 
 const SETTING = "[scripts]\nediting = true";
 
@@ -49,7 +53,12 @@ export function ScriptsScreen() {
   const moveScript = useMoveScript();
   const deleteScript = useDeleteScript();
   const deleteFolder = useDeleteFolder();
-  const [selected, setSelected] = useState<string | null>(null);
+  const router = useRouter();
+  const [selected, setChosen] = useState<string | null>(useSearchParams().get(PATH_PARAMETER));
+  const setSelected = (path: string | null) => {
+    setChosen(path);
+    router.replace(path === null ? routes.adminScripts : routes.script(path), { scroll: false });
+  };
   const [dirty, setDirty] = useState(false);
   const [asking, setAsking] = useState<Asking>(null);
   const [problem, setProblem] = useState<string | null>(null);

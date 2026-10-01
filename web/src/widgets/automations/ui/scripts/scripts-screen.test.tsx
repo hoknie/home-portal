@@ -8,12 +8,16 @@ import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
 
 import { ScriptsScreen } from "./scripts-screen";
 
+let search = "";
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   usePathname: () => "/admin/scripts/",
+  useSearchParams: () => new URLSearchParams(search),
 }));
 
 afterEach(() => {
+  search = "";
   vi.unstubAllGlobals();
 });
 
@@ -143,3 +147,18 @@ it("an open script shows how it is called, its arguments as cards, and a header 
   expect(area.value.split("\n")[1]).toBe("# @description Restart a service's container");
   expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
 });
+
+it("an address naming a script opens it in the editor", async () => {
+  search = "path=media%2Frestart.sh";
+  const fetch = serve();
+  expect(await screen.findByRole("region", { name: "Declared by the header" })).toBeInTheDocument();
+  expect(fetch.mock.calls.some(([path]) => String(path) === "/api/scripts/file?path=media%2Frestart.sh")).toBe(true);
+});
+
+it("an address naming no script opens the directory alone", async () => {
+  search = "path=missing.sh";
+  serve();
+  expect(await screen.findByRole("navigation", { name: "Files" })).toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "Declared by the header" })).toBeNull();
+});
+

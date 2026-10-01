@@ -21,6 +21,9 @@ export const routes = {
   workflowRun: (id: string, run: string) => `/admin/workflows/${encodeURIComponent(id)}/history/${encodeURIComponent(run)}/`,
   adminNotifications: "/admin/notifications/",
   adminScripts: "/admin/scripts/",
+  script: (path: string) => `/admin/scripts/?path=${encodeURIComponent(path)}`,
+  adminRuns: "/admin/runs/",
+  run: (id: string) => `/admin/runs/?run=${encodeURIComponent(id)}`,
   adminPermissions: "/admin/permissions/",
   newWebhook: "/admin/webhooks/new/",
   editWebhook: (id: string) => `/admin/webhooks/edit/?id=${encodeURIComponent(id)}`,
@@ -69,11 +72,11 @@ export const api = {
   automations: "/api/automations",
   automation: (id: string) => `/api/automations/${encodeURIComponent(id)}`,
   automationRun: (id: string) => `/api/automations/${encodeURIComponent(id)}/run`,
-  automationRuns: (filter: { automation?: string | null; webhook?: string | null; workflow?: string | null; text?: string | null }) => {
+  automationRuns: (filter: { automation?: string | null; webhook?: string | null; workflow?: string | null; text?: string | null; before?: string | null; limit?: number | null }) => {
     const query = new URLSearchParams();
     for (const [name, value] of Object.entries(filter)) {
       if (value) {
-        query.set(name, value);
+        query.set(name, String(value));
       }
     }
     const text = query.toString();

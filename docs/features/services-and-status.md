@@ -6,7 +6,8 @@ down, or could not be checked at all — and keeps 30 days of history so you can
 
 ## Using it
 
-- **Management → Services** lists every service. **Add service** opens a form with the name, a
+- **Management → Services** lists the services in one table per group, groups by name and services
+  without a group last. **Add service** opens a form with the name, a
   group, an icon, how to check it and an **Addresses** table: environments, sign-in, address and
   whether it goes through the proxy. The first row is the main address the portal checks. Editing
   works the same way.

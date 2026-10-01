@@ -2,12 +2,12 @@
 
 import { Plus, Workflow } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Allowed } from "@/entities/session";
-import { StopRunButton } from "@/features/stop-run";
-import { RunDetails, useAutomations, useCatalogue } from "@/entities/automation";
+import { useAutomations, useCatalogue } from "@/entities/automation";
 import { enabledModules, useModules } from "@/entities/module";
 import { routes } from "@/shared/config";
 import { DataTable } from "@/shared/ui/data-table";
@@ -21,7 +21,6 @@ import { SectionCard } from "@/shared/ui/section-card";
 import { TagFilter, distinctTags, stillChosen, tagsMatch } from "@/shared/ui/tag-filter";
 
 import { useAutomationColumns } from "./automation-columns";
-import { RunJournal } from "./run-journal";
 
 export function AutomationsScreen() {
   const trail = useTrail();
@@ -29,8 +28,8 @@ export function AutomationsScreen() {
   const loadedModules = useModules().data?.data;
   const automations = useAutomations();
   const catalogue = useCatalogue();
-  const [opened, setOpened] = useState<string | null>(null);
-  const columns = useAutomationColumns(automations.data?.revision ?? null, catalogue.data, setOpened);
+  const router = useRouter();
+  const columns = useAutomationColumns(automations.data?.revision ?? null, catalogue.data, (id) => router.push(routes.run(id)));
   const add = (
     <Allowed area="automations" action="create">
       <Button asChild>
@@ -71,12 +70,6 @@ export function AutomationsScreen() {
       ) : automations.error ? null : (
         <Skeleton className="h-64 w-full" aria-busy="true" />
       )}
-      {automations.data ? <RunJournal automations={list} onOpen={setOpened} /> : null}
-      <RunDetails
-        runId={opened}
-        onClose={() => setOpened(null)}
-        actions={(run) => <StopRunButton run={run} title={list.find((automation) => automation.id === run.automation)?.title} labelled />}
-      />
     </div>
   );
 }

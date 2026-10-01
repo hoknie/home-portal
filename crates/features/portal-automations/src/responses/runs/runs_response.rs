@@ -6,4 +6,5 @@ use super::RunResponse;
 #[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct RunsResponse {
     pub runs: Vec<RunResponse>,
+    pub next_before: Option<String>,
 }

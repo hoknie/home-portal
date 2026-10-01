@@ -15,12 +15,12 @@ import { RunDetails } from "./run-details";
 
 export type RunTableProps = {
   runs: Run[];
-  titleOf: (id: string) => string;
+  sourceOf: (run: Run) => ReactNode;
   actionsOf?: (run: Run) => ReactNode;
   onOpen?: (id: string) => void;
 };
 
-export function RunTable({ runs, titleOf, actionsOf, onOpen }: RunTableProps) {
+export function RunTable({ runs, sourceOf, actionsOf, onOpen }: RunTableProps) {
   const t = useTranslations();
   const [opened, setOpened] = useState<string | null>(null);
   const open = onOpen ?? setOpened;
@@ -32,7 +32,7 @@ export function RunTable({ runs, titleOf, actionsOf, onOpen }: RunTableProps) {
         empty={<EmptyState icon={History} title={t("automations.journalEmpty")} description={t("automations.journalEmptyHint")} />}
         columns={[
           { key: "when", header: t("automations.columns.when"), cell: (run) => <RelativeTime moment={run.outcome.last_at} /> },
-          { key: "automation", header: t("automations.columns.title"), cell: (run) => titleOf(run.automation) },
+          { key: "automation", header: t("automations.columns.source"), cell: sourceOf },
           {
             key: "event",
             header: t("automations.columns.event"),

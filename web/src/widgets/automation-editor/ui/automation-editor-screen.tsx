@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { AutomationBuilder } from "@/features/automation-builder";
-import { RunAutomationButton } from "@/features/run-automation";
+import { RunAutomationButton } from "@/features/runs/run-automation";
 import { useAutomations, useCatalogue, useScripts } from "@/entities/automation";
 import { routes } from "@/shared/config";
 import { EmptyState } from "@/shared/ui/empty-state";

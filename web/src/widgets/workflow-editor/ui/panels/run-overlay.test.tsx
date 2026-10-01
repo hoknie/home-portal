@@ -38,7 +38,7 @@ const fresh = { last_run: null, active_run: null };
 function serving(runs: Run[]) {
   return vi.fn(async (path: string) => {
     if (path.startsWith("/api/automations/runs?workflow=draft")) {
-      return jsonResponse({ runs });
+      return jsonResponse({ runs, next_before: null });
     }
     const found = runs.find((candidate) => path === `/api/automations/runs/${candidate.id}`);
     return found ? jsonResponse(found) : jsonResponse({ error: "not found" }, { status: 404 });
@@ -92,7 +92,7 @@ it("watching a run on the canvas colours the nodes that ran and emphasises the b
       return jsonResponse({ run_id: "7" });
     }
     if (path.startsWith("/api/automations/runs?workflow=draft")) {
-      return jsonResponse({ runs: [second] });
+      return jsonResponse({ runs: [second], next_before: null });
     }
     if (path !== "/api/automations/runs/7") {
       return jsonResponse({ error: "not found" }, { status: 404 });

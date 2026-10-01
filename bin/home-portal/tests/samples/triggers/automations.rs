@@ -250,7 +250,13 @@ fn the_automation_samples_match_their_serializers() {
         ],
     };
     typed("automations", &automations);
-    typed("automation-runs", &RunsResponse { runs: history });
+    typed(
+        "automation-runs",
+        &RunsResponse {
+            runs: history,
+            next_before: None,
+        },
+    );
     typed(
         "automation-catalogue",
         &CatalogueResponse::of(

@@ -60,7 +60,10 @@ pub async fn run_now(
 pub async fn runs(
     State(state): State<AutomationsState>,
     Query(query): Query<RunsQuery>,
-) -> Json<RunsResponse> {
+) -> Result<Json<RunsResponse>, ApiError> {
+    let page = query
+        .page()
+        .map_err(|(field, message)| ApiError::BadRequest(format!("{field}: {message}")))?;
     let filter = RunFilter {
         automation: query.automation,
         webhook: query.webhook,
@@ -69,22 +72,38 @@ pub async fn runs(
     };
     let finished = state.sink.journal.matching(&filter);
     let recorded: HashSet<u64> = finished.iter().map(|record| record.id).collect();
-    let active = state
-        .sink
-        .active
-        .matching(&filter)
-        .into_iter()
-        .filter(|run| !recorded.contains(&run.run_id));
-    Json(RunsResponse {
-        runs: active
+    let mut older: Vec<_> = finished
+        .iter()
+        .filter(|record| page.before.is_none_or(|before| record.id < before))
+        .take(page.limit + 1)
+        .collect();
+    let more = older.len() > page.limit;
+    older.truncate(page.limit);
+    let next_before = more
+        .then(|| older.last().map(|record| record.id.to_string()))
+        .flatten();
+    let active: Vec<RunResponse> = match page.before {
+        Some(_) => Vec::new(),
+        None => state
+            .sink
+            .active
+            .matching(&filter)
+            .into_iter()
+            .filter(|run| !recorded.contains(&run.run_id))
             .map(|run| RunResponse::active(&run).summarized())
+            .collect(),
+    };
+    Ok(Json(RunsResponse {
+        runs: active
+            .into_iter()
             .chain(
-                finished
-                    .iter()
+                older
+                    .into_iter()
                     .map(|record| RunResponse::of(record).summarized()),
             )
             .collect(),
-    })
+        next_before,
+    }))
 }
 
 pub async fn run(

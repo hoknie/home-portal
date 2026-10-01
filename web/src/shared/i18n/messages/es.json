@@ -43,7 +43,8 @@
     "expandMenu": "Expandir el menú",
     "menu": "Menú",
     "scripts": "Scripts",
-    "permissions": "Permisos"
+    "permissions": "Permisos",
+    "runs": "Registro de ejecuciones"
   },
   "theme": {
     "label": "Tema",
@@ -143,7 +144,6 @@
     "emptyHint": "Añade un servicio: aparecerá en el inicio y empezará a comprobarse.",
     "columns": {
       "name": "Nombre",
-      "group": "Grupo",
       "url": "Dirección",
       "status": "Estado",
       "latency": "Respuesta",
@@ -154,7 +154,8 @@
     "deleted": "Servicio eliminado",
     "saved": "Servicio guardado",
     "created": "Servicio añadido",
-    "openService": "Abrir {name}"
+    "openService": "Abrir {name}",
+    "noGroup": "Sin grupo"
   },
   "serviceForm": {
     "notSaved": "El servicio no se guardó: la configuración tiene otros problemas",
@@ -663,14 +664,15 @@
     "columns": {
       "title": "Automatización",
       "trigger": "Cuándo",
-      "script": "Script",
       "enabled": "Estado",
       "lastRun": "Última ejecución",
       "actions": "Acciones",
       "when": "Cuándo",
       "event": "Evento",
       "outcome": "Resultado",
-      "details": "Detalles"
+      "details": "Detalles",
+      "source": "Origen",
+      "action": "Acción"
     },
     "enabled": "Activada",
     "disabled": "Desactivada",
@@ -2537,5 +2539,22 @@
     "overwrite": "Sobrescribir",
     "reloadTitle": "¿Descartar lo que escribiste?",
     "reloadDescription": "Los valores actuales sustituirán todo lo que escribiste en este formulario."
+  },
+  "references": {
+    "automation": "Automatización",
+    "webhook": "Webhook",
+    "workflow": "Flujo",
+    "script": "Script"
+  },
+  "runJournal": {
+    "title": "Registro de ejecuciones",
+    "subtitle": "Ejecuciones de automatizaciones, webhooks y flujos, las más recientes primero"
+  },
+  "runPager": {
+    "page": "Página {page}",
+    "frozen": "Página {page}: las ejecuciones antiguas no se actualizan solas.",
+    "newest": "Ir a las más recientes",
+    "newer": "Más recientes",
+    "older": "Más antiguas"
   }
 }

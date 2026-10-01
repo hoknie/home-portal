@@ -7,11 +7,12 @@ import { useState } from "react";
 
 import { Allowed } from "@/entities/session";
 import { DeleteWebhookButton } from "@/features/delete-webhook";
+import { useItemReferences } from "@/features/runs/item-references";
 import { enabledModules, useModules } from "@/entities/module";
 import { type Webhook, absoluteAddress, shortAddress, useWebhooks } from "@/entities/webhook";
-import { useWorkflows } from "@/entities/workflow";
 import { routes } from "@/shared/config";
 import { type Column, DataTable } from "@/shared/ui/data-table";
+import { ItemReference } from "@/shared/ui/item-reference";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
@@ -28,8 +29,7 @@ import { RunWebhookDialog } from "./run-webhook-dialog";
 function useColumns(revision: string | null): Column<Webhook>[] {
   const t = useTranslations();
   const origin = typeof window === "undefined" ? "" : window.location.origin;
-  const workflows = useWorkflows().data?.data.workflows ?? [];
-  const titleOf = (id: string) => workflows.find((workflow) => workflow.id === id)?.title ?? id;
+  const references = useItemReferences();
   return [
     {
       key: "title",
@@ -62,13 +62,10 @@ function useColumns(revision: string | null): Column<Webhook>[] {
       key: "action",
       header: t("webhooks.columns.action"),
       hideBelow: "md",
-      cell: (webhook) => (
-        <span className="grid gap-0.5">
-          <span>{t(`webhooks.actions.${webhook.workflow ? "workflow" : webhook.action}`)}</span>
-          {webhook.run ? <span className="font-mono text-xs text-muted-foreground">{webhook.run.script}</span> : null}
-          {webhook.workflow ? <span className="text-xs text-muted-foreground">{titleOf(webhook.workflow.id)}</span> : null}
-        </span>
-      ),
+      cell: (webhook) => {
+        const action = references.actionOf(webhook);
+        return action ? <ItemReference {...action} /> : <span className="text-sm">{t("webhooks.actions.event")}</span>;
+      },
     },
     {
       key: "last",

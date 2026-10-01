@@ -60,3 +60,6 @@ export { ScriptLogDialog } from "./ui/trace/script-log-dialog";
 export { depthOf, hasLog, loopOf, passRows } from "./ui/trace/pass-groups";
 export type { TraceRow } from "./ui/trace/pass-groups";
 export type { RunTableProps } from "./ui/run-table";
+export { useRunPages } from "./model/run-pages";
+export type { RunPages } from "./model/run-pages";
+export { RunPager } from "./ui/run-pager";

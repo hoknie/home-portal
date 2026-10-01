@@ -24,10 +24,11 @@ it("only enabled modules are listed", () => {
   expect(moduleLinks(new Set())).toEqual([]);
 });
 
-it("scripts follow the modules while editing is on, whatever modules are switched", () => {
-  expect(sectionLinks(new Set(["workflows"]), true).map((item) => item.href)).toEqual(["/admin/workflows/", "/admin/scripts/"]);
+it("the run journal and scripts follow the modules, scripts while editing is on, whatever modules are switched", () => {
+  expect(sectionLinks(new Set(["workflows"]), true).map((item) => item.href)).toEqual(["/admin/workflows/", "/admin/runs/", "/admin/scripts/"]);
   expect(sectionLinks(new Set(), true).map((item) => item.label)).toEqual(["scripts"]);
-  expect(sectionLinks(new Set(["workflows"]), false).map((item) => item.label)).toEqual(["workflows"]);
+  expect(sectionLinks(new Set(["workflows"]), false).map((item) => item.label)).toEqual(["workflows", "runs"]);
+  expect(sectionLinks(new Set(["proxy"]), false).map((item) => item.label)).toEqual(["proxy"]);
 });
 
 const guest: Session = { name: "guest", group: null, admin: false, rights: {} };
@@ -43,7 +44,7 @@ it("a module appears only with its read right, and scripts only with scripts rea
   const family: Session = { name: "anna", group: "family", admin: false, rights: { automations: ["read"], layout: ["update"] } };
   const may = (area: Parameters<typeof mayOpen>[1]) => mayOpen(family, area);
   expect(managementLinks(may).map((item) => item.label)).toEqual(["home", "services", "layout"]);
-  expect(sectionLinks(new Set(["automations", "proxy"]), true, may).map((item) => item.label)).toEqual(["automations"]);
+  expect(sectionLinks(new Set(["automations", "proxy"]), true, may).map((item) => item.label)).toEqual(["automations", "runs"]);
 });
 
 const EVERY_MODULE = new Set(MODULE_LINKS.map((link) => link.module));
@@ -52,7 +53,7 @@ it("module links come grouped as network, automation with scripts last, notifica
   const groups = categoryLinks(EVERY_MODULE, true);
   expect(groups.map((group) => [group.category, group.links.map((link) => link.label)])).toEqual([
     ["network", ["proxy", "dns"]],
-    ["automation", ["automations", "webhooks", "workflows", "scripts"]],
+    ["automation", ["automations", "webhooks", "workflows", "runs", "scripts"]],
     ["notifications", ["notifications"]],
     ["access", ["users"]],
   ]);
@@ -62,4 +63,12 @@ it("a category without a visible link is left out, and a guest gets none", () =>
   expect(categoryLinks(new Set(["proxy"]), false).map((group) => group.category)).toEqual(["network"]);
   expect(categoryLinks(new Set(), true).map((group) => group.category)).toEqual(["automation"]);
   expect(categoryLinks(EVERY_MODULE, true, () => false)).toEqual([]);
+});
+
+it("the run journal shows while any of automations, webhooks or workflows is on, for whoever may read automations or workflows", () => {
+  const flows: Session = { name: "anna", group: "family", admin: false, rights: { workflows: ["read"] } };
+  const may = (area: Parameters<typeof mayOpen>[1]) => mayOpen(flows, area);
+  expect(sectionLinks(new Set(["automations", "workflows"]), false, may).map((item) => item.label)).toEqual(["workflows", "runs"]);
+  expect(sectionLinks(new Set(["notifications"]), false).map((item) => item.label)).toEqual(["notifications"]);
+  expect(sectionLinks(new Set(["automations"]), false, () => false)).toEqual([]);
 });

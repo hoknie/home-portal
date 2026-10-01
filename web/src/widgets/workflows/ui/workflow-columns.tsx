@@ -75,9 +75,16 @@ export function useWorkflowColumns({ revision, moduleOff }: ColumnsOptions): Col
       cell: (workflow) => {
         const run = workflow.active_run ?? workflow.last_run;
         return run ? (
-          <AddressLink href={routes.workflowRun(workflow.id, run.id)} className="flex items-center gap-2 text-xs text-muted-foreground">
+          <AddressLink href={routes.workflowRun(workflow.id, run.id)} className="grid justify-items-start gap-1">
             <OutcomeBadge outcome={run.outcome.result} />
-            <RelativeTime moment={run.started_at} />
+            {run.outcome.result === "running" ? (
+              <span className="text-xs text-muted-foreground tabular-nums">{t("automations.runningFor", { seconds: Math.floor(run.outcome.duration_milliseconds / 1000) })}</span>
+            ) : run.outcome.result === "queued" ? null : (
+              <span className="flex gap-2 text-xs text-muted-foreground">
+                <RelativeTime moment={run.outcome.last_at} />
+                <span>{t("common.milliseconds", { value: run.outcome.duration_milliseconds })}</span>
+              </span>
+            )}
           </AddressLink>
         ) : (
           <span className="text-xs text-muted-foreground">{t("workflows.neverRan")}</span>

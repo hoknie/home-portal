@@ -93,3 +93,60 @@ async fn an_unknown_run_answers_404() {
     .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn the_journal_answers_in_pages_with_running_runs_only_on_the_first() {
+    let api = with_backup("sleep 600");
+    let running = run_backup(&api).await;
+    for run in 1..=120u64 {
+        api.feature
+            .state
+            .sink
+            .journal
+            .record(crate::types::RunRecord::skipped(
+                &crate::services::tests::support::pending(&format!("a{run}"), 1000 + run, None),
+                crate::types::SkipReason::Cooldown,
+                time::OffsetDateTime::UNIX_EPOCH + time::Duration::seconds(run as i64),
+            ));
+    }
+    let (status, _, first) = send(&api, get("/api/automations/runs?limit=50")).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(first["runs"].as_array().unwrap().len(), 51);
+    assert_eq!(first["runs"][0]["id"], running);
+    assert_eq!(first["runs"][1]["id"], "1120");
+    assert_eq!(first["next_before"], "1071");
+    let (_, _, second) = send(&api, get("/api/automations/runs?limit=50&before=1071")).await;
+    assert_eq!(second["runs"].as_array().unwrap().len(), 50);
+    assert_eq!(second["runs"][0]["id"], "1070");
+    assert!(
+        second["runs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|run| run["id"] != running)
+    );
+    let (_, _, third) = send(
+        &api,
+        get(&format!(
+            "/api/automations/runs?limit=50&before={}",
+            second["next_before"].as_str().unwrap()
+        )),
+    )
+    .await;
+    assert_eq!(third["runs"].as_array().unwrap().len(), 20);
+    assert_eq!(third["next_before"], serde_json::Value::Null);
+}
+
+#[tokio::test]
+async fn a_page_size_or_cursor_out_of_range_answers_400_naming_it() {
+    let api = with_backup("true");
+    for (query, field) in [
+        ("limit=500", "limit"),
+        ("limit=0", "limit"),
+        ("before=last", "before"),
+    ] {
+        let (status, _, body) = send(&api, get(&format!("/api/automations/runs?{query}"))).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{query}");
+        assert!(body.to_string().contains(field), "{query}: {body}");
+    }
+}

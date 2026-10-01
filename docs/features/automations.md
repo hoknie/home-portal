@@ -17,8 +17,11 @@ Automations are on unless you switch them off under **Management → Modules** (
 4. Choose **what** it does: a script with its arguments, or a workflow with its inputs.
 5. Save. **Run now** tries it at once with sample values.
 
-Every run lands in the journal on the same page: when it started, why, how it ended, and what the
-script printed. A run that is still going can be followed and stopped from there.
+Every run lands in the **Run journal** (**Management → Run journal**, `/admin/runs`): when it
+started, what started it (with a link to it), how it ended, and what the script printed. A run that
+is still going can be followed and stopped from there. The journal shows 50 runs a page; **Older**
+and **Newer** move through the rest, and only the newest page refreshes itself. The automations
+table names what each automation does in its **Action** column, linked to the script or workflow.
 
 ## Settings
 
