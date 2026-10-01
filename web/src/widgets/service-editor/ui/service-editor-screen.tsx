@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
 import { ServiceForm } from "@/features/service-form";
+import { useEnvironment } from "@/entities/environment";
 import { groupsOf, useServices } from "@/entities/service";
 import { routes } from "@/shared/config";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -25,10 +26,11 @@ export function ServiceEditorScreen({ mode }: ServiceEditorScreenProps) {
   const router = useRouter();
   const id = useSearchParams().get(ID_PARAMETER) ?? "";
   const services = useServices();
+  const environment = useEnvironment();
   const title = t(mode === "new" ? "serviceForm.addTitle" : "serviceForm.editTitle");
   const serviceName = services.data?.data.services.find((candidate) => candidate.id === id)?.name ?? id;
   const header = <PageHeader breadcrumbs={trail.of(trail.section("services"), { label: mode === "new" ? t("breadcrumbs.new.service") : serviceName })} title={title} description={t("serviceForm.description")} />;
-  if (!services.data) {
+  if (!services.data || !environment.data) {
     return (
       <div className="grid gap-8">
         {header}
@@ -65,6 +67,8 @@ export function ServiceEditorScreen({ mode }: ServiceEditorScreenProps) {
       <ServiceForm
         key={service?.id ?? "new"}
         service={service}
+        environments={environment.data.environments}
+        cancelHref={service ? routes.service(service.id) : routes.adminServices}
         revision={services.data.revision}
         taken={all.map((candidate) => candidate.id).filter((candidate) => candidate !== service?.id)}
         groups={groupsOf(all, locale)}

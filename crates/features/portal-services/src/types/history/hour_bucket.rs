@@ -1,7 +1,7 @@
 use portal_model::ServiceState;
 use serde::{Deserialize, Serialize};
 
-use super::Sample;
+use super::{LatencyPoint, Sample};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HourBucket {
@@ -48,6 +48,35 @@ impl HourBucket {
         }
         self.covered_seconds += u64::from(sample.covered);
         self.answered_seconds += sample.answered_seconds();
+    }
+
+    pub fn merge(&mut self, other: &HourBucket) {
+        self.up += other.up;
+        self.degraded += other.degraded;
+        self.down += other.down;
+        self.unreadable += other.unreadable;
+        self.minimum = match (self.minimum, other.minimum) {
+            (Some(left), Some(right)) => Some(left.min(right)),
+            (left, right) => left.or(right),
+        };
+        self.maximum = match (self.maximum, other.maximum) {
+            (Some(left), Some(right)) => Some(left.max(right)),
+            (left, right) => left.or(right),
+        };
+        self.latency_sum += other.latency_sum;
+        self.latency_count += other.latency_count;
+        self.covered_seconds += other.covered_seconds;
+        self.answered_seconds += other.answered_seconds;
+    }
+
+    pub fn point(&self) -> LatencyPoint {
+        LatencyPoint {
+            at: self.hour,
+            state: self.worst(),
+            average: self.average(),
+            minimum: self.minimum,
+            maximum: self.maximum,
+        }
     }
 
     pub fn average(&self) -> Option<u32> {

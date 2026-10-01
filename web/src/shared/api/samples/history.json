@@ -1,5 +1,5 @@
 {
-  "from": "2026-09-21T10:03:00Z",
+  "from": "2026-09-21T11:30:00Z",
   "points": [
     {
       "at": "2026-09-22T10:00:00Z",
@@ -9,35 +9,35 @@
       "state": "up"
     },
     {
-      "at": "2026-09-22T10:00:30Z",
+      "at": "2026-09-22T10:15:00Z",
       "average": 41,
       "maximum": 41,
       "minimum": 41,
       "state": "up"
     },
     {
-      "at": "2026-09-22T10:01:00Z",
+      "at": "2026-09-22T10:30:00Z",
       "average": 42,
       "maximum": 42,
       "minimum": 42,
       "state": "up"
     },
     {
-      "at": "2026-09-22T10:01:30Z",
+      "at": "2026-09-22T10:45:00Z",
       "average": null,
       "maximum": null,
       "minimum": null,
       "state": "down"
     },
     {
-      "at": "2026-09-22T10:02:00Z",
+      "at": "2026-09-22T11:00:00Z",
       "average": 44,
       "maximum": 44,
       "minimum": 44,
       "state": "up"
     },
     {
-      "at": "2026-09-22T10:02:30Z",
+      "at": "2026-09-22T11:15:00Z",
       "average": 45,
       "maximum": 45,
       "minimum": 45,
@@ -45,7 +45,8 @@
     }
   ],
   "range": "24h",
-  "to": "2026-09-22T10:03:00Z",
+  "step_seconds": 900,
+  "to": "2026-09-22T11:30:00Z",
   "transitions": [
     {
       "at": "2026-09-22T10:00:00Z",
@@ -54,13 +55,13 @@
       "to": "up"
     },
     {
-      "at": "2026-09-22T10:01:30Z",
+      "at": "2026-09-22T10:45:00Z",
       "error": "connection refused",
       "from": "up",
       "to": "down"
     },
     {
-      "at": "2026-09-22T10:02:00Z",
+      "at": "2026-09-22T11:00:00Z",
       "error": null,
       "from": "down",
       "to": "up"
@@ -68,17 +69,17 @@
   ],
   "uptime": [
     {
-      "covered_seconds": 150,
+      "covered_seconds": 1800,
       "range": "24h",
       "ratio": 0.8
     },
     {
-      "covered_seconds": 150,
+      "covered_seconds": 1800,
       "range": "7d",
       "ratio": 0.8
     },
     {
-      "covered_seconds": 150,
+      "covered_seconds": 1800,
       "range": "30d",
       "ratio": 0.8
     }

@@ -216,7 +216,6 @@ fn a_publication_with_every_field_is_written_whole() {
     let mut published = entry("nas", "NAS", "http://10.0.0.6");
     published.proxy = Some(portal_model::Publication {
         host: "nas.home.arpa".into(),
-        upstream: Some("https://10.0.0.6:5001".into()),
         environments: vec!["local".into(), "internet".into()],
         auth: Vec::new(),
         tls: Some(portal_model::TlsPolicy {
@@ -227,7 +226,7 @@ fn a_publication_with_every_field_is_written_whole() {
     });
     replace(&mut document, 1, &published);
     assert!(document.to_string().ends_with(
-        "url = \"http://10.0.0.6\"\nproxy = { host = \"nas.home.arpa\", upstream = \"https://10.0.0.6:5001\", environments = [\"local\", \"internet\"], tls = { mode = \"internal\" }, upstream_verify = false }\n"
+        "url = \"http://10.0.0.6\"\nproxy = { host = \"nas.home.arpa\", environments = [\"local\", \"internet\"], tls = { mode = \"internal\" }, upstream_verify = false }\n"
     ));
 }
 

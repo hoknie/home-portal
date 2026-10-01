@@ -14,6 +14,7 @@ pub struct HistoryResponse {
     #[serde(with = "time::serde::rfc3339")]
     #[schemars(with = "String")]
     pub to: OffsetDateTime,
+    pub step_seconds: i64,
     pub uptime: Vec<UptimeResponse>,
     pub points: Vec<LatencyPointResponse>,
     pub transitions: Vec<TransitionResponse>,
@@ -27,6 +28,7 @@ impl HistoryResponse {
             range: view.range.name().to_string(),
             from: time(view.from),
             to: time(view.to),
+            step_seconds: view.step,
             uptime: view.uptime.iter().map(UptimeResponse::of).collect(),
             points: view.points.iter().map(LatencyPointResponse::of).collect(),
             transitions: view

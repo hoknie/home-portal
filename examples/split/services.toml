@@ -8,8 +8,9 @@ name = "Jellyfin"
 url = "http://192.168.1.10:8096"
 addresses = { local = "http://192.168.1.10:8096", vpn = "http://10.8.0.10:8096" }
 # Published by Caddy with a Let's Encrypt certificate. From the internet the portal's
-# sign-in comes first; at home and over the VPN Jellyfin opens directly.
-proxy = { host = "media.home.example.com", upstream = "http://192.168.1.10:8096", auth = ["internet"] }
+# sign-in comes first; Caddy forwards to the main address (url). At home and over the
+# VPN Jellyfin opens directly.
+proxy = { host = "media.home.example.com", auth = ["internet"] }
 group = "Media"
 icon = "catalog:jellyfin"
 description = "Films and series"

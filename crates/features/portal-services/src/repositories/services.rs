@@ -139,9 +139,6 @@ fn write_fields(table: &mut Table, entry: &ServiceEntry) {
 fn publication_table(publication: &Publication) -> InlineTable {
     let mut table = InlineTable::new();
     table.insert("host", publication.host.as_str().into());
-    if let Some(upstream) = &publication.upstream {
-        table.insert("upstream", upstream.as_str().into());
-    }
     if publication.environments != Publication::default_environments() {
         let list: Array = publication
             .environments

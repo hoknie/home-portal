@@ -80,7 +80,6 @@
         ],
         "host": "nas.example.com",
         "tls": null,
-        "upstream": null,
         "upstream_verify": true
       },
       "public": false,

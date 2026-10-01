@@ -65,7 +65,7 @@ export function ServicePageScreen() {
   return (
     <div className="grid gap-6">
       {crumbs}
-      <ServiceSummary service={service} />
+      <ServiceSummary service={service} revision={services.data.revision} />
       <div className="grid gap-6 lg:grid-cols-2">
         <ProbeCard service={service} />
         <AddressesCard service={service} environment={environment.data?.environment ?? null} />

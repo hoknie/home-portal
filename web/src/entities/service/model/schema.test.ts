@@ -13,7 +13,6 @@ it("a published service carries its publication with defaults", () => {
   expect(parsed.services[0].proxy).toBeNull();
   expect(parsed.services[1].proxy).toEqual({
     host: "nas.example.com",
-    upstream: null,
     environments: ["internet"],
     auth: ["internet"],
     tls: null,

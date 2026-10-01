@@ -33,7 +33,7 @@ function seeded(enabled = true) {
 
 function open(onConflict = vi.fn(), service: typeof nas | null = nas, onSaved = vi.fn(), client = seeded()) {
   renderWithProviders(
-    <ServiceForm service={service} revision='"r1"' taken={["media", "nas"]} groups={["Media", "Network"]} onSaved={onSaved} onConflict={onConflict} />,
+    <ServiceForm service={service} environments={["local", "vpn"]} cancelHref="/service/?id=nas" revision='"r1"' taken={["media", "nas"]} groups={["Media", "Network"]} onSaved={onSaved} onConflict={onConflict} />,
     client,
   );
   return onConflict;
@@ -54,7 +54,7 @@ it("shows the server's field errors next to the fields they name", async () => {
 it("two people edit the same service: the second save conflicts, keeps what was typed and can overwrite", async () => {
   const fetch = vi.fn(async () => new Response("stale", { status: 409 }));
   vi.stubGlobal("fetch", fetch);
-  const form = (revision: string) => <ServiceForm service={nas} revision={revision} taken={["media", "nas"]} groups={["Media", "Network"]} onSaved={vi.fn()} onConflict={vi.fn()} />;
+  const form = (revision: string) => <ServiceForm service={nas} environments={["local", "vpn"]} cancelHref="/service/?id=nas" revision={revision} taken={["media", "nas"]} groups={["Media", "Network"]} onSaved={vi.fn()} onConflict={vi.fn()} />;
   const view = renderWithProviders(form('"r1"'), seeded());
   view.rerender(form('"r2"'));
   const name = screen.getByLabelText("Name");
@@ -75,7 +75,7 @@ it("two people edit the same service: the second save conflicts, keeps what was 
 
 it("reloading after a conflict takes the current values once the person confirms", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response("stale", { status: 409 })));
-  const form = (service: typeof nas, revision: string) => <ServiceForm service={service} revision={revision} taken={["media", "nas"]} groups={["Media", "Network"]} onSaved={vi.fn()} onConflict={vi.fn()} />;
+  const form = (service: typeof nas, revision: string) => <ServiceForm service={service} environments={["local", "vpn"]} cancelHref="/service/?id=nas" revision={revision} taken={["media", "nas"]} groups={["Media", "Network"]} onSaved={vi.fn()} onConflict={vi.fn()} />;
   const view = renderWithProviders(form(nas, '"r1"'), seeded());
   await userEvent.clear(screen.getByLabelText("Name"));
   await userEvent.type(screen.getByLabelText("Name"), "Storage box");
@@ -92,7 +92,7 @@ it("checks the fields on the client before sending", async () => {
   const fetch = vi.fn();
   vi.stubGlobal("fetch", fetch);
   open();
-  const url = screen.getByLabelText("Address");
+  const url = screen.getByLabelText("Address of Main address");
   await userEvent.clear(url);
   await userEvent.type(url, "ftp://nas");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -118,7 +118,7 @@ it("switching to a tcp probe asks for a port and refuses an address without one"
   await userEvent.selectOptions(screen.getByLabelText("Probe kind"), "tcp");
   expect(screen.getByLabelText(/^Port/)).toBeInTheDocument();
   expect(screen.queryByLabelText("Probe path")).not.toBeInTheDocument();
-  const url = screen.getByLabelText("Address");
+  const url = screen.getByLabelText("Address of Main address");
   await userEvent.clear(url);
   await userEvent.type(url, "tcp://printer.home.lan");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -229,7 +229,7 @@ it("asks the portal once for a fetched icon after a pause", async () => {
   const fetch = vi.fn(async () => new Response(new Blob(["png"], { type: "image/png" }), { status: 200 }));
   vi.stubGlobal("fetch", fetch);
   add();
-  fireEvent.change(screen.getByLabelText(/^Address$/), { target: { value: "http://nas.local" } });
+  fireEvent.change(screen.getByLabelText("Address of Main address"), { target: { value: "http://nas.local" } });
   fireEvent.change(screen.getByLabelText(/^Icon/), { target: { value: "catalog:jellyfin" } });
   expect(fetch).not.toHaveBeenCalled();
   await act(async () => {
@@ -279,38 +279,6 @@ it("aborts the previous preview when the value changes again", async () => {
   expect(signals[0].aborted).toBe(true);
 });
 
-it("publishing a service sends its publication, and an empty host removes it", async () => {
-  const fetch = vi.fn(async () => jsonResponse(apiSamples.services.services[0]));
-  vi.stubGlobal("fetch", fetch);
-  open(vi.fn(), { ...nas, proxy: null });
-  await userEvent.type(screen.getByLabelText(/^Published address/), "Media.Example.com");
-  const signIn = screen.getByRole("group", { name: "Require signing in to the portal from the environments" });
-  await userEvent.click(within(signIn).getByLabelText("internet"));
-  await userEvent.click(screen.getByRole("button", { name: "Save" }));
-  await waitFor(() => expect(fetch).toHaveBeenCalled());
-  const body = JSON.parse(String((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body));
-  expect(body.proxy).toEqual({
-    host: "media.example.com",
-    upstream: null,
-    environments: ["internet"],
-    auth: ["internet"],
-    tls: null,
-    upstream_verify: true,
-  });
-});
-
-it("an empty host removes the publication", async () => {
-  const fetch = vi.fn(async () => jsonResponse(apiSamples.services.services[1]));
-  vi.stubGlobal("fetch", fetch);
-  open();
-  expect(screen.getByLabelText(/^Published address/)).toHaveValue("nas.example.com");
-  await userEvent.clear(screen.getByLabelText(/^Published address/));
-  await userEvent.click(screen.getByRole("button", { name: "Save" }));
-  await waitFor(() => expect(fetch).toHaveBeenCalled());
-  const body = JSON.parse(String((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body));
-  expect(body.proxy).toBeNull();
-});
-
 it("a host already taken is reported next to the host field", async () => {
   vi.stubGlobal(
     "fetch",
@@ -320,7 +288,8 @@ it("a host already taken is reported next to the host field", async () => {
   );
   open();
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
-  expect(await screen.findByText("is published by another service")).toBeInTheDocument();
+  const published = screen.getByRole("listitem", { name: "Address 2" });
+  expect(await within(published).findByText("is published by another service")).toBeInTheDocument();
 });
 
 it("an error about another part of the configuration is shown above the form", async () => {
@@ -336,12 +305,6 @@ it("an error about another part of the configuration is shown above the form", a
   expect(notice.closest("[role=alert]")).toHaveTextContent("services[2].proxy.auth: must be under proxy.cookie_domain");
 });
 
-it("a disabled proxy is explained without hiding the publication", () => {
-  open(vi.fn(), nas, vi.fn(), seeded(false));
-  expect(screen.getByRole("note")).toHaveTextContent("The proxy is off");
-  expect(screen.getByLabelText(/^Published address/)).toBeInTheDocument();
-});
-
 it("files mode asks for both files before sending", async () => {
   const fetch = vi.fn();
   vi.stubGlobal("fetch", fetch);
@@ -354,21 +317,18 @@ it("files mode asks for both files before sending", async () => {
 
 
 it("shows every setting of an http probe without a click", () => {
-  open();
+  open(vi.fn(), { ...nas, proxy: null });
   for (const label of ["Probe kind", "Probe path", "Interval, s", "Timeout, s", "Slow after, ms"]) {
     expect(screen.getByLabelText(label)).toBeVisible();
   }
   expect(document.querySelector("details, summary")).toBeNull();
 });
 
-it("groups the publication block into address, access and certificate", () => {
-  open();
-  const groups = ["Address and target", "Access", "Encryption"].map((name) => screen.getByRole("group", { name }));
-  expect(groups[0].compareDocumentPosition(groups[1]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(groups[1].compareDocumentPosition(groups[2]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(within(groups[0]).getByLabelText(/^Published address/)).toBeInTheDocument();
-  const shown = within(groups[1]).getByRole("group", { name: "Show this address in the environments" });
-  expect(within(shown).getByRole("checkbox", { name: "internet" })).toBeInTheDocument();
-  expect(within(groups[1]).getByRole("group", { name: "Require signing in to the portal from the environments" })).toBeInTheDocument();
-  expect(within(groups[2]).getByLabelText("Certificate")).toBeInTheDocument();
+it("two links share one header row and each input keeps its own label", () => {
+  open(vi.fn(), { ...nas, links: [{ title: "Admin", url: "http://nas.local/admin" }, { title: "Logs", url: "http://nas.local/logs" }] });
+  const block = screen.getByRole("group", { name: "Links" });
+  expect(within(block).getAllByText("Title")).toHaveLength(1);
+  expect(within(block).getAllByText("Address")).toHaveLength(1);
+  expect(screen.getAllByLabelText("Link title").map((input) => (input as HTMLInputElement).value)).toEqual(["Admin", "Logs"]);
+  expect(screen.getAllByLabelText("Link address")).toHaveLength(2);
 });

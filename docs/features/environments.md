@@ -9,9 +9,9 @@ that works from there. Anyone who is in none of your networks is in the environm
 
 - Describe your networks once in the main configuration file; the header then shows the visitor's
   environment.
-- In a service's form, give it one address per environment, and optionally limit it to some
-  environments: a service limited to `local` and `vpn` is not listed, linked or counted for
-  anyone else.
+- In a service's form, the **Addresses** table gives each row its environments and address; an
+  environment in no row does not see the service: a service whose rows cover only `local` and
+  `vpn` is not listed, linked or counted for anyone else.
 - Widgets on the home page can be limited to environments in the same way (see
   [Home page](home-page.md)).
 - **View the portal as from another environment**: a visitor inside one of your networks can pick

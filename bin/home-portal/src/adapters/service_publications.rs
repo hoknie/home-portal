@@ -14,10 +14,7 @@ impl ServicePublications {
             .into_iter()
             .filter_map(|entry| {
                 let publication = entry.proxy.clone()?;
-                let upstream = publication
-                    .upstream
-                    .clone()
-                    .unwrap_or_else(|| entry.probe_address(host).to_string());
+                let upstream = entry.probe_address(host).to_string();
                 Some(PublishedService {
                     id: entry.id,
                     upstream,

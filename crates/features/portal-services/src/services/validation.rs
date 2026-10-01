@@ -4,11 +4,11 @@ use portal_config::deserialize_section;
 use portal_feature::FieldError;
 use portal_model::{Environment, Environments, RawEnvironmentsSection, ServiceId};
 use portal_widget::WidgetsSection;
-use toml_edit::DocumentMut;
+use toml_edit::{DocumentMut, Item};
 
 use super::details_validation::{check_links, check_notes, check_widgets};
 use super::probe_validation::{address_problem, check_probe};
-use super::publishing::check_publication;
+use super::publishing::{RETIRED_UPSTREAM, check_publication};
 use crate::types::{Known, ServiceEntry, ServicesSection};
 
 pub fn validate_services(document: &DocumentMut) -> Vec<FieldError> {
@@ -26,6 +26,12 @@ pub fn validate_services(document: &DocumentMut) -> Vec<FieldError> {
                 .into_iter()
                 .map(|error| error.prefixed(&prefix)),
         );
+        if proxy_holds_upstream(document, index) {
+            errors.push(FieldError::new(
+                format!("{prefix}proxy.upstream"),
+                RETIRED_UPSTREAM,
+            ));
+        }
         if !seen.insert(entry.id.as_str()) {
             errors.push(FieldError::new(
                 format!("{prefix}id"),
@@ -34,6 +40,16 @@ pub fn validate_services(document: &DocumentMut) -> Vec<FieldError> {
         }
     }
     errors
+}
+
+fn proxy_holds_upstream(document: &DocumentMut, index: usize) -> bool {
+    document
+        .get("services")
+        .and_then(Item::as_array_of_tables)
+        .and_then(|services| services.get(index))
+        .and_then(|service| service.get("proxy"))
+        .and_then(Item::as_table_like)
+        .is_some_and(|proxy| proxy.contains_key("upstream"))
 }
 
 pub fn known_of(document: &DocumentMut) -> Known {

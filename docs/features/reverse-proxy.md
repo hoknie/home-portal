@@ -21,9 +21,11 @@ Caddy itself can come from two places:
 
 1. On **Management → Proxy**, fill in **Portal address** and, if some services need
    sign-in, **Sign-in domain**. Pick the **Default certificate**.
-2. On **Management → Services**, edit a service. Under **Publication**, set its
-   **Published address**. You can also choose who has to sign in first (**Require signing
-   in to the portal from the environments**) and a certificate for that address alone.
+2. On **Management → Services**, edit a service. Under **Addresses**, add a row with the
+   environments it is for, `https://<published name>` and **Through the proxy** checked; choose
+   **Portal sign-in** if visitors from there must sign in first. Caddy forwards that name to the
+   service's main address, the first row. **Proxy settings** holds a certificate for that name
+   alone.
 3. The **Published addresses** table on the proxy page lists every host. The badge tells you
    whether Caddy is reachable and holds the current configuration, and **Apply now** reloads it.
 

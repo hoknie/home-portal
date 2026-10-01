@@ -243,7 +243,6 @@ fn dns_over_https_gets_its_own_route_only_on_another_host_while_it_is_on() {
 fn a_publication_is_checked_against_the_settings_by_its_own_field_names() {
     let outside = portal_model::Publication {
         host: "nas.example.org".into(),
-        upstream: None,
         environments: vec!["internet".into()],
         auth: vec!["internet".into()],
         tls: None,

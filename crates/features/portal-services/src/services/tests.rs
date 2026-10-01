@@ -369,3 +369,13 @@ async fn pausing_probing_keeps_the_history_and_sets_the_status_to_unknown() {
     assert_eq!(board.status("nas").state, ServiceState::Unknown);
     assert_eq!(day(&board), recorded);
 }
+
+#[test]
+fn an_upstream_left_in_the_file_is_refused_naming_the_main_address() {
+    let document: DocumentMut = "[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://192.168.1.10:8096\"\nproxy = { host = \"media.example.com\", upstream = \"http://192.168.1.10:8096\" }\n"
+        .parse()
+        .unwrap();
+    let errors = validate_services(&document);
+    assert_eq!(fields(errors.clone()), vec!["services[0].proxy.upstream"]);
+    assert!(errors[0].message.contains("main address"), "{errors:?}");
+}

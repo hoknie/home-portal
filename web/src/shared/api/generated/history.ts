@@ -16,7 +16,7 @@ export const uptimeResponseSchema = z.object({ "covered_seconds": z.number(), "r
 
 export type UptimeResponse = z.infer<typeof uptimeResponseSchema>;
 
-export const historyResponseSchema = z.object({ "from": z.string(), "points": z.array(latencyPointResponseSchema), "range": z.string(), "to": z.string(), "transitions": z.array(transitionResponseSchema), "uptime": z.array(uptimeResponseSchema) });
+export const historyResponseSchema = z.object({ "from": z.string(), "points": z.array(latencyPointResponseSchema), "range": z.string(), "step_seconds": z.number(), "to": z.string(), "transitions": z.array(transitionResponseSchema), "uptime": z.array(uptimeResponseSchema) });
 
 export type HistoryResponse = z.infer<typeof historyResponseSchema>;
 

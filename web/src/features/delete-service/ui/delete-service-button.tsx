@@ -11,9 +11,9 @@ import { ConflictError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Button } from "@/shared/ui/primitives";
 
-export type DeleteServiceButtonProps = { service: Service; revision: string | null };
+export type DeleteServiceButtonProps = { service: Service; revision: string | null; onDeleted?: () => void; labelled?: boolean };
 
-function DeleteServiceButtonAllowed({ service, revision }: DeleteServiceButtonProps) {
+function DeleteServiceButtonAllowed({ service, revision, onDeleted, labelled = false }: DeleteServiceButtonProps) {
   const t = useTranslations();
   const remove = useDeleteService();
   const [open, setOpen] = useState(false);
@@ -22,6 +22,7 @@ function DeleteServiceButtonAllowed({ service, revision }: DeleteServiceButtonPr
       await remove.mutateAsync({ id: service.id, revision });
       toast.success(t("services.deleted"));
       setOpen(false);
+      onDeleted?.();
     } catch (error) {
       toast.error(t(error instanceof ConflictError ? "errors.conflict" : "errors.generic"));
       setOpen(false);
@@ -29,9 +30,16 @@ function DeleteServiceButtonAllowed({ service, revision }: DeleteServiceButtonPr
   };
   return (
     <>
-      <Button variant="ghost" size="icon" aria-label={t("common.delete")} onClick={() => setOpen(true)}>
-        <Trash2 aria-hidden />
-      </Button>
+      {labelled ? (
+        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)}>
+          <Trash2 className="size-4" aria-hidden />
+          {t("common.delete")}
+        </Button>
+      ) : (
+        <Button variant="ghost" size="icon" aria-label={t("common.delete")} onClick={() => setOpen(true)}>
+          <Trash2 aria-hidden />
+        </Button>
+      )}
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}

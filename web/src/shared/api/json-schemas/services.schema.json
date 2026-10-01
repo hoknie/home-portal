@@ -119,13 +119,6 @@
           ],
           "default": null
         },
-        "upstream": {
-          "default": null,
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "upstream_verify": {
           "default": true,
           "type": "boolean"
@@ -133,7 +126,6 @@
       },
       "required": [
         "host",
-        "upstream",
         "environments",
         "auth",
         "tls",

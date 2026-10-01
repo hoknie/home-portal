@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { useCan } from "@/entities/session";
 import { type Service, type ServiceForm as ServiceFormValues, emptyServiceForm, formOf, serviceFormSchema, useSaveService } from "@/entities/service";
 import { ConflictError, type FieldError, ValidationError } from "@/shared/api";
-import { routes } from "@/shared/config";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
@@ -22,13 +21,16 @@ import { TagInput } from "@/shared/ui/tag-input";
 
 import { byField } from "../model/server-errors";
 import { slugOf, uniqueId } from "@/shared/lib/slug";
+import { AddressRows } from "./address-rows";
 import { DetailsFields } from "./details-fields";
 import { IconField } from "./icon-field";
 import { ProbeFields } from "./probe-fields";
-import { PublicationFields } from "./publication-fields";
+
 
 export type ServiceFormProps = {
   service: Service | null;
+  environments: string[];
+  cancelHref: string;
   revision: string | null;
   taken: string[];
   groups: string[];
@@ -36,7 +38,11 @@ export type ServiceFormProps = {
   onConflict: () => void;
 };
 
-export function ServiceForm({ service, revision, taken, groups, onSaved, onConflict }: ServiceFormProps) {
+function initialOf(service: Service | null, environments: string[]) {
+  return service ? formOf(service, environments) : emptyServiceForm(environments);
+}
+
+export function ServiceForm({ service, environments, cancelHref, revision, taken, groups, onSaved, onConflict }: ServiceFormProps) {
   const t = useTranslations();
   const can = useCan();
   const editable = can("services", service === null ? "create" : "update");
@@ -45,7 +51,7 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
   const [unplaced, setUnplaced] = useState<FieldError[]>([]);
   const [saved, setSaved] = useState(false);
   const [idFollowsName, setIdFollowsName] = useState(service === null);
-  const form = useForm<ServiceFormValues>({ resolver: zodResolver(serviceFormSchema), defaultValues: service ? formOf(service) : emptyServiceForm });
+  const form = useForm<ServiceFormValues>({ resolver: zodResolver(serviceFormSchema), defaultValues: initialOf(service, environments) });
   useLeaveGuard(form.formState.isDirty && !saved, t("serviceForm.leave"));
 
   const held = useEditorRevision(revision);
@@ -60,7 +66,7 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
       onSaved();
     } catch (error) {
       if (error instanceof ValidationError) {
-        const { placed, unplaced } = byField(error.fields, Object.keys(emptyServiceForm));
+        const { placed, unplaced } = byField(error.fields, Object.keys(emptyServiceForm(environments)), form.getValues("rows"));
         for (const { path, message } of placed) {
           form.setError(path as Path<ServiceFormValues>, { message });
         }
@@ -76,7 +82,7 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
   const submit = send(held.revision);
   const reload = () => {
     held.catchUp();
-    form.reset(service ? formOf(service) : emptyServiceForm);
+    form.reset(initialOf(service, environments));
     setConflict(false);
   };
 
@@ -114,9 +120,6 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
                   })}
                 />
               </FormField>
-              <FormField id="service-url" label={t("serviceForm.url")} hint={t("serviceForm.urlHint")} error={errors.url?.message}>
-                <Input id="service-url" type="url" inputMode="url" spellCheck={false} {...form.register("url")} />
-              </FormField>
               <FormField id="service-group" label={t("serviceForm.group")} hint={t("serviceForm.groupHint")} optional error={errors.group?.message}>
                 <Controller
                   control={form.control}
@@ -145,15 +148,15 @@ export function ServiceForm({ service, revision, taken, groups, onSaved, onConfl
             <ProbeFields form={form} />
           </SectionCard>
         </div>
-        <SectionCard title={t("serviceForm.publication")} description={t("serviceForm.publicationDescription")}>
-          <PublicationFields form={form} />
+        <SectionCard title={t("serviceForm.rows.title")} description={t("serviceForm.rows.description")}>
+          <AddressRows form={form} />
         </SectionCard>
         <SectionCard title={t("serviceForm.details")}>
           <DetailsFields form={form} />
         </SectionCard>
         <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
           <Button asChild variant="outline">
-            <Link href={routes.adminServices}>{t("common.cancel")}</Link>
+            <Link href={cancelHref}>{t("common.cancel")}</Link>
           </Button>
           {editable ? (
             <Button type="submit" disabled={form.formState.isSubmitting}>

@@ -7,9 +7,9 @@ use crate::types::ServiceEntry;
 pub const NOT_SHOWN: &str = "names an environment this service is not shown in";
 pub const UNKNOWN_ENVIRONMENT: &str = "names no configured environment";
 pub const GIVEN_BY_PROXY: &str = "is given by proxy.host, because the service is published there";
-pub const INVALID_UPSTREAM: &str = "must be an absolute http or https URL";
-pub const MISSING_UPSTREAM: &str =
-    "is required, because the service is not reached over http or https";
+pub const MAIN_NOT_HTTP: &str =
+    "cannot be published: the proxy forwards to the main address, which is not http or https";
+pub const RETIRED_UPSTREAM: &str = "is no longer read; the proxy forwards to the main address";
 
 pub fn check_publication(entry: &ServiceEntry, known: &Environments) -> Vec<FieldError> {
     let Some(publication) = &entry.proxy else {
@@ -19,7 +19,9 @@ pub fn check_publication(entry: &ServiceEntry, known: &Environments) -> Vec<Fiel
     if let Some(message) = Publication::host_problem(&publication.host) {
         errors.push(FieldError::new("proxy.host", message));
     }
-    errors.extend(check_upstream(entry, publication));
+    if !speaks_http(main_address(entry)) {
+        errors.push(FieldError::new("proxy.host", MAIN_NOT_HTTP));
+    }
     for (index, name) in publication.environments.iter().enumerate() {
         let field = format!("proxy.environments[{index}]");
         if !Environment::parse(name).is_ok_and(|environment| known.knows(&environment)) {
@@ -49,25 +51,13 @@ pub fn check_publication(entry: &ServiceEntry, known: &Environments) -> Vec<Fiel
     errors
 }
 
-fn check_upstream(entry: &ServiceEntry, publication: &Publication) -> Option<FieldError> {
-    match &publication.upstream {
-        Some(upstream) if !speaks_http(upstream) => {
-            Some(FieldError::new("proxy.upstream", INVALID_UPSTREAM))
-        }
-        Some(_) => None,
-        None => {
-            let candidates: Vec<&String> = match &entry.probe.environment {
-                Some(name) => entry.addresses.get(name).into_iter().collect(),
-                None => std::iter::once(&entry.url)
-                    .chain(entry.addresses.values())
-                    .collect(),
-            };
-            candidates
-                .iter()
-                .any(|address| !speaks_http(address))
-                .then(|| FieldError::new("proxy.upstream", MISSING_UPSTREAM))
-        }
-    }
+fn main_address(entry: &ServiceEntry) -> &str {
+    entry
+        .probe
+        .environment
+        .as_ref()
+        .and_then(|name| entry.addresses.get(name))
+        .unwrap_or(&entry.url)
 }
 
 fn speaks_http(address: &str) -> bool {

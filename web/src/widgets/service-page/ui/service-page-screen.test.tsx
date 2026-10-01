@@ -1,31 +1,37 @@
-import { fireEvent, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { apiSamples } from "@/shared/api";
-import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
+import { TEST_SESSION_KEY, jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { ServicePageScreen } from "./service-page-screen";
 
 let id = "media";
 
+const navigation = vi.hoisted(() => ({ push: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(`id=${id}`),
   usePathname: () => "/service/",
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), push: navigation.push }),
 }));
 
 type Services = { services: Array<{ notes: string | null; status: Record<string, unknown> }> };
 
 const copy = (): Services => structuredClone(apiSamples.services) as Services;
 
-function serve(services: Services = copy()) {
-  const fetch = vi.fn(async (input: RequestInfo | URL) => {
+function serve(services: Services = copy(), client = testQueryClient()) {
+  const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const path = String(input);
     if (path.startsWith("/api/services/") && path.includes("/history")) {
       const range = new URL(path, "http://portal").searchParams.get("range") ?? "24h";
       const days = { "24h": 1, "7d": 7, "30d": 30 }[range] ?? 1;
       const to = Date.parse(apiSamples.history.to);
       return jsonResponse({ ...apiSamples.history, range, from: new Date(to - days * 86_400_000).toISOString() });
+    }
+    if (path === "/api/services/media" && init?.method === "DELETE") {
+      return jsonResponse({ services: copy().services.slice(1) }, { headers: { ETag: '"r2"' } });
     }
     if (path === "/api/services") {
       return jsonResponse(services, { headers: { ETag: '"r"' } });
@@ -42,11 +48,12 @@ function serve(services: Services = copy()) {
     return new Response("missing", { status: 404 });
   });
   vi.stubGlobal("fetch", fetch);
-  renderWithProviders(<ServicePageScreen />);
+  renderWithProviders(<ServicePageScreen />, client);
   return fetch;
 }
 
 afterEach(() => {
+  navigation.push.mockReset();
   vi.unstubAllGlobals();
   id = "media";
 });
@@ -69,27 +76,27 @@ it("lists every address, marking the visitor's and the probed one", async () => 
   expect(internet.closest("li")?.textContent).not.toContain("checked");
 });
 
-it("shows the probe settings and history: uptime for three ranges, the latency chart and the state changes", async () => {
+it("shows the probe settings and history: uptime for three ranges, the history chart and the state changes", async () => {
   serve();
   expect(await screen.findByText("HTTP request")).toBeInTheDocument();
   expect(screen.getByText("every 30 s")).toBeInTheDocument();
   expect(await screen.findByText("Availability over 24 hours")).toBeInTheDocument();
   expect(screen.getByText("Availability over 30 days")).toBeInTheDocument();
   expect(screen.getAllByText(/^80%$/)).toHaveLength(3);
-  expect(screen.getByRole("img", { name: "Latency over 24 hours" })).toBeInTheDocument();
+  expect(screen.getByRole("group", { name: "History over 24 hours" })).toBeInTheDocument();
   expect(screen.getByText("connection refused", { selector: "p" })).toBeInTheDocument();
 });
 
 it("draws time and millisecond axes: hours for a day, dates for a month", async () => {
   serve();
-  const chart = await screen.findByRole("img", { name: "Latency over 24 hours" });
+  const chart = await screen.findByRole("group", { name: "History over 24 hours" });
   const card = chart.closest("section") ?? document.body;
   const hours = [...card.querySelectorAll("[data-tick]")].map((tick) => tick.textContent ?? "");
   expect(hours.length).toBeGreaterThanOrEqual(2);
   expect(hours.every((label) => /^\d{1,2}:\d{2}\s[AP]M$/.test(label))).toBe(true);
   expect(card.querySelector('[data-value-tick="0"]')?.textContent).toBe("0 ms");
   fireEvent.click(screen.getByRole("button", { name: "30 days" }));
-  await screen.findByRole("img", { name: "Latency over 30 days" });
+  await screen.findByRole("group", { name: "History over 30 days" });
   const days = [...card.querySelectorAll("[data-tick]")].map((tick) => tick.textContent ?? "");
   expect(days.length).toBeGreaterThanOrEqual(2);
   expect(days.every((label) => /^\S+ \d{1,2}$/.test(label))).toBe(true);
@@ -138,3 +145,21 @@ it("the breadcrumbs lead from home to the service by its name", async () => {
   expect(within(trail).getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
   expect(await within(trail).findByText("Media")).toHaveAttribute("aria-current", "page");
 });
+
+it("deleting from the page asks first, deletes the service and goes to the list", async () => {
+  const fetch = serve();
+  await userEvent.click(await screen.findByRole("button", { name: "Delete" }));
+  const dialog = await screen.findByRole("dialog");
+  await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+  await waitFor(() => expect(navigation.push).toHaveBeenCalledWith("/admin/services/"));
+  expect(fetch.mock.calls.some(([path, init]) => String(path) === "/api/services/media" && init?.method === "DELETE")).toBe(true);
+});
+
+it("shows no delete control without the right to delete services", async () => {
+  const client = testQueryClient();
+  client.setQueryData(TEST_SESSION_KEY, { name: "anna", group: "family", admin: false, rights: { services: ["read", "update"] } });
+  serve(copy(), client);
+  expect(await screen.findByRole("heading", { level: 1, name: "Media" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Delete" })).toBeNull();
+});
+

@@ -8,18 +8,20 @@ export {
   DEFAULT_TLS,
   PUBLICATION_TLS,
   addressAccepted,
-  emptyPublication,
+  emptyProxy,
   emptyServiceForm,
   formOf,
   groupsOf,
   hostAccepted,
-  publicationFormOf,
-  publicationRequestOf,
+  mainAddressOf,
+  proxyFormOf,
   requestOf,
   serviceFormSchema,
   tcpPortKnown,
 } from "./model/form";
 export type { ServiceForm } from "./model/form";
+export { INTERNET, choicesOf, fieldsOf, hostOf, publishedAddressAccepted, row, rowProblems, rowsOf } from "./model/address-rows";
+export type { AddressFields, AddressRow, RowProblem } from "./model/address-rows";
 export {
   HISTORY_REFRESH_MILLISECONDS,
   historyKey,

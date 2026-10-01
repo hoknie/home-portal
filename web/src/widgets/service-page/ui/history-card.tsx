@@ -5,13 +5,12 @@ import { useState } from "react";
 
 import { HISTORY_RANGES, type HistoryRange, useServiceHistory } from "@/entities/service";
 import { STATUS_REFRESH_MILLISECONDS } from "@/shared/config";
-import { LatencyChart } from "@/shared/ui/latency-chart";
+import { HistoryChart } from "@/shared/ui/history-chart";
 import { Button, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 import { StatTile } from "@/shared/ui/stat-tile";
-import { UptimeStrip } from "@/shared/ui/uptime-strip";
 
-import { durationParts, percent, slotsOf } from "../model/history";
+import { durationParts, percent } from "../model/history";
 import { TransitionsList } from "./transitions-list";
 
 export function HistoryCard({ id }: { id: string }) {
@@ -42,9 +41,13 @@ export function HistoryCard({ id }: { id: string }) {
   const data = history.data;
   const to = Date.parse(data.to);
   const from = Date.parse(data.from);
-  const slots = slotsOf(data.points, range, to);
+  const milliseconds = (value: number) => root("common.milliseconds", { value: Math.round(value) });
+  const points = data.points.map((point) => ({ at: Date.parse(point.at), average: point.average, minimum: point.minimum, maximum: point.maximum, state: point.state === "unknown" ? null : point.state }));
+  const highest = Math.max(0, ...points.map((point) => point.maximum ?? point.average ?? 0));
+  const failed = points.filter((point) => point.state === "down" || point.state === "unreadable").length;
+  const summary = t("history.summary", { range: rangeName(range), highest: milliseconds(highest), failed, checks: points.length });
   const tick = (at: number) =>
-    range === "24h" ? format.dateTime(new Date(at), { timeStyle: "short" }) : format.dateTime(new Date(at), { day: "numeric", month: "short" });
+    range === "1h" || range === "6h" || range === "24h" ? format.dateTime(new Date(at), { timeStyle: "short" }) : format.dateTime(new Date(at), { day: "numeric", month: "short" });
   return (
     <SectionCard title={t("history.title")} actions={switcher}>
       <div className="grid gap-6">
@@ -62,42 +65,24 @@ export function HistoryCard({ id }: { id: string }) {
             );
           })}
         </div>
-        <div className="grid gap-2">
-          <p className="text-sm text-muted-foreground">{t("history.latency", { range: rangeName(range) })}</p>
-          <LatencyChart
-            from={from}
-            to={to}
-            formatTime={tick}
-            formatValue={(value) => root("common.milliseconds", { value })}
-            title={t("history.latency", { range: rangeName(range) })}
-            empty={t("history.noSamples")}
-            samples={data.points.map((point) => ({
-              at: point.at,
-              value: point.average,
-              failed: point.state === "down" || point.state === "unreadable",
-              label:
-                point.average === null
-                  ? t("history.failedPoint", { moment: moment(point.at) })
-                  : t("history.point", { moment: moment(point.at), value: root("common.milliseconds", { value: point.average }) }),
-            }))}
-          />
-        </div>
-        <div className="grid gap-2">
-          <p className="text-sm text-muted-foreground">{t("history.strip", { range: rangeName(range) })}</p>
-          <UptimeStrip
-            from={from}
-            to={to}
-            formatTime={tick}
-            title={t("history.strip", { range: rangeName(range) })}
-            slots={slots.map((slot) => ({
-              key: String(slot.start),
-              state: slot.state,
-              label: slot.state
-                ? t("history.slot", { moment: moment(slot.start), state: root(`status.${slot.state}`) })
-                : t("history.slotEmpty", { moment: moment(slot.start) }),
-            }))}
-          />
-        </div>
+        <HistoryChart
+          from={from}
+          to={to}
+          step={data.step_seconds * 1000}
+          formatTime={tick}
+          formatValue={milliseconds}
+          title={t("history.chart", { range: rangeName(range) })}
+          summary={summary}
+          empty={t("history.noSamples")}
+          legend={{ average: t("history.average"), range: t("history.range"), states: { unknown: root("status.unknown"), up: root("status.up"), degraded: root("status.degraded"), down: root("status.down"), unreadable: root("status.unreadable") } }}
+          points={points}
+          hintOf={(point) => ({
+            time: t("history.interval", { from: moment(point.at), to: format.dateTime(new Date(point.until), { timeStyle: "short" }) }),
+            state: point.state ? root(`status.${point.state}`) : t("history.noChecks"),
+            average: point.average === null ? t("history.noLatency") : t("history.averageValue", { value: milliseconds(point.average) }),
+            maximum: point.maximum === null || point.minimum === null ? "" : t("history.spreadValue", { minimum: milliseconds(point.minimum), maximum: milliseconds(point.maximum) }),
+          })}
+        />
         <TransitionsList transitions={data.transitions} now={now.getTime()} />
       </div>
     </SectionCard>

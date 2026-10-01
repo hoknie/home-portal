@@ -2,8 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import { apiSamples } from "@/shared/api";
 
-import { emptyServiceForm, formOf, groupsOf, requestOf, serviceFormSchema } from "./form";
+import { row } from "./address-rows";
+import { emptyServiceForm as emptyOf, formOf as formWith, groupsOf, requestOf, serviceFormSchema } from "./form";
 import { servicesSchema } from "./schema";
+
+const CONFIGURED = ["local", "vpn"];
+const emptyServiceForm = emptyOf(CONFIGURED);
+const formOf = (service: Parameters<typeof formWith>[0]) => formWith(service, CONFIGURED);
+
+function at(url: string, rest: object = {}) {
+  return { ...emptyServiceForm, rows: [row({ environments: ["local", "vpn"], address: url })], ...rest };
+}
 
 function messages(form: unknown) {
   const result = serviceFormSchema.safeParse(form);
@@ -12,28 +21,22 @@ function messages(form: unknown) {
 
 describe("the service form mirrors the server rules", () => {
   it("accepts a minimal valid service", () => {
-    expect(messages({ ...emptyServiceForm, id: "media", name: "Media", url: "http://10.0.0.5" })).toEqual({});
+    expect(messages(at("http://10.0.0.5", { id: "media", name: "Media" }))).toEqual({});
   });
 
   it("names every invalid field with a message key", () => {
-    const form = {
-      ...emptyServiceForm,
-      id: "Bad Id",
-      name: "",
-      url: "ftp://x",
-      probe: { ...emptyServiceForm.probe, path: "health", every_seconds: 4 },
-    };
+    const form = at("ftp://x", { id: "Bad Id", name: "", probe: { ...emptyServiceForm.probe, path: "health", every_seconds: 4 } });
     expect(messages(form)).toMatchObject({
       id: "validation.id",
       name: "validation.name",
-      url: "validation.url",
+      "rows.0.address": "validation.url",
       "probe.path": "validation.probePath",
       "probe.every_seconds": "validation.probeEvery",
     });
   });
 
   it("requires a timeout shorter than the period", () => {
-    const form = { ...emptyServiceForm, id: "a", name: "A", url: "http://a", probe: { ...emptyServiceForm.probe, every_seconds: 10, timeout_seconds: 10 } };
+    const form = at("http://a", { id: "a", name: "A", probe: { ...emptyServiceForm.probe, every_seconds: 10, timeout_seconds: 10 } });
     expect(messages(form)).toEqual({ "probe.timeout_seconds": "validation.probeTimeout" });
   });
 
@@ -44,7 +47,7 @@ describe("the service form mirrors the server rules", () => {
 });
 
 describe("fields the form does not edit survive an edit", () => {
-  it("keeps addresses, environments, flags and the probe kind and port of a service", () => {
+  it("keeps addresses, visibility, flags and the probe kind and port of a service", () => {
     const service = servicesSchema.parse(apiSamples.services).services[2];
     const edited = {
       ...service,
@@ -81,18 +84,19 @@ describe("fields the form does not edit survive an edit", () => {
 
 describe("the address follows the probe kind", () => {
   const base = { ...emptyServiceForm, id: "printer", name: "Printer" };
+  const with_ = (url: string, probe: object = {}) => at(url, { id: "printer", name: "Printer", probe: { ...base.probe, ...probe } });
 
   it("accepts any scheme with a host for tcp and icmp, and only http for http", () => {
-    expect(messages({ ...base, url: "ssh://nas.home.lan", probe: { ...base.probe, kind: "tcp" } })).toEqual({});
-    expect(messages({ ...base, url: "icmp://printer.home.lan", probe: { ...base.probe, kind: "icmp" } })).toEqual({});
-    expect(messages({ ...base, url: "ssh://nas.home.lan" })).toEqual({ url: "validation.url" });
+    expect(messages(with_("ssh://nas.home.lan", { kind: "tcp" }))).toEqual({});
+    expect(messages(with_("icmp://printer.home.lan", { kind: "icmp" }))).toEqual({});
+    expect(messages(with_("ssh://nas.home.lan"))).toEqual({ "rows.0.address": "validation.url" });
   });
 
   it("asks for a port when a tcp address has none", () => {
-    expect(messages({ ...base, url: "tcp://printer.home.lan", probe: { ...base.probe, kind: "tcp" } })).toEqual({
+    expect(messages(with_("tcp://printer.home.lan", { kind: "tcp" }))).toEqual({
       "probe.port": "validation.probePort",
     });
-    expect(messages({ ...base, url: "tcp://printer.home.lan", probe: { ...base.probe, kind: "tcp", port: 9100 } })).toEqual({});
+    expect(messages(with_("tcp://printer.home.lan", { kind: "tcp", port: 9100 }))).toEqual({});
   });
 });
 

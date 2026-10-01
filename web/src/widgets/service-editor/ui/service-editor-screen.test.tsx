@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
+import { environmentKey, environmentSchema } from "@/entities/environment";
 import { servicesKey, servicesSchema } from "@/entities/service";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
@@ -27,6 +28,7 @@ afterEach(() => {
 function renderScreen(mode: "new" | "edit") {
   const client = testQueryClient();
   client.setQueryData(servicesKey, { data: servicesSchema.parse(apiSamples.services), revision: '"r"' });
+  client.setQueryData(environmentKey, environmentSchema.parse(apiSamples.environment));
   return renderWithProviders(<ServiceEditorScreen mode={mode} />, client);
 }
 
@@ -37,7 +39,7 @@ it("adds a service on its own page and returns to the list after saving", async 
   expect(screen.getByRole("heading", { level: 1, name: "New service" })).toBeInTheDocument();
   expect(screen.getByLabelText("Name")).toHaveValue("");
   await userEvent.type(screen.getByLabelText("Name"), "Scanner");
-  await userEvent.type(screen.getByLabelText(/^Address$/), "http://scanner.local");
+  await userEvent.type(screen.getByLabelText("Address of Main address"), "http://scanner.local");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
   await waitFor(() => expect(push).toHaveBeenCalledWith("/admin/services/"));
   const post = (fetch.mock.calls as unknown as [string, RequestInit | undefined][]).find(([, init]) => init?.method === "POST");
@@ -69,4 +71,15 @@ it("asks before leaving with unsaved changes", async () => {
   await userEvent.type(screen.getByLabelText("Name"), " box");
   fireEvent.click(cancel);
   expect(confirm).toHaveBeenCalledWith("The service has unsaved changes. Leave the page?");
+});
+
+it("cancelling an edit leads to the service's page", () => {
+  search = "id=nas";
+  renderScreen("edit");
+  expect(screen.getByRole("link", { name: "Cancel" }).getAttribute("href")).toMatch(/^\/service\/?\?id=nas$/);
+});
+
+it("cancelling a new service leads to the list", () => {
+  renderScreen("new");
+  expect(screen.getByRole("link", { name: "Cancel" }).getAttribute("href")).toMatch(/^\/admin\/services\/?$/);
 });

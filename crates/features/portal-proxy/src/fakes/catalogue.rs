@@ -33,7 +33,7 @@ impl PublishedServices for Catalogue {
                 let publication = entry.published.proxy?;
                 Some(PublishedService {
                     id: entry.published.id,
-                    upstream: publication.upstream.clone().unwrap_or(entry.url),
+                    upstream: entry.url,
                     publication,
                 })
             })

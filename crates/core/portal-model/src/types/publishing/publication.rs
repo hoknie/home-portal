@@ -7,8 +7,6 @@ use crate::types::Environment;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct Publication {
     pub host: String,
-    #[serde(default)]
-    pub upstream: Option<String>,
     #[serde(default = "Publication::default_environments")]
     pub environments: Vec<String>,
     #[serde(default)]
@@ -28,7 +26,6 @@ impl Publication {
     pub fn new(host: &str) -> Publication {
         Publication {
             host: host.to_string(),
-            upstream: None,
             environments: Self::default_environments(),
             auth: Vec::new(),
             tls: None,

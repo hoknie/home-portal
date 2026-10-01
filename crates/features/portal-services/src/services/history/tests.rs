@@ -127,16 +127,56 @@ fn probes_closer_than_five_seconds_are_thinned_into_one_sample() {
 }
 
 #[test]
-fn a_day_view_lists_single_outcomes_and_a_week_view_lists_hours() {
+fn each_range_is_answered_in_intervals_of_its_own_length() {
     let mut history = ServiceHistory::default();
-    probed_every(&mut history, START, START + 7200, 60);
-    let now = START + 7200;
-    let day = history.view(HistoryRange::Day, now);
-    assert_eq!(day.points.len(), 120);
-    assert_eq!(day.uptime.len(), 3);
-    let week = history.view(HistoryRange::Week, now);
-    assert!(week.points.len() <= 3 && week.points.len() >= 2);
-    assert!(week.points.iter().all(|point| point.average == Some(10)));
+    probed_every(&mut history, START, START + 7 * 3600, 60);
+    let now = START + 7 * 3600;
+    for (range, step, most) in [
+        (HistoryRange::Hour, 60, 61),
+        (HistoryRange::SixHours, 300, 73),
+        (HistoryRange::Day, 900, 97),
+        (HistoryRange::Week, 7200, 85),
+        (HistoryRange::Month, 21600, 121),
+    ] {
+        let view = history.view(range, now);
+        assert_eq!(view.step, step, "{range:?}");
+        assert!(
+            !view.points.is_empty() && view.points.len() <= most,
+            "{range:?}: {}",
+            view.points.len()
+        );
+        assert!(
+            view.points.iter().all(|point| point.at % step == 0),
+            "{range:?}"
+        );
+        assert!(
+            view.points.iter().all(|point| point.average == Some(10)),
+            "{range:?}"
+        );
+        assert_eq!(view.uptime.len(), 3, "{range:?}");
+    }
+    assert_eq!(HistoryRange::parse("1h"), Some(HistoryRange::Hour));
+    assert_eq!(HistoryRange::parse("6h"), Some(HistoryRange::SixHours));
+}
+
+#[test]
+fn an_interval_carries_the_mean_minimum_maximum_and_worst_state_of_its_probes() {
+    let mut history = ServiceHistory::default();
+    let start = START - START.rem_euclid(900);
+    history.record(start + 60, &up(10));
+    history.record(start + 120, &up(40));
+    history.record(start + 180, &up(430));
+    history.record(
+        start + 240,
+        &ProbeOutcome::failed(ServiceState::Down, None, "refused".into()),
+    );
+    let view = history.view(HistoryRange::Day, start + 600);
+    let point = view.points.iter().find(|point| point.at == start).unwrap();
+    assert_eq!(
+        (point.minimum, point.average, point.maximum),
+        (Some(10), Some(160), Some(430))
+    );
+    assert_eq!(point.state, ServiceState::Down);
 }
 
 #[test]

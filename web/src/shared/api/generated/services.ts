@@ -20,7 +20,7 @@ export const tlsPolicySchema = z.object({ "certificate": z.string().nullable(), 
 
 export type TlsPolicy = z.infer<typeof tlsPolicySchema>;
 
-export const publicationSchema = z.object({ "auth": z.array(z.string()), "environments": z.array(z.string()), "host": z.string(), "tls": tlsPolicySchema.nullable(), "upstream": z.string().nullable(), "upstream_verify": z.boolean() });
+export const publicationSchema = z.object({ "auth": z.array(z.string()), "environments": z.array(z.string()), "host": z.string(), "tls": tlsPolicySchema.nullable(), "upstream_verify": z.boolean() });
 
 export type Publication = z.infer<typeof publicationSchema>;
 

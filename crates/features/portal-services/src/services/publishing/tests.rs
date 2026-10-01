@@ -5,7 +5,7 @@ use portal_model::{Environment, Environments, Publication, TlsMode, TlsPolicy};
 
 use super::check_publication;
 use super::publication_validation::{
-    GIVEN_BY_PROXY, MISSING_UPSTREAM, NOT_SHOWN, UNKNOWN_ENVIRONMENT,
+    GIVEN_BY_PROXY, MAIN_NOT_HTTP, NOT_SHOWN, UNKNOWN_ENVIRONMENT,
 };
 use crate::types::{ProbeKind, ServiceEntry};
 
@@ -64,9 +64,9 @@ fn a_tcp_service_without_an_upstream_is_refused() {
     entry.probe.kind = ProbeKind::Tcp;
     entry.proxy = Some(Publication::new("nas.example.com"));
     let errors = errors_of(&entry);
-    assert_eq!(fields(&errors), vec!["proxy.upstream"]);
-    assert_eq!(errors[0].message, MISSING_UPSTREAM);
-    entry.proxy.as_mut().unwrap().upstream = Some("http://nas.home.lan:5000".to_string());
+    assert_eq!(fields(&errors), vec!["proxy.host"]);
+    assert_eq!(errors[0].message, MAIN_NOT_HTTP);
+    entry.url = "http://nas.home.lan:5000".to_string();
     assert!(errors_of(&entry).is_empty());
 }
 
@@ -89,22 +89,16 @@ fn unknown_environments_are_refused_in_publication_and_sign_in() {
 }
 
 #[test]
-fn a_bad_host_upstream_and_tls_override_are_named() {
+fn a_bad_host_and_tls_override_are_named() {
     let mut entry = published("https://media");
     let publication = entry.proxy.as_mut().unwrap();
-    publication.upstream = Some("ftp://media".to_string());
     publication.tls = Some(TlsPolicy {
         mode: TlsMode::Files,
         ..TlsPolicy::default()
     });
     assert_eq!(
         fields(&errors_of(&entry)),
-        vec![
-            "proxy.host",
-            "proxy.upstream",
-            "proxy.tls.certificate",
-            "proxy.tls.key"
-        ]
+        vec!["proxy.host", "proxy.tls.certificate", "proxy.tls.key"]
     );
 }
 

@@ -21,7 +21,7 @@ impl EventSink for Silent {
     async fn settle(&self, _within: std::time::Duration) {}
 }
 
-const FILE: &str = "[environments.local]\nnetworks = [\"192.168.0.0/16\"]\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://media.lan:8096\"\naddresses = { local = \"http://192.168.1.10:8096\" }\nproxy = { host = \"media.example.com\" }\nprobe = { enabled = false }\n\n[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"http://192.168.1.5\"\nproxy = { host = \"nas.example.com\", upstream = \"https://192.168.1.5:5001\" }\nprobe = { enabled = false }\n\n[[services]]\nid = \"printer\"\nname = \"Printer\"\nurl = \"http://192.168.1.30\"\nprobe = { enabled = false }\n";
+const FILE: &str = "[environments.local]\nnetworks = [\"192.168.0.0/16\"]\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://media.lan:8096\"\naddresses = { local = \"http://192.168.1.10:8096\" }\nproxy = { host = \"media.example.com\" }\nprobe = { enabled = false }\n\n[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"https://192.168.1.5:5001\"\nproxy = { host = \"nas.example.com\" }\nprobe = { enabled = false }\n\n[[services]]\nid = \"printer\"\nname = \"Printer\"\nurl = \"http://192.168.1.30\"\nprobe = { enabled = false }\n";
 
 fn publishing_of(store: &Arc<ConfigStore>) -> ProxyPublishing {
     ProxyPublishing::new(
@@ -47,7 +47,7 @@ fn services(text: &str) -> (tempfile::TempDir, Arc<ConfigStore>, Arc<ServicesFea
 }
 
 #[test]
-fn a_service_without_an_upstream_is_proxied_to_the_address_it_is_probed_at() {
+fn a_published_service_is_proxied_to_the_address_it_is_probed_at() {
     let (_directory, _, services) = services(FILE);
     let published = ServicePublications { services }.published();
     let upstreams: Vec<(&str, &str)> = published
@@ -79,7 +79,6 @@ fn publishing_names_a_sign_in_the_cookie_domain_cannot_reach_by_the_service_fiel
     let (_directory, store, _) = services(&format!("{PROXIED}\n{FILE}"));
     let publication = portal_model::Publication {
         host: "nas.example.org".into(),
-        upstream: None,
         environments: vec!["internet".into()],
         auth: vec!["internet".into()],
         tls: None,

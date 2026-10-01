@@ -3,4 +3,4 @@ mod publication_validation;
 #[cfg(test)]
 mod tests;
 
-pub use publication_validation::check_publication;
+pub use publication_validation::{RETIRED_UPSTREAM, check_publication};

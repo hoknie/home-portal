@@ -6,14 +6,18 @@ down, or could not be checked at all — and keeps 30 days of history so you can
 
 ## Using it
 
-- **Management → Services** lists every service. **Add service** opens a form with the name, the
-  address, a group, an icon and how to check it; editing works the same way.
+- **Management → Services** lists every service. **Add service** opens a form with the name, a
+  group, an icon, how to check it and an **Addresses** table: environments, sign-in, address and
+  whether it goes through the proxy. The first row is the main address the portal checks. Editing
+  works the same way.
 - Every service is checked on its own schedule. The state is one of **up**, **degraded** (answered,
   but slowly), **down**, **unreadable** (the check itself could not run, for example the name did
   not resolve) or **unknown** (not checked yet, or checking is off).
 - Click a service card on the home page to open its **service page**: status and since when, its
-  address in every environment, the probe settings, uptime for 24 hours, 7 and 30 days, a latency
-  chart, a timeline of outages, your links and notes. **Check now** runs a check right away.
+  address in every environment, the probe settings, uptime for 24 hours, 7 and 30 days, one history
+  chart (latency over a band of states; point at it or use the arrow keys for details), a timeline
+  of outages, your links and notes. **Check now** runs a check right away, and **Delete** removes
+  the service after asking.
 - When a check fails, the page explains why in plain words (connection refused, timeout, name not
   resolved, TLS problem, local network access denied…) and what to do about it.
 

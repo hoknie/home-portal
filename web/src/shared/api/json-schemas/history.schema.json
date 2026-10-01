@@ -119,6 +119,10 @@
     "range": {
       "type": "string"
     },
+    "step_seconds": {
+      "format": "int64",
+      "type": "integer"
+    },
     "to": {
       "type": "string"
     },
@@ -139,6 +143,7 @@
     "range",
     "from",
     "to",
+    "step_seconds",
     "uptime",
     "points",
     "transitions"

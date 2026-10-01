@@ -1,10 +1,10 @@
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 
 use portal_model::{ProbeOutcome, ServiceState};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    HistoryLine, HistoryRange, HistoryView, HourBucket, LatencyPoint, Sample, Transition, Uptime,
+    HistoryLine, HistoryRange, HistoryView, HourBucket, Sample, Transition, Uptime,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -104,37 +104,37 @@ impl ServiceHistory {
 
     pub fn view(&self, range: HistoryRange, now: i64) -> HistoryView {
         let from = now - range.seconds();
-        let points = match range {
-            HistoryRange::Day => self
-                .samples
-                .iter()
-                .filter(|sample| sample.at > from)
-                .map(|sample| LatencyPoint {
-                    at: sample.at,
-                    state: sample.state,
-                    average: sample.latency,
-                    minimum: sample.latency,
-                    maximum: sample.latency,
-                })
-                .collect(),
-            HistoryRange::Week | HistoryRange::Month => self
+        let step = range.step_seconds();
+        let start_of = |at: i64| at - at.rem_euclid(step);
+        let mut intervals: BTreeMap<i64, HourBucket> = BTreeMap::new();
+        if range.from_samples() {
+            for sample in self.samples.iter().filter(|sample| sample.at > from) {
+                let start = start_of(sample.at);
+                intervals
+                    .entry(start)
+                    .or_insert_with(|| HourBucket::starting(start))
+                    .absorb(sample);
+            }
+        } else {
+            for bucket in self
                 .buckets
                 .iter()
                 .filter(|bucket| bucket.hour + HourBucket::SECONDS > from)
-                .map(|bucket| LatencyPoint {
-                    at: bucket.hour,
-                    state: bucket.worst(),
-                    average: bucket.average(),
-                    minimum: bucket.minimum,
-                    maximum: bucket.maximum,
-                })
-                .collect(),
-        };
+            {
+                let start = start_of(bucket.hour);
+                intervals
+                    .entry(start)
+                    .or_insert_with(|| HourBucket::starting(start))
+                    .merge(bucket);
+            }
+        }
+        let points = intervals.values().map(HourBucket::point).collect();
         HistoryView {
             range,
             from,
             to: now,
-            uptime: HistoryRange::ALL
+            step,
+            uptime: HistoryRange::UPTIME
                 .into_iter()
                 .map(|range| self.uptime(range, now))
                 .collect(),
@@ -150,8 +150,8 @@ impl ServiceHistory {
 
     pub fn uptime(&self, range: HistoryRange, now: i64) -> Uptime {
         let from = now - range.seconds();
-        let (covered, answered) = match range {
-            HistoryRange::Day => self.samples.iter().filter(|sample| sample.at > from).fold(
+        let (covered, answered) = match range.from_samples() {
+            true => self.samples.iter().filter(|sample| sample.at > from).fold(
                 (0u64, 0u64),
                 |(covered, answered), sample| {
                     (
@@ -160,7 +160,7 @@ impl ServiceHistory {
                     )
                 },
             ),
-            HistoryRange::Week | HistoryRange::Month => self
+            false => self
                 .buckets
                 .iter()
                 .filter(|bucket| bucket.hour + HourBucket::SECONDS > from)

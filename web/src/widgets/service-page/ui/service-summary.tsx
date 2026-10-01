@@ -2,18 +2,21 @@
 
 import { ExternalLink, Pencil } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { Allowed } from "@/entities/session";
 import { type Service, ServiceIcon, iconOf } from "@/entities/service";
+import { DeleteServiceButton } from "@/features/delete-service";
 import { ProbeNowButton } from "@/features/probe-now";
 import { routes } from "@/shared/config";
 import { Button } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { StatusBadge } from "@/shared/ui/status-badge";
 
-export function ServiceSummary({ service }: { service: Service }) {
+export function ServiceSummary({ service, revision }: { service: Service; revision: string | null }) {
   const t = useTranslations("servicePage");
+  const router = useRouter();
   return (
     <header className="glass-panel grid gap-4 rounded-xl p-5 sm:grid-cols-[1fr_auto] sm:items-start">
       <div className="flex min-w-0 items-start gap-4">
@@ -47,6 +50,7 @@ export function ServiceSummary({ service }: { service: Service }) {
             </Link>
           </Button>
         </Allowed>
+        <DeleteServiceButton service={service} revision={revision} labelled onDeleted={() => router.push(routes.adminServices)} />
       </div>
     </header>
   );

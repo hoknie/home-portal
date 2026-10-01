@@ -83,13 +83,8 @@ impl ServiceRequest {
     }
 
     fn trimmed(publication: Publication) -> Publication {
-        let upstream = publication
-            .upstream
-            .map(|upstream| upstream.trim().to_string())
-            .filter(|upstream| !upstream.is_empty());
         Publication {
             host: publication.host.trim().to_ascii_lowercase(),
-            upstream,
             ..publication
         }
     }
