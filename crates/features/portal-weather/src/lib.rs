@@ -1,6 +1,4 @@
 mod clients;
-#[cfg(test)]
-mod fakes;
 mod features;
 mod helpers;
 mod providers;

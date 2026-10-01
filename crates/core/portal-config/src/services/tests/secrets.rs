@@ -6,7 +6,7 @@ use crate::types::{ConfigError, SecretString};
 #[test]
 fn secrets_are_read_but_never_appear_in_the_document() {
     let portal = Portal::with(&[
-        ("home-portal.toml", "include = [\"secrets.toml\"]\n"),
+        ("home-portal.toml", ""),
         ("secrets.toml", "[secrets]\ntelegram_token = \"abc123\"\n"),
     ]);
     assert!(portal.store.read().document.get("secrets").is_none());
@@ -25,7 +25,7 @@ fn secrets_are_read_but_never_appear_in_the_document() {
 #[test]
 fn a_secrets_file_anyone_can_read_is_refused() {
     let error = open(&[
-        ("home-portal.toml", "include = [\"secrets.toml\"]\n"),
+        ("home-portal.toml", ""),
         ("secrets.toml", "[secrets]\ntoken = \"abc\"\n"),
     ])
     .err()
@@ -91,10 +91,7 @@ fn a_secret_has_no_way_to_be_serialized() {
 #[test]
 fn a_check_that_reads_a_secret_while_a_hand_edit_is_reloaded_does_not_lock_the_store() {
     let portal = Portal::with(&[
-        (
-            "home-portal.toml",
-            "include = [\"secrets.toml\"]\nname = \"old\"\n",
-        ),
+        ("home-portal.toml", "name = \"old\"\n"),
         ("secrets.toml", "[secrets]\ntoken = \"abc\"\n"),
     ]);
     super::support::private(&portal.path("secrets.toml"));
@@ -121,7 +118,7 @@ fn a_check_that_reads_a_secret_while_a_hand_edit_is_reloaded_does_not_lock_the_s
     super::support::private(&portal.path("secrets.toml"));
     super::support::rewrite(
         &portal.path("home-portal.toml"),
-        "include = [\"secrets.toml\"]\nname = \"new\"\nwants = true\n",
+        "name = \"new\"\nwants = true\n",
     );
     let store = portal.store.clone();
     let (sender, receiver) = std::sync::mpsc::channel();

@@ -3,8 +3,7 @@ use std::collections::HashSet;
 use portal_feature::FieldError;
 
 use super::action_decoding::{
-    LEGACY_TELEGRAM, decode_automation, decode_http, decode_log, decode_notify, decode_script,
-    decode_service,
+    decode_automation, decode_http, decode_log, decode_notify, decode_script, decode_service,
 };
 use super::flow_decoding::{
     check_loop_exits, decode_call, decode_if, decode_loop, decode_parallel, decode_set,
@@ -112,11 +111,7 @@ fn decode_step(
     if !valid_name(&raw.id) {
         errors.push(FieldError::new(format!("{path}.id"), NAME_RULE));
     }
-    let kind = if raw.kind == LEGACY_TELEGRAM {
-        "notify"
-    } else {
-        raw.kind.as_str()
-    };
+    let kind = raw.kind.as_str();
     let Some(description) = kind_named(kind) else {
         let names: Vec<&str> = KINDS.iter().map(|kind| kind.name).collect();
         errors.push(FieldError::new(

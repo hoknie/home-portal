@@ -34,8 +34,6 @@ All switches live in `[modules]` in the main configuration file:
 
 - Turning a module on while the module it needs is off is refused, both on the page and when
   the portal reads its configuration.
-- Older files that say `proxy.enabled` or `dns.enabled` still work; the first switch from the
-  page moves the setting into `[modules]`.
 - Switching the proxy on also lets the portal trust Caddy running on the same machine.
 - Seeing which modules are on needs the right to read modules, and switching them needs the
   right to change them (see [Users, groups and sign-in](users-and-sign-in.md)). Someone without

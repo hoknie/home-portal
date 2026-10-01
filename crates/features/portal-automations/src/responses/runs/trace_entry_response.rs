@@ -1,4 +1,5 @@
 use portal_feature::PortalEvent;
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::OutputResponse;
@@ -6,7 +7,7 @@ use time::OffsetDateTime;
 
 use crate::types::{StepOutcome, TraceEntry};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct TraceEntryResponse {
     pub path: String,
     pub step: String,
@@ -32,7 +33,7 @@ pub struct TraceEntryResponse {
     pub wait_seconds: Option<u64>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct RenderedResponse {
     pub template: String,
     pub value: String,

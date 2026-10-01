@@ -35,10 +35,11 @@ test-linux:
 [group('quality')]
 test-all: test test-linux
 
-# Write the API samples the frontend schemas are checked against
+# Write the API samples and response schemas, and generate the frontend's zod schemas from them
 [group('quality')]
 samples:
     HOME_PORTAL_SAMPLES=write {{ CARGO }} test -p home-portal --test samples
+    node {{ WEB }}/scripts/generate-schemas.mjs
 
 # The whole gate, in CI's order
 [group('quality')]

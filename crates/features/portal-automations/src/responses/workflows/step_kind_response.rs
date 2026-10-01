@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::StepFieldResponse;
 use crate::types::KindDescription;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct StepKindResponse {
     pub name: String,
     pub group: String,

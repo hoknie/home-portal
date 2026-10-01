@@ -51,7 +51,6 @@ condition = { left = "{{steps.again.state}}", op = "==", right = "up" }
 then = [{ id = "done", kind = "stop", outcome = "succeeded", reason = "{{inputs.service}} is back" }]
 
 # notify sends through every enabled notification channel; channel = "telegram" picks one.
-# The old kind = "telegram" still loads and is saved as notify.
 [[steps]]
 id = "report"
 kind = "notify"

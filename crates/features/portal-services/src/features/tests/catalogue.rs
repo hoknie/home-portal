@@ -8,7 +8,7 @@ use axum::http::header::{CONTENT_TYPE, ETAG, IF_MATCH};
 use axum::http::{Request, StatusCode};
 use axum::response::Response;
 use http_body_util::BodyExt;
-use portal_config::{ConfigStore, Section};
+use portal_config::Section;
 use portal_feature::Feature;
 use portal_model::Environment;
 use serde_json::Value;
@@ -16,7 +16,7 @@ use tempfile::TempDir;
 use tower::ServiceExt;
 
 use crate::ServicesFeature;
-use crate::fakes::{Behaviour, Upstream};
+use portal_testing::{Answer, FakeHttp};
 
 pub const FILE: &str = "# my services\n\n[[services]]\nid = \"b-first\"\nname = \"B\"\nurl = \"http://10.255.0.2\"\nprobe = { enabled = false }\n\n[[services]]\nid = \"a-second\"\nname = \"A\"\nurl = \"http://10.255.0.1\"\nprobe = { enabled = false }\n";
 
@@ -27,10 +27,8 @@ pub struct Portal {
 }
 
 fn portal() -> Portal {
-    let directory = tempfile::tempdir().unwrap();
-    let main = directory.path().join("home-portal.toml");
-    fs::write(&main, FILE).unwrap();
-    let store = Arc::new(ConfigStore::open(&main).unwrap());
+    let (directory, main) = portal_testing::written(FILE);
+    let store = Arc::new(portal_testing::opened(&main).unwrap());
     let feature = ServicesFeature::new(
         store.clone(),
         portal_model::Environment::internet(),
@@ -122,11 +120,8 @@ async fn the_list_follows_the_file_order_and_carries_status_and_a_revision() {
 #[tokio::test]
 async fn adding_a_service_writes_the_file_keeps_comments_and_probes_it_within_a_second() {
     let portal = portal();
-    let upstream = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: Duration::ZERO,
-    })
-    .await;
+    let upstream =
+        FakeHttp::always(Answer::status(200).with_body("ok").after(Duration::ZERO)).await;
     let current = revision(&portal.router).await;
     let (status, etag, body) = send(
         &portal.router,
@@ -311,10 +306,8 @@ probe = { enabled = false }
 "#;
 
 fn portal_with(text: &str) -> Portal {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (directory, path) = portal_testing::written(text);
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = ServicesFeature::new(
         store.clone(),
         Environment::internet(),

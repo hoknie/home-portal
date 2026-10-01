@@ -65,6 +65,7 @@ fn a_restart_from_the_api_applies_the_new_port_in_the_same_process_and_runs_the_
     let script = scripts.join("stop.sh");
     fs::write(&script, "#!/bin/sh\necho stopped >> stops\n").unwrap();
     fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+    portal_testing::split(&path);
     let mut child = Command::new(BINARY)
         .env("HOME_PORTAL_CONFIG", &path)
         .env_remove("HOME_PORTAL_ADDRESS")

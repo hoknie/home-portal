@@ -1,0 +1,404 @@
+{
+  "$defs": {
+    "Diagnosis": {
+      "enum": [
+        "local-network-denied",
+        "refused",
+        "timeout",
+        "host-unreachable",
+        "name-not-resolved",
+        "tls",
+        "not-http",
+        "http-status",
+        "icmp-not-permitted",
+        "other"
+      ],
+      "type": "string",
+      "x-open": "other"
+    },
+    "ProbeKind": {
+      "enum": [
+        "http",
+        "tcp",
+        "icmp"
+      ],
+      "type": "string",
+      "x-open": "http"
+    },
+    "ProbeSettings": {
+      "properties": {
+        "degraded_after_milliseconds": {
+          "default": 1500,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "environment": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "every_seconds": {
+          "default": 30,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kind": {
+          "$ref": "#/$defs/ProbeKind",
+          "default": "http"
+        },
+        "path": {
+          "default": "/",
+          "type": "string"
+        },
+        "port": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "timeout_seconds": {
+          "default": 5,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "kind",
+        "environment",
+        "path",
+        "port",
+        "every_seconds",
+        "timeout_seconds",
+        "degraded_after_milliseconds"
+      ],
+      "type": "object"
+    },
+    "Publication": {
+      "properties": {
+        "auth": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "environments": {
+          "default": [
+            "internet"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "host": {
+          "type": "string"
+        },
+        "tls": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TlsPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "upstream": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "upstream_verify": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "host",
+        "upstream",
+        "environments",
+        "auth",
+        "tls",
+        "upstream_verify"
+      ],
+      "type": "object"
+    },
+    "ServiceLink": {
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "url"
+      ],
+      "type": "object"
+    },
+    "ServiceResponse": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "addresses": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "environments": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "group": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "links": {
+          "items": {
+            "$ref": "#/$defs/ServiceLink"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notify": {
+          "type": "boolean"
+        },
+        "probe": {
+          "$ref": "#/$defs/ProbeSettings"
+        },
+        "probe_address": {
+          "type": "string"
+        },
+        "proxy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Publication"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "public": {
+          "type": "boolean"
+        },
+        "public_status": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/ServiceStatus"
+        },
+        "url": {
+          "type": "string"
+        },
+        "widgets": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "url",
+        "address",
+        "probe_address",
+        "addresses",
+        "environments",
+        "group",
+        "icon",
+        "description",
+        "public",
+        "public_status",
+        "notify",
+        "links",
+        "notes",
+        "widgets",
+        "probe",
+        "proxy",
+        "status"
+      ],
+      "type": "object"
+    },
+    "ServiceState": {
+      "enum": [
+        "unknown",
+        "up",
+        "degraded",
+        "down",
+        "unreadable"
+      ],
+      "type": "string",
+      "x-open": "unknown"
+    },
+    "ServiceStatus": {
+      "properties": {
+        "checked_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "diagnosis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Diagnosis"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "last_error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_ok_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "latency_milliseconds": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "since": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/ServiceState"
+        }
+      },
+      "required": [
+        "state",
+        "checked_at",
+        "latency_milliseconds",
+        "last_ok_at",
+        "last_error",
+        "diagnosis",
+        "since"
+      ],
+      "type": "object"
+    },
+    "TlsMode": {
+      "enum": [
+        "acme",
+        "internal",
+        "files"
+      ],
+      "type": "string",
+      "x-open": "acme"
+    },
+    "TlsPolicy": {
+      "properties": {
+        "certificate": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "email": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mode": {
+          "$ref": "#/$defs/TlsMode",
+          "default": "acme"
+        }
+      },
+      "required": [
+        "mode",
+        "email",
+        "certificate",
+        "key"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "services": {
+      "items": {
+        "$ref": "#/$defs/ServiceResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "services"
+  ],
+  "title": "ServicesResponse",
+  "type": "object"
+}

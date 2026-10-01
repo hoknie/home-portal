@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{OwnerResponse, PermissionResponse};
 use crate::types::PermissionsView;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct PermissionsResponse {
     pub platform: String,
     pub owner: OwnerResponse,

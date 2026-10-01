@@ -1,12 +1,14 @@
 use portal_model::ServiceState;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
 use crate::types::Transition;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct TransitionResponse {
     #[serde(with = "time::serde::rfc3339")]
+    #[schemars(with = "String")]
     pub at: OffsetDateTime,
     pub from: ServiceState,
     pub to: ServiceState,

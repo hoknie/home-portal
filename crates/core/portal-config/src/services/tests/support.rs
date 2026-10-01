@@ -9,8 +9,6 @@ use toml_edit::DocumentMut;
 use crate::services::ConfigStore;
 use crate::types::ConfigError;
 
-pub const COMMENTED: &str = "# my services, edited by hand\n\n# the media box\n[[services]]\nid = \"media\"\nname = \"Media\"\n";
-
 pub fn no_negative_ports(document: &DocumentMut) -> Vec<FieldError> {
     match document.get("port").and_then(|item| item.as_integer()) {
         Some(port) if port < 0 => vec![FieldError::new("port", "must not be negative")],

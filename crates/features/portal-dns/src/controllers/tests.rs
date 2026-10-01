@@ -23,7 +23,9 @@ use crate::types::Cadence;
 fn router(from: &str) -> Router {
     let library = Arc::new(Library::default());
     library.publish(
-        settings("[dns]\nenabled = true\nzones = [\"home\"]\n[dns.https]\nenabled = true\n"),
+        settings(
+            "[modules]\ndns = true\n\n[dns]\nzones = [\"home\"]\n[dns.https]\nenabled = true\n",
+        ),
         book(
             "[dns]\nzones = [\"home\"]\n[dns.addresses]\nlocal = \"192.168.1.60\"\n",
             &[published("jellyfin.home", None)],
@@ -143,7 +145,10 @@ async fn an_oversized_a_foreign_and_a_badly_encoded_request_are_refused() {
 #[tokio::test]
 async fn dns_over_https_is_not_served_while_it_is_off() {
     let library = Arc::new(Library::default());
-    library.publish(settings("[dns]\nenabled = true\n"), book("", &[], &[]));
+    library.publish(
+        settings("[modules]\ndns = true\n\n[dns]\n"),
+        book("", &[], &[]),
+    );
     let router = Router::new()
         .route("/dns-query", get(resolve_encoded).post(resolve_posted))
         .layer(axum::Extension(ClientAddress(

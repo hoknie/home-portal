@@ -1,0 +1,276 @@
+{
+  "$defs": {
+    "DnsHttpsSettingsResponse": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "host": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "enabled",
+        "host"
+      ],
+      "type": "object"
+    },
+    "DnsSettingsResponse": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "addresses": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        "https": {
+          "$ref": "#/$defs/DnsHttpsSettingsResponse"
+        },
+        "port": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tls": {
+          "$ref": "#/$defs/DnsTlsSettingsResponse"
+        },
+        "ttl": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "zones": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "address",
+        "port",
+        "zones",
+        "ttl",
+        "addresses",
+        "tls",
+        "https"
+      ],
+      "type": "object"
+    },
+    "DnsTlsSettingsResponse": {
+      "properties": {
+        "certificate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "port": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "port",
+        "certificate",
+        "key"
+      ],
+      "type": "object"
+    },
+    "EnvironmentAnswerResponse": {
+      "properties": {
+        "environment": {
+          "type": "string"
+        },
+        "records": {
+          "items": {
+            "$ref": "#/$defs/RecordResponse"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "environment",
+        "records"
+      ],
+      "type": "object"
+    },
+    "NameResponse": {
+      "properties": {
+        "answers": {
+          "items": {
+            "$ref": "#/$defs/EnvironmentAnswerResponse"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "answers"
+      ],
+      "type": "object"
+    },
+    "RecordResponse": {
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "type": "object"
+    },
+    "TransportResponse": {
+      "properties": {
+        "address": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "listening": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "listening",
+        "address",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "ZoneResponse": {
+      "properties": {
+        "apex": {
+          "type": "string"
+        },
+        "serial": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "single": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "apex",
+        "single",
+        "serial"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "doh_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "environments": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "https": {
+      "$ref": "#/$defs/TransportResponse"
+    },
+    "last_error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "names": {
+      "items": {
+        "$ref": "#/$defs/NameResponse"
+      },
+      "type": "array"
+    },
+    "plain": {
+      "$ref": "#/$defs/TransportResponse"
+    },
+    "settings": {
+      "$ref": "#/$defs/DnsSettingsResponse"
+    },
+    "tls": {
+      "$ref": "#/$defs/TransportResponse"
+    },
+    "tls_host": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "unaddressed": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "zones": {
+      "items": {
+        "$ref": "#/$defs/ZoneResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "enabled",
+    "plain",
+    "tls",
+    "https",
+    "last_error",
+    "zones",
+    "names",
+    "environments",
+    "unaddressed",
+    "tls_host",
+    "doh_url",
+    "settings"
+  ],
+  "title": "DnsResponse",
+  "type": "object"
+}

@@ -6,7 +6,6 @@ use async_trait::async_trait;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::FieldError;
 use portal_model::Environment;
 use serde_json::{Value, json};
@@ -46,7 +45,7 @@ async fn ask(id: &str, environment: Environment) -> (StatusCode, Value) {
         "[[dashboard.widgets]]\ntype = \"clock\"\nid = \"clock\"\n\n[[dashboard.widgets]]\ntype = \"clock\"\nid = \"private\"\nenvironments = [\"local\"]\n",
     )
     .unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let registry = Arc::new(WidgetRegistry::new(store, vec![Arc::new(Clock)]));
     let mut request = Request::get(format!("/api/widgets/{id}/data"))
         .body(Body::empty())

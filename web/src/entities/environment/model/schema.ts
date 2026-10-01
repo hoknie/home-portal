@@ -1,10 +1,7 @@
-import { z } from "zod";
+import type { z } from "zod";
 
-export const environmentSchema = z.object({
-  environment: z.string(),
-  detected: z.string(),
-  switchable: z.boolean(),
-  environments: z.array(z.string()),
-});
+import { generated } from "@/shared/api";
+
+export const environmentSchema = generated.environment.environmentResponseSchema;
 
 export type Environments = z.infer<typeof environmentSchema>;

@@ -24,3 +24,4 @@ export {
 } from "./schemas";
 export type { Diagnosis, Section, ServiceState, ServiceStatus, WidgetSize } from "./schemas";
 export { apiSamples } from "./samples";
+export * as generated from "./generated";

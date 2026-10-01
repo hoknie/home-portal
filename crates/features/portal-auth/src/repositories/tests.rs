@@ -1,7 +1,6 @@
 use std::fs;
 use std::sync::Arc;
 
-use portal_config::ConfigStore;
 use toml_edit::DocumentMut;
 
 use super::{append, last_origin, origin, position, remove, set_hash};
@@ -62,7 +61,7 @@ fn users_are_written_back_to_the_file_they_came_from() {
     let people = folder.path().join("people.toml");
     fs::write(&main, "[files]\nusers = \"people.toml\"\n").unwrap();
     fs::write(&people, PEOPLE).unwrap();
-    let store = Arc::new(ConfigStore::open(&main).unwrap());
+    let store = Arc::new(portal_testing::opened(&main).unwrap());
     let snapshot = store.read();
     assert_eq!(origin(&snapshot, "anna").as_deref(), Some(people.as_path()));
     assert_eq!(last_origin(&snapshot).as_deref(), Some(people.as_path()));

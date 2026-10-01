@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "at": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string"
+    },
+    "delivered": {
+      "type": "boolean"
+    },
+    "error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "channel",
+    "at",
+    "delivered",
+    "error"
+  ],
+  "title": "DeliveryResponse",
+  "type": "object"
+}

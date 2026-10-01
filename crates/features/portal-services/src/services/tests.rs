@@ -2,16 +2,15 @@ use std::fs;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use portal_config::ConfigStore;
 use portal_feature::{FieldError, StatusChange, StatusObserver};
 use portal_model::{Environment, ProbeOutcome, ServiceState};
 use time::OffsetDateTime;
 use toml_edit::DocumentMut;
 
 use super::{StatusBoard, Supervisor, check_entry, validate_services};
-use crate::fakes::{Behaviour, Upstream};
 use crate::probes::Probe;
 use crate::types::{HistoryRange, Known, ProbeKind, ProbeSettings, ServiceEntry, Wake};
+use portal_testing::{Answer, FakeHttp};
 
 fn entry() -> ServiceEntry {
     ServiceEntry::new("media", "Media", "http://10.0.0.5:8096")
@@ -117,20 +116,12 @@ fn service_text(id: &str, url: &str) -> String {
 
 #[tokio::test]
 async fn the_supervisor_starts_stops_and_restarts_probing_as_the_file_changes() {
-    let first = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: Duration::ZERO,
-    })
-    .await;
-    let second = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: Duration::ZERO,
-    })
-    .await;
+    let first = FakeHttp::always(Answer::status(200).with_body("ok").after(Duration::ZERO)).await;
+    let second = FakeHttp::always(Answer::status(200).with_body("ok").after(Duration::ZERO)).await;
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     write(&path, &service_text("media", &first.url()));
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let path = path.with_file_name("services.toml");
     let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), Vec::new()));
     let supervisor = Supervisor::new(
@@ -158,11 +149,8 @@ async fn the_supervisor_starts_stops_and_restarts_probing_as_the_file_changes() 
 
 #[tokio::test]
 async fn the_probe_goes_to_the_address_of_the_environment_the_portal_is_in() {
-    let reachable = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: Duration::ZERO,
-    })
-    .await;
+    let reachable =
+        FakeHttp::always(Answer::status(200).with_body("ok").after(Duration::ZERO)).await;
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     let text = format!(
@@ -170,7 +158,7 @@ async fn the_probe_goes_to_the_address_of_the_environment_the_portal_is_in() {
         reachable.url()
     );
     write(&path, &text);
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), Vec::new()));
     let local = Environment::parse("local").unwrap();
     let supervisor = Supervisor::new(store, local, board.clone(), Arc::new(Probe::new().unwrap()));
@@ -240,15 +228,11 @@ fn an_unknown_probe_kind_is_refused_by_the_section() {
 
 #[tokio::test]
 async fn a_wake_probes_a_service_in_backoff_at_once_and_resets_the_backoff() {
-    let failing = Upstream::start(Behaviour::Status {
-        code: 500,
-        delay: Duration::ZERO,
-    })
-    .await;
+    let failing = FakeHttp::always(Answer::status(500).with_body("ok").after(Duration::ZERO)).await;
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     write(&path, &service_text("media", &failing.url()));
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), Vec::new()));
     let supervisor = Supervisor::new(
         store,
@@ -274,7 +258,7 @@ async fn a_service_with_probing_disabled_cannot_be_woken() {
         &path,
         "[[services]]\nid = \"printer\"\nname = \"Printer\"\nurl = \"http://10.255.0.3\"\nprobe = { enabled = false }\n",
     );
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), Vec::new()));
     let supervisor = Supervisor::new(
         store,
@@ -355,15 +339,12 @@ fn a_service_that_does_not_notify_still_reports_its_changes_marked_as_silent() {
 
 #[tokio::test]
 async fn pausing_probing_keeps_the_history_and_sets_the_status_to_unknown() {
-    let upstream = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: Duration::ZERO,
-    })
-    .await;
+    let upstream =
+        FakeHttp::always(Answer::status(200).with_body("ok").after(Duration::ZERO)).await;
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     write(&path, &service_text("nas", &upstream.url()));
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let path = path.with_file_name("services.toml");
     let board = Arc::new(StatusBoard::watched(OffsetDateTime::now_utc(), Vec::new()));
     let supervisor = Supervisor::new(

@@ -18,6 +18,9 @@ export function ValuePreview({ preview, from, label }: ValuePreviewProps) {
   if (preview === null) {
     return <p className="text-xs text-muted-foreground">{t("noSample")}</p>;
   }
+  if (preview.waiting !== undefined) {
+    return <p className="text-xs text-muted-foreground">{t(preview.waiting === "computing" ? "computing" : "unreachable")}</p>;
+  }
   if (preview.unknown !== undefined) {
     return <p className="rounded-md border border-glass-edge bg-glass-tint px-2 py-1 text-xs text-muted-foreground">{t("unknownUntilRun", { name: preview.unknown })}</p>;
   }

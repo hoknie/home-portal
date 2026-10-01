@@ -1,0 +1,41 @@
+{
+  "$defs": {
+    "PreviewStepResponse": {
+      "properties": {
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": true
+      },
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "examples": {
+      "items": {
+        "$ref": "#/$defs/PreviewStepResponse"
+      },
+      "type": "array"
+    },
+    "input": {
+      "$ref": "#/$defs/PreviewStepResponse"
+    },
+    "steps": {
+      "items": {
+        "$ref": "#/$defs/PreviewStepResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "input",
+    "steps",
+    "examples"
+  ],
+  "title": "TransformPreviewResponse",
+  "type": "object"
+}

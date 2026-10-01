@@ -1,0 +1,47 @@
+{
+  "$defs": {
+    "ModuleResponse": {
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "required_by": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "requires": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "enabled",
+        "requires",
+        "required_by"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "modules": {
+      "items": {
+        "$ref": "#/$defs/ModuleResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "modules"
+  ],
+  "title": "ModulesResponse",
+  "type": "object"
+}

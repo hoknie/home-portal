@@ -1,7 +1,5 @@
 mod channels;
 mod clients;
-#[cfg(test)]
-mod fakes;
 mod helpers;
 mod types;
 

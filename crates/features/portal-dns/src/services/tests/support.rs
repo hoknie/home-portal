@@ -27,9 +27,17 @@ pub fn environments() -> Environments {
     ])
 }
 
+pub const DNS_ON: &str = "[modules]\ndns = true\n\n";
+
 pub fn settings(extra: &str) -> DnsSettings {
+    let dns = if extra.contains(DNS_ON) {
+        "dns = true\n"
+    } else {
+        ""
+    };
+    let extra = extra.replace(DNS_ON, "");
     let document: DocumentMut = format!(
-        "[environments.local]\nnetworks = [\"192.168.1.0/24\", \"fd00::/64\"]\n[environments.vpn]\nnetworks = [\"10.8.0.0/24\"]\n[proxy]\nenabled = true\nportal_host = \"portal.home\"\n{extra}"
+        "[modules]\nproxy = true\n{dns}\n[environments.local]\nnetworks = [\"192.168.1.0/24\", \"fd00::/64\"]\n[environments.vpn]\nnetworks = [\"10.8.0.0/24\"]\n[proxy]\nportal_host = \"portal.home\"\n{extra}"
     )
     .parse()
     .unwrap();

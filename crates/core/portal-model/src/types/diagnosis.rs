@@ -1,6 +1,8 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[schemars(extend("x-open" = "other"))]
 #[serde(rename_all = "kebab-case")]
 pub enum Diagnosis {
     LocalNetworkDenied,
@@ -14,6 +16,7 @@ pub enum Diagnosis {
     IcmpNotPermitted,
     Other,
     #[serde(other)]
+    #[schemars(skip)]
     Unknown,
 }
 

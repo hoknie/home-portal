@@ -31,10 +31,8 @@ fn publishing_of(store: &Arc<ConfigStore>) -> ProxyPublishing {
 }
 
 fn services(text: &str) -> (tempfile::TempDir, Arc<ConfigStore>, Arc<ServicesFeature>) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (directory, path) = portal_testing::written(text);
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let services = ServicesFeature::new(
         store.clone(),
         Environment::parse("local").unwrap(),
@@ -71,7 +69,7 @@ fn publishing_follows_the_proxy_section() {
     let publishing = publishing_of(&store);
     assert_eq!(publishing.https_port(), None);
     let (_directory, store, _) = services(&format!(
-        "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\n\n{FILE}"
+        "[modules]\nproxy = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nportal_host = \"portal.example.com\"\n\n{FILE}"
     ));
     assert_eq!(publishing_of(&store).https_port(), Some(443));
 }
@@ -93,10 +91,8 @@ fn publishing_names_a_sign_in_the_cookie_domain_cannot_reach_by_the_service_fiel
 }
 
 fn connection(text: &str) -> (tempfile::TempDir, super::NetworkConnection) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let configuration = Arc::new(ConfigStore::open(&path).unwrap());
+    let (directory, path) = portal_testing::written(text);
+    let configuration = Arc::new(portal_testing::opened(&path).unwrap());
     (
         directory,
         super::NetworkConnection {
@@ -106,7 +102,7 @@ fn connection(text: &str) -> (tempfile::TempDir, super::NetworkConnection) {
     )
 }
 
-const PROXIED: &str = "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\ncookie_domain = \"example.com\"\n";
+const PROXIED: &str = "[modules]\nproxy = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nportal_host = \"portal.example.com\"\ncookie_domain = \"example.com\"\n";
 
 fn through(host: &str) -> axum::http::HeaderMap {
     let mut headers = axum::http::HeaderMap::new();
@@ -142,8 +138,7 @@ fn a_sign_in_made_directly_while_the_proxy_is_on_keeps_a_plain_cookie() {
 #[test]
 fn without_the_proxy_the_cookie_has_no_domain() {
     use portal_auth::Connection;
-    let (_directory, connection) =
-        connection(&PROXIED.replace("enabled = true", "enabled = false"));
+    let (_directory, connection) = connection(&PROXIED.replace("proxy = true", "proxy = false"));
     let scope = connection.cookie_scope(peer("127.0.0.1"), &through("portal.example.com"));
     assert_eq!(scope, portal_auth::CookieScope::default());
 }
@@ -177,20 +172,11 @@ fn the_automation_directory_lists_services_users_and_environments_with_internet(
     assert_eq!(directory.environments(), vec!["local", "internet"]);
 }
 
-fn answering_http() -> u16 {
-    use std::io::{Read, Write};
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    std::thread::spawn(move || {
-        for stream in listener.incoming() {
-            let Ok(mut stream) = stream else { continue };
-            let mut buffer = [0u8; 1024];
-            let _ = stream.read(&mut buffer);
-            let _ = stream
-                .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nok");
-        }
-    });
-    port
+async fn answering_http() -> u16 {
+    portal_testing::FakeHttp::always(portal_testing::Answer::status(200).with_body("ok"))
+        .await
+        .address
+        .port()
 }
 
 #[tokio::test]
@@ -202,11 +188,11 @@ async fn workflow_actions_wait_for_their_features_then_probe_read_and_refuse_tel
         &path,
         format!(
             "[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"http://127.0.0.1:{}\"\n",
-            answering_http()
+            answering_http().await
         ),
     )
     .unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let actions = super::WorkflowActions::default();
     assert_eq!(
         actions.probe("nas").await.unwrap_err(),
@@ -272,7 +258,9 @@ fn the_script_shelf_refuses_a_link_that_leaves_the_directory_through_the_port() 
     let shelf = ScriptShelf {
         resolve: ResolveScript::at(root.clone(), Arc::new(PortalProcess)),
         list: ListScripts::at(root.clone(), Arc::new(PortalProcess)),
-        editing: portal_scripts::ScriptEditing::new(Arc::new(ConfigStore::open(&main).unwrap())),
+        editing: portal_scripts::ScriptEditing::new(Arc::new(
+            portal_testing::opened(&main).unwrap(),
+        )),
     };
     let refusal = shelf.resolve("evil.sh").unwrap_err();
     assert_eq!(refusal.code, RefusalCode::Outside);

@@ -1,7 +1,17 @@
+import type { FilterDescription } from "../schema";
 import type { Scope } from "../scope";
-import { FILTERS, takes } from "./filters";
 import type { FilterCall } from "./parse";
 import type { ValueType } from "./values";
+
+export type Filters = readonly FilterDescription[];
+
+export function takes(types: readonly ValueType[], type: ValueType) {
+  return types.includes("any") || types.includes(type);
+}
+
+function described(filters: Filters, name: string) {
+  return filters.find((filter) => filter.name === name);
+}
 
 const RESULT_TYPES: Record<string, Record<string, ValueType>> = {
   http: { status: "number", body: "text", headers: "object" },
@@ -58,9 +68,9 @@ export type FilterProblem =
   | { reason: "filterArgument"; params: { filter: string; argument: string } }
   | { reason: "filterType"; params: { filter: string; takes: string; got: string } };
 
-export function givesAfter(start: ValueType, filters: FilterCall[]): ValueType {
-  return filters.reduce<ValueType>((current, call) => {
-    const filter = FILTERS[call.name];
+export function givesAfter(start: ValueType, calls: FilterCall[], filters: Filters): ValueType {
+  return calls.reduce<ValueType>((current, call) => {
+    const filter = described(filters, call.name);
     if (!filter) {
       return "any";
     }
@@ -71,10 +81,13 @@ export function givesAfter(start: ValueType, filters: FilterCall[]): ValueType {
   }, start);
 }
 
-export function chainProblem(start: ValueType, filters: FilterCall[]): FilterProblem | null {
+export function chainProblem(start: ValueType, calls: FilterCall[], filters: Filters): FilterProblem | null {
+  if (filters.length === 0) {
+    return null;
+  }
   let current = start;
-  for (const call of filters) {
-    const filter = FILTERS[call.name];
+  for (const call of calls) {
+    const filter = described(filters, call.name);
     if (!filter) {
       return { reason: "unknownFilter", params: { filter: call.name } };
     }

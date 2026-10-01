@@ -48,6 +48,7 @@ fn without_the_variable_the_portal_reads_and_writes_in_the_home_configuration_fo
         ),
     )
     .unwrap();
+    portal_testing::split(&folder.join("home-portal.toml"));
     let working = tempfile::tempdir().unwrap();
     let mut child = Command::new(BINARY)
         .current_dir(working.path())

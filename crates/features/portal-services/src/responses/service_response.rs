@@ -1,11 +1,12 @@
 use std::collections::BTreeMap;
 
 use portal_model::{Publication, ServiceStatus};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{ProbeSettings, ServiceEntry, ServiceLink, Viewpoint};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct ServiceResponse {
     pub id: String,
     pub name: String,

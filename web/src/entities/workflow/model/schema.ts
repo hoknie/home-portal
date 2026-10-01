@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { runSchema } from "@/entities/automation/@x/workflow";
+import { generated } from "@/shared/api";
 
 import type { Operation } from "./transforming/operations";
 
@@ -130,7 +131,7 @@ export const stepSchema: z.ZodType<Step> = z.lazy(() =>
 
 export const USAGE_KINDS = ["automation", "webhook", "workflow"] as const;
 
-export const usageSchema = z.object({ kind: z.string(), id: z.string(), title: z.string(), variables: z.array(z.string()).default([]) });
+export const usageSchema = generated.workflows.workflowUsageResponseSchema;
 
 export type Usage = z.infer<typeof usageSchema>;
 
@@ -150,24 +151,16 @@ export const inputDeclarationSchema = z.preprocess(
 
 export type InputDeclaration = z.infer<typeof inputDeclarationSchema>;
 
-export const workflowSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  enabled: z.boolean(),
-  description: z.string().nullable().default(null),
-  tags: z.array(z.string()).default([]),
-  timeout_seconds: z.number(),
-  inputs: z.array(inputDeclarationSchema).default([]),
+export const workflowSchema = generated.workflows.workflowResponseSchema.extend({
+  inputs: z.array(inputDeclarationSchema),
   steps: z.array(stepSchema),
-  steps_version: z.string().default(""),
-  used_by: z.array(usageSchema).default([]),
-  last_run: runSchema.nullable().default(null),
-  active_run: runSchema.nullable().default(null),
+  last_run: runSchema.nullable(),
+  active_run: runSchema.nullable(),
 });
 
 export type Workflow = z.infer<typeof workflowSchema>;
 
-export const workflowsSchema = z.object({ workflows: z.array(workflowSchema) });
+export const workflowsSchema = generated.workflows.workflowsResponseSchema.extend({ workflows: z.array(workflowSchema) });
 
 export const FIELD_TYPES = [
   "template",
@@ -194,53 +187,31 @@ export const KIND_GROUPS = ["flow", "data", "actions"] as const;
 
 export type KindGroup = (typeof KIND_GROUPS)[number];
 
-export const kindFieldSchema = z.object({
-  name: z.string(),
-  type: z.enum(FIELD_TYPES),
-  required: z.boolean(),
-  default: z.string().nullable(),
-  minimum: z.number().nullable(),
-  maximum: z.number().nullable(),
-  choices: z.array(z.string()),
-  templated: z.boolean().default(false),
-  template_keys: z.boolean().default(false),
-});
+const catalogue = generated.workflowCatalogue;
+
+export const kindFieldSchema = catalogue.stepFieldResponseSchema.extend({ type: z.enum(FIELD_TYPES) });
 
 export type KindField = z.infer<typeof kindFieldSchema>;
 
-export const kindSchema = z.object({
-  name: z.string(),
-  group: z.enum(KIND_GROUPS),
-  fields: z.array(kindFieldSchema),
-  results: z.array(z.string()),
-  exclusive: z.array(z.array(z.string())).default([]),
-});
+export const kindSchema = catalogue.stepKindResponseSchema.extend({ group: z.enum(KIND_GROUPS), fields: z.array(kindFieldSchema) });
 
 export type Kind = z.infer<typeof kindSchema>;
 
 export const VALUE_TYPE_NAMES = ["text", "number", "boolean", "list", "object", "null", "any"] as const;
 
-export const filterSchema = z.object({
-  name: z.string(),
-  arguments: z.array(z.object({ name: z.string(), type: z.string(), required: z.boolean(), choices: z.array(z.string()) })),
-  accepts: z.array(z.enum(VALUE_TYPE_NAMES)),
-  gives: z.enum(VALUE_TYPE_NAMES),
-  element: z.boolean().default(false),
-});
+export const filterSchema = catalogue.filterResponseSchema.extend({ accepts: z.array(z.enum(VALUE_TYPE_NAMES)), gives: z.enum(VALUE_TYPE_NAMES) });
 
 export type FilterDescription = z.infer<typeof filterSchema>;
 
-export const workflowCatalogueSchema = z.object({
+export const workflowCatalogueSchema = catalogue.workflowCatalogueResponseSchema.extend({
   kinds: z.array(kindSchema),
-  operators: z.array(z.object({ name: z.string(), takes_right: z.boolean() })),
-  events: z.array(z.object({ name: z.string(), fields: z.array(z.string()) })),
-  filters: z.array(filterSchema).default([]),
-  operations: z.array(filterSchema).default([]),
+  filters: z.array(filterSchema),
+  operations: z.array(filterSchema),
 });
 
 export type WorkflowCatalogue = z.infer<typeof workflowCatalogueSchema>;
 
-export const workflowRunSchema = z.object({ run_id: z.string() });
+export const workflowRunSchema = generated.workflowRun.queuedResponseSchema;
 
 export type WorkflowRequest = {
   id: string;
@@ -266,6 +237,6 @@ export function requestOf(workflow: Workflow): WorkflowRequest {
   };
 }
 
-export const secretNamesSchema = z.object({ secrets: z.array(z.object({ name: z.string(), set: z.boolean() })) });
+export const secretNamesSchema = generated.secrets.secretsResponseSchema;
 
 export type SecretName = z.infer<typeof secretNamesSchema>["secrets"][number];

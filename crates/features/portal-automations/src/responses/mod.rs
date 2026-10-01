@@ -2,6 +2,7 @@ mod automation_response;
 mod automations_response;
 mod catalogue;
 mod marks_response;
+mod previews;
 mod run_settings_response;
 mod runs;
 mod schedule_response;
@@ -18,6 +19,7 @@ pub use catalogue::{
     CatalogueResponse, ChoiceResponse, ChoicesResponse, EventResponse, FieldResponse,
 };
 pub use marks_response::MarksResponse;
+pub use previews::TransformPreviewResponse;
 pub use run_settings_response::RunSettingsResponse;
 pub use runs::{
     OutcomeResponse, OutputResponse, QueuedResponse, RenderedResponse, RunResponse, RunsResponse,

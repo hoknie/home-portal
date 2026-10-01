@@ -1,0 +1,33 @@
+{
+  "$defs": {
+    "Environment": {
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "detected": {
+      "$ref": "#/$defs/Environment"
+    },
+    "environment": {
+      "$ref": "#/$defs/Environment"
+    },
+    "environments": {
+      "items": {
+        "$ref": "#/$defs/Environment"
+      },
+      "type": "array"
+    },
+    "switchable": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "environment",
+    "detected",
+    "switchable",
+    "environments"
+  ],
+  "title": "EnvironmentResponse",
+  "type": "object"
+}

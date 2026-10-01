@@ -199,16 +199,16 @@ async fn an_edit_keeps_the_comments_and_the_untouched_keys() {
 }
 
 #[tokio::test]
-async fn an_automation_in_an_included_file_is_edited_in_that_file() {
+async fn an_automation_in_its_home_is_edited_in_that_file() {
     let folder = TempDir::new().unwrap();
     let included = folder.path().join("automations.toml");
     fs::write(&included, FILE).unwrap();
     let main = folder.path().join("home-portal.toml");
-    fs::write(&main, "include = [\"automations.toml\"]\n").unwrap();
+    fs::write(&main, "").unwrap();
     for path in [&main, &included] {
         fs::set_permissions(path, fs::Permissions::from_mode(0o600)).unwrap();
     }
-    let store = Arc::new(portal_config::ConfigStore::open(&main).unwrap());
+    let store = Arc::new(portal_testing::opened(&main).unwrap());
     let feature = AutomationsFeature::new(
         store,
         Arc::new(crate::features::tests::FakeDirectory),
@@ -232,7 +232,7 @@ async fn an_automation_in_an_included_file_is_edited_in_that_file() {
     assert!(!text.contains("sleeping"));
     assert!(text.contains("restart-media"));
     let main = fs::read_to_string(api.folder.path().join("home-portal.toml")).unwrap();
-    assert_eq!(main, "include = [\"automations.toml\"]\n");
+    assert_eq!(main, "");
 }
 
 #[tokio::test]

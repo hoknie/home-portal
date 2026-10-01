@@ -33,6 +33,7 @@ fn fetch(port: u16, route: &str) -> (String, String) {
 fn spawned(program: &Path, configuration: &Path, port: u16) -> Child {
     let began = Instant::now();
     loop {
+        portal_testing::split(configuration);
         let attempt = Command::new(program)
             .env("HOME_PORTAL_CONFIG", configuration)
             .env("HOME_PORTAL_ADDRESS", format!("127.0.0.1:{port}"))

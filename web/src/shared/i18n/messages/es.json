@@ -1599,6 +1599,8 @@
       "fromSample": "según la estructura de la respuesta",
       "fromRun": "según la última ejecución",
       "noSample": "Sin vista previa: tome la entrada de un paso con estructura de respuesta o última ejecución conocida.",
+      "computing": "Calculando la vista previa…",
+      "unreachable": "No se puede contactar con el portal para calcular la vista previa.",
       "cannot": "No acepta este valor: {error}",
       "where": "Conservar los elementos donde",
       "to": "Convertir cada elemento en",

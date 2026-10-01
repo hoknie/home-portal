@@ -9,15 +9,13 @@ use super::Outbox;
 use crate::types::Rules;
 
 pub fn store(text: &str) -> (TempDir, Arc<ConfigStore>) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
+    let (directory, path) = portal_testing::written(text);
     #[cfg(unix)]
     if text.contains("[secrets]") {
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
     }
-    (directory, Arc::new(ConfigStore::open(&path).unwrap()))
+    (directory, Arc::new(portal_testing::opened(&path).unwrap()))
 }
 
 pub fn change(was: &str, now: &str) -> StatusChange {
@@ -43,16 +41,24 @@ fn the_rules_default_to_failures_and_recoveries() {
 }
 
 #[test]
-fn a_file_written_before_channels_existed_keeps_its_rules_and_the_new_place_wins() {
+fn rules_in_a_channel_table_are_refused_naming_the_key_and_the_section() {
     let legacy =
         "[notifications.telegram]\nenabled = true\nstates = [\"down\"]\nrecovered = false\n";
-    let rules = Rules::read(&legacy.parse().unwrap()).unwrap();
-    assert_eq!(rules.states, vec!["down"]);
-    assert!(!rules.recovered);
-    let both = format!("[notifications]\nstates = [\"unreadable\"]\n\n{legacy}");
-    let rules = Rules::read(&both.parse().unwrap()).unwrap();
-    assert_eq!(rules.states, vec!["unreadable"]);
-    assert!(!rules.recovered);
+    let fields: Vec<String> = Rules::problems(&legacy.parse().unwrap())
+        .into_iter()
+        .map(|problem| format!("{}: {}", problem.field, problem.message))
+        .collect();
+    assert_eq!(
+        fields,
+        vec![
+            "notifications.telegram.states: is no longer read; the rules live in notifications",
+            "notifications.telegram.recovered: is no longer read; the rules live in notifications",
+        ]
+    );
+    assert_eq!(
+        Rules::read(&legacy.parse().unwrap()).unwrap(),
+        Rules::default()
+    );
 }
 
 #[test]

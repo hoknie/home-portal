@@ -13,150 +13,120 @@ fn a_missing_file_is_refused_by_path() {
 
 #[test]
 fn a_syntax_error_is_refused_with_its_file_and_line() {
-    let error = open(&[
-        ("home-portal.toml", "include = [\"a.toml\"]\n"),
-        ("a.toml", "b = \n"),
-    ])
-    .err()
-    .unwrap();
+    let error = open(&[("home-portal.toml", ""), ("services.toml", "b = \n")])
+        .err()
+        .unwrap();
     assert!(matches!(error, ConfigError::Syntax { .. }));
     let message = error.to_string();
     assert!(
-        message.contains("a.toml") && message.contains("line 1"),
+        message.contains("services.toml") && message.contains("line 1"),
         "{message}"
     );
 }
 
 #[test]
-fn services_from_the_main_file_are_moved_after_those_already_in_their_home() {
-    let portal = Portal::with(&[
-        (
-            "home-portal.toml",
-            "include = [\"services.toml\"]\n\n[[services]]\nid = \"a\"\n",
-        ),
-        (
-            "services.toml",
-            "[[services]]\nid = \"b\"\n\n[[services]]\nid = \"c\"\n",
-        ),
-    ]);
-    let snapshot = portal.store.read();
-    let ids: Vec<&str> = snapshot.document["services"]
-        .as_array_of_tables()
-        .unwrap()
-        .iter()
-        .map(|table| table["id"].as_str().unwrap())
-        .collect();
-    assert_eq!(ids, vec!["b", "c", "a"]);
-    assert!(snapshot.document.get("include").is_none());
-    assert!(!portal.text("home-portal.toml").contains("[[services]]"));
-}
-
-#[test]
-fn an_include_outside_the_directory_a_missing_file_and_a_nested_include_are_refused() {
-    let outside = open(&[("home-portal.toml", "include = [\"../secrets.toml\"]\n")])
-        .err()
-        .unwrap();
-    assert!(outside.to_string().contains("secrets.toml"), "{outside}");
-    let missing = open(&[("home-portal.toml", "include = [\"nope.toml\"]\n")])
-        .err()
-        .unwrap();
-    assert!(missing.to_string().contains("does not exist"), "{missing}");
-    let nested = open(&[
-        ("home-portal.toml", "include = [\"a.toml\"]\n"),
-        ("a.toml", "include = [\"b.toml\"]\n"),
-        ("b.toml", "x = 1\n"),
+fn a_section_in_the_main_file_is_refused_naming_its_home() {
+    let error = open(&[
+        ("home-portal.toml", "[[services]]\nid = \"a\"\n"),
+        ("services.toml", "[[services]]\nid = \"b\"\n"),
     ])
     .err()
     .unwrap();
-    assert!(nested.to_string().contains("may not include"), "{nested}");
+    let message = error.to_string();
+    assert!(
+        message.contains("services: is in home-portal.toml; it belongs in services.toml"),
+        "{message}"
+    );
+}
+
+#[test]
+fn include_and_configuration_are_refused_by_key() {
+    for (key, text) in [
+        ("include", "include = [\"extra.toml\"]\n"),
+        (
+            "configuration",
+            "[configuration]\nwrites_to = \"services.toml\"\n",
+        ),
+    ] {
+        let message = open(&[("home-portal.toml", text)])
+            .err()
+            .unwrap()
+            .to_string();
+        assert!(
+            message.contains(&format!("{key}: is no longer read")),
+            "{message}"
+        );
+    }
 }
 
 #[test]
 fn a_key_set_by_two_files_names_both() {
     let error = open(&[
-        (
-            "home-portal.toml",
-            "include = [\"net.toml\"]\n\n[network]\nport = 8080\n",
-        ),
-        ("net.toml", "[network]\nport = 9090\n"),
+        ("home-portal.toml", "[network]\nport = 8080\n"),
+        ("services.toml", "[network]\nport = 9090\n"),
     ])
     .err()
     .unwrap();
     let message = error.to_string();
     assert!(message.contains("network.port"), "{message}");
     assert!(
-        message.contains("home-portal.toml") && message.contains("net.toml"),
+        message.contains("home-portal.toml") && message.contains("services.toml"),
         "{message}"
     );
 }
 
 #[test]
-fn nested_tables_from_several_files_merge_and_their_entries_concatenate() {
+fn a_home_shared_by_two_sections_holds_both_and_names_itself_as_their_origin() {
     let portal = Portal::with(&[
         (
             "home-portal.toml",
-            "include = [\"widgets.toml\"]\n\n[[dashboard.widgets]]\ntype = \"status-summary\"\n",
+            "[files]\nautomations = \"rules.toml\"\nwebhooks = \"rules.toml\"\n",
         ),
         (
-            "widgets.toml",
-            "[[dashboard.widgets]]\ntype = \"weather\"\n",
+            "rules.toml",
+            "[[automations]]\nid = \"a\"\n\n[[webhooks]]\nid = \"w\"\n",
         ),
     ]);
     let snapshot = portal.store.read();
-    let kinds: Vec<&str> = snapshot.document["dashboard"]["widgets"]
-        .as_array_of_tables()
-        .unwrap()
-        .iter()
-        .map(|table| table["type"].as_str().unwrap())
-        .collect();
-    assert_eq!(kinds, vec!["status-summary", "weather"]);
     assert_eq!(
-        snapshot
-            .origins
-            .of("dashboard.widgets", 1)
-            .unwrap()
-            .file_name()
-            .unwrap(),
-        "dashboard.toml"
+        snapshot.origins.of("automations", 0).unwrap(),
+        portal.path("rules.toml")
+    );
+    assert_eq!(
+        snapshot.origins.of("webhooks", 0).unwrap(),
+        portal.path("rules.toml")
     );
 }
 
 #[test]
 fn every_entry_knows_the_file_it_came_from() {
     let portal = Portal::with(&[
-        (
-            "home-portal.toml",
-            "include = [\"services.toml\"]\n\n[[services]]\nid = \"a\"\n\n[network]\nport = 8080\n",
-        ),
+        ("home-portal.toml", "[network]\nport = 8080\n"),
         ("services.toml", "[[services]]\nid = \"b\"\n"),
     ]);
     super::support::rewrite(
-        &portal.path("home-portal.toml"),
+        &portal.path("services.toml"),
         &format!(
             "{}\n[[services]]\nid = \"by-hand\"\n",
-            portal.text("home-portal.toml")
+            portal.text("services.toml")
         ),
     );
     let snapshot = portal.store.read();
     assert_eq!(
-        snapshot.origins.of("services", 0).unwrap(),
+        snapshot.origins.of("services", 1).unwrap(),
         portal.path("services.toml")
-    );
-    assert_eq!(
-        snapshot.origins.of("services", 2).unwrap(),
-        portal.path("home-portal.toml")
     );
     assert_eq!(
         snapshot.origins.table("network").unwrap(),
         portal.path("home-portal.toml")
     );
-    assert_eq!(snapshot.origins.count("services"), 3);
+    assert_eq!(snapshot.origins.count("services"), 2);
 }
 
 #[test]
 fn the_revision_covers_every_file() {
     let portal = Portal::with(&[
-        ("home-portal.toml", "include = [\"services.toml\"]\n"),
+        ("home-portal.toml", ""),
         ("services.toml", "[[services]]\nid = \"a\"\n"),
     ]);
     let before = portal.store.read().revision;

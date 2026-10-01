@@ -1,0 +1,113 @@
+{
+  "$defs": {
+    "SectionView": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "type": "object"
+    },
+    "WidgetSize": {
+      "enum": [
+        "quarter",
+        "third",
+        "half",
+        "two-thirds",
+        "full"
+      ],
+      "type": "string",
+      "x-open": "full"
+    },
+    "WidgetView": {
+      "properties": {
+        "environments": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "type": "string"
+        },
+        "public": {
+          "type": "boolean"
+        },
+        "section": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "settings": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "size": {
+          "$ref": "#/$defs/WidgetSize"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "type",
+        "id",
+        "title",
+        "settings",
+        "section",
+        "size",
+        "environments",
+        "public"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "sections": {
+      "items": {
+        "$ref": "#/$defs/SectionView"
+      },
+      "type": "array"
+    },
+    "widgets": {
+      "items": {
+        "$ref": "#/$defs/WidgetView"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "sections",
+    "widgets"
+  ],
+  "title": "DashboardResponse",
+  "type": "object"
+}

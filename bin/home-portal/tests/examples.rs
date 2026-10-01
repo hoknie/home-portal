@@ -8,7 +8,6 @@ use home_portal::registered;
 use portal_auth::hash_password;
 use std::sync::Arc;
 
-use portal_config::ConfigStore;
 use portal_services::ServiceEntries;
 use toml_edit::DocumentMut;
 
@@ -82,11 +81,9 @@ fn copied_split() -> tempfile::TempDir {
 }
 
 fn services_of(path: &Path) -> Vec<portal_services::ServiceEntry> {
-    let directory = tempfile::tempdir().unwrap();
-    let main = directory.path().join("home-portal.toml");
-    fs::write(&main, "").unwrap();
+    let (directory, main) = portal_testing::written("");
     fs::copy(path, directory.path().join("services.toml")).unwrap();
-    let store = Arc::new(ConfigStore::open(&main).unwrap());
+    let store = Arc::new(portal_testing::opened(&main).unwrap());
     ServiceEntries::new(store)
         .run()
         .unwrap_or_else(|message| panic!("{}: {message}", path.display()))
@@ -170,11 +167,7 @@ fn every_service_example_loads_through_every_validator_and_teaches() {
         let directory = tempfile::tempdir().unwrap();
         fs::copy(&file, directory.path().join("services.toml")).unwrap();
         let main = directory.path().join("home-portal.toml");
-        fs::write(
-            &main,
-            format!("include = [\"services.toml\"]\n\n{ENVIRONMENTS}{}", user()),
-        )
-        .unwrap();
+        fs::write(&main, format!("{ENVIRONMENTS}{}", user())).unwrap();
         assert_eq!(every_error(&main), "", "{}", file.display());
         assert_teaches(&file);
     }
@@ -303,11 +296,10 @@ impl portal_scripts::ProcessIdentity for ThisProcess {
 }
 
 #[test]
-fn the_split_example_needs_no_moving_and_holds_one_file_per_workflow() {
+fn the_split_example_loads_as_it_is_and_holds_one_file_per_workflow() {
     let directory = copied_split();
     let main = directory.path().join("home-portal.toml");
-    assert_eq!(portal_config::pending_moves(&main).unwrap(), Vec::new());
-    let store = ConfigStore::open(&main).unwrap();
+    let store = portal_testing::opened(&main).unwrap();
     let workflows = store.read().document["workflows"]
         .as_array_of_tables()
         .unwrap()

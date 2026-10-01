@@ -6,7 +6,6 @@ use crate::types::{
 };
 
 pub const URL_RULE: &str = "must be an http or https address";
-pub const LEGACY_TELEGRAM: &str = "telegram";
 pub const HEADER_RULE: &str = "is set by the portal and cannot be given";
 pub const SAMPLE_RULE: &str = "must be JSON, an example of the answer";
 pub const SAMPLE_SIZE_RULE: &str = "must be at most 16 KiB";
@@ -150,8 +149,7 @@ pub fn decode_notify(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) ->
     let channel = raw
         .channel
         .clone()
-        .filter(|channel| !channel.trim().is_empty())
-        .or_else(|| (raw.kind == LEGACY_TELEGRAM).then(|| LEGACY_TELEGRAM.to_string()));
+        .filter(|channel| !channel.trim().is_empty());
     let title = raw.title.clone().filter(|title| !title.trim().is_empty());
     match raw.text.clone().filter(|text| !text.trim().is_empty()) {
         Some(text) => Some(StepKind::Notify {

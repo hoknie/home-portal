@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { apiSamples } from "@/shared/api";
+import { TRACE_ENTRY_BLANKS } from "@/shared/lib/testing";
 
 import {
   automationsSchema,
@@ -55,7 +56,7 @@ describe("automation", () => {
   });
 
   it("an entry from before separate streams parses and keeps its single output", () => {
-    const old = { path: "steps[0]", step: "run", label: "run", kind: "script", iteration: null, outcome: "failed", started_at: "2026-01-01T00:00:00Z", duration_milliseconds: 3, detail: "restart.sh exited 1", output: "progress\ncontainer not found\n" };
+    const old = { ...TRACE_ENTRY_BLANKS, path: "steps[0]", step: "run", label: "run", kind: "script", iteration: null, outcome: "failed", started_at: "2026-01-01T00:00:00Z", duration_milliseconds: 3, detail: "restart.sh exited 1", output: "progress\ncontainer not found\n" };
     const [entry] = traceSchema.parse({ entries: [old], dropped: 0 }).entries;
     expect(entry).toMatchObject({ stdout: null, stderr: null, command: null, budget_reached: false });
     expect(scriptLogOf(entry)).toEqual({ kind: "merged", output: { tail: "progress\ncontainer not found\n", bytes: 29, truncated: false } });

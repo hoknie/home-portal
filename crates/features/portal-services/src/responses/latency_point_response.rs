@@ -1,12 +1,14 @@
 use portal_model::ServiceState;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
 use crate::types::LatencyPoint;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct LatencyPointResponse {
     #[serde(with = "time::serde::rfc3339")]
+    #[schemars(with = "String")]
     pub at: OffsetDateTime,
     pub state: ServiceState,
     pub average: Option<u32>,

@@ -4,6 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+schemars.workspace = true
 axum.workspace = true
 serde.workspace = true
 toml_edit.workspace = true
@@ -11,6 +12,7 @@ portal-config.workspace = true
 portal-feature.workspace = true
 
 [dev-dependencies]
+portal-testing.workspace = true
 http-body-util.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true

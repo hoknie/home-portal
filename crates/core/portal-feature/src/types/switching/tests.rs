@@ -59,16 +59,24 @@ fn users_require_nothing_and_are_switched_on_by_the_modules_section() {
 }
 
 #[test]
-fn a_legacy_enabled_key_wins_over_the_default() {
-    let resolved = switches("[proxy]\nenabled = true\n\n[dns]\nenabled = true\n");
-    assert!(resolved.is_on(Module::Proxy));
-    assert!(resolved.is_on(Module::Dns));
+fn a_legacy_enabled_key_is_refused_naming_the_module_switch() {
+    assert_eq!(
+        fields("[proxy]\nenabled = true\n\n[dns]\nenabled = true\n"),
+        vec!["proxy.enabled", "dns.enabled"]
+    );
+    let message = ModuleSwitches::errors(&"[proxy]\nenabled = false\n".parse().unwrap())
+        .remove(0)
+        .message;
+    assert!(message.contains("modules.proxy"), "{message}");
 }
 
 #[test]
-fn the_modules_key_wins_over_the_legacy_key() {
-    let resolved = switches("[modules]\nproxy = false\n\n[proxy]\nenabled = true\n");
-    assert!(!resolved.is_on(Module::Proxy));
+fn the_modules_key_does_not_excuse_a_legacy_key() {
+    assert_eq!(
+        fields("[modules]\nproxy = false\n\n[proxy]\nenabled = true\n"),
+        vec!["proxy.enabled"]
+    );
+    assert!(!switches("[modules]\nproxy = false\n").is_on(Module::Proxy));
 }
 
 #[test]
@@ -93,8 +101,8 @@ fn an_unknown_module_or_a_value_that_is_not_a_switch_is_refused_by_its_key() {
 
 #[test]
 fn dns_without_the_proxy_is_refused_as_modules_dns() {
-    assert_eq!(fields("[dns]\nenabled = true\n"), vec!["modules.dns"]);
-    let message = ModuleSwitches::errors(&"[dns]\nenabled = true\n".parse().unwrap())
+    assert_eq!(fields("[modules]\ndns = true\n"), vec!["modules.dns"]);
+    let message = ModuleSwitches::errors(&"[modules]\ndns = true\n".parse().unwrap())
         .remove(0)
         .message;
     assert!(message.contains("proxy"), "{message}");

@@ -1,0 +1,152 @@
+{
+  "$defs": {
+    "ChoiceResponse": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ChoicesResponse": {
+      "properties": {
+        "environments": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "services": {
+          "items": {
+            "$ref": "#/$defs/ChoiceResponse"
+          },
+          "type": "array"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "users": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "webhooks": {
+          "items": {
+            "$ref": "#/$defs/WebhookChoiceResponse"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "services",
+        "users",
+        "environments",
+        "webhooks",
+        "tags"
+      ],
+      "type": "object"
+    },
+    "EventResponse": {
+      "properties": {
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldResponse"
+          },
+          "type": "array"
+        },
+        "filters": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "fields",
+        "filters"
+      ],
+      "type": "object"
+    },
+    "FieldResponse": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sample": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sample"
+      ],
+      "type": "object"
+    },
+    "WebhookChoiceResponse": {
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "variables": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "variables",
+        "action"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "choices": {
+      "$ref": "#/$defs/ChoicesResponse"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/EventResponse"
+      },
+      "type": "array"
+    },
+    "states": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "events",
+    "states",
+    "choices"
+  ],
+  "title": "CatalogueResponse",
+  "type": "object"
+}

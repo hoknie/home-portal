@@ -51,7 +51,7 @@ async fn a_wait_in_progress_shows_its_seconds_and_values_before_it_ends() {
 
 #[tokio::test]
 async fn a_request_in_progress_already_shows_the_address_it_rendered() {
-    let port = serve();
+    let port = serve().await;
     let (during, after) = peeked(
         &format!("[[workflows]]\nid = \"w\"\ntitle = \"W\"\ninputs = [\"service\"]\n[[workflows.steps]]\nid = \"call\"\nkind = \"http\"\nurl = \"http://127.0.0.1:{port}/{{{{inputs.service}}}}/../slow\"\n"),
         Duration::from_millis(1000),

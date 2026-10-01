@@ -1,9 +1,10 @@
 use portal_feature::PortalEvent;
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use crate::types::Delivery;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct DeliveryResponse {
     pub channel: String,
     pub at: String,

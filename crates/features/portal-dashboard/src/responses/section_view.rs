@@ -1,7 +1,8 @@
 use portal_widget::SectionEntry;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct SectionView {
     pub id: String,
     pub title: Option<String>,

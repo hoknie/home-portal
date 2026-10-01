@@ -7,8 +7,8 @@ use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
 
 use super::{HttpProbe, Probe};
-use crate::fakes::{Behaviour, Upstream};
 use crate::types::{ProbeKind, ProbeSettings, ServiceEntry};
+use portal_testing::{Answer, FakeHttp};
 
 const FAST: Duration = Duration::from_millis(0);
 
@@ -37,11 +37,7 @@ async fn free_port() -> u16 {
 
 #[tokio::test]
 async fn a_fast_success_is_up() {
-    let upstream = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: FAST,
-    })
-    .await;
+    let upstream = FakeHttp::always(Answer::status(200).with_body("ok").after(FAST)).await;
     let outcome = HttpProbe::new()
         .unwrap()
         .probe(&entry(&upstream.url()), &upstream.url())
@@ -53,21 +49,18 @@ async fn a_fast_success_is_up() {
 
 #[tokio::test]
 async fn a_slow_success_is_degraded() {
-    let upstream = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: Duration::from_millis(500),
-    })
+    let upstream = FakeHttp::always(
+        Answer::status(200)
+            .with_body("ok")
+            .after(Duration::from_millis(500)),
+    )
     .await;
     assert_eq!(state_of(&upstream.url()).await, ServiceState::Degraded);
 }
 
 #[tokio::test]
 async fn a_server_error_is_down() {
-    let upstream = Upstream::start(Behaviour::Status {
-        code: 500,
-        delay: FAST,
-    })
-    .await;
+    let upstream = FakeHttp::always(Answer::status(500).with_body("ok").after(FAST)).await;
     let outcome = HttpProbe::new()
         .unwrap()
         .probe(&entry(&upstream.url()), &upstream.url())
@@ -87,7 +80,7 @@ async fn a_refused_connection_is_down() {
 
 #[tokio::test]
 async fn a_server_that_accepts_and_never_answers_is_down_after_the_timeout() {
-    let upstream = Upstream::start(Behaviour::Hang).await;
+    let upstream = FakeHttp::always(Answer::Hang).await;
     assert_eq!(state_of(&upstream.url()).await, ServiceState::Down);
 }
 
@@ -101,13 +94,14 @@ async fn a_name_that_does_not_resolve_is_unreadable_not_down() {
 
 #[tokio::test]
 async fn an_answer_that_is_not_http_is_unreadable() {
-    let upstream = Upstream::start(Behaviour::Garbage).await;
+    let upstream = FakeHttp::always(Answer::Raw(b"this is not http at all\r\n\r\n".to_vec())).await;
     assert_eq!(state_of(&upstream.url()).await, ServiceState::Unreadable);
 }
 
 #[tokio::test]
 async fn a_redirect_is_an_answer_and_is_not_followed() {
-    let upstream = Upstream::start(Behaviour::Redirect).await;
+    let upstream =
+        FakeHttp::always(Answer::status(302).with_header("location", "http://127.0.0.1:1/")).await;
     assert_eq!(state_of(&upstream.url()).await, ServiceState::Up);
     assert_eq!(upstream.hits(), 1);
 }
@@ -125,18 +119,10 @@ fn tcp_entry(url: &str, port: Option<u16>) -> ServiceEntry {
 
 #[tokio::test]
 async fn every_failure_names_its_diagnosis() {
-    let error = Upstream::start(Behaviour::Status {
-        code: 503,
-        delay: FAST,
-    })
-    .await;
-    let hang = Upstream::start(Behaviour::Hang).await;
-    let garbage = Upstream::start(Behaviour::Garbage).await;
-    let plain = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: FAST,
-    })
-    .await;
+    let error = FakeHttp::always(Answer::status(503).with_body("ok").after(FAST)).await;
+    let hang = FakeHttp::always(Answer::Hang).await;
+    let garbage = FakeHttp::always(Answer::Raw(b"this is not http at all\r\n\r\n".to_vec())).await;
+    let plain = FakeHttp::always(Answer::status(200).with_body("ok").after(FAST)).await;
     let port = free_port().await;
     let cases = [
         (error.url(), ServiceState::Down, Diagnosis::HttpStatus),
@@ -171,11 +157,7 @@ async fn every_failure_names_its_diagnosis() {
 
 #[tokio::test]
 async fn a_success_carries_no_diagnosis() {
-    let upstream = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: FAST,
-    })
-    .await;
+    let upstream = FakeHttp::always(Answer::status(200).with_body("ok").after(FAST)).await;
     assert_eq!(outcome_of(&upstream.url()).await.diagnosis, None);
 }
 

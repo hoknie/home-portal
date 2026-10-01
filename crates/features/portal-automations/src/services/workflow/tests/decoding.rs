@@ -36,7 +36,8 @@ seconds = 5
 
 [[workflows.steps]]
 id = "notify"
-kind = "telegram"
+kind = "notify"
+channel = "telegram"
 text = "{{inputs.service}} is {{steps.probe.state}}"
 "#;
 
@@ -184,7 +185,7 @@ fn every_broken_rule_names_its_field() {
             "steps[0].outcome",
         ),
         ("id = \"x\"\nkind = \"set\"\nvariable = \"v\"", "steps[0]"),
-        ("id = \"x\"\nkind = \"telegram\"", "steps[0].text"),
+        ("id = \"x\"\nkind = \"notify\"", "steps[0].text"),
         ("id = \"x\"\nkind = \"probe\"", "steps[0].service"),
         (
             "id = \"x\"\nkind = \"if\"\ncondition = { left = \"a\", op = \"~\" , right = \"b\" }\nthen = [{ id = \"y\", kind = \"wait\", seconds = 1 }]",

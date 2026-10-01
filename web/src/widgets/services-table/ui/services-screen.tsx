@@ -2,9 +2,7 @@
 
 import { Plus, Server } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
 
 import { Allowed } from "@/entities/session";
 import { useServices } from "@/entities/service";
@@ -19,19 +17,10 @@ import { SectionCard } from "@/shared/ui/section-card";
 
 import { useServiceColumns } from "./service-columns";
 
-export const LEGACY_EDIT_PARAMETER = "edit";
-
 export function ServicesScreen() {
   const trail = useTrail();
   const t = useTranslations();
-  const router = useRouter();
   const services = useServices();
-  const legacyEdit = useSearchParams().get(LEGACY_EDIT_PARAMETER);
-  useEffect(() => {
-    if (legacyEdit) {
-      router.replace(routes.editService(legacyEdit));
-    }
-  }, [legacyEdit, router]);
   const revision = services.data?.revision ?? null;
   const columns = useServiceColumns(revision);
   const add = (

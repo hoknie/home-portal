@@ -1,13 +1,15 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 use time::OffsetDateTime;
 
 use crate::types::{Advice, Pane, PermissionState, PermissionView};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct PermissionResponse {
     pub code: String,
     pub state: PermissionState,
     #[serde(with = "time::serde::rfc3339::option")]
+    #[schemars(with = "Option<String>")]
     pub learned_at: Option<OffsetDateTime>,
     pub advice: Option<Advice>,
     pub pane: Pane,

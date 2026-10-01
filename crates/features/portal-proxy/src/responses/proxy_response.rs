@@ -1,11 +1,12 @@
 use portal_model::TlsMode;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
 use super::{CaddyResponse, RouteResponse, SettingsResponse};
 use crate::types::ProxyView;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct ProxyResponse {
     pub enabled: bool,
     pub settings: SettingsResponse,
@@ -13,6 +14,7 @@ pub struct ProxyResponse {
     pub reachable: bool,
     pub in_sync: bool,
     #[serde(with = "time::serde::rfc3339::option")]
+    #[schemars(with = "Option<String>")]
     pub last_applied_at: Option<OffsetDateTime>,
     pub last_error: Option<String>,
     pub routes: Vec<RouteResponse>,

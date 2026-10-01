@@ -6,7 +6,6 @@ use axum::Router;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::Feature;
 use portal_model::{DetectedEnvironment, Environment, Environments};
 use serde_json::{Value, json};
@@ -21,13 +20,11 @@ struct Api {
 }
 
 fn api(configuration: &str) -> Api {
-    let folder = tempfile::tempdir().unwrap();
-    let main = folder.path().join("home-portal.toml");
-    fs::write(&main, configuration).unwrap();
+    let (folder, main) = portal_testing::written(configuration);
     let root = folder.path().join("scripts");
     fs::create_dir(&root).unwrap();
     fs::set_permissions(&root, fs::Permissions::from_mode(0o755)).unwrap();
-    let store = Arc::new(ConfigStore::open(&main).unwrap());
+    let store = Arc::new(portal_testing::opened(&main).unwrap());
     let feature = ScriptsFeature::new(store, Arc::new(FileOwner::of_this_process()));
     Api {
         router: feature.router(),

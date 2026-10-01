@@ -7,7 +7,6 @@ use axum::body::Body;
 use axum::http::header::{CONTENT_TYPE, ETAG, IF_MATCH};
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::{Feature, FieldError};
 use portal_model::Environment;
 use serde_json::{Value, json};
@@ -56,7 +55,7 @@ fn portal_with(files: &[(&str, &str)]) -> Portal {
     }
     let main = directory.path().join(files[0].0);
     let path = directory.path().join("dashboard.toml");
-    let store = Arc::new(ConfigStore::open(&main).unwrap());
+    let store = Arc::new(portal_testing::opened(&main).unwrap());
     let feature = DashboardFeature::new(store.clone());
     store.adopt(vec![feature.validator().unwrap()]).unwrap();
     store.adopt_checks(vec![Arc::new(latitude_check)]).unwrap();

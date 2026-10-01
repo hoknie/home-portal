@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::ScriptFileResponse;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct ScriptTreeResponse {
     pub directory: String,
     pub exists: bool,

@@ -55,7 +55,7 @@ impl Gate for Ticket {
 fn probe_configuration() -> Arc<portal_config::ConfigStore> {
     let directory = Box::leak(Box::new(tempfile::tempdir().unwrap()));
     let path = support::with_extra(directory, "secret", "");
-    Arc::new(portal_config::ConfigStore::open(path).unwrap())
+    Arc::new(portal_testing::opened(path).unwrap())
 }
 
 fn probe_portal() -> Router {

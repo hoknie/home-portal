@@ -1,0 +1,12 @@
+[package]
+name = "portal-testing"
+edition.workspace = true
+version.workspace = true
+publish = false
+
+[dependencies]
+portal-config.workspace = true
+tempfile.workspace = true
+tokio = { workspace = true, features = ["io-util"] }
+toml_edit.workspace = true
+

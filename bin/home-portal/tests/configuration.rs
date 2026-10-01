@@ -130,7 +130,7 @@ fn every_section_the_example_documents_is_accepted_when_it_is_used() {
 }
 
 #[test]
-fn the_secrets_example_is_read_from_an_include_and_never_reaches_the_document() {
+fn the_secrets_example_is_read_from_its_home_and_never_reaches_the_document() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let directory = tempfile::tempdir().unwrap();
     let secrets = directory.path().join("secrets.toml");
@@ -143,11 +143,15 @@ fn the_secrets_example_is_read_from_an_include_and_never_reaches_the_document() 
     std::fs::set_permissions(&secrets, PermissionsExt::from_mode(0o600)).unwrap();
     let path = directory.path().join("home-portal.toml");
     let hash = portal_auth::hash_password("secret").unwrap();
+    std::fs::write(&path, "").unwrap();
     std::fs::write(
-        &path,
-        format!(
-            "include = [\"secrets.toml\"]\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[notifications.telegram]\nenabled = true\nsecret = \"telegram_token\"\nchat_id = \"42\"\n"
-        ),
+        directory.path().join("users.toml"),
+        format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"),
+    )
+    .unwrap();
+    std::fs::write(
+        directory.path().join("notifications.toml"),
+        "[notifications.telegram]\nenabled = true\nsecret = \"telegram_token\"\nchat_id = \"42\"\n",
     )
     .unwrap();
     let wiring = support::wiring_for(&path);
@@ -209,9 +213,10 @@ async fn a_write_is_refused_while_the_file_holds_a_bad_widget_setting_added_by_h
         .adopt_checks(vec![registry.widgets.checker()])
         .unwrap();
     let revision = wiring.configuration.read().revision;
-    let mut text = std::fs::read_to_string(&path).unwrap();
+    let dashboard = path.with_file_name("dashboard.toml");
+    let mut text = std::fs::read_to_string(&dashboard).unwrap_or_default();
     text.push_str("\n[[dashboard.widgets]]\ntype = \"host-metrics\"\nid = \"box\"\nsettings = { disks = 5 }\n");
-    std::fs::write(&path, text).unwrap();
+    std::fs::write(&dashboard, text).unwrap();
     let refused = wiring
         .configuration
         .update(&path, &revision, |_| Ok(()))
@@ -313,55 +318,23 @@ fn all_in_one() -> String {
     text
 }
 
-fn ids(store: &ConfigStore, section: &str) -> Vec<String> {
-    store.read().document[section]
-        .as_array_of_tables()
-        .unwrap()
-        .iter()
-        .map(|entry| entry["id"].as_str().unwrap().to_string())
-        .collect()
-}
-
 #[test]
-fn an_all_in_one_file_starts_as_the_split_layout_and_answers_the_same_entries() {
+fn an_all_in_one_file_is_refused_naming_each_section_and_its_home() {
     let directory = tempfile::tempdir().unwrap();
     let main = directory.path().join("home-portal.toml");
     std::fs::write(&main, all_in_one()).unwrap();
-    let moved = ConfigStore::open(&main).unwrap();
-    let copy = tempfile::tempdir().unwrap();
-    std::fs::create_dir(copy.path().join("workflows")).unwrap();
-    for entry in std::fs::read_dir(split_example())
-        .unwrap()
-        .chain(std::fs::read_dir(split_example().join("workflows")).unwrap())
-    {
-        let path = entry.unwrap().path();
-        if path
-            .extension()
-            .is_some_and(|extension| extension == "toml")
-        {
-            let relative = path.strip_prefix(split_example()).unwrap();
-            std::fs::copy(&path, copy.path().join(relative)).unwrap();
-        }
-    }
-    let split = ConfigStore::open(copy.path().join("home-portal.toml")).unwrap();
-    for section in ["services", "automations", "webhooks", "workflows"] {
-        assert_eq!(ids(&moved, section), ids(&split, section), "{section}");
-    }
-    assert_eq!(
-        moved.read().document["dashboard"].to_string(),
-        split.read().document["dashboard"].to_string()
-    );
-    for name in [
-        "services.toml",
-        "dashboard.toml",
-        "automations.toml",
-        "webhooks.toml",
-        "notifications.toml",
-        "proxy.toml",
-        "workflows/revive.toml",
+    let message = ConfigStore::open(&main).err().unwrap().to_string();
+    for (section, home) in [
+        ("services", "services.toml"),
+        ("proxy", "proxy.toml"),
+        ("workflows", "workflows/"),
     ] {
-        assert!(directory.path().join(name).is_file(), "{name}");
+        assert!(
+            message.contains(&format!(
+                "{section}: is in home-portal.toml; it belongs in {home}"
+            )),
+            "{message}"
+        );
     }
-    assert!(directory.path().join("home-portal.toml.previous").is_file());
-    assert_eq!(portal_config::pending_moves(&main).unwrap(), Vec::new());
+    assert!(!directory.path().join("services.toml").exists());
 }

@@ -1,14 +1,15 @@
 import { z } from "zod";
 
+import { generated } from "@/shared/api";
+
 export const MODULE_NAMES = ["proxy", "dns", "automations", "webhooks", "users", "workflows", "notifications"] as const;
 
 export const moduleNameSchema = z.enum(MODULE_NAMES);
 
 export type ModuleName = z.infer<typeof moduleNameSchema>;
 
-export const moduleSchema = z.object({
+export const moduleSchema = generated.modules.moduleResponseSchema.extend({
   name: moduleNameSchema,
-  enabled: z.boolean(),
   requires: z.array(moduleNameSchema),
   required_by: z.array(moduleNameSchema),
 });

@@ -5,7 +5,7 @@ use portal_config::{ConfigStore, Revision, Revisioned, Snapshot};
 use portal_feature::{ApiError, Module, ModulePreparer, ModuleSwitches};
 
 use super::current_modules::views;
-use crate::repositories::{LEGACY_KEY, SECTION, remove_legacy_switch, write_switch};
+use crate::repositories::{SECTION, write_switch};
 use crate::types::ModuleView;
 
 #[derive(Clone)]
@@ -53,46 +53,14 @@ impl SwitchModule {
             .configuration
             .update(&target, revision, |document| {
                 write_switch(document, module, on);
-                remove_legacy_switch(document, module);
                 for preparer in &preparers {
                     preparer.prepare(document);
                 }
                 Ok(())
             })
             .await?;
-        let written = self.legacy_elsewhere(module, &target, written).await?;
         let switches = ModuleSwitches::resolve(&written.document).map_err(ApiError::Invalid)?;
         Ok(Revisioned::new(views(switches), written.revision))
-    }
-
-    async fn legacy_elsewhere(
-        &self,
-        module: Module,
-        target: &Path,
-        written: Snapshot,
-    ) -> Result<Snapshot, ApiError> {
-        let Some(section) = module.legacy_section() else {
-            return Ok(written);
-        };
-        let Some(origin) = written.origins.table(section).map(Path::to_path_buf) else {
-            return Ok(written);
-        };
-        let holds = written
-            .document
-            .get(section)
-            .and_then(toml_edit::Item::as_table_like)
-            .is_some_and(|table| table.contains_key(LEGACY_KEY));
-        if origin == target || !holds {
-            return Ok(written);
-        }
-        let (_, again) = self
-            .configuration
-            .update(&origin, &written.revision, |document| {
-                remove_legacy_switch(document, module);
-                Ok(())
-            })
-            .await?;
-        Ok(again)
     }
 
     fn target(&self, snapshot: &Snapshot) -> PathBuf {

@@ -1,9 +1,7 @@
-use std::fs;
 use std::sync::Arc;
 
 use axum::Router;
 use axum::http::StatusCode;
-use portal_config::ConfigStore;
 use portal_feature::{EventName, Feature, PortalEvent, Principal};
 use tempfile::TempDir;
 
@@ -13,10 +11,8 @@ use crate::fakes::{Recorder, Switch};
 use crate::types::ServicesPorts;
 
 fn announcing() -> (Router, Arc<Recorder>, TempDir) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, FILE).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (directory, path) = portal_testing::written(FILE);
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let events = Arc::new(Recorder::default());
     let feature = ServicesFeature::new(
         store.clone(),

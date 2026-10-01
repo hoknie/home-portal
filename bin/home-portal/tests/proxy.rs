@@ -3,11 +3,13 @@ use std::process::{Command, Output};
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
 
-const ENABLED: &str = r#"[network]
+const ENABLED: &str = r#"[modules]
+proxy = true
+
+[network]
 trusted_proxies = ["127.0.0.1"]
 
 [proxy]
-enabled = true
 portal_host = "portal.example.com"
 cookie_domain = "example.com"
 
@@ -34,6 +36,7 @@ fn render_in(text: &str, variables: &[(&str, &str)]) -> Output {
         ),
     )
     .unwrap();
+    portal_testing::split(&path);
     Command::new(BINARY)
         .args(["proxy", "render"])
         .env("HOME_PORTAL_CONFIG", &path)
@@ -74,7 +77,7 @@ fn an_invalid_configuration_is_refused_with_its_error() {
 
 #[test]
 fn a_disabled_proxy_has_nothing_to_render() {
-    let output = render_with(&ENABLED.replace("enabled = true", "enabled = false"));
+    let output = render_with(&ENABLED.replace("proxy = true", "proxy = false"));
     assert_eq!(output.status.code(), Some(1));
     let error = String::from_utf8_lossy(&output.stderr);
     assert!(error.starts_with("error: "), "{error}");
@@ -84,10 +87,13 @@ fn a_disabled_proxy_has_nothing_to_render() {
 }
 
 #[test]
-fn the_modules_section_switches_off_a_legacy_enabled_proxy() {
-    let output = render_with(&format!("[modules]\nproxy = false\n\n{ENABLED}"));
+fn a_legacy_enabled_proxy_is_refused_naming_the_module_switch() {
+    let output = render_with(&ENABLED.replace("[proxy]\n", "[proxy]\nenabled = true\n"));
     assert_eq!(output.status.code(), Some(1));
-    assert!(String::from_utf8_lossy(&output.stderr).contains("module is off"));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("proxy.enabled: is no longer read; switch the module with modules.proxy")
+    );
 }
 
 #[test]

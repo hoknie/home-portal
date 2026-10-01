@@ -1,6 +1,8 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[schemars(extend("x-open" = "http"))]
 #[serde(rename_all = "lowercase")]
 pub enum ProbeKind {
     #[default]

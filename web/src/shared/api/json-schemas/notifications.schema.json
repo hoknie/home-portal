@@ -1,0 +1,165 @@
+{
+  "$defs": {
+    "ChannelResponse": {
+      "properties": {
+        "dropped": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "last_delivery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeliveryResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LastErrorResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "missing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MissingResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "queued": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "readiness": {
+          "type": "string"
+        },
+        "settings": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "readiness",
+        "missing",
+        "settings",
+        "last_delivery",
+        "last_error",
+        "queued",
+        "dropped"
+      ],
+      "type": "object"
+    },
+    "DeliveryResponse": {
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        },
+        "delivered": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "channel",
+        "at",
+        "delivered",
+        "error"
+      ],
+      "type": "object"
+    },
+    "LastErrorResponse": {
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "at",
+        "message"
+      ],
+      "type": "object"
+    },
+    "MissingResponse": {
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "message"
+      ],
+      "type": "object"
+    },
+    "RulesResponse": {
+      "properties": {
+        "recovered": {
+          "type": "boolean"
+        },
+        "states": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "states",
+        "recovered"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "channels": {
+      "items": {
+        "$ref": "#/$defs/ChannelResponse"
+      },
+      "type": "array"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "rules": {
+      "$ref": "#/$defs/RulesResponse"
+    }
+  },
+  "required": [
+    "enabled",
+    "rules",
+    "channels"
+  ],
+  "title": "NotificationsResponse",
+  "type": "object"
+}

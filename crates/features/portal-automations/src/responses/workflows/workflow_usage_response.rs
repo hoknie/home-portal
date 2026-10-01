@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use crate::types::WorkflowUsage;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct WorkflowUsageResponse {
     pub kind: String,
     pub id: String,

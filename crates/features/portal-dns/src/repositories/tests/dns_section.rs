@@ -31,15 +31,12 @@ fn a_new_section_is_written_whole_without_a_switch() {
 }
 
 #[test]
-fn an_edit_keeps_comments_records_untouched_keys_and_a_legacy_switch() {
-    let original = "# Local names.\n[dns]\nenabled = false # off for now\nport = 53\n\n[dns.addresses]\noffice = \"10.0.0.1\"\n\n[[dns.records]]\n# The printer.\nname = \"printer.home\"\ntype = \"A\"\nvalue = \"192.168.1.9\"\n";
+fn an_edit_keeps_comments_and_records() {
+    let original = "# Local names.\n[dns]\nport = 53\n\n[dns.addresses]\noffice = \"10.0.0.1\"\n\n[[dns.records]]\n# The printer.\nname = \"printer.home\"\ntype = \"A\"\nvalue = \"192.168.1.9\"\n";
     let mut document: DocumentMut = original.parse().unwrap();
     write_dns(&mut document, &request());
     let text = document.to_string();
-    assert!(
-        text.starts_with("# Local names.\n[dns]\nenabled = false # off for now\n"),
-        "{text}"
-    );
+    assert!(text.starts_with("# Local names.\n[dns]\n"), "{text}");
     assert!(text.contains("port = 5353\n"), "{text}");
     assert!(!text.contains("office"), "{text}");
     assert!(

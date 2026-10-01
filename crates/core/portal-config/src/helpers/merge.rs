@@ -4,7 +4,6 @@ use toml_edit::{DocumentMut, Item, Table};
 
 use crate::types::{ConfigError, Origins, Source};
 
-use super::includes::INCLUDE_KEY;
 use super::positions::{highest, shifted};
 
 pub fn merge(sources: &[Source]) -> Result<(DocumentMut, Origins), ConfigError> {
@@ -24,7 +23,6 @@ pub fn merge(sources: &[Source]) -> Result<(DocumentMut, Origins), ConfigError> 
             sources,
         )?;
     }
-    merged.remove(INCLUDE_KEY);
     Ok((merged, origins))
 }
 

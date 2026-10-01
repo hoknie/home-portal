@@ -3,11 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { vi } from "vitest";
 
-import { type Step, type Workflow, portalValuesSchema, workflowAddressOf, workflowCatalogueSchema, workflowsSchema } from "@/entities/workflow";
+import { type Operation, type Step, type Workflow, portalValuesSchema, workflowAddressOf, workflowCatalogueSchema, workflowsSchema } from "@/entities/workflow";
 import { apiSamples } from "@/shared/api";
-import { routes } from "@/shared/config";
+import { api, routes } from "@/shared/config";
 import { pushAddress, useAddress } from "@/shared/lib/navigation";
-import { renderWithProviders } from "@/shared/lib/testing";
+import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
 
 import type { Draft } from "../model/draft";
 import type { Sources } from "../model/editor-context";
@@ -127,7 +127,7 @@ export function inspector() {
 }
 
 export function sentBody(fetch: ReturnType<typeof vi.fn>) {
-  const call = fetch.mock.calls.find(([, init]) => ["POST", "PUT"].includes(String((init as RequestInit | undefined)?.method)) && String((init as RequestInit).body).includes("steps"));
+  const call = fetch.mock.calls.find(([url, init]) => !String(url).endsWith(api.transformPreview) && ["POST", "PUT"].includes(String((init as RequestInit | undefined)?.method)) && String((init as RequestInit).body).includes("steps"));
   return JSON.parse(String((call?.[1] as RequestInit).body));
 }
 
@@ -176,4 +176,40 @@ function AddressHarness({ workflow, start, scripts }: { workflow: Workflow; star
 export function openAt(workflow: Workflow, path: string, scripts?: Sources["scripts"]) {
   window.history.replaceState(null, "", path);
   return renderWithProviders(<AddressHarness workflow={workflow} start={path} scripts={scripts} />);
+}
+
+export type PreviewReply = { steps?: unknown[]; examples?: Record<string, unknown> };
+
+export class Failing {
+  constructor(readonly error: string) {}
+}
+
+export function chainOf(operations: Operation[]): string {
+  return operations.map((operation) => (operation.operations ? `${operation.op}(${chainOf(operation.operations)})` : operation.op)).join(",");
+}
+
+function outcome(value: unknown) {
+  return value instanceof Failing ? { error: value.error } : { value };
+}
+
+export function previewRequests(fetch: ReturnType<typeof vi.fn>): { value: unknown; filters: string; operations: Operation[]; examples: string[] }[] {
+  return fetch.mock.calls.filter(([url]) => String(url).endsWith(api.transformPreview)).map(([, init]) => JSON.parse(String((init as RequestInit).body)));
+}
+
+export function stubPreviews(replies: Record<string, PreviewReply>, other: () => Response = () => jsonResponse(sampleWorkflows[1])) {
+  const fetch = vi.fn(async (url: string, init?: RequestInit) => {
+    if (!String(url).endsWith(api.transformPreview)) {
+      return other();
+    }
+    const question = JSON.parse(String(init?.body)) as { value: unknown; operations: Operation[]; examples: string[] };
+    const reply = replies[chainOf(question.operations)] ?? {};
+    const examples = reply.examples ?? {};
+    return jsonResponse({
+      input: { value: question.value },
+      steps: (reply.steps ?? []).map(outcome),
+      examples: question.examples.map((example) => (example in examples ? outcome(examples[example]) : { error: "not in the stub" })),
+    });
+  });
+  vi.stubGlobal("fetch", fetch);
+  return fetch;
 }

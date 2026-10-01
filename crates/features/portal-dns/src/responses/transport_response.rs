@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use crate::types::TransportState;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct TransportResponse {
     pub listening: bool,
     pub address: Option<String>,

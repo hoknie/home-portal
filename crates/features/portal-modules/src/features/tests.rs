@@ -7,7 +7,6 @@ use axum::body::Body;
 use axum::http::header::{CONTENT_TYPE, ETAG, IF_MATCH};
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::{Feature, FieldError, Module, ModulePreparer, ModuleSwitches};
 use serde_json::Value;
 use tempfile::TempDir;
@@ -60,7 +59,7 @@ fn portal_with(files: &[(&str, &str)]) -> Portal {
         fs::write(folder.path().join(name), text).unwrap();
     }
     let path = folder.path().join(files[0].0);
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = ModulesFeature::new(store.clone(), vec![Arc::new(TrustLoopback)]);
     store
         .adopt(vec![feature.validator().unwrap(), proxy_needs_a_host])
@@ -223,38 +222,24 @@ async fn switching_the_proxy_on_writes_the_switch_and_prepares_the_network() {
 }
 
 #[tokio::test]
-async fn a_network_in_another_file_is_not_prepared_there() {
-    let portal = portal_with(&[
-        (
-            "home-portal.toml",
-            "include = [\"network.toml\"]\n\n[proxy]\nportal_host = \"portal.example.com\"\n",
-        ),
-        ("network.toml", "[network]\nport = 8080\n"),
-    ]);
-    let (status, _) = switched(&portal, "proxy", true).await;
-    assert_eq!(status, StatusCode::OK);
-    assert!(!text_of(&portal).contains("trusted_proxies"));
-    assert_eq!(
-        fs::read_to_string(portal.folder.path().join("network.toml")).unwrap(),
-        "[network]\nport = 8080\n"
-    );
-}
-
-#[tokio::test]
-async fn a_legacy_key_is_replaced_and_comments_are_kept() {
+async fn a_legacy_key_is_replaced() {
     let portal = portal(
-        "[modules]\nproxy = true\n\n[proxy]\nportal_host = \"portal.example.com\"\n\n# names\n[dns]\nenabled = true # on\nport = 53\n",
+        "[modules]\nproxy = true\n\n[proxy]\nportal_host = \"portal.example.com\"\n\n# names\n[dns]\nport = 53\n",
     );
-    let (status, body) = switched(&portal, "dns", false).await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(entry(&body, "dns")["enabled"], false);
-    let text = text_of(&portal);
-    assert!(
-        text.contains("[modules]\nproxy = true\ndns = false\n"),
-        "{text}"
-    );
-    let dns = fs::read_to_string(portal.folder.path().join("dns.toml")).unwrap();
-    assert!(dns.contains("# names\n[dns]\nport = 53\n"), "{dns}");
+    let (revision, _) = modules(&portal).await;
+    let dns = portal.folder.path().join("dns.toml");
+    let before = fs::metadata(&dns).unwrap().modified().unwrap();
+    fs::write(&dns, "# names\n[dns]\nenabled = true\nport = 53\n").unwrap();
+    fs::File::options()
+        .write(true)
+        .open(&dns)
+        .unwrap()
+        .set_modified(before + std::time::Duration::from_secs(2))
+        .unwrap();
+    let (status, _, body) = answer(&portal, switch("dns", true, Some(&revision))).await;
+    assert_eq!(status, StatusCode::CONFLICT, "{body}");
+    assert!(body.to_string().contains("dns.enabled"), "{body}");
+    assert!(body.to_string().contains("modules.dns"), "{body}");
 }
 
 #[tokio::test]
@@ -268,11 +253,9 @@ async fn a_stale_or_missing_revision_is_refused() {
 
 #[test]
 fn a_file_with_dns_on_and_the_proxy_off_is_refused_as_modules_dns() {
-    let folder = TempDir::new().unwrap();
-    let path = folder.path().join("home-portal.toml");
-    fs::write(&path, "[dns]\nenabled = true\n").unwrap();
-    let store = ConfigStore::open(&path).unwrap();
-    let feature = ModulesFeature::new(Arc::new(ConfigStore::open(&path).unwrap()), Vec::new());
+    let (_folder, path) = portal_testing::written("[modules]\ndns = true\n\n[dns]\n");
+    let store = portal_testing::opened(&path).unwrap();
+    let feature = ModulesFeature::new(Arc::new(portal_testing::opened(&path).unwrap()), Vec::new());
     let error = store
         .adopt(vec![feature.validator().unwrap()])
         .unwrap_err()

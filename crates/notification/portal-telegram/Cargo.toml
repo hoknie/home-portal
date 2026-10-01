@@ -14,4 +14,5 @@ tokio.workspace = true
 toml_edit.workspace = true
 
 [dev-dependencies]
+portal-testing.workspace = true
 tempfile.workspace = true

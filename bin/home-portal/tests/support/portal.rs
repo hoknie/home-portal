@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use home_portal::Wiring;
 use portal_auth::hash_password;
-use portal_config::ConfigStore;
 use portal_network::EffectiveAddress;
 use tempfile::TempDir;
 
@@ -25,7 +24,7 @@ pub fn with_extra(directory: &TempDir, password: &str, extra: &str) -> PathBuf {
 
 pub fn wiring_for(path: &Path) -> Wiring {
     Wiring {
-        configuration: Arc::new(ConfigStore::open(path).unwrap()),
+        configuration: Arc::new(portal_testing::opened(path).unwrap()),
         effective: EffectiveAddress {
             address: "127.0.0.1:8080".parse().unwrap(),
             overridden: false,

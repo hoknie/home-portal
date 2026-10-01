@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::StatesResponse;
 use crate::types::Trigger;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct WhenResponse {
     pub event: String,
     #[serde(skip_serializing_if = "Option::is_none")]

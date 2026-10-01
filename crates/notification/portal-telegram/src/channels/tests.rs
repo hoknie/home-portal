@@ -1,11 +1,10 @@
 use std::collections::BTreeMap;
-use std::time::Duration;
 
 use portal_feature::{Channel, ChannelReadiness, Notification, SecretSource};
 use toml_edit::DocumentMut;
 
 use super::TelegramChannel;
-use crate::fakes::BotService;
+use portal_testing::{Answer, FakeHttp, Request};
 
 struct Secrets(BTreeMap<String, String>);
 
@@ -126,8 +125,8 @@ fn applying_settings_keeps_comments_and_refuses_an_enabled_channel_without_a_cha
 
 #[tokio::test]
 async fn a_notification_reaches_telegram_with_the_token_and_the_chat() {
-    let telegram = BotService::start(200, Duration::ZERO).await;
-    let channel = TelegramChannel::new(&telegram.endpoint()).unwrap();
+    let telegram = FakeHttp::always(Answer::json("{\"ok\":true}")).await;
+    let channel = TelegramChannel::new(&telegram.url()).unwrap();
     channel
         .deliver(
             &Notification::new("NAS", "up → down"),
@@ -136,7 +135,11 @@ async fn a_notification_reaches_telegram_with_the_token_and_the_chat() {
         )
         .await
         .unwrap();
-    let request = telegram.requests().first().cloned().unwrap_or_default();
+    let request = telegram
+        .requests()
+        .first()
+        .map(Request::text)
+        .unwrap_or_default();
     assert!(request.contains("/botabc/sendMessage"), "{request}");
     assert!(request.contains("\"chat_id\":\"42\""), "{request}");
     assert!(request.contains("NAS"), "{request}");

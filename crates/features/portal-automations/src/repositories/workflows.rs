@@ -122,10 +122,6 @@ fn steps_item(steps: &[RawStep]) -> Item {
     let tables: Vec<toml::Table> = steps
         .iter()
         .filter_map(|step| toml::Table::try_from(step).ok())
-        .map(|mut table| {
-            normalize(&mut table);
-            table
-        })
         .collect();
     list_item(&tables)
 }
@@ -218,26 +214,5 @@ fn inline(entry: &toml::Value) -> Option<Value> {
                 .collect(),
         )),
         _ => None,
-    }
-}
-
-pub const LEGACY_KIND: &str = "telegram";
-pub const NOTIFY_KIND: &str = "notify";
-
-fn normalize(table: &mut toml::Table) {
-    if table.get("kind").and_then(toml::Value::as_str) == Some(LEGACY_KIND) {
-        table.insert("kind".into(), NOTIFY_KIND.into());
-        table.entry("channel").or_insert_with(|| LEGACY_KIND.into());
-    }
-    for (_, value) in table.iter_mut() {
-        normalize_value(value);
-    }
-}
-
-fn normalize_value(value: &mut toml::Value) {
-    match value {
-        toml::Value::Table(table) => normalize(table),
-        toml::Value::Array(items) => items.iter_mut().for_each(normalize_value),
-        _ => {}
     }
 }

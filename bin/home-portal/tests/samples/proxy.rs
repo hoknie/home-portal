@@ -5,7 +5,7 @@ use portal_proxy::{
 };
 use time::macros::datetime;
 
-use crate::check;
+use crate::typed;
 
 #[test]
 fn the_proxy_sample_matches_its_serializer() {
@@ -79,5 +79,5 @@ fn the_proxy_sample_matches_its_serializer() {
             log: vec!["{\"level\":\"info\",\"msg\":\"serving initial configuration\"}".into()],
         },
     };
-    check("proxy", serde_json::to_value(response).unwrap());
+    typed("proxy", &response);
 }

@@ -1,0 +1,261 @@
+{
+  "$defs": {
+    "Diagnosis": {
+      "enum": [
+        "local-network-denied",
+        "refused",
+        "timeout",
+        "host-unreachable",
+        "name-not-resolved",
+        "tls",
+        "not-http",
+        "http-status",
+        "icmp-not-permitted",
+        "other"
+      ],
+      "type": "string",
+      "x-open": "other"
+    },
+    "Environment": {
+      "type": "string"
+    },
+    "PublicSection": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title"
+      ],
+      "type": "object"
+    },
+    "PublicService": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "group": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ServiceStatus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "address",
+        "group",
+        "icon",
+        "description",
+        "status"
+      ],
+      "type": "object"
+    },
+    "PublicWidget": {
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "section": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "settings": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "size": {
+          "$ref": "#/$defs/WidgetSize"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "title",
+        "settings",
+        "section",
+        "size"
+      ],
+      "type": "object"
+    },
+    "ServiceState": {
+      "enum": [
+        "unknown",
+        "up",
+        "degraded",
+        "down",
+        "unreadable"
+      ],
+      "type": "string",
+      "x-open": "unknown"
+    },
+    "ServiceStatus": {
+      "properties": {
+        "checked_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "diagnosis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Diagnosis"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "last_error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last_ok_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "latency_milliseconds": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "since": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/ServiceState"
+        }
+      },
+      "required": [
+        "state",
+        "checked_at",
+        "latency_milliseconds",
+        "last_ok_at",
+        "last_error",
+        "diagnosis",
+        "since"
+      ],
+      "type": "object"
+    },
+    "WidgetSize": {
+      "enum": [
+        "quarter",
+        "third",
+        "half",
+        "two-thirds",
+        "full"
+      ],
+      "type": "string",
+      "x-open": "full"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "detected": {
+      "$ref": "#/$defs/Environment"
+    },
+    "environment": {
+      "$ref": "#/$defs/Environment"
+    },
+    "environments": {
+      "items": {
+        "$ref": "#/$defs/Environment"
+      },
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "sections": {
+      "items": {
+        "$ref": "#/$defs/PublicSection"
+      },
+      "type": "array"
+    },
+    "services": {
+      "items": {
+        "$ref": "#/$defs/PublicService"
+      },
+      "type": "array"
+    },
+    "switchable": {
+      "type": "boolean"
+    },
+    "widgets": {
+      "items": {
+        "$ref": "#/$defs/PublicWidget"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "environment",
+    "detected",
+    "switchable",
+    "sections",
+    "services",
+    "widgets"
+  ],
+  "title": "PortalResponse",
+  "type": "object"
+}

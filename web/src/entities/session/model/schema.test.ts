@@ -11,10 +11,6 @@ const admin: Session = { name: "root", group: "admin", admin: true, rights: {} }
 
 const guest: Session = { name: "guest", group: null, admin: false, rights: {} };
 
-it("the session sample parses with its group and rights", () => {
-  expect(anna).toEqual({ name: "anna", group: "family", admin: false, rights: { automations: ["read", "execute"] } });
-});
-
 it("a right is allowed only when the group holds it, and always for admin", () => {
   expect(allows(anna, "automations", "execute")).toBe(true);
   expect(allows(anna, "automations", "update")).toBe(false);

@@ -4,7 +4,6 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use portal_config::ConfigStore;
 use portal_feature::{EventName, Feature, PortalEvent, StatusChange};
 use tempfile::TempDir;
 use time::OffsetDateTime;
@@ -33,9 +32,7 @@ impl Directory for FakeDirectory {
 }
 
 pub fn portal(configuration: &str, scripts: &[(&str, &str)]) -> (TempDir, AutomationsFeature) {
-    let folder = TempDir::new().unwrap();
-    let path = folder.path().join("home-portal.toml");
-    fs::write(&path, configuration).unwrap();
+    let (folder, path) = portal_testing::written(configuration);
     fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
     let root = folder.path().join("scripts");
     fs::create_dir(&root).unwrap();
@@ -43,7 +40,7 @@ pub fn portal(configuration: &str, scripts: &[(&str, &str)]) -> (TempDir, Automa
     for (name, body) in scripts {
         write_script(&root, name, body);
     }
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = AutomationsFeature::new(
         store,
         Arc::new(FakeDirectory),
@@ -212,7 +209,7 @@ async fn the_run_journal_is_kept_across_a_restart_and_numbering_goes_on() {
     assert!(eventually(|| runs(&feature).len() == 1).await);
     feature.stop();
     let first = runs(&feature)[0].id;
-    let store = Arc::new(ConfigStore::open(folder.path().join("home-portal.toml")).unwrap());
+    let store = Arc::new(portal_testing::opened(folder.path().join("home-portal.toml")).unwrap());
     let again = AutomationsFeature::new(
         store,
         Arc::new(FakeDirectory),

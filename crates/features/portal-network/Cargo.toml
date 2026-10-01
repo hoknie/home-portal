@@ -4,6 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+schemars.workspace = true
 axum.workspace = true
 if-addrs.workspace = true
 ipnet.workspace = true
@@ -15,6 +16,7 @@ portal-feature.workspace = true
 portal-model.workspace = true
 
 [dev-dependencies]
+portal-testing.workspace = true
 http-body-util.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true

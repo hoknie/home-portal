@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::FieldResponse;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct EventResponse {
     pub name: String,
     pub fields: Vec<FieldResponse>,

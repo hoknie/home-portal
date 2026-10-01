@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use crate::types::{Owner, OwnerKind};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct OwnerResponse {
     pub kind: OwnerKind,
     pub name: String,

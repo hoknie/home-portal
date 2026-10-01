@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { runsSchema, traceSchema } from "@/entities/automation";
 import { apiSamples } from "@/shared/api";
-import { jsonResponse } from "@/shared/lib/testing";
+import { TRACE_ENTRY_BLANKS, jsonResponse } from "@/shared/lib/testing";
 
 import { node, openAt, stubCanvasDom, withSteps } from "../testing-support";
 
@@ -80,7 +80,7 @@ it("choosing a node on the runs replaces the list with the card, and Close bring
 
 it("on a run's address the step data has a closed Settings that opens to the card", async () => {
   const [base] = runsSchema.parse(apiSamples.automationRuns).runs;
-  const trace = traceSchema.parse({ entries: [{ path: "steps[0]", step: "ping", label: "ping", kind: "http", iteration: null, outcome: "succeeded", started_at: "2026-09-29T10:00:00Z", duration_milliseconds: 5, detail: "GET http://nas.lan → 200", output: null }], dropped: 0 });
+  const trace = traceSchema.parse({ entries: [{ ...TRACE_ENTRY_BLANKS, path: "steps[0]", step: "ping", label: "ping", kind: "http", iteration: null, outcome: "succeeded", started_at: "2026-09-29T10:00:00Z", duration_milliseconds: 5, detail: "GET http://nas.lan → 200", output: null }], dropped: 0 });
   const shown = { ...base, id: "9", workflow: "draft", trace };
   vi.stubGlobal("fetch", vi.fn(async (path: string) => (path === "/api/automations/runs/9" ? jsonResponse(shown) : jsonResponse({ runs: [shown] }))));
   openAt(withSteps([{ id: "ping", kind: "http", url: "http://nas.lan" }], fresh), "/admin/workflows/draft/history/9/");

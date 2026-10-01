@@ -11,11 +11,12 @@ const scripts = scriptsSchema.parse({
   directory: "/srv/portal/scripts",
   exists: true,
   user_id: 501,
+  editing: false,
   scripts: [
-    { path: "open.sh", runnable: false, problem: "open.sh can be written by group or others", code: "writable", concerns: "/srv/portal/scripts/open.sh" },
-    { path: "notes.sh", runnable: false, problem: "notes.sh is not executable", code: "not-executable", concerns: "/srv/portal/scripts/notes.sh" },
-    { path: "media/restart.sh", runnable: false, problem: "owner", code: "folder-owner", concerns: "/srv/portal/scripts/media" },
-    { path: "fine.sh", runnable: true, problem: null, code: null, concerns: null },
+    { path: "open.sh", runnable: false, problem: "open.sh can be written by group or others", code: "writable", concerns: "/srv/portal/scripts/open.sh", description: null, arguments: [], argument_problems: [] },
+    { path: "notes.sh", runnable: false, problem: "notes.sh is not executable", code: "not-executable", concerns: "/srv/portal/scripts/notes.sh", description: null, arguments: [], argument_problems: [] },
+    { path: "media/restart.sh", runnable: false, problem: "owner", code: "folder-owner", concerns: "/srv/portal/scripts/media", description: null, arguments: [], argument_problems: [] },
+    { path: "fine.sh", runnable: true, problem: null, code: null, concerns: null, description: null, arguments: [], argument_problems: [] },
   ],
 });
 

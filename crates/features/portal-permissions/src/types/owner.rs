@@ -1,9 +1,10 @@
 use std::env;
 use std::path::PathBuf;
 
+use schemars::JsonSchema;
 use serde::Serialize;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum OwnerKind {
     Terminal,

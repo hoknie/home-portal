@@ -64,7 +64,7 @@ fn serial_of(answer: &[u8]) -> u32 {
 
 fn configuration(dns: u16, admin: u16, hash: &str, photos: &str) -> String {
     format!(
-        "{QUIET}[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.home\"\nadmin = \"http://127.0.0.1:{admin}\"\n\n[dns]\nenabled = true\naddress = \"127.0.0.1\"\nport = {dns}\nzones = [\"home\"]\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[[services]]\nid = \"photos\"\nname = \"Photos\"\nurl = \"http://192.168.1.7\"\n{photos}"
+        "[modules]\ndns = true\nproxy = true\n\n{QUIET}[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nportal_host = \"portal.home\"\nadmin = \"http://127.0.0.1:{admin}\"\n\n[dns]\naddress = \"127.0.0.1\"\nport = {dns}\nzones = [\"home\"]\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n\n[[services]]\nid = \"photos\"\nname = \"Photos\"\nurl = \"http://192.168.1.7\"\n{photos}"
     )
 }
 
@@ -86,6 +86,7 @@ fn publishing_a_service_updates_dns_within_seconds() {
     let (dns, admin) = (free_port(), free_port());
     let hash = hash_password("secret").unwrap();
     fs::write(&path, configuration(dns, admin, &hash, "")).unwrap();
+    portal_testing::split(&path);
     let mut child = Command::new(BINARY)
         .env("HOME_PORTAL_CONFIG", &path)
         .env("HOME_PORTAL_ADDRESS", "127.0.0.1:0")

@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::Value;
 
@@ -5,7 +6,7 @@ use super::{InputResponse, WorkflowUsageResponse};
 use crate::responses::RunResponse;
 use crate::types::WorkflowView;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct WorkflowResponse {
     pub id: String,
     pub title: String,

@@ -32,7 +32,7 @@ pub fn unwrapped(document: &DocumentMut) -> DocumentMut {
     root_of(entry)
 }
 
-pub fn root_of(mut entry: Table) -> DocumentMut {
+fn root_of(mut entry: Table) -> DocumentMut {
     let comment = entry
         .decor()
         .prefix()

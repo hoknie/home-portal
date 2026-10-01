@@ -1,20 +1,24 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
 use super::{Diagnosis, ProbeOutcome, ServiceState};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct ServiceStatus {
     pub state: ServiceState,
     #[serde(with = "time::serde::rfc3339::option")]
+    #[schemars(with = "Option<String>")]
     pub checked_at: Option<OffsetDateTime>,
     pub latency_milliseconds: Option<u64>,
     #[serde(with = "time::serde::rfc3339::option")]
+    #[schemars(with = "Option<String>")]
     pub last_ok_at: Option<OffsetDateTime>,
     pub last_error: Option<String>,
     #[serde(default)]
     pub diagnosis: Option<Diagnosis>,
     #[serde(with = "time::serde::rfc3339")]
+    #[schemars(with = "String")]
     pub since: OffsetDateTime,
 }
 

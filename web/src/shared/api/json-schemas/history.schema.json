@@ -1,0 +1,148 @@
+{
+  "$defs": {
+    "LatencyPointResponse": {
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "average": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "maximum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "minimum": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/ServiceState"
+        }
+      },
+      "required": [
+        "at",
+        "state",
+        "average",
+        "minimum",
+        "maximum"
+      ],
+      "type": "object"
+    },
+    "ServiceState": {
+      "enum": [
+        "unknown",
+        "up",
+        "degraded",
+        "down",
+        "unreadable"
+      ],
+      "type": "string",
+      "x-open": "unknown"
+    },
+    "TransitionResponse": {
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "from": {
+          "$ref": "#/$defs/ServiceState"
+        },
+        "to": {
+          "$ref": "#/$defs/ServiceState"
+        }
+      },
+      "required": [
+        "at",
+        "from",
+        "to",
+        "error"
+      ],
+      "type": "object"
+    },
+    "UptimeResponse": {
+      "properties": {
+        "covered_seconds": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "range": {
+          "type": "string"
+        },
+        "ratio": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "range",
+        "ratio",
+        "covered_seconds"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "from": {
+      "type": "string"
+    },
+    "points": {
+      "items": {
+        "$ref": "#/$defs/LatencyPointResponse"
+      },
+      "type": "array"
+    },
+    "range": {
+      "type": "string"
+    },
+    "to": {
+      "type": "string"
+    },
+    "transitions": {
+      "items": {
+        "$ref": "#/$defs/TransitionResponse"
+      },
+      "type": "array"
+    },
+    "uptime": {
+      "items": {
+        "$ref": "#/$defs/UptimeResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "range",
+    "from",
+    "to",
+    "uptime",
+    "points",
+    "transitions"
+  ],
+  "title": "HistoryResponse",
+  "type": "object"
+}

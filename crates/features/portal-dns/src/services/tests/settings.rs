@@ -15,7 +15,7 @@ fn fields(extra: &str) -> Vec<String> {
 #[test]
 fn a_whole_section_reads_with_its_defaults() {
     let document: DocumentMut = format!(
-        "{ENVIRONMENTS}[dns]\nenabled = true\nzones = [\"Home.\"]\n[dns.addresses]\nlocal = \"192.168.1.60\"\nvpn = [\"10.8.0.1\", \"fd00::1\"]\n[[dns.records]]\nname = \"printer.home\"\ntype = \"A\"\nvalue = \"192.168.1.9\"\nenvironments = [\"local\"]\n"
+        "[modules]\ndns = true\n\n{ENVIRONMENTS}[dns]\nzones = [\"Home.\"]\n[dns.addresses]\nlocal = \"192.168.1.60\"\nvpn = [\"10.8.0.1\", \"fd00::1\"]\n[[dns.records]]\nname = \"printer.home\"\ntype = \"A\"\nvalue = \"192.168.1.9\"\nenvironments = [\"local\"]\n"
     )
     .parse()
     .unwrap();
@@ -71,7 +71,7 @@ fn dns_over_https_needs_the_proxy() {
     );
     assert!(
         fields(
-            "[proxy]\nenabled = true\nportal_host = \"portal.home\"\n[dns.https]\nenabled = true\n"
+            "[modules]\nproxy = true\n\n[proxy]\nportal_host = \"portal.home\"\n[dns.https]\nenabled = true\n"
         )
         .is_empty()
     );

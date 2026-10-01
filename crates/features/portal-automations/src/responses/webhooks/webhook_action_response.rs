@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use crate::responses::{RunSettingsResponse, WorkflowCallResponse};
 use crate::types::{Webhook, WebhookAction};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct WebhookActionResponse {
     pub variables: Vec<String>,
     pub action: String,

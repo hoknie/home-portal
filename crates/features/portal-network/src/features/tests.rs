@@ -6,7 +6,6 @@ use axum::body::Body;
 use axum::http::header::{CONTENT_TYPE, ETAG, IF_MATCH};
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::Feature;
 use serde_json::Value;
 use tempfile::TempDir;
@@ -29,7 +28,7 @@ fn portal(effective: &str, overridden: bool) -> Portal {
         "# portal\n[network]\n# keep this local\naddress = \"127.0.0.1\"\nport = 8080\n",
     )
     .unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = NetworkFeature::new(
         store.clone(),
         EffectiveAddress {

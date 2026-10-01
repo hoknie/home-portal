@@ -1,16 +1,13 @@
 use portal_feature::ApiError;
 use toml_edit::value;
 
-use super::support::{COMMENTED, Portal, open, rewrite, services_have_names};
+use super::support::{Portal, rewrite, services_have_names};
 use crate::types::Section;
 
 #[tokio::test]
 async fn a_write_lands_in_the_file_that_holds_the_entry() {
     let portal = Portal::with(&[
-        (
-            "home-portal.toml",
-            format!("include = [\"services.toml\"]\n\n{COMMENTED}").as_str(),
-        ),
+        ("home-portal.toml", "[network]\nport = 8080\n"),
         (
             "services.toml",
             "# other services\n\n[[services]]\nid = \"nas\"\nname = \"NAS\"\n",
@@ -33,12 +30,9 @@ async fn a_write_lands_in_the_file_that_holds_the_entry() {
 }
 
 #[tokio::test]
-async fn a_new_entry_goes_to_its_home_whatever_writes_to_says() {
+async fn a_new_entry_goes_to_its_home() {
     let portal = Portal::with(&[
-        (
-            "home-portal.toml",
-            "[configuration]\nwrites_to = \"home-portal.toml\"\n\n[network]\nport = 8080\n",
-        ),
+        ("home-portal.toml", "[network]\nport = 8080\n"),
         ("services.toml", "[[services]]\nid = \"a\"\n"),
     ]);
     let main_before = portal.text("home-portal.toml");
@@ -60,17 +54,6 @@ async fn a_new_entry_goes_to_its_home_whatever_writes_to_says() {
     assert_eq!(
         portal.text("services.toml").matches("[[services]]").count(),
         2
-    );
-}
-
-#[test]
-fn a_writes_to_that_names_no_configuration_file_is_ignored() {
-    assert!(
-        open(&[(
-            "home-portal.toml",
-            "[configuration]\nwrites_to = \"elsewhere.toml\"\n"
-        )])
-        .is_ok()
     );
 }
 
@@ -184,9 +167,9 @@ async fn a_workflow_file_dropped_in_by_hand_is_read_and_makes_an_older_revision_
 }
 
 #[tokio::test]
-async fn writes_never_touch_files_include_or_configuration() {
-    let main = "include = [\"extra.toml\"]\n\n[files]\nworkflows = \"flows/\"\nservices = \"lists/services.toml\"\n\n[configuration]\nwrites_to = \"home-portal.toml\"\n\n[network]\nport = 8080\n";
-    let portal = Portal::with(&[("home-portal.toml", main), ("extra.toml", "# kept\n")]);
+async fn writes_never_touch_files() {
+    let main = "[files]\nworkflows = \"flows/\"\nservices = \"lists/services.toml\"\n\n[network]\nport = 8080\n";
+    let portal = Portal::with(&[("home-portal.toml", main)]);
     let revision = portal.store.read().revision;
     let (_, snapshot) = portal
         .store
@@ -220,7 +203,6 @@ async fn writes_never_touch_files_include_or_configuration() {
     assert_eq!(portal.text("home-portal.toml"), main);
     assert!(portal.path("lists/services.toml").exists());
     assert!(!portal.path("workflows").exists());
-    assert_eq!(portal.text("extra.toml"), "# kept\n");
 }
 
 fn mode(path: &std::path::Path) -> u32 {
@@ -231,18 +213,16 @@ fn mode(path: &std::path::Path) -> u32 {
 #[tokio::test]
 async fn an_edit_to_any_file_makes_an_older_revision_stale() {
     let portal = Portal::with(&[
+        ("home-portal.toml", ""),
+        ("services.toml", "[[services]]\nid = \"a\"\n"),
         (
-            "home-portal.toml",
-            "include = [\"widgets.toml\"]\n\n[[services]]\nid = \"a\"\n",
-        ),
-        (
-            "widgets.toml",
+            "dashboard.toml",
             "[[dashboard.widgets]]\ntype = \"services\"\n",
         ),
     ]);
     let revision = portal.store.read().revision;
     rewrite(
-        &portal.path("widgets.toml"),
+        &portal.path("dashboard.toml"),
         "[[dashboard.widgets]]\ntype = \"status-summary\"\n",
     );
     let refused = portal
@@ -257,10 +237,10 @@ async fn an_edit_to_any_file_makes_an_older_revision_stale() {
 
 #[tokio::test]
 async fn a_write_that_breaks_a_rule_is_refused_field_by_field() {
-    let portal = Portal::with(&[(
-        "home-portal.toml",
-        "[[services]]\nid = \"a\"\nname = \"A\"\n",
-    )]);
+    let portal = Portal::with(&[
+        ("home-portal.toml", ""),
+        ("services.toml", "[[services]]\nid = \"a\"\nname = \"A\"\n"),
+    ]);
     portal.store.adopt(vec![services_have_names]).unwrap();
     let revision = portal.store.read().revision;
     let refused = portal

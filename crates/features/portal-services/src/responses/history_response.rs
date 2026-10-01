@@ -1,15 +1,18 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
 use super::{LatencyPointResponse, TransitionResponse, UptimeResponse};
 use crate::types::HistoryView;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct HistoryResponse {
     pub range: String,
     #[serde(with = "time::serde::rfc3339")]
+    #[schemars(with = "String")]
     pub from: OffsetDateTime,
     #[serde(with = "time::serde::rfc3339")]
+    #[schemars(with = "String")]
     pub to: OffsetDateTime,
     pub uptime: Vec<UptimeResponse>,
     pub points: Vec<LatencyPointResponse>,

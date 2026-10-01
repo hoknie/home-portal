@@ -15,7 +15,7 @@ export function SiteHeader() {
   return session.data ? <SignedInHeader user={session.data.name} /> : <PublicHeader />;
 }
 
-type Reported = { environment: string; detected: string; switchable: boolean; environments: string[] } | undefined;
+type Reported = { environment: string; detected: string; switchable: boolean; environments: string[] | null } | undefined;
 
 function switchOf(reported: Reported) {
   return {

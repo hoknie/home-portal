@@ -1,23 +1,20 @@
-import { z } from "zod";
+import type { z } from "zod";
+
+import { generated } from "@/shared/api";
 
 import { ADMIN_GROUP } from "./schema";
 
 export type Rights = Record<string, string[]>;
 
-export const groupSchema = z.object({
-  name: z.string(),
-  builtin: z.boolean(),
-  rights: z.record(z.string(), z.array(z.string())),
-  members: z.array(z.string()),
-});
+export const groupSchema = generated.groups.groupResponseSchema;
 
 export type Group = z.infer<typeof groupSchema>;
 
-export const matrixRowSchema = z.object({ area: z.string(), actions: z.array(z.string()) });
+export const matrixRowSchema = generated.groups.areaResponseSchema;
 
 export type MatrixRow = z.infer<typeof matrixRowSchema>;
 
-export const groupsSchema = z.object({ groups: z.array(groupSchema), matrix: z.array(matrixRowSchema) });
+export const groupsSchema = generated.groups.groupsResponseSchema;
 
 export type Groups = z.infer<typeof groupsSchema>;
 

@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 use portal_feature::FieldError;
 use toml_edit::{DocumentMut, Item};
 
-use super::includes::inside;
 use crate::types::{Home, Layout, Section};
 
 pub const FILES_SECTION: &str = "files";
@@ -108,4 +107,23 @@ fn problem_of(
         return Some("must be a file, not a folder");
     }
     (path == folder || path.starts_with(folder)).then_some("must not lie in the workflow folder")
+}
+
+pub fn inside(directory: &Path, name: &str) -> bool {
+    let candidate = Path::new(name);
+    if candidate.is_absolute() {
+        return false;
+    }
+    let mut depth = 0i32;
+    for part in candidate.components() {
+        match part {
+            std::path::Component::ParentDir => depth -= 1,
+            std::path::Component::CurDir => {}
+            _ => depth += 1,
+        }
+        if depth < 0 {
+            return false;
+        }
+    }
+    directory.join(candidate).starts_with(directory)
 }

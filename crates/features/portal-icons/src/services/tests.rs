@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::fs;
 use std::sync::Arc;
 
 use portal_config::ConfigStore;
@@ -11,16 +10,14 @@ use url::Url;
 
 use super::{Icons, validate_icons};
 use crate::clients::{Fetcher, discover_icon};
-use crate::fakes::{Reply, Site};
 use crate::types::IconSource;
+use portal_testing::{Answer, FakeHttp};
 
 const PNG: &[u8] = b"\x89PNG\r\n\x1a\n and some pixels";
 
 fn portal(text: &str) -> (TempDir, Arc<ConfigStore>) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    (directory, Arc::new(ConfigStore::open(&path).unwrap()))
+    let (directory, path) = portal_testing::written(text);
+    (directory, Arc::new(portal_testing::opened(&path).unwrap()))
 }
 
 fn service_with(icon: &str, url: &str) -> String {
@@ -71,9 +68,9 @@ fn an_unknown_prefix_names_the_service_it_came_from() {
 
 #[tokio::test]
 async fn an_icon_is_fetched_cached_and_reused_after_a_restart() {
-    let site = Site::start(BTreeMap::from([(
+    let site = FakeHttp::pages(BTreeMap::from([(
         "/icon.png".to_string(),
-        Reply::image(PNG),
+        Answer::ok("image/png", PNG),
     )]))
     .await;
     let (directory, store) = portal(&service_with(
@@ -99,9 +96,9 @@ async fn an_icon_is_fetched_cached_and_reused_after_a_restart() {
 
 #[tokio::test]
 async fn something_that_is_not_an_image_leaves_the_previous_icon_in_place() {
-    let good = Site::start(BTreeMap::from([(
+    let good = FakeHttp::pages(BTreeMap::from([(
         "/icon.png".to_string(),
-        Reply::image(PNG),
+        Answer::ok("image/png", PNG),
     )]))
     .await;
     let (_directory, store) = portal(&service_with(
@@ -111,9 +108,9 @@ async fn something_that_is_not_an_image_leaves_the_previous_icon_in_place() {
     let icons = Icons::new(store, "http://unused.invalid").unwrap();
     let now = datetime!(2026-09-22 10:00 UTC);
     icons.refresh_all(now).await;
-    let html = Site::start(BTreeMap::from([(
+    let html = FakeHttp::pages(BTreeMap::from([(
         "/icon.png".to_string(),
-        Reply::page("<html></html>"),
+        Answer::ok("text/html", "<html></html>"),
     )]))
     .await;
     let problem = icons
@@ -129,13 +126,9 @@ async fn an_icon_larger_than_the_ceiling_is_refused_by_size() {
     let big = vec![b'x'; 600 * 1024];
     let mut body = b"\x89PNG\r\n\x1a\n".to_vec();
     body.extend_from_slice(&big);
-    let site = Site::start(BTreeMap::from([(
+    let site = FakeHttp::pages(BTreeMap::from([(
         "/icon.png".to_string(),
-        Reply {
-            status: 200,
-            content_type: "image/png",
-            body,
-        },
+        Answer::ok("image/png", body),
     )]))
     .await;
     let (_directory, store) = portal(&service_with(
@@ -157,9 +150,9 @@ async fn an_icon_larger_than_the_ceiling_is_refused_by_size() {
 
 #[tokio::test]
 async fn a_catalogue_icon_is_fetched_once_and_then_reused() {
-    let catalog = Site::start(BTreeMap::from([(
+    let catalog = FakeHttp::pages(BTreeMap::from([(
         "/jellyfin.png".to_string(),
-        Reply::image(PNG),
+        Answer::ok("image/png", PNG),
     )]))
     .await;
     let (_directory, store) = portal(&service_with("catalog:jellyfin", "http://nas.local"));
@@ -174,18 +167,14 @@ async fn a_catalogue_icon_is_fetched_once_and_then_reused() {
 #[tokio::test]
 async fn a_service_icon_is_found_in_the_manifest_then_the_page_then_the_favicon() {
     let manifest = r#"{"icons":[{"src":"/small.png","sizes":"48x48"},{"src":"/large.png","sizes":"512x512"}]}"#;
-    let site = Site::start(BTreeMap::from([
+    let site = FakeHttp::pages(BTreeMap::from([
         (
             "/".to_string(),
-            Reply::page("<html><head><link rel=\"manifest\" href=\"/app.webmanifest\"><link rel=\"icon\" href=\"/page.png\"></head></html>"),
+            Answer::ok("text/html", "<html><head><link rel=\"manifest\" href=\"/app.webmanifest\"><link rel=\"icon\" href=\"/page.png\"></head></html>"),
         ),
         (
             "/app.webmanifest".to_string(),
-            Reply {
-                status: 200,
-                content_type: "application/manifest+json",
-                body: manifest.as_bytes().to_vec(),
-            },
+            Answer::ok("application/manifest+json", manifest.as_bytes().to_vec()),
         ),
     ]))
     .await;
@@ -195,9 +184,12 @@ async fn a_service_icon_is_found_in_the_manifest_then_the_page_then_the_favicon(
         .unwrap();
     assert!(found.path().ends_with("/large.png"), "{found}");
 
-    let page_only = Site::start(BTreeMap::from([(
+    let page_only = FakeHttp::pages(BTreeMap::from([(
         "/".to_string(),
-        Reply::page("<html><head><link rel='apple-touch-icon' href='/touch.png'></head></html>"),
+        Answer::ok(
+            "text/html",
+            "<html><head><link rel='apple-touch-icon' href='/touch.png'></head></html>",
+        ),
     )]))
     .await;
     let found = discover_icon(&fetcher, &Url::parse(&page_only.url()).unwrap())
@@ -205,16 +197,16 @@ async fn a_service_icon_is_found_in_the_manifest_then_the_page_then_the_favicon(
         .unwrap();
     assert!(found.path().ends_with("/touch.png"), "{found}");
 
-    let bare = Site::start(BTreeMap::new()).await;
+    let bare = FakeHttp::pages(BTreeMap::new()).await;
     let found = discover_icon(&fetcher, &Url::parse(&bare.url()).unwrap()).await;
     assert!(found.is_err() || found.unwrap().path() == "/favicon.ico");
 }
 
 #[tokio::test]
 async fn a_service_whose_icon_is_nowhere_keeps_no_icon_and_says_why() {
-    let site = Site::start(BTreeMap::from([(
+    let site = FakeHttp::pages(BTreeMap::from([(
         "/".to_string(),
-        Reply::page("<html></html>"),
+        Answer::ok("text/html", "<html></html>"),
     )]))
     .await;
     let (_directory, store) = portal(&service_with("auto", &site.url()));

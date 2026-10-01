@@ -1,0 +1,274 @@
+{
+  "$defs": {
+    "CaddyResponse": {
+      "properties": {
+        "download": {
+          "$ref": "#/$defs/DownloadState"
+        },
+        "installed": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "installed_from": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "log": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "managed": {
+          "type": "boolean"
+        },
+        "platform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "platform_error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "release_url": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "managed",
+        "installed",
+        "installed_from",
+        "source",
+        "version",
+        "release_url",
+        "platform",
+        "platform_error",
+        "download",
+        "log"
+      ],
+      "type": "object"
+    },
+    "DownloadStage": {
+      "enum": [
+        "idle",
+        "downloading",
+        "installed",
+        "failed"
+      ],
+      "type": "string",
+      "x-open": "idle"
+    },
+    "DownloadState": {
+      "properties": {
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/DownloadStage"
+        }
+      },
+      "required": [
+        "state",
+        "error"
+      ],
+      "type": "object"
+    },
+    "RouteResponse": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "auth": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "environments": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "host": {
+          "type": "string"
+        },
+        "service": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tls": {
+          "$ref": "#/$defs/TlsMode"
+        },
+        "upstream": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "host",
+        "address",
+        "service",
+        "upstream",
+        "tls",
+        "auth",
+        "environments"
+      ],
+      "type": "object"
+    },
+    "SettingsResponse": {
+      "properties": {
+        "cookie_domain": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "http_port": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "https_port": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "portal_host": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tls": {
+          "$ref": "#/$defs/TlsPolicy"
+        }
+      },
+      "required": [
+        "http_port",
+        "https_port",
+        "portal_host",
+        "cookie_domain",
+        "tls"
+      ],
+      "type": "object"
+    },
+    "TlsMode": {
+      "enum": [
+        "acme",
+        "internal",
+        "files"
+      ],
+      "type": "string",
+      "x-open": "acme"
+    },
+    "TlsPolicy": {
+      "properties": {
+        "certificate": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "email": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mode": {
+          "$ref": "#/$defs/TlsMode",
+          "default": "acme"
+        }
+      },
+      "required": [
+        "mode",
+        "email",
+        "certificate",
+        "key"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "admin": {
+      "type": "string"
+    },
+    "caddy": {
+      "$ref": "#/$defs/CaddyResponse"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "in_sync": {
+      "type": "boolean"
+    },
+    "last_applied_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_error": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reachable": {
+      "type": "boolean"
+    },
+    "routes": {
+      "items": {
+        "$ref": "#/$defs/RouteResponse"
+      },
+      "type": "array"
+    },
+    "settings": {
+      "$ref": "#/$defs/SettingsResponse"
+    }
+  },
+  "required": [
+    "enabled",
+    "settings",
+    "admin",
+    "reachable",
+    "in_sync",
+    "last_applied_at",
+    "last_error",
+    "routes",
+    "caddy"
+  ],
+  "title": "ProxyResponse",
+  "type": "object"
+}

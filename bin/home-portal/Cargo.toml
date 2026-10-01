@@ -51,6 +51,9 @@ portal-web.workspace = true
 portal-widget.workspace = true
 
 [dev-dependencies]
+portal-testing.workspace = true
+schemars.workspace = true
+serde.workspace = true
 http-body-util.workspace = true
 time.workspace = true
 proc-macro2.workspace = true

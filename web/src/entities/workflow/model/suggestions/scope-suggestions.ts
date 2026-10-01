@@ -4,6 +4,7 @@ import type { InputDeclaration, Step, Workflow, WorkflowCatalogue } from "../sch
 import { scopeAt } from "../scope";
 import { type Path, everyStep } from "../tree";
 import { itemSample } from "../transforming/known";
+import type { PreviewCache } from "../transforming/previews";
 import { type PortalValues, portalSuggestions } from "../portal";
 import { jsonKeys } from "./json-keys";
 import { lastOutput } from "./last-output";
@@ -31,6 +32,7 @@ export type SuggestionContext = {
   secrets: { name: string; set: boolean }[];
   lastRun: Trace | null;
   portal?: PortalValues | null;
+  preview?: PreviewCache;
 };
 
 function variablesOf(workflow: Workflow | undefined): string[] {

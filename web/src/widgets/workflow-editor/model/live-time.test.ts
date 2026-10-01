@@ -2,11 +2,12 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { type TraceEntry, traceSchema } from "@/entities/automation";
+import { TRACE_ENTRY_BLANKS } from "@/shared/lib/testing";
 
 import { elapsedOf, timeLeftOf, useNow } from "./live-time";
 
 function entry(extra: Partial<TraceEntry>): TraceEntry {
-  const [parsed] = traceSchema.parse({ entries: [{ path: "steps[0]", step: "nap", label: "nap", kind: "wait", iteration: null, outcome: "running", started_at: "2026-09-29T10:00:00Z", duration_milliseconds: 12_000, detail: "", output: null }], dropped: 0 }).entries;
+  const [parsed] = traceSchema.parse({ entries: [{ ...TRACE_ENTRY_BLANKS, path: "steps[0]", step: "nap", label: "nap", kind: "wait", iteration: null, outcome: "running", started_at: "2026-09-29T10:00:00Z", duration_milliseconds: 12_000, detail: "", output: null }], dropped: 0 }).entries;
   return { ...parsed, ...extra };
 }
 

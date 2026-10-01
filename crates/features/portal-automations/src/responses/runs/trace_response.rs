@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::TraceEntryResponse;
@@ -5,7 +6,7 @@ use time::OffsetDateTime;
 
 use crate::types::Trace;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct TraceResponse {
     pub entries: Vec<TraceEntryResponse>,
     pub dropped: usize,

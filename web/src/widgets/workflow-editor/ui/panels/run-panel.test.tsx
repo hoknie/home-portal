@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { runsSchema, traceSchema } from "@/entities/automation";
 import { apiSamples } from "@/shared/api";
-import { jsonResponse } from "@/shared/lib/testing";
+import { TRACE_ENTRY_BLANKS, jsonResponse } from "@/shared/lib/testing";
 
 import { node, openAt, stubCanvasDom, withSteps } from "../testing-support";
 
@@ -21,7 +21,7 @@ afterEach(() => {
 
 it("the steps of the run and the chosen step's data are two headed parts, and a longer list says there is more below", async () => {
   const [base] = runsSchema.parse(apiSamples.automationRuns).runs;
-  const steps = ["one", "two", "three"].map((id, index) => ({ path: `steps[${index}]`, step: id, label: id, kind: "wait", iteration: null, outcome: "succeeded", started_at: "2026-09-29T10:00:00Z", duration_milliseconds: 5, detail: "", output: null }));
+  const steps = ["one", "two", "three"].map((id, index) => ({ ...TRACE_ENTRY_BLANKS, path: `steps[${index}]`, step: id, label: id, kind: "wait", iteration: null, outcome: "succeeded", started_at: "2026-09-29T10:00:00Z", duration_milliseconds: 5, detail: "", output: null }));
   const shown = { ...base, id: "9", workflow: "draft", trace: traceSchema.parse({ entries: steps, dropped: 0 }) };
   vi.stubGlobal("fetch", vi.fn(async (path: string) => (path === "/api/automations/runs/9" ? jsonResponse(shown) : jsonResponse({ runs: [shown] }))));
   openAt(withSteps(["one", "two", "three"].map((id) => ({ id, kind: "wait", seconds: 1 })), { last_run: null, active_run: null }), "/admin/workflows/draft/history/9/");

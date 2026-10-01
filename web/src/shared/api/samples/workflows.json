@@ -211,8 +211,9 @@
           "kind": "parallel"
         },
         {
+          "channel": "telegram",
           "id": "tell",
-          "kind": "telegram",
+          "kind": "notify",
           "text": "{{inputs.service}} is {{steps.nas_state.state}}"
         }
       ],

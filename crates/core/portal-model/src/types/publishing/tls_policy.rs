@@ -1,8 +1,11 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::TlsMode;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
+)]
 #[serde(default)]
 pub struct TlsPolicy {
     pub mode: TlsMode,

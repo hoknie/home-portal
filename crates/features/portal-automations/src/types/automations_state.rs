@@ -8,7 +8,7 @@ use crate::usecases::{
     ChangeAutomation, ChangeWebhook, ChangeWorkflow, CreateAutomation, CreateWebhook,
     CreateWorkflow, DeleteAutomation, DeleteWebhook, DeleteWorkflow, IssueToken, ListAutomations,
     ListWebhooks, ListWorkflows, ReadPortalValues, RemoveToken, RunWebhook, RunWorkflow,
-    WorkflowCatalogue,
+    TransformValue, WorkflowCatalogue,
 };
 
 #[derive(Clone)]
@@ -41,4 +41,5 @@ pub struct WorkflowCases {
     pub run: RunWorkflow,
     pub catalogue: WorkflowCatalogue,
     pub portal: ReadPortalValues,
+    pub transform: TransformValue,
 }

@@ -4,7 +4,7 @@ use super::module::Module;
 use crate::types::FieldError;
 
 pub const SECTION: &str = "modules";
-pub const LEGACY_KEY: &str = "enabled";
+pub const RETIRED_KEY: &str = "enabled";
 pub const NOT_A_MODULE: &str =
     "is not a module; the modules are proxy, dns, automations, webhooks, users and workflows";
 pub const NOT_A_SWITCH: &str = "must be true or false";
@@ -28,8 +28,14 @@ impl ModuleSwitches {
         let mut switches = ModuleSwitches::default();
         let mut errors = Vec::new();
         for module in Module::ALL {
-            if let Some(on) = legacy_switch(document, module) {
-                switches.on[module.index()] = on;
+            if let Some(section) = retired_switch(document, module) {
+                errors.push(FieldError::new(
+                    format!("{section}.{RETIRED_KEY}"),
+                    format!(
+                        "is no longer read; switch the module with {SECTION}.{name}",
+                        name = module.name()
+                    ),
+                ));
             }
         }
         match document.get(SECTION) {
@@ -110,10 +116,11 @@ impl ModuleSwitches {
     }
 }
 
-fn legacy_switch(document: &DocumentMut, module: Module) -> Option<bool> {
+fn retired_switch(document: &DocumentMut, module: Module) -> Option<&'static str> {
+    let section = module.legacy_section()?;
     document
-        .get(module.legacy_section()?)
+        .get(section)
         .and_then(Item::as_table_like)
-        .and_then(|table| table.get(LEGACY_KEY))
-        .and_then(Item::as_bool)
+        .is_some_and(|table| table.contains_key(RETIRED_KEY))
+        .then_some(section)
 }

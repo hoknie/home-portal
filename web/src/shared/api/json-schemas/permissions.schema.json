@@ -1,0 +1,115 @@
+{
+  "$defs": {
+    "Advice": {
+      "enum": [
+        "allow-in-settings",
+        "answer-the-prompt",
+        "connect-a-volume",
+        "grant-full-disk-access",
+        "application-not-found",
+        "check-failed"
+      ],
+      "type": "string"
+    },
+    "OwnerKind": {
+      "enum": [
+        "terminal",
+        "binary"
+      ],
+      "type": "string"
+    },
+    "OwnerResponse": {
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/OwnerKind"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "type": "object"
+    },
+    "Pane": {
+      "enum": [
+        "local-network",
+        "files-and-folders",
+        "automation",
+        "full-disk-access"
+      ],
+      "type": "string"
+    },
+    "PermissionResponse": {
+      "properties": {
+        "advice": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Advice"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "code": {
+          "type": "string"
+        },
+        "learned_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pane": {
+          "$ref": "#/$defs/Pane"
+        },
+        "state": {
+          "$ref": "#/$defs/PermissionState"
+        }
+      },
+      "required": [
+        "code",
+        "state",
+        "learned_at",
+        "advice",
+        "pane"
+      ],
+      "type": "object"
+    },
+    "PermissionState": {
+      "enum": [
+        "granted",
+        "denied",
+        "pending",
+        "not-applicable",
+        "unknown"
+      ],
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "owner": {
+      "$ref": "#/$defs/OwnerResponse"
+    },
+    "permissions": {
+      "items": {
+        "$ref": "#/$defs/PermissionResponse"
+      },
+      "type": "array"
+    },
+    "platform": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "platform",
+    "owner",
+    "permissions"
+  ],
+  "title": "PermissionsResponse",
+  "type": "object"
+}

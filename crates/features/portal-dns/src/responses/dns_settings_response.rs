@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
 
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use crate::types::DnsSettings;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct DnsSettingsResponse {
     pub address: String,
     pub port: u16,
@@ -15,7 +16,7 @@ pub struct DnsSettingsResponse {
     pub https: DnsHttpsSettingsResponse,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct DnsTlsSettingsResponse {
     pub enabled: bool,
     pub port: u16,
@@ -23,7 +24,7 @@ pub struct DnsTlsSettingsResponse {
     pub key: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct DnsHttpsSettingsResponse {
     pub enabled: bool,
     pub host: Option<String>,

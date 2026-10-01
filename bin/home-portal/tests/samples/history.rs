@@ -1,4 +1,5 @@
 use super::*;
+use crate::typed;
 
 #[test]
 fn the_history_sample_matches_its_serializer() {
@@ -15,8 +16,5 @@ fn the_history_sample_matches_its_serializer() {
         history.record(at, &outcome);
     }
     let view = history.view(HistoryRange::Day, start + 180);
-    check(
-        "history",
-        serde_json::to_value(HistoryResponse::of(&view)).unwrap(),
-    );
+    typed("history", &HistoryResponse::of(&view));
 }

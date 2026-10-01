@@ -4,12 +4,6 @@ import { apiSamples } from "@/shared/api";
 
 import { serviceStateSchema, servicesSchema, tlsModeSchema } from "./schema";
 
-it("the services sample parses with every state it carries", () => {
-  const parsed = servicesSchema.parse(apiSamples.services);
-  expect(parsed.services.map((service) => service.status.state)).toEqual(["up", "down", "unknown"]);
-  expect(parsed.services[1].status.last_ok_at).not.toBeNull();
-});
-
 it("a state the interface does not know becomes unknown", () => {
   expect(serviceStateSchema.parse("maintenance")).toBe("unknown");
 });

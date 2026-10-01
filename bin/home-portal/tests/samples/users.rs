@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use portal_auth::{AreaResponse, GroupResponse, GroupsResponse, UserResponse, UsersResponse};
 
-use crate::check;
+use crate::typed;
 
 #[test]
 fn the_users_sample_matches_its_serializer() {
@@ -26,7 +26,7 @@ fn the_users_sample_matches_its_serializer() {
         ],
         editable: true,
     };
-    check("users", serde_json::to_value(users).unwrap());
+    typed("users", &users);
 }
 
 #[test]
@@ -76,5 +76,5 @@ fn the_groups_sample_matches_its_serializer() {
         ],
         matrix: AreaResponse::matrix(),
     };
-    check("groups", serde_json::to_value(groups).unwrap());
+    typed("groups", &groups);
 }

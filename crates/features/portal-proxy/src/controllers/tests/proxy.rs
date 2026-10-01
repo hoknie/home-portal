@@ -230,9 +230,8 @@ async fn without_an_internal_host_or_a_reachable_caddy_there_is_no_root_certific
 
 #[tokio::test]
 async fn another_https_port_is_kept_in_the_sign_in_redirect() {
-    let portal = portal(
-        &file("http://127.0.0.1:9").replace("enabled = true", "enabled = true\nhttps_port = 8443"),
-    );
+    let portal =
+        portal(&file("http://127.0.0.1:9").replace("[proxy]\n", "[proxy]\nhttps_port = 8443\n"));
     let response = send(
         &portal,
         authorize("nas.example.com:8443", None, "GET"),

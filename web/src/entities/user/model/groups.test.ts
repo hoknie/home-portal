@@ -6,15 +6,6 @@ import { columnState, givable, groupsSchema, matrixState, rowState, withAction, 
 
 const groups = groupsSchema.parse(apiSamples.groups);
 
-it("the groups sample puts admin first and answers the matrix", () => {
-  expect(groups.groups.map((group) => [group.name, group.builtin])).toEqual([
-    ["admin", true],
-    ["family", false],
-    ["guests", false],
-  ]);
-  expect(groups.matrix.find((row) => row.area === "layout")?.actions).toEqual(["update"]);
-});
-
 it("rights are within others when every action is held", () => {
   expect(within({ automations: ["read"] }, { automations: ["read", "execute"] })).toBe(true);
   expect(within({ proxy: ["update"] }, { automations: ["read"] })).toBe(false);

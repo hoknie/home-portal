@@ -1,8 +1,21 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize,
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    Serialize,
+    Deserialize,
+    JsonSchema,
 )]
+#[schemars(extend("x-open" = "acme"))]
 #[serde(rename_all = "lowercase")]
 pub enum TlsMode {
     #[default]

@@ -1,4 +1,3 @@
-use std::fs;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -6,7 +5,6 @@ use axum::Router;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::Feature;
 use portal_model::{DetectedEnvironment, Environment, Environments};
 use serde_json::Value;
@@ -24,10 +22,8 @@ struct Api {
 }
 
 fn api(delay: Duration) -> Api {
-    let folder = TempDir::new().unwrap();
-    let path = folder.path().join("home-portal.toml");
-    fs::write(&path, "[permissions]\nautomation = [\"Finder\"]\n").unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (folder, path) = portal_testing::written("[permissions]\nautomation = [\"Finder\"]\n");
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = PermissionsFeature::with(
         store,
         Arc::new(FixedChecks::granting(delay)),

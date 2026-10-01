@@ -1,0 +1,75 @@
+{
+  "$defs": {
+    "AreaResponse": {
+      "properties": {
+        "actions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "area": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "area",
+        "actions"
+      ],
+      "type": "object"
+    },
+    "GroupResponse": {
+      "properties": {
+        "builtin": {
+          "type": "boolean"
+        },
+        "members": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rights": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "builtin",
+        "rights",
+        "members"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "groups": {
+      "items": {
+        "$ref": "#/$defs/GroupResponse"
+      },
+      "type": "array"
+    },
+    "matrix": {
+      "items": {
+        "$ref": "#/$defs/AreaResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "groups",
+    "matrix"
+  ],
+  "title": "GroupsResponse",
+  "type": "object"
+}

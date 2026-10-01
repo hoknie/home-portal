@@ -7,7 +7,6 @@ use std::time::{Duration, Instant};
 use hickory_proto::op::{Message, Query, ResponseCode};
 use hickory_proto::rr::{Name, RecordType};
 use ipnet::IpNet;
-use portal_config::ConfigStore;
 use portal_model::{Environment, Environments};
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, ServerName};
@@ -64,23 +63,21 @@ fn fixture(name: &str) -> PathBuf {
 
 fn configuration(port: u16, extra: &str) -> String {
     format!(
-        "[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.home\"\n\n{}",
+        "[modules]\nproxy = true\ndns = true\n\n[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n[proxy]\nportal_host = \"portal.home\"\n\n{}",
         dns_section(port, extra)
     )
 }
 
 fn dns_section(port: u16, extra: &str) -> String {
     format!(
-        "[dns]\nenabled = true\naddress = \"127.0.0.1\"\nport = {port}\nzones = [\"home\"]\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\n{extra}"
+        "[dns]\naddress = \"127.0.0.1\"\nport = {port}\nzones = [\"home\"]\n\n[dns.addresses]\nlocal = \"192.168.1.60\"\n{extra}"
     )
 }
 
 fn started(text: &str) -> (TempDir, Arc<DnsRuntime>) {
-    let folder = TempDir::new().unwrap();
-    let path = folder.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
+    let (folder, path) = portal_testing::written(text);
     let runtime = Arc::new(DnsRuntime {
-        configuration: Arc::new(ConfigStore::open(&path).unwrap()),
+        configuration: Arc::new(portal_testing::opened(&path).unwrap()),
         sources: Arc::new(Sources),
         library: Arc::new(Library::default()),
         cadence: QUICK,

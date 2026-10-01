@@ -1,30 +1,20 @@
 import { z } from "zod";
 
+import { generated } from "@/shared/api";
+
 export const WEBHOOK_ACTIONS = ["event", "script"] as const;
 
-export const webhookSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  enabled: z.boolean(),
-  tags: z.array(z.string()).default([]),
-  address: z.string(),
-  protected: z.boolean(),
-  variables: z.array(z.string()),
-  action: z.enum(WEBHOOK_ACTIONS).catch("event"),
-  run: z.object({ script: z.string(), args: z.array(z.string()), timeout_seconds: z.number() }).nullable(),
-  workflow: z.object({ id: z.string(), inputs: z.record(z.string(), z.unknown()) }).nullable().default(null),
-  last_received: z.object({ at: z.string(), status: z.number() }).nullable(),
-});
+export const webhookSchema = generated.webhooks.webhookResponseSchema.extend({ action: z.enum(WEBHOOK_ACTIONS).catch("event") });
 
 export type Webhook = z.infer<typeof webhookSchema>;
 
 export const webhooksSchema = z.object({ webhooks: z.array(webhookSchema) });
 
-export const createdWebhookSchema = z.object({ webhook: webhookSchema, token: z.string().nullable() });
+export const createdWebhookSchema = generated.webhookCreated.createdWebhookResponseSchema.extend({ webhook: webhookSchema });
 
-export const tokenSchema = z.object({ token: z.string() });
+export const tokenSchema = generated.webhookToken.tokenResponseSchema;
 
-export const acceptedSchema = z.object({ accepted: z.boolean(), run_id: z.string().nullish() });
+export const acceptedSchema = generated.webhookAccepted.acceptedResponseSchema;
 
 export function absoluteAddress(address: string, origin: string) {
   return `${origin.replace(/\/$/, "")}${address}`;

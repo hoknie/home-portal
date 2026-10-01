@@ -36,3 +36,22 @@ export function jsonResponse(body: unknown, init: { status?: number; headers?: R
     headers: { "Content-Type": "application/json", ...init.headers },
   });
 }
+
+export const TRACE_ENTRY_BLANKS = {
+  label: "",
+  iteration: null,
+  detail: "",
+  output: null,
+  shape: null,
+  stdout: null,
+  stderr: null,
+  command: null,
+  budget_reached: false,
+  values: [],
+  log: [],
+  values_dropped: 0,
+  log_dropped: 0,
+  item: null,
+  level: null,
+  wait_seconds: null,
+} as const;

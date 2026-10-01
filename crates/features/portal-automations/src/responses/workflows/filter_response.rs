@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::ArgumentResponse;
 use crate::types::FilterDescription;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct FilterResponse {
     pub name: String,
     pub arguments: Vec<ArgumentResponse>,

@@ -1,34 +1,25 @@
 use std::fs;
-use std::io::{Read, Write};
-use std::net::TcpListener;
 use std::process::{Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
 use portal_auth::hash_password;
+use portal_testing::{Answer, FakeHttp};
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
 const QUIET: &str = "[permissions]\nrequest_at_start = false\n\n";
 
-fn answering_http() -> u16 {
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    thread::spawn(move || {
-        for stream in listener.incoming() {
-            let Ok(mut stream) = stream else { continue };
-            let mut buffer = [0u8; 1024];
-            let _ = stream.read(&mut buffer);
-            let _ = stream
-                .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nok");
-        }
-    });
-    port
+async fn answering_http() -> u16 {
+    FakeHttp::always(Answer::status(200).with_body("ok"))
+        .await
+        .address
+        .port()
 }
 
 #[cfg(unix)]
-#[test]
-fn stopping_on_a_signal_writes_the_history_where_the_storage_section_points() {
-    let port = answering_http();
+#[tokio::test(flavor = "multi_thread")]
+async fn stopping_on_a_signal_writes_the_history_where_the_storage_section_points() {
+    let port = answering_http().await;
     let directory = tempfile::tempdir().unwrap();
     fs::create_dir(directory.path().join("config")).unwrap();
     let path = directory.path().join("config/home-portal.toml");
@@ -40,6 +31,7 @@ fn stopping_on_a_signal_writes_the_history_where_the_storage_section_points() {
         ),
     )
     .unwrap();
+    portal_testing::split(&path);
     let mut child = Command::new(BINARY)
         .env("HOME_PORTAL_CONFIG", &path)
         .env("HOME_PORTAL_ADDRESS", "127.0.0.1:0")
@@ -90,6 +82,7 @@ fn portal_with_a_stop_script(body: &str) -> (tempfile::TempDir, std::process::Ch
     let script = scripts.join("stop.sh");
     fs::write(&script, format!("#!/bin/sh\n{body}\n")).unwrap();
     fs::set_permissions(&script, fs::Permissions::from_mode(0o755)).unwrap();
+    portal_testing::split(&path);
     let mut child = Command::new(BINARY)
         .env("HOME_PORTAL_CONFIG", &path)
         .env("HOME_PORTAL_ADDRESS", "127.0.0.1:0")

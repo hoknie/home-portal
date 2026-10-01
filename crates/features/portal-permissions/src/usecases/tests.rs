@@ -1,9 +1,7 @@
-use std::fs;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 
-use portal_config::ConfigStore;
 use portal_feature::ApiError;
 use tempfile::TempDir;
 
@@ -24,10 +22,8 @@ fn limits(prompt: Duration) -> Limits {
 }
 
 fn portal(configuration: &str, source: FixedChecks, prompt: Duration) -> Portal {
-    let folder = TempDir::new().unwrap();
-    let path = folder.path().join("home-portal.toml");
-    fs::write(&path, configuration).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (folder, path) = portal_testing::written(configuration);
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     Portal {
         feature: PermissionsFeature::with(
             store,

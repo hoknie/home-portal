@@ -54,10 +54,8 @@ fn free_port() -> u16 {
 }
 
 fn portal(text: &str) -> (TempDir, Arc<ConfigStore>, Router) {
-    let folder = TempDir::new().unwrap();
-    let path = folder.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let configuration = Arc::new(ConfigStore::open(&path).unwrap());
+    let (folder, path) = portal_testing::written(text);
+    let configuration = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = DnsFeature::with(configuration.clone(), Arc::new(Sources), QUICK);
     configuration
         .adopt(vec![feature.validator().unwrap()])
@@ -92,7 +90,7 @@ async fn settled(router: &Router, check: impl Fn(&Value) -> bool) -> Value {
 
 fn enabled_on(port: u16) -> String {
     format!(
-        "[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n# Local names.\n[dns]\nenabled = true # on\naddress = \"127.0.0.1\"\nport = {port}\nzones = [\"home\"]\n"
+        "[modules]\ndns = true\n\n[environments.local]\nnetworks = [\"127.0.0.0/8\"]\n\n# Local names.\n[dns]\naddress = \"127.0.0.1\"\nport = {port}\nzones = [\"home\"]\n"
     )
 }
 
@@ -143,10 +141,7 @@ async fn changing_the_port_through_the_api_moves_the_server_and_keeps_comments()
     .await;
     assert_eq!(moved["settings"]["port"], second);
     let text = fs::read_to_string(folder.path().join("dns.toml")).unwrap();
-    assert!(
-        text.contains("# Local names.\n[dns]\nenabled = true # on\n"),
-        "{text}"
-    );
+    assert!(text.contains("# Local names.\n[dns]\n"), "{text}");
     assert!(UdpSocket::bind(("127.0.0.1", first)).is_ok());
 }
 
@@ -201,7 +196,7 @@ async fn switching_the_module_off_closes_the_sockets_within_two_seconds() {
     assert_eq!(listening["plain"]["listening"], true);
     let main = folder.path().join("home-portal.toml");
     let kept = fs::read_to_string(&main).unwrap();
-    fs::write(&main, format!("[modules]\ndns = false\n\n{kept}")).unwrap();
+    fs::write(&main, kept.replace("dns = true", "dns = false")).unwrap();
     let began = Instant::now();
     let closed = settled(&router, |body| body["plain"]["listening"] == false).await;
     assert_eq!(closed["enabled"], false);

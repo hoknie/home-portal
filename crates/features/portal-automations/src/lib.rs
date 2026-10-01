@@ -30,12 +30,13 @@ pub use responses::{
     WhenResponse, WorkflowCallResponse,
 };
 pub use responses::{
-    InputResponse, WorkflowCatalogueResponse, WorkflowResponse, WorkflowUsageResponse,
-    WorkflowsResponse,
+    InputResponse, TransformPreviewResponse, WorkflowCatalogueResponse, WorkflowResponse,
+    WorkflowUsageResponse, WorkflowsResponse,
 };
 pub use services::validate_automations;
 pub use types::{
-    Choice, InputValue, PortalService, PortalState, ProbeResult, RawMarks, RawOperation, RawRun,
-    RawWebhook, Refusal, RefusalCode, Schedule, ScriptEntry, StatusResult, StepLogging, Webhook,
+    Choice, InputValue, PortalService, PortalState, PreviewQuestion, ProbeResult, RawMarks,
+    RawOperation, RawRun, RawWebhook, Refusal, RefusalCode, Schedule, ScriptEntry, StatusResult,
+    StepLogging, Webhook,
 };
 pub use usecases::{TransformValue, WorkflowCatalogue};

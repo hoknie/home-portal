@@ -13,4 +13,5 @@ serde_json.workspace = true
 url.workspace = true
 
 [dev-dependencies]
+portal-testing.workspace = true
 tokio.workspace = true

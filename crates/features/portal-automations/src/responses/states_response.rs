@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use crate::types::StateFilter;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct StatesResponse {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub from: Vec<String>,

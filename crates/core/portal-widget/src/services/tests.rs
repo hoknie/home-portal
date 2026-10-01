@@ -1,10 +1,8 @@
-use std::fs;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 
 use async_trait::async_trait;
-use portal_config::ConfigStore;
 use portal_feature::{ApiError, FieldError, WidgetProvider};
 use portal_model::Environment;
 use serde_json::{Value, json};
@@ -59,10 +57,8 @@ impl WidgetProvider for Counting {
 }
 
 fn registry_with(text: &str, provider: Arc<Counting>) -> (TempDir, WidgetRegistry) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (directory, path) = portal_testing::written(text);
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     (directory, WidgetRegistry::new(store, vec![provider]))
 }
 

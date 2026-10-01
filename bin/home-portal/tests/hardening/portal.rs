@@ -71,7 +71,7 @@ pub fn probe_portal() -> Router {
         format!("{example}\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"),
     )
     .unwrap();
-    let configuration = Arc::new(portal_config::ConfigStore::open(path).unwrap());
+    let configuration = Arc::new(portal_testing::opened(path).unwrap());
     let interface: Arc<dyn portal_web::AssetSource> =
         Arc::new(portal_web::Directory::first_of(&[std::path::Path::new(
             env!("CARGO_MANIFEST_DIR"),

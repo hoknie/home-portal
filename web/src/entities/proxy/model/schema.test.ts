@@ -5,19 +5,10 @@ import { apiSamples } from "@/shared/api";
 import { proxySchema, proxyTlsModeSchema, usesInternal } from "./schema";
 
 describe("proxy", () => {
-  it("the proxy sample parses with the portal first", () => {
+  it("a route on the internal authority means the internal certificate is in use", () => {
     const parsed = proxySchema.parse(apiSamples.proxy);
-    expect(parsed.in_sync).toBe(true);
-    expect(parsed.routes.map((route) => route.service)).toEqual([null, "nas", "media"]);
     expect(usesInternal(parsed)).toBe(true);
-    expect(parsed.caddy).toMatchObject({ managed: true, installed: "2.11.4", download: { state: "idle", error: null } });
-    expect(parsed.caddy).toMatchObject({
-      version: "latest",
-      release_url: "https://api.github.com/repos/caddyserver/caddy/releases/latest",
-      platform: "mac_arm64",
-      platform_error: null,
-    });
-    expect(parsed.caddy.installed_from).toMatch(/caddy_2\.11\.4_mac_arm64\.tar\.gz$/);
+    expect(usesInternal({ ...parsed, routes: parsed.routes.filter((route) => route.tls !== "internal") })).toBe(false);
   });
 
   it("a TLS mode the interface does not know becomes acme", () => {

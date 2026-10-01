@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "accepted": {
+      "type": "boolean"
+    },
+    "run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "accepted"
+  ],
+  "title": "AcceptedResponse",
+  "type": "object"
+}

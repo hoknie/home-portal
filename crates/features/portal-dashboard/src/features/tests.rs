@@ -1,11 +1,9 @@
-use std::fs;
 use std::sync::Arc;
 
 use axum::body::Body;
 use axum::http::header::ETAG;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::{Feature, Principal, Rights};
 use portal_model::{DetectedEnvironment, Environment, Environments};
 use serde_json::Value;
@@ -22,10 +20,8 @@ async fn ask_as(
     uri: &str,
     (principal, detected): (Principal, &str),
 ) -> (StatusCode, bool, Value) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let feature = DashboardFeature::new(Arc::new(ConfigStore::open(&path).unwrap()));
+    let (_directory, path) = portal_testing::written(text);
+    let feature = DashboardFeature::new(Arc::new(portal_testing::opened(&path).unwrap()));
     let mut request = Request::get(uri).body(Body::empty()).unwrap();
     request
         .extensions_mut()

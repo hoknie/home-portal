@@ -7,13 +7,10 @@ import { renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { ServicesScreen } from "./services-screen";
 
-let search = "";
-const replace = vi.fn();
-
 vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(search),
+  useSearchParams: () => new URLSearchParams(""),
   usePathname: () => "/admin/services/",
-  useRouter: () => ({ replace, push: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 
 function renderWith(services: unknown) {
@@ -38,13 +35,6 @@ it("links each row to the page that edits it", () => {
 it("invites the first service when there are none", () => {
   renderWith({ services: [] });
   expect(screen.getByText("No services yet")).toBeInTheDocument();
-});
-
-it("sends an old edit link to the edit page", () => {
-  search = "edit=nas";
-  renderWith(apiSamples.services);
-  search = "";
-  expect(replace).toHaveBeenCalledWith("/admin/services/edit/?id=nas");
 });
 
 it("names why a service is failing and links each name to its page", () => {

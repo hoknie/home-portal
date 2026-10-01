@@ -1,7 +1,8 @@
 use portal_feature::Area;
+use schemars::JsonSchema;
 use serde::Serialize;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct AreaResponse {
     pub area: &'static str,
     pub actions: Vec<&'static str>,

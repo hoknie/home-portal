@@ -8,12 +8,9 @@ import { answerIn, dnsSchema } from "./schema";
 const dns = dnsSchema.parse(apiSamples.dns);
 
 describe("dns", () => {
-  it("the sample parses with its transports and answers per environment", () => {
-    expect(dns.plain.listening).toBe(false);
-    expect(dns.tls.listening).toBe(true);
+  it("the answer to a name in an environment is its records, or none", () => {
     expect(answerIn(dns, "jellyfin.home", "vpn")).toEqual([{ type: "A", value: "10.8.0.1" }]);
     expect(answerIn(dns, "nas.home", "vpn")).toEqual([]);
-    expect(dns.unaddressed).toEqual(["office"]);
   });
 
   it("the form has one address row per environment and writes only the filled ones", () => {

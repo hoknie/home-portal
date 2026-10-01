@@ -4,7 +4,7 @@ use portal_permissions::{
 };
 use time::macros::datetime;
 
-use crate::check;
+use crate::typed;
 
 fn permission(
     code: &str,
@@ -69,5 +69,5 @@ fn the_permissions_sample_matches_its_serializer() {
             },
         ],
     };
-    check("permissions", serde_json::to_value(permissions).unwrap());
+    typed("permissions", &permissions);
 }

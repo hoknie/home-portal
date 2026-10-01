@@ -1,0 +1,43 @@
+{
+  "$defs": {
+    "IconState": {
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "fetched_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "service": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "service",
+        "source",
+        "available",
+        "fetched_at",
+        "problem"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "items": {
+    "$ref": "#/$defs/IconState"
+  },
+  "title": "Array_of_IconState",
+  "type": "array"
+}

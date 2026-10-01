@@ -1,0 +1,470 @@
+{
+  "$defs": {
+    "InputResponse": {
+      "properties": {
+        "default": true,
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "default",
+        "description"
+      ],
+      "type": "object"
+    },
+    "OutcomeResponse": {
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "duration_milliseconds": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "exit_code": {
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "last_at": {
+          "type": "string"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result": {
+          "type": "string"
+        },
+        "stderr": {
+          "$ref": "#/$defs/OutputResponse"
+        },
+        "stdout": {
+          "$ref": "#/$defs/OutputResponse"
+        }
+      },
+      "required": [
+        "result",
+        "exit_code",
+        "reason",
+        "duration_milliseconds",
+        "count",
+        "last_at",
+        "stdout",
+        "stderr"
+      ],
+      "type": "object"
+    },
+    "OutputResponse": {
+      "properties": {
+        "bytes": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tail": {
+          "type": "string"
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "tail",
+        "bytes",
+        "truncated"
+      ],
+      "type": "object"
+    },
+    "RenderedResponse": {
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "template",
+        "value"
+      ],
+      "type": "object"
+    },
+    "RunResponse": {
+      "properties": {
+        "arguments": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "automation": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string"
+        },
+        "fields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "id": {
+          "type": "string"
+        },
+        "outcome": {
+          "$ref": "#/$defs/OutcomeResponse"
+        },
+        "started_at": {
+          "type": "string"
+        },
+        "steps_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trace": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TraceResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workflow": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "automation",
+        "event",
+        "fields",
+        "arguments",
+        "started_at",
+        "outcome",
+        "workflow",
+        "trace",
+        "steps_version"
+      ],
+      "type": "object"
+    },
+    "TraceEntryResponse": {
+      "properties": {
+        "budget_reached": {
+          "type": "boolean"
+        },
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": "string"
+        },
+        "duration_milliseconds": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "item": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "iteration": {
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "log": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "log_dropped": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "output": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "shape": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "started_at": {
+          "type": "string"
+        },
+        "stderr": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stdout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OutputResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "step": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "$ref": "#/$defs/RenderedResponse"
+          },
+          "type": "array"
+        },
+        "values_dropped": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "wait_seconds": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "step",
+        "label",
+        "kind",
+        "iteration",
+        "outcome",
+        "started_at",
+        "duration_milliseconds",
+        "detail",
+        "output",
+        "shape",
+        "stdout",
+        "stderr",
+        "command",
+        "budget_reached",
+        "values",
+        "log",
+        "values_dropped",
+        "log_dropped",
+        "item",
+        "level",
+        "wait_seconds"
+      ],
+      "type": "object"
+    },
+    "TraceResponse": {
+      "properties": {
+        "dropped": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/TraceEntryResponse"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "entries",
+        "dropped"
+      ],
+      "type": "object"
+    },
+    "WorkflowResponse": {
+      "properties": {
+        "active_run": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "$ref": "#/$defs/InputResponse"
+          },
+          "type": "array"
+        },
+        "last_run": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steps": true,
+        "steps_version": {
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "timeout_seconds": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "used_by": {
+          "items": {
+            "$ref": "#/$defs/WorkflowUsageResponse"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "enabled",
+        "description",
+        "tags",
+        "timeout_seconds",
+        "inputs",
+        "steps",
+        "steps_version",
+        "used_by",
+        "last_run",
+        "active_run"
+      ],
+      "type": "object"
+    },
+    "WorkflowUsageResponse": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "variables": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "title",
+        "variables"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "workflows": {
+      "items": {
+        "$ref": "#/$defs/WorkflowResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "workflows"
+  ],
+  "title": "WorkflowsResponse",
+  "type": "object"
+}

@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::InterfaceResponse;
 use crate::types::{EffectiveAddress, NetworkSettings};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct NetworkResponse {
     pub configured: NetworkSettings,
     pub effective: EffectiveAddress,

@@ -1,11 +1,12 @@
 use std::collections::BTreeMap;
 
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::session_response::rights_map;
 use crate::types::GroupView;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct GroupResponse {
     pub name: String,
     pub builtin: bool,

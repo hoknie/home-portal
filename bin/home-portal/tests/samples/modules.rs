@@ -1,6 +1,6 @@
 use portal_modules::{ModuleResponse, ModulesResponse};
 
-use crate::check;
+use crate::typed;
 
 fn module(
     name: &'static str,
@@ -29,5 +29,5 @@ fn the_modules_sample_matches_its_serializer() {
             module("notifications", true, vec![], vec![]),
         ],
     };
-    check("modules", serde_json::to_value(modules).unwrap());
+    typed("modules", &modules);
 }

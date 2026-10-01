@@ -1,105 +1,42 @@
-use std::io::{BufRead, BufReader, Read, Write};
-use std::net::TcpListener;
-use std::thread;
 use std::time::Duration;
 
+use portal_testing::{Answer, FakeHttp, Request};
 use serde_json::json;
 
 use super::running::run;
 use crate::types::{Ending, StepOutcome};
 
-pub fn serve() -> u16 {
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    thread::spawn(move || {
-        for stream in listener.incoming() {
-            let Ok(stream) = stream else { continue };
-            thread::spawn(move || answer(stream));
-        }
-    });
-    port
+pub async fn serve() -> u16 {
+    FakeHttp::start(reply).await.address.port()
 }
 
-fn answer(mut stream: std::net::TcpStream) {
-    let mut reader = BufReader::new(stream.try_clone().unwrap());
-    let mut head = String::new();
-    loop {
-        let mut line = String::new();
-        if reader.read_line(&mut line).unwrap_or(0) == 0 || line == "\r\n" {
-            break;
-        }
-        head.push_str(&line);
-    }
-    let length = head
-        .lines()
-        .find_map(|line| {
-            line.to_ascii_lowercase()
-                .strip_prefix("content-length:")
-                .map(|value| value.trim().parse::<usize>().unwrap_or(0))
-        })
-        .unwrap_or(0);
-    let mut body = vec![0u8; length];
-    let _ = reader.read_exact(&mut body);
-    let path = head.split_whitespace().nth(1).unwrap_or("/").to_string();
-    let reply = |status: &str, headers: &str, body: &[u8]| {
-        let mut out = format!(
-            "HTTP/1.1 {status}\r\ncontent-length: {}\r\nconnection: close\r\n{headers}\r\n",
-            body.len()
-        )
-        .into_bytes();
-        out.extend_from_slice(body);
-        out
-    };
-    let bytes = if path == "/ok" {
-        reply(
-            "200 OK",
-            "content-type: application/json\r\n",
-            br#"{"state":"up","disks":[{"health":"ok"}]}"#,
-        )
+fn reply(request: &Request) -> Answer {
+    let path = request.path.as_str();
+    if path == "/ok" {
+        Answer::json(r#"{"state":"up","disks":[{"health":"ok"}]}"#)
     } else if path == "/metadata" {
-        reply(
-            "302 Found",
-            "location: http://169.254.169.254/latest/meta-data\r\n",
-            b"",
-        )
+        Answer::status(302).with_header("location", "http://169.254.169.254/latest/meta-data")
     } else if path == "/fail" {
-        reply("503 Service Unavailable", "", b"down for maintenance")
+        Answer::status(503).with_body("down for maintenance")
     } else if let Some(left) = path.strip_prefix("/redirect/") {
-        let left: usize = left.parse().unwrap_or(0);
-        if left == 0 {
-            reply("200 OK", "", b"arrived")
-        } else {
-            reply(
-                "302 Found",
-                &format!("location: /redirect/{}\r\n", left - 1),
-                b"",
-            )
+        match left.parse::<usize>().unwrap_or(0) {
+            0 => Answer::status(200).with_body("arrived"),
+            left => Answer::status(302).with_header("location", &format!("/redirect/{}", left - 1)),
         }
     } else if path == "/disks" {
         let disks: Vec<serde_json::Value> = (0..200)
             .map(|index| json!({"name": format!("sd{index}"), "health": "ok", "note": "x".repeat(150)}))
             .collect();
-        let text = json!({"disks": disks}).to_string();
-        reply(
-            "200 OK",
-            "content-type: application/json\r\n",
-            text.as_bytes(),
-        )
+        Answer::json(&json!({"disks": disks}).to_string())
     } else if path == "/slow" {
-        thread::sleep(Duration::from_secs(3));
-        reply("200 OK", "", b"late")
+        Answer::status(200)
+            .with_body("late")
+            .after(Duration::from_secs(3))
     } else if path == "/big" {
-        let size = 20 * 1024 * 1024;
-        let mut out =
-            format!("HTTP/1.1 200 OK\r\ncontent-length: {size}\r\nconnection: close\r\n\r\n")
-                .into_bytes();
-        out.extend(std::iter::repeat_n(b'x', size));
-        out
+        Answer::status(200).with_body(vec![b'x'; 20 * 1024 * 1024])
     } else {
-        let echoed = format!("{head}\n{}", String::from_utf8_lossy(&body));
-        reply("200 OK", "", echoed.as_bytes())
-    };
-    let _ = stream.write_all(&bytes);
+        Answer::status(200).with_body(format!("{}\r\n\n{}", request.head, request.body))
+    }
 }
 
 fn workflow(port: u16, step: &str) -> String {
@@ -111,7 +48,7 @@ fn workflow(port: u16, step: &str) -> String {
 
 #[tokio::test]
 async fn an_answer_is_read_as_status_body_and_json() {
-    let port = serve();
+    let port = serve().await;
     let outcome = run(&workflow(port, "url = \"http://127.0.0.1:PORT/ok\"")).await;
     assert_eq!(outcome.ending, Ending::Succeeded(None));
     let result = &outcome.frame.steps["call"];
@@ -123,7 +60,7 @@ async fn an_answer_is_read_as_status_body_and_json() {
 
 #[tokio::test]
 async fn a_failing_request_fails_the_step_with_its_status() {
-    let port = serve();
+    let port = serve().await;
     let outcome = run(&workflow(port, "url = \"http://127.0.0.1:PORT/fail\"")).await;
     let Ending::Failed(reason) = &outcome.ending else {
         panic!("{:?}", outcome.ending);
@@ -138,7 +75,7 @@ async fn a_failing_request_fails_the_step_with_its_status() {
 
 #[tokio::test]
 async fn a_tolerated_error_keeps_going_with_the_status() {
-    let port = serve();
+    let port = serve().await;
     let outcome = run(&workflow(
         port,
         "url = \"http://127.0.0.1:PORT/fail\"\nfail_on_error = false",
@@ -150,7 +87,7 @@ async fn a_tolerated_error_keeps_going_with_the_status() {
 
 #[tokio::test]
 async fn more_than_five_redirects_fail_and_five_are_followed() {
-    let port = serve();
+    let port = serve().await;
     let followed = run(&workflow(
         port,
         "url = \"http://127.0.0.1:PORT/redirect/5\"",
@@ -170,7 +107,7 @@ async fn more_than_five_redirects_fail_and_five_are_followed() {
 
 #[tokio::test]
 async fn a_slow_server_hits_the_step_timeout() {
-    let port = serve();
+    let port = serve().await;
     let outcome = run(&workflow(
         port,
         "url = \"http://127.0.0.1:PORT/slow\"\ntimeout_seconds = 1",
@@ -184,7 +121,7 @@ async fn a_slow_server_hits_the_step_timeout() {
 
 #[tokio::test]
 async fn a_huge_answer_is_capped() {
-    let port = serve();
+    let port = serve().await;
     let outcome = run(&workflow(port, "url = \"http://127.0.0.1:PORT/big\"")).await;
     assert_eq!(outcome.ending, Ending::Succeeded(None));
     let body = outcome.frame.steps["call"]["body"].as_str().unwrap().len();
@@ -193,7 +130,7 @@ async fn a_huge_answer_is_capped() {
 
 #[tokio::test]
 async fn headers_and_a_json_body_are_sent() {
-    let port = serve();
+    let port = serve().await;
     let outcome = run(&workflow(
         port,
         "method = \"POST\"\nurl = \"http://127.0.0.1:PORT/echo\"\nheaders = { X-Service = \"{{inputs.service}}\" }\nbody = '{\"service\": \"{{inputs.service}}\"}'",
@@ -214,7 +151,7 @@ async fn headers_and_a_json_body_are_sent() {
 
 #[tokio::test]
 async fn a_long_answer_keeps_its_shape_while_its_body_is_cut() {
-    let port = serve();
+    let port = serve().await;
     let outcome = run(&workflow(port, "url = \"http://127.0.0.1:PORT/disks\"")).await;
     assert_eq!(outcome.ending, Ending::Succeeded(None));
     let entry = &outcome.trace.entries[0];
@@ -261,7 +198,7 @@ async fn a_request_to_the_portal_host_is_refused_before_it_is_sent() {
 
 #[tokio::test]
 async fn a_redirect_into_the_metadata_address_is_not_followed() {
-    let port = serve();
+    let port = serve().await;
     let outcome = run(&workflow(port, "url = \"http://127.0.0.1:PORT/metadata\"")).await;
     let Ending::Failed(reason) = &outcome.ending else {
         panic!("{:?}", outcome.ending);

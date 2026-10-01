@@ -3,46 +3,29 @@ use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 
 use portal_feature::FieldError;
-use toml_edit::{DocumentMut, Item};
+use toml_edit::DocumentMut;
 
 use crate::helpers::{
-    entry_id, holds_secrets, include_paths, merge, parse_document, refuse_if_readable,
-    refuse_nested, take_secrets, wrapped,
+    entry_id, holds_secrets, merge, misplaced, parse_document, refuse_if_readable, take_secrets,
+    wrapped,
 };
 use crate::types::{ConfigError, Layout, Loaded, Revision, Section, Shape, Snapshot, Source};
-
-pub const CONFIGURATION_SECTION: &str = "configuration";
-pub const WRITES_TO_KEY: &str = "writes_to";
-pub const WRITES_TO_IGNORED: &str =
-    "configuration.writes_to is ignored; new entries go to the home of their section";
 
 pub fn read_main(main: &Path) -> Result<DocumentMut, ConfigError> {
     Ok(read_source(main, Shape::Whole)?.document)
 }
 
 pub fn load(main: &Path, layout: &Layout) -> Result<Loaded, ConfigError> {
-    let main_source = read_source(main, Shape::Whole)?;
-    let includes = include_paths(main, &main_source.document)?;
     let mut sources = Vec::new();
     for path in layout.files() {
         if path != main && path.is_file() {
-            let source = read_source(&path, Shape::Whole)?;
-            refuse_nested(&path, &source.document)?;
-            sources.push(source);
+            sources.push(placed(read_source(&path, Shape::Whole)?, main, layout)?);
         }
     }
     for path in workflow_files(&layout.folder()) {
         sources.push(read_entry(&path)?);
     }
-    sources.push(main_source);
-    for path in includes {
-        if sources.iter().any(|source| source.path == path) {
-            continue;
-        }
-        let source = read_source(&path, Shape::Whole)?;
-        refuse_nested(&path, &source.document)?;
-        sources.push(source);
-    }
+    sources.push(placed(read_source(main, Shape::Whole)?, main, layout)?);
     loaded_from(sources)
 }
 
@@ -96,13 +79,6 @@ pub fn revision_of(sources: &[Source]) -> Revision {
     Revision::of(&bytes)
 }
 
-pub fn names_writes_to(document: &DocumentMut) -> bool {
-    document
-        .get(CONFIGURATION_SECTION)
-        .and_then(Item::as_table_like)
-        .is_some_and(|table| table.contains_key(WRITES_TO_KEY))
-}
-
 pub fn entry_problems(path: &Path, document: &DocumentMut) -> Vec<FieldError> {
     let mut problems: Vec<FieldError> = document
         .iter()
@@ -132,6 +108,18 @@ pub fn entry_problems(path: &Path, document: &DocumentMut) -> Vec<FieldError> {
         Some(_) => {}
     }
     problems
+}
+
+fn placed(source: Source, main: &Path, layout: &Layout) -> Result<Source, ConfigError> {
+    let errors = misplaced(&source.path, &source.document, main, layout);
+    if errors.is_empty() {
+        Ok(source)
+    } else {
+        Err(ConfigError::Invalid {
+            path: source.path,
+            errors,
+        })
+    }
 }
 
 fn read_entry(path: &Path) -> Result<Source, ConfigError> {

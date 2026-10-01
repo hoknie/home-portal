@@ -19,10 +19,6 @@ pub enum ConfigError {
         path: PathBuf,
         message: String,
     },
-    Include {
-        path: PathBuf,
-        message: String,
-    },
     Merge {
         message: String,
     },
@@ -79,9 +75,6 @@ impl fmt::Display for ConfigError {
                     "configuration file {} is not valid TOML: {message}",
                     path.display()
                 )
-            }
-            ConfigError::Include { path, message } => {
-                write!(formatter, "include {}: {message}", path.display())
             }
             ConfigError::Merge { message } => {
                 write!(formatter, "the configuration files disagree: {message}")

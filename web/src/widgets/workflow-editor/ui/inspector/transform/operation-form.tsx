@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { type Condition, FILTERS, type Operation, type Path, emptyRow, jsonKeys } from "@/entities/workflow";
+import { type Condition, type Operation, type Path, emptyRow, jsonKeys } from "@/entities/workflow";
 import { FormField } from "@/shared/ui/form-field";
 import { TemplateInput } from "@/shared/ui/template-input";
 
@@ -67,6 +67,7 @@ function KeyField({ path, field, id, label, value, keys, onChange }: KeyFieldPro
 
 export function OperationForm({ path, field, depth, operation, item, from, nested: Nested, onChange }: OperationFormProps) {
   const t = useTranslations("workflowEditor.transform");
+  const editor = useEditor();
   const id = fieldId(path, field);
   const keys = jsonKeys(item === undefined ? null : JSON.stringify(item)).map((key) => key.path);
   switch (operation.op) {
@@ -116,7 +117,7 @@ export function OperationForm({ path, field, depth, operation, item, from, neste
     case "count_by":
       return <KeyField path={path} field={`${field}.key`} id={`${id}-key`} label={t("key")} value={operation.key ?? ""} keys={keys} onChange={(key) => onChange({ ...operation, key })} />;
     default: {
-      const filter = FILTERS[operation.op];
+      const filter = editor.catalogue.filters.find((described) => described.name === operation.op);
       if (!filter || filter.arguments.length === 0) {
         return null;
       }

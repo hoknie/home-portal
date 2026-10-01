@@ -1,18 +1,18 @@
 use super::*;
+use crate::typed;
 
 #[test]
 fn the_session_sample_matches_its_serializer() {
-    check(
+    typed(
         "session",
-        serde_json::to_value(SessionResponse::of(&Principal::member(
+        &SessionResponse::of(&Principal::member(
             "anna",
             Some("family".to_string()),
             Rights::of([
                 Right::new(Area::Automations, Action::Execute),
                 Right::new(Area::Automations, Action::Read),
             ]),
-        )))
-        .unwrap(),
+        )),
     );
 }
 
@@ -66,7 +66,7 @@ fn the_services_sample_matches_its_serializer() {
             ServiceResponse::of(printer, viewpoint, ServiceStatus::unknown(start)),
         ],
     };
-    check("services", serde_json::to_value(response).unwrap());
+    typed("services", &response);
 }
 
 #[test]
@@ -91,9 +91,9 @@ fn the_network_sample_matches_its_serializer() {
             addresses: vec!["127.0.0.1".into()],
         },
     ];
-    check(
+    typed(
         "network",
-        serde_json::to_value(NetworkResponse::of(configured, effective, interfaces)).unwrap(),
+        &NetworkResponse::of(configured, effective, interfaces),
     );
 }
 
@@ -120,9 +120,9 @@ fn the_dashboard_sample_matches_its_serializer() {
         },
         placed("services", "media", WidgetSize::Half),
     ];
-    check(
+    typed(
         "dashboard",
-        serde_json::to_value(DashboardResponse {
+        &DashboardResponse {
             sections: vec![
                 SectionView {
                     id: "now".into(),
@@ -138,8 +138,7 @@ fn the_dashboard_sample_matches_its_serializer() {
                 .enumerate()
                 .map(|(index, widget)| WidgetView::of(WidgetView::key_of(index, &widget), widget))
                 .collect(),
-        })
-        .unwrap(),
+        },
     );
 }
 
@@ -156,9 +155,9 @@ async fn the_field_errors_sample_matches_its_serializer() {
 
 #[test]
 fn the_environment_sample_matches_its_serializer() {
-    check(
+    typed(
         "environment",
-        serde_json::to_value(EnvironmentResponse {
+        &EnvironmentResponse {
             environment: Environment::parse("local").unwrap(),
             detected: Environment::parse("local").unwrap(),
             switchable: true,
@@ -167,16 +166,15 @@ fn the_environment_sample_matches_its_serializer() {
                 Environment::parse("vpn").unwrap(),
                 Environment::internet(),
             ],
-        })
-        .unwrap(),
+        },
     );
 }
 
 #[test]
 fn the_icons_sample_matches_its_serializer() {
-    check(
+    typed(
         "icons",
-        serde_json::to_value(vec![
+        &vec![
             IconState {
                 service: "media".into(),
                 source: "auto".into(),
@@ -191,16 +189,15 @@ fn the_icons_sample_matches_its_serializer() {
                 fetched_at: None,
                 problem: Some("the catalogue answered 404".into()),
             },
-        ])
-        .unwrap(),
+        ],
     );
 }
 
 #[test]
 fn the_secrets_sample_matches_its_serializer() {
-    check(
+    typed(
         "secrets",
-        serde_json::to_value(SecretsResponse {
+        &SecretsResponse {
             secrets: vec![
                 SecretResponse {
                     name: "telegram_token".into(),
@@ -211,7 +208,6 @@ fn the_secrets_sample_matches_its_serializer() {
                     set: false,
                 },
             ],
-        })
-        .unwrap(),
+        },
     );
 }

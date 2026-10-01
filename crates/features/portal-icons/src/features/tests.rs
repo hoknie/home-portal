@@ -6,22 +6,21 @@ use axum::body::Body;
 use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE, ETAG, IF_NONE_MATCH};
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::Feature;
 use serde_json::Value;
 use time::macros::datetime;
 use tower::ServiceExt;
 
 use super::IconsFeature;
-use crate::fakes::{Reply, Site};
+use portal_testing::{Answer, FakeHttp};
 
 const PNG: &[u8] = b"\x89PNG\r\n\x1a\n and some pixels";
 
 #[tokio::test]
 async fn the_portal_serves_the_icon_it_fetched_and_answers_304_to_the_same_tag() {
-    let site = Site::start(BTreeMap::from([(
+    let site = FakeHttp::pages(BTreeMap::from([(
         "/icon.png".to_string(),
-        Reply::image(PNG),
+        Answer::ok("image/png", PNG),
     )]))
     .await;
     let directory = tempfile::tempdir().unwrap();
@@ -35,7 +34,7 @@ async fn the_portal_serves_the_icon_it_fetched_and_answers_304_to_the_same_tag()
         ),
     )
     .unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = IconsFeature::new(store, "http://unused.invalid").unwrap();
     feature
         .icons()
@@ -81,11 +80,9 @@ async fn the_portal_serves_the_icon_it_fetched_and_answers_304_to_the_same_tag()
     assert_eq!(missing.status(), StatusCode::NOT_FOUND);
 }
 
-async fn preview(site: &Site, body: &str) -> (StatusCode, String, String, Vec<u8>, bool) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, "").unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+async fn preview(site: &FakeHttp, body: &str) -> (StatusCode, String, String, Vec<u8>, bool) {
+    let (directory, path) = portal_testing::written("");
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = IconsFeature::new(store, &format!("{}/catalog", site.url())).unwrap();
     let response = feature
         .router()
@@ -124,9 +121,9 @@ fn field_error(bytes: &[u8]) -> (String, String) {
 
 #[tokio::test]
 async fn a_catalogue_icon_is_previewed_without_being_cached() {
-    let site = Site::start(BTreeMap::from([(
+    let site = FakeHttp::pages(BTreeMap::from([(
         "/catalog/jellyfin.png".to_string(),
-        Reply::image(PNG),
+        Answer::ok("image/png", PNG),
     )]))
     .await;
     let (status, content_type, cache, bytes, cached) =
@@ -140,12 +137,15 @@ async fn a_catalogue_icon_is_previewed_without_being_cached() {
 
 #[tokio::test]
 async fn auto_finds_the_icon_at_the_address_it_is_given() {
-    let site = Site::start(BTreeMap::from([
+    let site = FakeHttp::pages(BTreeMap::from([
         (
             "/".to_string(),
-            Reply::page("<html><head><link rel=\"icon\" href=\"/page.png\"></head></html>"),
+            Answer::ok(
+                "text/html",
+                "<html><head><link rel=\"icon\" href=\"/page.png\"></head></html>",
+            ),
         ),
-        ("/page.png".to_string(), Reply::image(PNG)),
+        ("/page.png".to_string(), Answer::ok("image/png", PNG)),
     ]))
     .await;
     let (status, _, _, bytes, cached) = preview(&site, r#"{"icon":"auto","url":"SITE/"}"#).await;
@@ -156,9 +156,9 @@ async fn auto_finds_the_icon_at_the_address_it_is_given() {
 
 #[tokio::test]
 async fn a_page_that_is_not_an_image_is_refused_on_the_icon_field() {
-    let site = Site::start(BTreeMap::from([(
+    let site = FakeHttp::pages(BTreeMap::from([(
         "/".to_string(),
-        Reply::page("<html></html>"),
+        Answer::ok("text/html", "<html></html>"),
     )]))
     .await;
     let (status, _, _, bytes, _) = preview(&site, r#"{"icon":"url:SITE/","url":null}"#).await;
@@ -170,7 +170,7 @@ async fn a_page_that_is_not_an_image_is_refused_on_the_icon_field() {
 
 #[tokio::test]
 async fn a_preview_that_cannot_be_fetched_is_refused_on_the_icon_field() {
-    let site = Site::start(BTreeMap::new()).await;
+    let site = FakeHttp::pages(BTreeMap::new()).await;
     for body in [
         r#"{"icon":"auto","url":""}"#,
         r#"{"icon":"auto","url":"ftp://nas.local"}"#,

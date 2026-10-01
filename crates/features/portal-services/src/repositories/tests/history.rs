@@ -122,15 +122,16 @@ fn a_line_cut_off_by_a_crash_is_skipped_and_the_rest_is_kept() {
 }
 
 #[test]
-fn a_history_in_the_former_json_format_is_carried_over_to_ndjson() {
+fn a_history_in_the_former_json_format_is_ignored_and_left_untouched() {
     let (directory, files) = files();
     fs::create_dir_all(directory.path().join("history")).unwrap();
     let legacy = directory.path().join("history/media.json");
-    fs::write(&legacy, serde_json::to_string(&history()).unwrap()).unwrap();
+    let text = serde_json::to_string(&history()).unwrap();
+    fs::write(&legacy, &text).unwrap();
     let loaded = files.load(&["media".to_string()]);
-    assert_eq!(loaded["media"].transitions, history().transitions);
-    assert!(!legacy.exists());
-    assert!(files.file_of("media").is_file());
+    assert!(!loaded.contains_key("media"));
+    assert_eq!(fs::read_to_string(&legacy).unwrap(), text);
+    assert!(!files.file_of("media").exists());
 }
 
 #[test]
@@ -281,21 +282,4 @@ fn a_line_with_broken_bytes_is_skipped_and_later_lines_are_kept() {
         .unwrap();
     let loaded = files.load(&["media".to_string()]);
     assert_eq!(loaded["media"].samples.back().unwrap().at, later);
-}
-
-#[test]
-fn a_former_json_and_newer_lines_are_merged_and_the_json_goes_away() {
-    let (directory, files) = files();
-    fs::create_dir_all(directory.path().join("history")).unwrap();
-    let legacy = directory.path().join("history/media.json");
-    fs::write(&legacy, serde_json::to_string(&history()).unwrap()).unwrap();
-    let mut newer = ServiceHistory::default();
-    let later = OffsetDateTime::now_utc().unix_timestamp();
-    newer.record(later, &ProbeOutcome::answered(ServiceState::Up, 4));
-    files
-        .save("media", &HistoryWrite::Append(newer.take_lines()))
-        .unwrap();
-    let loaded = files.load(&["media".to_string()]);
-    assert_eq!(loaded["media"].samples.len(), 3);
-    assert!(!legacy.exists());
 }

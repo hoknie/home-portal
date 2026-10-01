@@ -268,7 +268,8 @@ Rules for every integration:
 - Actions leave the crate through ports: `http` cannot reach the portal's host or link-local
   addresses, scripts follow §6.9, and portal actions go through `PortalActions`.
 - Secrets are masked in every trace and cannot pass through filters.
-- The filter evaluator is mirrored in TypeScript, and shared samples keep the two equal.
+- Templates and transforms are evaluated only in Rust; the editor asks for previews and keeps
+  no evaluator of its own.
 - One host page (`web/src/app/admin/workflows/workflows-route.tsx`) serves every workflow address
   and moves between them with `pushAddress`, since the static export has no dynamic segments.
 - Details: `openspec/specs/workflows/spec.md`.
@@ -343,6 +344,8 @@ Rules for every integration:
 | Tests | no live service, no network | ✅ |
 | Rust architecture guards | `bin/home-portal/tests/architecture/`: comments, allows, `unsafe`, roots, sizes, folders, layers, registry, channels, rules | ✅ |
 | API samples | `bin/home-portal/tests/samples/` against the web schemas; `just samples` rewrites | ✅ |
+| Response schemas | the samples test writes a JSON Schema per typed answer (`schemars`); `web/scripts/generate-schemas.mjs` turns them into `web/src/shared/api/generated/`; both fail when stale | ✅ |
+| Test support | `crates/core/portal-testing` (dev only): `FakeHttp` for outbound calls, `written`/`split`/`opened` for configuration directories | ✅ |
 | Widget kinds | `web/src/features/widget-board/model/registry.test.ts` | ✅ |
 | Example configurations | `bin/home-portal/tests/examples.rs`, `configuration.rs` | ✅ |
 | Frontend layers | `steiger` (FSD) | ✅ |

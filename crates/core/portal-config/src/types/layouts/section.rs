@@ -26,7 +26,7 @@ impl Section {
         Section::Workflows,
     ];
 
-    pub const MAIN_KEYS: [&'static str; 10] = [
+    pub const MAIN_KEYS: [&'static str; 8] = [
         "network",
         "environments",
         "modules",
@@ -35,8 +35,6 @@ impl Section {
         "scripts",
         "permissions",
         "files",
-        "include",
-        "configuration",
     ];
 
     pub const WORKFLOW_KEYS: [&'static str; 8] = [

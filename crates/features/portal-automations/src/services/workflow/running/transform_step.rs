@@ -10,8 +10,8 @@ use crate::services::workflow::evaluating::{
     rendered_arguments, text_of,
 };
 use crate::types::{
-    Ending, EventValues, Flow, Operation, RawOperation, RawStep, StepKind, StepLog, StepReport,
-    TraceEntry, ValueType,
+    EventValues, Operation, PreviewQuestion, RawStep, StepKind, StepLog, StepReport, TraceEntry,
+    TransformPreview, ValueType,
 };
 
 pub fn run_transform(input: &str, operations: &[Operation], frame: &mut Frame) -> StepReport {
@@ -56,32 +56,113 @@ pub fn run_transform(input: &str, operations: &[Operation], frame: &mut Frame) -
 
 pub const SAMPLE_INPUT: &str = "{{vars.input}}";
 
-pub fn transform_sample(input: Value, operations: &[RawOperation]) -> Result<Value, String> {
+pub fn preview_transform(question: &PreviewQuestion) -> Result<TransformPreview, String> {
     let raw = RawStep {
         kind: "transform".to_string(),
         input: Some(SAMPLE_INPUT.to_string()),
-        operations: Some(operations.to_vec()),
+        operations: Some(question.operations.clone()),
         ..RawStep::default()
     };
     let mut errors = Vec::new();
-    let Some(StepKind::Transform { operations, .. }) = decode_transform(&raw, "", &mut errors)
-    else {
-        let messages: Vec<String> = errors
-            .iter()
-            .map(|error| format!("{}: {}", error.field.trim_start_matches('.'), error.message))
-            .collect();
-        return Err(messages.join("; "));
+    let operations = match decode_transform(&raw, "", &mut errors) {
+        Some(StepKind::Transform { operations, .. }) => operations,
+        _ if question.operations.is_empty() => Vec::new(),
+        _ => {
+            let messages: Vec<String> = errors
+                .iter()
+                .map(|error| format!("{}: {}", error.field.trim_start_matches('.'), error.message))
+                .collect();
+            return Err(messages.join("; "));
+        }
     };
+    let mut frame = preview_frame(&question.names);
+    frame
+        .vars
+        .insert("input".to_string(), question.value.clone());
+    let start = render_value(&chained(&question.filters), &frame);
+    let Ok(value) = start.clone() else {
+        return Ok(TransformPreview {
+            input: start,
+            steps: Vec::new(),
+            examples: Vec::new(),
+        });
+    };
+    frame.vars.insert("input".to_string(), value.clone());
+    let examples = question
+        .examples
+        .iter()
+        .map(|example| render_value(&chained(&format!("| {example}")), &frame))
+        .collect();
+    let mut steps = Vec::with_capacity(operations.len());
+    let mut current = value;
+    for (index, operation) in operations.iter().enumerate() {
+        match apply_operation(current.clone(), operation, &mut frame) {
+            Ok(next) => {
+                steps.push(Ok(next.clone()));
+                current = next;
+            }
+            Err((position, name, message)) => {
+                steps.push(Err(format!(
+                    "operation {}{position} ({name}): {message}",
+                    index + 1
+                )));
+                break;
+            }
+        }
+    }
+    Ok(TransformPreview {
+        input: start,
+        steps,
+        examples,
+    })
+}
+
+fn chained(chain: &str) -> String {
+    let chain = chain.trim();
+    if chain.is_empty() {
+        SAMPLE_INPUT.to_string()
+    } else {
+        format!("{{{{vars.input {chain}}}}}")
+    }
+}
+
+fn preview_frame(names: &BTreeMap<String, Value>) -> Frame {
     let mut frame = Frame::new(
         Arc::new(EventValues::default()),
         BTreeMap::new(),
         Arc::new(Secrets::new(Arc::new(|_| None))),
     );
-    frame.vars.insert("input".to_string(), input);
-    let report = run_transform(SAMPLE_INPUT, &operations, &mut frame);
-    match report.flow {
-        Flow::End(Ending::Failed(message)) => Err(message),
-        _ => Ok(report.result.get("value").cloned().unwrap_or(Value::Null)),
+    for (name, value) in names {
+        let mut parts = name.split('.');
+        let (Some(namespace), Some(first)) = (parts.next(), parts.next()) else {
+            continue;
+        };
+        let place = match namespace {
+            "steps" => &mut frame.steps,
+            "vars" => &mut frame.vars,
+            "inputs" => &mut frame.inputs,
+            _ => continue,
+        };
+        let entry = place.entry(first.to_string()).or_insert(Value::Null);
+        placed(entry, &parts.collect::<Vec<_>>(), value.clone());
+    }
+    frame
+}
+
+fn placed(target: &mut Value, path: &[&str], value: Value) {
+    let Some((first, rest)) = path.split_first() else {
+        *target = value;
+        return;
+    };
+    if !target.is_object() {
+        *target = Value::Object(Map::new());
+    }
+    if let Some(object) = target.as_object_mut() {
+        placed(
+            object.entry(first.to_string()).or_insert(Value::Null),
+            rest,
+            value,
+        );
     }
 }
 

@@ -1,0 +1,44 @@
+{
+  "$defs": {
+    "UserResponse": {
+      "properties": {
+        "group": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "you": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "group",
+        "you"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "editable": {
+      "type": "boolean"
+    },
+    "users": {
+      "items": {
+        "$ref": "#/$defs/UserResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "users",
+    "editable"
+  ],
+  "title": "UsersResponse",
+  "type": "object"
+}

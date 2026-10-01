@@ -1,27 +1,29 @@
 use portal_feature::{ChannelReadiness, PortalEvent};
+use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::Value;
 
 use super::DeliveryResponse;
 use crate::types::ChannelView;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct MissingResponse {
     pub field: String,
     pub message: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct LastErrorResponse {
     pub at: String,
     pub message: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct ChannelResponse {
     pub name: String,
     pub readiness: String,
     pub missing: Option<MissingResponse>,
+    #[schemars(with = "serde_json::Map<String, Value>")]
     pub settings: Value,
     pub last_delivery: Option<DeliveryResponse>,
     pub last_error: Option<LastErrorResponse>,

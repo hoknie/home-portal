@@ -6,6 +6,7 @@ members = [
     "crates/core/portal-config",
     "crates/core/portal-web",
     "crates/core/portal-widget",
+    "crates/core/portal-testing",
     "crates/features/portal-health",
     "crates/features/portal-icons",
     "crates/features/portal-auth",
@@ -30,7 +31,7 @@ members = [
 
 [workspace.package]
 edition = "2024"
-version = "0.1.10"
+version = "0.2.0"
 
 [workspace.dependencies]
 async-trait = "0.1"
@@ -44,6 +45,7 @@ proc-macro2 = { version = "1", features = ["span-locations"] }
 http-body-util = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+schemars = "1.2"
 ical = "0.11"
 sysinfo = { version = "0.39", default-features = false, features = ["disk", "system"] }
 toml = "1.1"
@@ -75,6 +77,7 @@ portal-feature = { path = "crates/core/portal-feature" }
 portal-config = { path = "crates/core/portal-config" }
 portal-web = { path = "crates/core/portal-web" }
 portal-widget = { path = "crates/core/portal-widget" }
+portal-testing = { path = "crates/core/portal-testing" }
 portal-health = { path = "crates/features/portal-health" }
 portal-icons = { path = "crates/features/portal-icons" }
 portal-auth = { path = "crates/features/portal-auth" }

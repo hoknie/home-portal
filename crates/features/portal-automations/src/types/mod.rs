@@ -5,6 +5,7 @@ mod inputs;
 mod journal;
 mod logging;
 mod portal;
+mod previews;
 mod progress;
 mod running;
 mod schedule;
@@ -29,6 +30,7 @@ pub use inputs::{InputDeclaration, InputType, InputValue, RawInput};
 pub use journal::{Outcome, RunFilter, RunRecord, Seen, SkipReason};
 pub use logging::{EntryEnd, LogLevel, Rendered, StepLog, StepLogging};
 pub use portal::{PortalService, PortalState, RawServiceId};
+pub use previews::{PreviewQuestion, TransformPreview};
 pub use progress::{
     Ending, Flow, HttpAnswer, HttpRequest, Place, ProbeResult, StatusResult, StepOutcome,
     StepReport, Streams, Trace, TraceEntry,

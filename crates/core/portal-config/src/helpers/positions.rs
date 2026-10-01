@@ -1,8 +1,4 @@
-use toml_edit::{DocumentMut, Item, Table};
-
-pub fn next_position(document: &DocumentMut) -> isize {
-    highest(document.as_item()) + 1
-}
+use toml_edit::{Item, Table};
 
 pub fn highest(item: &Item) -> isize {
     let mut highest = 0;

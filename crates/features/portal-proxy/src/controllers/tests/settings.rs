@@ -54,7 +54,7 @@ async fn put_proxy_ignores_enabled_and_writes_no_switch() {
 #[tokio::test]
 async fn a_legacy_enabled_key_still_switches_the_proxy_on() {
     let portal = portal(
-        "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\n",
+        "[modules]\nproxy = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nportal_host = \"portal.example.com\"\n",
     );
     let response = send(&portal, get("/api/proxy"), CADDY, "local").await;
     assert_eq!(json(response).await["enabled"], true);
@@ -62,9 +62,8 @@ async fn a_legacy_enabled_key_still_switches_the_proxy_on() {
 
 #[tokio::test]
 async fn the_modules_key_wins_over_the_legacy_key() {
-    let portal = portal(
-        "[modules]\nproxy = false\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\n",
-    );
+    let portal =
+        portal("[modules]\nproxy = false\n\n[proxy]\nportal_host = \"portal.example.com\"\n");
     let response = send(&portal, get("/api/proxy"), CADDY, "local").await;
     let body = json(response).await;
     assert_eq!(body["enabled"], false);

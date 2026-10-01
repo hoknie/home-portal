@@ -147,7 +147,7 @@ fn workflow(steps: &str) -> String {
 
 #[tokio::test]
 async fn a_branch_is_chosen_and_the_other_does_not_run() {
-    let outcome = run(&workflow("[[workflows.steps]]\nid = \"check\"\nkind = \"status\"\nservice = \"{{inputs.service}}\"\n[[workflows.steps]]\nid = \"down\"\nkind = \"if\"\ncondition = { left = \"{{steps.check.state}}\", op = \"==\", right = \"down\" }\nthen = [{ id = \"yes\", kind = \"telegram\", text = \"{{inputs.service}} is down\" }]\nelse = [{ id = \"no\", kind = \"telegram\", text = \"fine\" }]\n")).await;
+    let outcome = run(&workflow("[[workflows.steps]]\nid = \"check\"\nkind = \"status\"\nservice = \"{{inputs.service}}\"\n[[workflows.steps]]\nid = \"down\"\nkind = \"if\"\ncondition = { left = \"{{steps.check.state}}\", op = \"==\", right = \"down\" }\nthen = [{ id = \"yes\", kind = \"notify\", channel = \"telegram\", text = \"{{inputs.service}} is down\" }]\nelse = [{ id = \"no\", kind = \"notify\", channel = \"telegram\", text = \"fine\" }]\n")).await;
     assert_eq!(outcome.ending, Ending::Succeeded(None));
     assert_eq!(*outcome.actions.sent.lock().unwrap(), vec!["nas is down"]);
     assert_eq!(outcome.frame.steps["down"], json!({"branch": "then"}));
@@ -179,7 +179,7 @@ async fn a_loop_that_never_ends_fails_at_its_bound() {
 async fn stopping_a_run_ends_a_long_wait_at_once() {
     let (sender, stop) = watch::channel(false);
     let text = workflow(
-        "[[workflows.steps]]\nid = \"nap\"\nkind = \"wait\"\nseconds = 600\n[[workflows.steps]]\nid = \"after\"\nkind = \"telegram\"\ntext = \"never\"\n",
+        "[[workflows.steps]]\nid = \"nap\"\nkind = \"wait\"\nseconds = 600\n[[workflows.steps]]\nid = \"after\"\nkind = \"notify\"\nchannel = \"telegram\"\ntext = \"never\"\n",
     );
     let began = Instant::now();
     let running =
@@ -215,7 +215,7 @@ async fn more_than_a_thousand_steps_fail_the_run() {
 
 #[tokio::test]
 async fn parallel_branches_merge_in_the_order_they_finish() {
-    let outcome = run(&workflow("[[workflows.steps]]\nid = \"both\"\nkind = \"parallel\"\nbranches = [\n  [{ id = \"a\", kind = \"set\", variable = \"who\", value = \"first\" }, { id = \"slow\", kind = \"wait\", seconds = 1 }],\n  [{ id = \"b\", kind = \"set\", variable = \"who\", value = \"second\" }],\n]\n[[workflows.steps]]\nid = \"say\"\nkind = \"telegram\"\ntext = \"{{vars.who}} {{steps.a.value}} {{steps.b.value}}\"\n")).await;
+    let outcome = run(&workflow("[[workflows.steps]]\nid = \"both\"\nkind = \"parallel\"\nbranches = [\n  [{ id = \"a\", kind = \"set\", variable = \"who\", value = \"first\" }, { id = \"slow\", kind = \"wait\", seconds = 1 }],\n  [{ id = \"b\", kind = \"set\", variable = \"who\", value = \"second\" }],\n]\n[[workflows.steps]]\nid = \"say\"\nkind = \"notify\"\nchannel = \"telegram\"\ntext = \"{{vars.who}} {{steps.a.value}} {{steps.b.value}}\"\n")).await;
     assert_eq!(outcome.ending, Ending::Succeeded(None));
     assert_eq!(
         *outcome.actions.sent.lock().unwrap(),
@@ -256,7 +256,7 @@ async fn a_trace_of_a_retry_shows_every_iteration() {
 
 #[tokio::test]
 async fn a_called_workflow_returns_its_variables_and_a_failing_action_fails_the_run() {
-    let text = "[[workflows]]\nid = \"caller\"\ntitle = \"C\"\n[[workflows.steps]]\nid = \"go\"\nkind = \"workflow\"\nworkflow = \"helper\"\ninputs = { name = \"nas\" }\n[[workflows.steps]]\nid = \"say\"\nkind = \"telegram\"\ntext = \"{{steps.go.vars.greeting}}\"\n[[workflows.steps]]\nid = \"broken\"\nkind = \"probe\"\nservice = \"ghost\"\n\n[[workflows]]\nid = \"helper\"\ntitle = \"H\"\ninputs = [\"name\"]\n[[workflows.steps]]\nid = \"greet\"\nkind = \"set\"\nvariable = \"greeting\"\nvalue = \"hello {{inputs.name}}\"\n";
+    let text = "[[workflows]]\nid = \"caller\"\ntitle = \"C\"\n[[workflows.steps]]\nid = \"go\"\nkind = \"workflow\"\nworkflow = \"helper\"\ninputs = { name = \"nas\" }\n[[workflows.steps]]\nid = \"say\"\nkind = \"notify\"\nchannel = \"telegram\"\ntext = \"{{steps.go.vars.greeting}}\"\n[[workflows.steps]]\nid = \"broken\"\nkind = \"probe\"\nservice = \"ghost\"\n\n[[workflows]]\nid = \"helper\"\ntitle = \"H\"\ninputs = [\"name\"]\n[[workflows.steps]]\nid = \"greet\"\nkind = \"set\"\nvariable = \"greeting\"\nvalue = \"hello {{inputs.name}}\"\n";
     let outcome = run(text).await;
     assert_eq!(*outcome.actions.sent.lock().unwrap(), vec!["hello nas"]);
     assert_eq!(outcome.ending, Ending::Failed("no service ghost".into()));
@@ -271,7 +271,7 @@ async fn a_called_workflow_returns_its_variables_and_a_failing_action_fails_the_
 
 #[tokio::test]
 async fn a_branch_that_does_nothing_runs_and_the_run_goes_on() {
-    let outcome = run(&workflow("[[workflows.steps]]\nid = \"check\"\nkind = \"if\"\ncondition = { left = \"a\", op = \"==\", right = \"a\" }\nthen = [{ id = \"skip\", kind = \"nothing\" }]\nelse = [{ id = \"tell\", kind = \"telegram\", text = \"x\" }]\n[[workflows.steps]]\nid = \"after\"\nkind = \"telegram\"\ntext = \"after\"\n")).await;
+    let outcome = run(&workflow("[[workflows.steps]]\nid = \"check\"\nkind = \"if\"\ncondition = { left = \"a\", op = \"==\", right = \"a\" }\nthen = [{ id = \"skip\", kind = \"nothing\" }]\nelse = [{ id = \"tell\", kind = \"notify\", channel = \"telegram\", text = \"x\" }]\n[[workflows.steps]]\nid = \"after\"\nkind = \"notify\"\nchannel = \"telegram\"\ntext = \"after\"\n")).await;
     assert_eq!(outcome.ending, Ending::Succeeded(None));
     assert_eq!(*outcome.actions.sent.lock().unwrap(), vec!["after"]);
     assert_eq!(outcome.trace.entries[1].step, "skip");

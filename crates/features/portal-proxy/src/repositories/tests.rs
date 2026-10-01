@@ -2,8 +2,7 @@ use toml_edit::DocumentMut;
 
 use super::write_managed;
 
-const BEFORE: &str =
-    "# the proxy\n[proxy]\nenabled = true # on\nportal_host = \"portal.example.com\"\n";
+const BEFORE: &str = "# the proxy\n[proxy]\nadmin = \"http://127.0.0.1:2019\" # on\nportal_host = \"portal.example.com\"\n";
 
 #[test]
 fn starting_caddy_adds_managed_and_keeps_every_comment() {
@@ -38,25 +37,25 @@ fn choice() -> crate::types::ProxyChoice {
 }
 
 #[test]
-fn writing_the_settings_leaves_a_legacy_switch_as_it_was_and_keeps_every_comment() {
+fn writing_the_settings_leaves_other_keys_as_they_were_and_keeps_every_comment() {
     let mut document: DocumentMut =
-        "# mine\n[proxy]\nenabled = false # off for now\ncookie_domain = \"old.example.com\"\n"
+        "# mine\n[proxy]\nmanaged = false # not yet\ncookie_domain = \"old.example.com\"\n"
             .parse()
             .unwrap();
     super::write_choice(&mut document, &choice());
     assert_eq!(
         document.to_string(),
-        "# mine\n[proxy]\nenabled = false # off for now\nportal_host = \"portal.example.com\"\ntls = { mode = \"acme\", email = \"owner@example.com\" }\n"
+        "# mine\n[proxy]\nmanaged = false # not yet\nportal_host = \"portal.example.com\"\ntls = { mode = \"acme\", email = \"owner@example.com\" }\n"
     );
 }
 
 #[test]
 fn a_tls_table_is_edited_in_place() {
-    let mut document: DocumentMut = "[proxy]\nenabled = true\n\n# certificates\n[proxy.tls]\nmode = \"files\"\ncertificate = \"/a.pem\"\nkey = \"/a.key\"\n".parse().unwrap();
+    let mut document: DocumentMut = "[proxy]\nmanaged = true\n\n# certificates\n[proxy.tls]\nmode = \"files\"\ncertificate = \"/a.pem\"\nkey = \"/a.key\"\n".parse().unwrap();
     super::write_choice(&mut document, &choice());
     assert_eq!(
         document.to_string(),
-        "[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\n\n# certificates\n[proxy.tls]\nmode = \"acme\"\nemail = \"owner@example.com\"\n"
+        "[proxy]\nmanaged = true\nportal_host = \"portal.example.com\"\n\n# certificates\n[proxy.tls]\nmode = \"acme\"\nemail = \"owner@example.com\"\n"
     );
 }
 
@@ -139,7 +138,7 @@ fn the_default_source_and_version_remove_the_caddy_key() {
 
 #[test]
 fn a_caddy_table_is_edited_in_place() {
-    let mut document: DocumentMut = "[proxy]\nenabled = true\n\n# where caddy comes from\n[proxy.caddy]\nsource = \"https://git.example.com/releases\" # mirror\nversion = \"2.9.0\"\n".parse().unwrap();
+    let mut document: DocumentMut = "[proxy]\nmanaged = true\n\n# where caddy comes from\n[proxy.caddy]\nsource = \"https://git.example.com/releases\" # mirror\nversion = \"2.9.0\"\n".parse().unwrap();
     let source = crate::types::CaddySource {
         base: "https://git.example.com/releases".into(),
         ..pinned("2.10.2")
@@ -147,7 +146,7 @@ fn a_caddy_table_is_edited_in_place() {
     super::write_caddy_source(&mut document, &source);
     assert_eq!(
         document.to_string(),
-        "[proxy]\nenabled = true\n\n# where caddy comes from\n[proxy.caddy]\nsource = \"https://git.example.com/releases\" # mirror\nversion = \"2.10.2\"\n"
+        "[proxy]\nmanaged = true\n\n# where caddy comes from\n[proxy.caddy]\nsource = \"https://git.example.com/releases\" # mirror\nversion = \"2.10.2\"\n"
     );
 }
 
@@ -155,7 +154,7 @@ fn a_caddy_table_is_edited_in_place() {
 fn editing_the_settings_keeps_the_download_source() {
     let mirror =
         "caddy = { source = \"https://git.example.com/api/v1/repos/caddy/caddy/releases\" }\n";
-    let mut document: DocumentMut = format!("[proxy]\nenabled = false\n{mirror}")
+    let mut document: DocumentMut = format!("[proxy]\nmanaged = false\n{mirror}")
         .parse()
         .unwrap();
     super::write_choice(&mut document, &choice());

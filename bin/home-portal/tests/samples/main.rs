@@ -10,10 +10,13 @@ mod notifications;
 mod permissions;
 mod proxy;
 mod public;
+mod schemas;
 mod triggers;
 mod users;
 mod widgets;
 mod workflows;
+
+use schemas::typed;
 
 use std::env;
 use std::fs;

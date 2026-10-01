@@ -5,14 +5,14 @@ import { type PortalValues, portalValue } from "../portal";
 import { scopeAt } from "../scope";
 import { lastOutput } from "../suggestions/last-output";
 import { type Path, at, everyStep } from "../tree";
-import { applyFilter } from "./filters";
-import { previewOperations } from "./operations";
-import { type FilterCall, parseChain } from "./parse";
+import type { Operation } from "./operations";
+import { parseChain } from "./parse";
+import { type ChainPreview, type PreviewCache, askPreview, settled } from "./previews";
 import { placeholderAt } from "./render";
 import { certainType, givesAfter } from "./types";
 import { type ValueType, textOf, typeOfValue, walk } from "./values";
 
-export type KnownContext = { steps: Step[]; inputs: (string | InputDeclaration)[]; path: Path; field: string; lastRun: Trace | null; catalogue: WorkflowCatalogue | undefined; portal?: PortalValues | null };
+export type KnownContext = { steps: Step[]; inputs: (string | InputDeclaration)[]; path: Path; field: string; lastRun: Trace | null; catalogue: WorkflowCatalogue | undefined; portal?: PortalValues | null; preview?: PreviewCache };
 
 export type Sample = { value: unknown; from: "sample" | "run" };
 
@@ -40,21 +40,41 @@ function stepNamed(steps: Step[], id: string) {
   return found;
 }
 
-export function inputSample(step: Step, context: KnownContext, depth = 0): Sample | null {
+function inputParts(step: Step): { name: string; filters: string } | null {
   const trimmed = (step.input ?? "").trim();
   const placeholder = trimmed.startsWith("{{") ? placeholderAt(trimmed.slice(2)) : null;
   if (placeholder === null || placeholder.filters === null || trimmed.length !== placeholder.length + 4) {
     return null;
   }
-  const source = sampleOf(placeholder.name, context, depth + 1);
-  if (source === null) {
+  const inner = trimmed.slice(2, -2);
+  const bar = inner.indexOf("|");
+  return { name: placeholder.name, filters: bar < 0 ? "" : inner.slice(bar) };
+}
+
+export function previewChain(value: unknown, operations: Operation[], context: KnownContext, depth = 0, filters = "", examples: string[] = []): ChainPreview {
+  return askPreview(context.preview, { value, filters, operations, examples }, (name) => sampleOf(name, context, depth + 1));
+}
+
+export function inputSample(step: Step, context: KnownContext, depth = 0): Sample | null {
+  const parts = inputParts(step);
+  const source = parts === null ? null : sampleOf(parts.name, context, depth + 1);
+  if (parts === null || source === null) {
     return null;
   }
-  try {
-    return { value: placeholder.filters.reduce<unknown>((value, call) => applyFilter(value, call), source.value), from: source.from };
-  } catch {
-    return null;
+  if (parts.filters === "") {
+    return source;
   }
+  const input = previewChain(source.value, [], context, depth, parts.filters).input;
+  return settled(input) ? { value: input.value, from: source.from } : null;
+}
+
+function afterChain(step: Step, context: KnownContext, depth: number, count: number): Sample | null {
+  const input = inputSample(step, context, depth);
+  if (input === null || count === 0) {
+    return input;
+  }
+  const last = previewChain(input.value, step.operations ?? [], context, depth).steps[count - 1];
+  return settled(last) ? { value: last.value, from: input.from } : null;
 }
 
 export function sampleOf(name: string, context: KnownContext, depth = 0): Sample | null {
@@ -74,10 +94,9 @@ export function sampleOf(name: string, context: KnownContext, depth = 0): Sample
     return value === undefined ? null : { value: walk(value, path), from: own !== undefined ? "sample" : "run" };
   }
   if (step?.kind === "transform" && field === "value") {
-    const input = inputSample(step, context, depth);
-    if (input !== null) {
-      const last = previewOperations(input.value, step.operations ?? []).at(-1);
-      return last && last.error === null ? { value: walk(last.value, path), from: input.from } : null;
+    const after = afterChain(step, context, depth, (step.operations ?? []).length);
+    if (after !== null) {
+      return { value: walk(after.value, path), from: after.from };
     }
     const snapshots = parsed(lastOutput(context.lastRun, id));
     return Array.isArray(snapshots) && snapshots.length > 0 ? { value: walk(snapshots.at(-1), path), from: "run" } : null;
@@ -92,18 +111,7 @@ export function operationIndex(field: string): number | null {
 
 export function valueBefore(context: KnownContext, index: number): Sample | null {
   const step = at(context.steps, context.path);
-  if (step?.kind !== "transform") {
-    return null;
-  }
-  const input = inputSample(step, context);
-  if (input === null) {
-    return null;
-  }
-  if (index === 0) {
-    return input;
-  }
-  const preview = previewOperations(input.value, (step.operations ?? []).slice(0, index)).at(-1);
-  return preview && preview.error === null ? { value: preview.value, from: input.from } : null;
+  return step?.kind === "transform" ? afterChain(step, context, 0, index) : null;
 }
 
 export function itemSample(context: KnownContext): Sample | null {
@@ -135,43 +143,39 @@ function placeholderOf(argument: FilterDescription["arguments"][number]) {
   return argument.type === "number" ? "0" : argument.type === "text" ? JSON.stringify(argument.name) : '""';
 }
 
-function exampleOf(value: unknown, call: FilterCall): string | undefined {
-  try {
-    const text = textOf(applyFilter(value, call));
-    return text.length > LONGEST_EXAMPLE ? `${text.slice(0, LONGEST_EXAMPLE - 1)}…` : text;
-  } catch {
+function exampleOf(preview: ChainPreview["examples"][number] | undefined): string | undefined {
+  if (!settled(preview) || preview.value === null) {
     return undefined;
   }
+  const text = textOf(preview.value);
+  return text.length > LONGEST_EXAMPLE ? `${text.slice(0, LONGEST_EXAMPLE - 1)}…` : text;
 }
 
 export function filterOffers(context: KnownContext, subject: string, chain: string): FilterOffer[] {
   const before = chain === "" ? [] : (parseChain(chain).filters ?? []);
-  const type = givesAfter(knownType(subject, context), before);
+  const type = givesAfter(knownType(subject, context), before, context.catalogue?.filters ?? []);
   const sample = subject.startsWith("item") ? itemSample(context) : sampleOf(subject, context);
-  let value: unknown;
-  try {
-    value = sample === null ? undefined : before.reduce<unknown>((current, call) => applyFilter(current, call), subject.startsWith("item") ? walk(sample.value, subject.split(".").slice(1)) : sample.value);
-  } catch {
-    value = undefined;
-  }
   const filters = context.catalogue?.filters ?? [];
   const exact = filters.filter((filter) => type === "any" || filter.accepts.includes(type));
   const general = type === "any" ? [] : filters.filter((filter) => !exact.includes(filter) && filter.accepts.includes("any"));
-  const first = Array.isArray(value) && value.length > 0 ? typeOfValue(value[0]) : null;
-  const elementwise =
-    type === "list"
-      ? filters.filter((filter) => filter.element && !exact.includes(filter) && (first === null || filter.accepts.includes(first as never)))
-      : [];
-  return [...exact, ...elementwise, ...general].map((filter) => {
+  const elements = type === "list" ? filters.filter((filter) => filter.element && !exact.includes(filter)) : [];
+  const candidates = [...exact, ...elements, ...general];
+  const insertOf = (filter: FilterDescription) => {
     const required = filter.arguments.filter((argument) => argument.required);
-    const insert = required.length === 0 ? filter.name : `${filter.name}(${required.map(placeholderOf).join(", ")})`;
-    const call = { name: filter.name, arguments: required.map((argument) => JSON.parse(placeholderOf(argument)) as unknown) };
-    return {
+    return required.length === 0 ? filter.name : `${filter.name}(${required.map(placeholderOf).join(", ")})`;
+  };
+  const start = sample === null ? undefined : subject.startsWith("item") ? walk(sample.value, subject.split(".").slice(1)) : sample.value;
+  const asked = start === undefined || start === null ? null : previewChain(start, [], context, 0, chain === "" ? "" : `| ${chain}`, candidates.map(insertOf));
+  const value = chain === "" ? start : asked !== null && settled(asked.input) ? asked.input.value : undefined;
+  const first = Array.isArray(value) && value.length > 0 ? typeOfValue(value[0]) : null;
+  const elementwise = elements.filter((filter) => first === null || filter.accepts.includes(first as never));
+  return candidates
+    .filter((filter) => !elements.includes(filter) || elementwise.includes(filter))
+    .map((filter) => ({
       name: filter.name,
-      insert,
+      insert: insertOf(filter),
       label: filter.arguments.length === 0 ? filter.name : `${filter.name}(${filter.arguments.map((argument) => argument.name).join(", ")})`,
-      example: value === undefined || value === null ? undefined : exampleOf(value, call),
-      element: elementwise.includes(filter),
-    };
-  });
+      example: asked === null ? undefined : exampleOf(asked.examples[candidates.indexOf(filter)]),
+      element: elements.includes(filter),
+    }));
 }

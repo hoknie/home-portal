@@ -1,11 +1,12 @@
 use std::collections::BTreeMap;
 
+use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::Value;
 
 use crate::types::WorkflowCall;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct WorkflowCallResponse {
     pub id: String,
     pub inputs: BTreeMap<String, Value>,

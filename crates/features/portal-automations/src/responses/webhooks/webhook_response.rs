@@ -1,11 +1,12 @@
 use portal_feature::PortalEvent;
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{ReceptionResponse, WebhookActionResponse};
 use crate::responses::MarksResponse;
 use crate::types::{Reception, Webhook};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct WebhookResponse {
     pub id: String,
     pub title: String,

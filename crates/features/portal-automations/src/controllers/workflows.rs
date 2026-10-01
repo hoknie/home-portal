@@ -8,9 +8,10 @@ use portal_config::{Revision, Revisioned};
 use portal_feature::{ApiError, Principal};
 
 use super::runs::{name_of, rights_of};
-use crate::requests::{WorkflowRequest, WorkflowRunRequest};
+use crate::requests::{TransformPreviewRequest, WorkflowRequest, WorkflowRunRequest};
 use crate::responses::{
-    QueuedResponse, WorkflowCatalogueResponse, WorkflowResponse, WorkflowsResponse,
+    QueuedResponse, TransformPreviewResponse, WorkflowCatalogueResponse, WorkflowResponse,
+    WorkflowsResponse,
 };
 use crate::types::{AutomationsState, WorkflowView};
 
@@ -95,6 +96,20 @@ pub async fn workflow_catalogue(
     Json(WorkflowCatalogueResponse::of(
         &state.workflows.catalogue.run(),
     ))
+}
+
+pub async fn transform_preview(
+    State(state): State<AutomationsState>,
+    body: Bytes,
+) -> Result<Json<TransformPreviewResponse>, ApiError> {
+    let request: TransformPreviewRequest = serde_json::from_slice(&body)
+        .map_err(|error| ApiError::invalid("body", &error.to_string()))?;
+    let preview = state
+        .workflows
+        .transform
+        .run(&request.question())
+        .map_err(|message| ApiError::invalid("operations", &message))?;
+    Ok(Json(TransformPreviewResponse::of(&preview)))
 }
 
 fn one(status: StatusCode, view: Revisioned<WorkflowView>) -> Response {

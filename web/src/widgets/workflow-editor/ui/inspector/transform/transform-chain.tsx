@@ -17,9 +17,9 @@ import {
   emptyRow,
   inputSample,
   pathText,
-  previewOperations,
+  previewChain,
+  settled,
   typeOfValue,
-  sampleOf,
 } from "@/entities/workflow";
 import { Button } from "@/shared/ui/primitives";
 
@@ -67,7 +67,7 @@ export function OperationsList({ path, field, operations, input, depth, onChange
   const ids = operations.map((_, index) => `${field}-${index}`);
   const at = pathText(path);
   const known = editor.knownAt(path, field);
-  const previews = input === null ? null : previewOperations(input.value, operations, (name) => sampleOf(name, known)?.value);
+  const previews = input === null ? null : previewChain(input.value, operations, known).steps;
   const filters = editor.catalogue.filters;
   const offered = LIST_OPERATIONS.filter((name) => name !== "each" || depth < DEEPEST_EACH);
   const labelOf = (name: string) => (filterHelp.has(`${name}.label` as "get.label") ? filterHelp(`${name}.label` as "get.label") : name);
@@ -83,7 +83,8 @@ export function OperationsList({ path, field, operations, input, depth, onChange
     const found = editor.problems.find((problem) => problem.at === prefix || problem.at?.startsWith(`${prefix}.`));
     return found ? (found.text ?? found.key) : null;
   };
-  const last = operations.length === 0 ? (input === null ? undefined : input.value) : previews?.at(-1)?.error === null ? previews.at(-1)!.value : undefined;
+  const final = previews?.at(-1);
+  const last = operations.length === 0 ? (input === null ? undefined : input.value) : settled(final) ? final.value : undefined;
   const now = last === undefined || last === null ? null : typeOfValue(last);
   const fitting =
     now === null
@@ -99,7 +100,10 @@ export function OperationsList({ path, field, operations, input, depth, onChange
         ];
   const choice = chosen ?? fitting[0]?.name ?? LIST_OPERATIONS[0];
   const setChoice = setChosen;
-  const before = (index: number) => (index === 0 ? (input?.value ?? null) : previews?.[index - 1]?.error === null ? previews[index - 1].value : null);
+  const before = (index: number) => {
+    const previous = previews?.[index - 1];
+    return index === 0 ? (input?.value ?? null) : settled(previous) ? previous.value : null;
+  };
   return (
     <div className="grid gap-2">
       {operations.length === 0 ? <p className="text-sm text-muted-foreground">{t("empty")}</p> : null}

@@ -1,4 +1,5 @@
 use super::*;
+use crate::typed;
 
 #[test]
 fn the_public_portal_sample_matches_its_serializer() {
@@ -6,9 +7,9 @@ fn the_public_portal_sample_matches_its_serializer() {
         ProbeOutcome::answered(ServiceState::Up, 42),
         datetime!(2026-09-22 10:00:30 UTC),
     );
-    check(
+    typed(
         "public-portal",
-        serde_json::to_value(PortalResponse {
+        &PortalResponse {
             environment: Environment::parse("local").unwrap(),
             detected: Environment::parse("local").unwrap(),
             switchable: true,
@@ -38,7 +39,6 @@ fn the_public_portal_sample_matches_its_serializer() {
                 section: Some("now".into()),
                 size: WidgetSize::Third,
             }],
-        })
-        .unwrap(),
+        },
     );
 }

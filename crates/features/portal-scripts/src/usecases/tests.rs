@@ -2,8 +2,6 @@ use std::fs;
 use std::os::unix::fs::{PermissionsExt, symlink};
 use std::sync::Arc;
 
-use portal_config::ConfigStore;
-
 use super::{ListScripts, ScriptEditing};
 use crate::fakes::FileOwner;
 
@@ -48,10 +46,8 @@ fn a_changed_header_is_read_again() {
 
 #[test]
 fn editing_follows_the_file_without_a_restart() {
-    let folder = tempfile::tempdir().unwrap();
-    let main = folder.path().join("home-portal.toml");
-    fs::write(&main, "").unwrap();
-    let editing = ScriptEditing::new(Arc::new(ConfigStore::open(&main).unwrap()));
+    let (_folder, main) = portal_testing::written("");
+    let editing = ScriptEditing::new(Arc::new(portal_testing::opened(&main).unwrap()));
     assert!(!editing.run());
     std::thread::sleep(std::time::Duration::from_millis(20));
     fs::write(&main, "[scripts]\nediting = true\n").unwrap();

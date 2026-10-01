@@ -1,0 +1,96 @@
+{
+  "$defs": {
+    "EffectiveAddress": {
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "overridden": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "address",
+        "overridden"
+      ],
+      "type": "object"
+    },
+    "InterfaceResponse": {
+      "properties": {
+        "addresses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "addresses"
+      ],
+      "type": "object"
+    },
+    "NetworkSettings": {
+      "properties": {
+        "address": {
+          "format": "ip",
+          "type": "string"
+        },
+        "port": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "public_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trusted_proxies": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "address",
+        "port",
+        "public_url",
+        "trusted_proxies"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "configured": {
+      "$ref": "#/$defs/NetworkSettings"
+    },
+    "effective": {
+      "$ref": "#/$defs/EffectiveAddress"
+    },
+    "interfaces": {
+      "items": {
+        "$ref": "#/$defs/InterfaceResponse"
+      },
+      "type": "array"
+    },
+    "restart_required": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "configured",
+    "effective",
+    "restart_required",
+    "interfaces"
+  ],
+  "title": "NetworkResponse",
+  "type": "object"
+}

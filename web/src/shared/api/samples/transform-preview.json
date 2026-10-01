@@ -1,0 +1,43 @@
+{
+  "examples": [
+    {
+      "value": 2
+    },
+    {
+      "value": [
+        "sda",
+        "sdb"
+      ]
+    }
+  ],
+  "input": {
+    "value": [
+      {
+        "health": "ok",
+        "name": "sda"
+      },
+      {
+        "health": "failing",
+        "name": "sdb"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "value": [
+        {
+          "health": "failing",
+          "name": "sdb"
+        }
+      ]
+    },
+    {
+      "value": [
+        "sdb"
+      ]
+    },
+    {
+      "error": "operation 3 (number): number cannot read \"sdb\" as a number"
+    }
+  ]
+}

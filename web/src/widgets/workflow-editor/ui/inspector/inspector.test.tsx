@@ -7,7 +7,7 @@ import { dictionaries } from "@/shared/i18n";
 import { jsonResponse } from "@/shared/lib/testing";
 
 import { NESTED_TYPES } from "./step-form";
-import { catalogue, inspector, node, openEditor, pressOnCanvas, sampleWorkflows, sentBody, stubCanvasDom, withSteps } from "../testing-support";
+import { catalogue, inspector, node, openEditor, pressOnCanvas, sampleWorkflows, sentBody, stubCanvasDom, stubPreviews, withSteps } from "../testing-support";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
 
@@ -133,8 +133,8 @@ it("a branch can do nothing on purpose", async () => {
   expect(await node("nothing")).toHaveTextContent("goes on");
 });
 
-it("an old telegram step opens as a notification to telegram, and the channel picker marks channels not set up", async () => {
-  openEditor(withSteps([{ id: "tell", kind: "telegram", text: "x" }]));
+it("a notification to telegram shows its channel, and the channel picker marks channels not set up", async () => {
+  openEditor(withSteps([{ id: "tell", kind: "notify", channel: "telegram", text: "x" }]));
   pressOnCanvas(await node("tell"));
   const channel = within(inspector()).getByRole("combobox", { name: "Channel" });
   expect(channel).toHaveValue("telegram");
@@ -145,7 +145,8 @@ it("an old telegram step opens as a notification to telegram, and the channel pi
   expect(options[1]).toHaveAttribute("aria-disabled", "true");
 });
 
-it("typing a bar after a list offers list filters first and not text filters", async () => {
+it("typing a bar after a list offers list filters first and not text filters, with examples from the portal", async () => {
+  stubPreviews({ "": { examples: { length: 2 } } });
   openEditor(
     withSteps([
       { id: "list", kind: "http", url: "http://nas.lan", response_sample: '{"disks": [{"name": "sda"}, {"name": "sdb"}]}' },
@@ -162,7 +163,7 @@ it("typing a bar after a list offers list filters first and not text filters", a
   expect(offered.some((label) => label.startsWith("join(separator)"))).toBe(true);
   expect(offered.some((label) => label.startsWith("pluck(key)"))).toBe(true);
   expect(offered.some((label) => label.startsWith("upper"))).toBe(false);
-  expect(offered.find((label) => label.startsWith("length"))).toContain("2");
+  await waitFor(() => expect(within(screen.getByRole("listbox")).getAllByRole("option").find((option) => option.textContent?.startsWith("length"))).toHaveTextContent("2"));
   await userEvent.keyboard("pl{Enter}");
   expect(text).toHaveValue('{{steps.list.json.disks | pluck("key")');
 });

@@ -12,7 +12,6 @@ use axum::http::{HeaderMap, Request, StatusCode};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::{EventSink, Feature, Gate, PortalEvent};
 use serde_json::Value;
 use tempfile::TempDir;
@@ -82,7 +81,7 @@ pub fn portal_with(files: &[(&str, String)]) -> Portal {
         fs::write(folder.path().join(name), text).unwrap();
     }
     let main = folder.path().join(files[0].0);
-    let store = Arc::new(ConfigStore::open(&main).unwrap());
+    let store = Arc::new(portal_testing::opened(&main).unwrap());
     let feature = AuthFeature::new(store.clone(), Arc::new(Direct), Arc::new(Silent));
     store
         .adopt(vec![

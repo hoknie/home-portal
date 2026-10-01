@@ -4,8 +4,10 @@ use super::{channel_table, write_rules};
 use crate::types::Rules;
 
 #[test]
-fn writing_the_rules_moves_the_legacy_keys_up_and_keeps_comments() {
-    let mut document: DocumentMut = "# alerts\n[notifications.telegram]\nenabled = true # on\nstates = [\"down\"]\nrecovered = false\n".parse().unwrap();
+fn writing_the_rules_puts_them_in_notifications_and_keeps_the_channel_and_its_comments() {
+    let mut document: DocumentMut = "# alerts\n[notifications.telegram]\nenabled = true # on\n"
+        .parse()
+        .unwrap();
     write_rules(
         &mut document,
         &Rules {

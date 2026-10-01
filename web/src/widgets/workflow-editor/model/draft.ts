@@ -1,4 +1,4 @@
-import { type Step, type Workflow, type WorkflowRequest, withNotifySteps } from "@/entities/workflow";
+import type { Step, Workflow, WorkflowRequest } from "@/entities/workflow";
 
 export type Draft = WorkflowRequest;
 
@@ -27,7 +27,7 @@ export function draftOf(workflow: Workflow | null): Draft {
     tags: workflow.tags,
     timeout_seconds: workflow.timeout_seconds,
     inputs: workflow.inputs,
-    steps: withNotifySteps(workflow.steps),
+    steps: workflow.steps,
   };
 }
 

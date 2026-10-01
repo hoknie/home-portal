@@ -1,0 +1,210 @@
+{
+  "$defs": {
+    "ArgumentResponse": {
+      "properties": {
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "default": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "option": {
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "option",
+        "required",
+        "type",
+        "choices",
+        "default",
+        "description"
+      ],
+      "type": "object"
+    },
+    "HeaderProblemResponse": {
+      "properties": {
+        "line": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "line",
+        "message"
+      ],
+      "type": "object"
+    },
+    "ScriptFileResponse": {
+      "properties": {
+        "argument_problems": {
+          "items": {
+            "$ref": "#/$defs/HeaderProblemResponse"
+          },
+          "type": "array"
+        },
+        "arguments": {
+          "items": {
+            "$ref": "#/$defs/ArgumentResponse"
+          },
+          "type": "array"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "concerns": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "folder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mode": {
+          "type": "string"
+        },
+        "modified": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runnable": {
+          "type": "boolean"
+        },
+        "size": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "text": {
+          "type": "boolean"
+        },
+        "unreadable": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "folder",
+        "name",
+        "size",
+        "modified",
+        "mode",
+        "runnable",
+        "problem",
+        "code",
+        "concerns",
+        "text",
+        "unreadable",
+        "revision",
+        "description",
+        "arguments",
+        "argument_problems"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "directory": {
+      "type": "string"
+    },
+    "exists": {
+      "type": "boolean"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/ScriptFileResponse"
+      },
+      "type": "array"
+    },
+    "folders": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "inside": {
+      "type": "boolean"
+    },
+    "left_out": {
+      "format": "uint",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "user_id": {
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "directory",
+    "exists",
+    "user_id",
+    "left_out",
+    "inside",
+    "folders",
+    "files"
+  ],
+  "title": "ScriptTreeResponse",
+  "type": "object"
+}

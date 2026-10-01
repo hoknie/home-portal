@@ -1,14 +1,14 @@
 import { screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
 
-import { renderWithProviders } from "@/shared/lib/testing";
+import { TRACE_ENTRY_BLANKS, renderWithProviders } from "@/shared/lib/testing";
 
 import { type TraceEntry, traceEntrySchema } from "../../model/schema";
 import { passRows } from "./pass-groups";
 import { TraceTimeline } from "./trace-timeline";
 
 function entry(fields: Partial<TraceEntry> & Pick<TraceEntry, "path" | "step" | "kind">): TraceEntry {
-  return traceEntrySchema.parse({ label: fields.step, iteration: null, outcome: "succeeded", started_at: "2026-09-28T19:15:59Z", duration_milliseconds: 1, detail: "", output: null, ...fields });
+  return traceEntrySchema.parse({ ...TRACE_ENTRY_BLANKS, label: fields.step, iteration: null, outcome: "succeeded", started_at: "2026-09-28T19:15:59Z", duration_milliseconds: 1, detail: "", output: null, ...fields });
 }
 
 const oshof = [
@@ -43,7 +43,7 @@ it("seeing why a status step failed: the pass, what the template gave and the hi
 });
 
 it("an old entry without values or a log draws as before, without a log to open", () => {
-  const old = traceEntrySchema.parse({ path: "steps[0]", step: "ping", label: "ping", kind: "http", iteration: null, outcome: "failed", started_at: "", duration_milliseconds: 3, detail: "500", output: null });
+  const old = traceEntrySchema.parse({ ...TRACE_ENTRY_BLANKS, path: "steps[0]", step: "ping", label: "ping", kind: "http", iteration: null, outcome: "failed", started_at: "", duration_milliseconds: 3, detail: "500", output: null });
   renderWithProviders(<TraceTimeline trace={{ entries: [old], dropped: 0 }} />);
   expect(screen.getByText("500")).toBeInTheDocument();
   expect(screen.queryByText("Values and log")).toBeNull();

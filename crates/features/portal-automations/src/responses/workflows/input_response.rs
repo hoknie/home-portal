@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::Value;
 
 use crate::types::InputDeclaration;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct InputResponse {
     pub name: String,
     #[serde(rename = "type")]

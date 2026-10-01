@@ -1,13 +1,11 @@
-use serde_json::Value;
-
-use crate::services::transform_sample;
-use crate::types::RawOperation;
+use crate::services::preview_transform;
+use crate::types::{PreviewQuestion, TransformPreview};
 
 #[derive(Clone, Default)]
 pub struct TransformValue;
 
 impl TransformValue {
-    pub fn run(&self, input: Value, operations: &[RawOperation]) -> Result<Value, String> {
-        transform_sample(input, operations)
+    pub fn run(&self, question: &PreviewQuestion) -> Result<TransformPreview, String> {
+        preview_transform(question)
     }
 }

@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{AreaResponse, GroupResponse};
 use crate::types::GroupsView;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct GroupsResponse {
     pub groups: Vec<GroupResponse>,
     pub matrix: Vec<AreaResponse>,

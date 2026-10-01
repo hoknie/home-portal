@@ -16,8 +16,8 @@ use crate::controllers::{
     update_webhook,
 };
 use crate::controllers::{
-    create_workflow, delete_workflow, list_workflows, portal_values, run_workflow, update_workflow,
-    workflow_catalogue,
+    create_workflow, delete_workflow, list_workflows, portal_values, run_workflow,
+    transform_preview, update_workflow, workflow_catalogue,
 };
 use crate::loops::{
     JournalWriter, dispatch_children_forever, dispatch_forever, schedule_forever, watch_forever,
@@ -32,6 +32,7 @@ use crate::types::{AutomationsState, WorkflowCases};
 use crate::usecases::{
     ChangeAutomation, ChangeWebhook, CreateAutomation, CreateWebhook, DeleteAutomation,
     DeleteWebhook, IssueToken, ListAutomations, ListWebhooks, RemoveToken, RunWebhook,
+    TransformValue,
 };
 use crate::usecases::{
     ChangeWorkflow, CreateWorkflow, DeleteWorkflow, ListWorkflows, ReadPortalValues, RunWorkflow,
@@ -96,6 +97,8 @@ impl AutomationsFeature {
     pub const WORKFLOW_RUN: &'static str = "/api/workflows/{id}/run";
     pub const WORKFLOW_CATALOGUE: &'static str = "/api/workflows/catalogue";
     pub const WORKFLOW_PORTAL: &'static str = "/api/workflows/portal";
+    pub const TRANSFORM_PREVIEW: &'static str = "/api/workflows/transform-preview";
+    pub const LARGEST_PREVIEW: usize = 256 * 1024;
     pub const LARGEST_BODY: usize = 64 * 1024;
 
     pub fn new(
@@ -123,6 +126,7 @@ impl AutomationsFeature {
             run: RunWorkflow::new(sink.clone(), manual_runs.clone()),
             catalogue: WorkflowCatalogue,
             portal: ReadPortalValues::new(tools.actions.clone(), sink.clone()),
+            transform: TransformValue,
         };
         let webhook_writer = WebhookWriter {
             configuration: configuration.clone(),
@@ -195,6 +199,10 @@ impl Feature for AutomationsFeature {
             .route(Self::WORKFLOW_RUN, post(run_workflow))
             .route(Self::WORKFLOW_CATALOGUE, get(workflow_catalogue))
             .route(Self::WORKFLOW_PORTAL, get(portal_values))
+            .route(
+                Self::TRANSFORM_PREVIEW,
+                post(transform_preview).layer(DefaultBodyLimit::max(Self::LARGEST_PREVIEW)),
+            )
             .with_state(self.state.clone())
     }
 
@@ -225,6 +233,7 @@ impl Feature for AutomationsFeature {
             Rule::needs(Method::POST, Self::WORKFLOW_RUN, WORKFLOWS_EXECUTE),
             Rule::needs(Method::GET, Self::WORKFLOW_CATALOGUE, WORKFLOWS_READ),
             Rule::needs(Method::GET, Self::WORKFLOW_PORTAL, WORKFLOWS_READ),
+            Rule::needs(Method::POST, Self::TRANSFORM_PREVIEW, WORKFLOWS_READ),
         ]
     }
 

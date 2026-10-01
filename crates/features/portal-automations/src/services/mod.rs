@@ -31,6 +31,6 @@ pub use webhook_reception::received;
 pub use webhook_writer::WebhookWriter;
 pub use workflow::{
     Budget, Frame, Secrets, WorkflowRunner, WorkflowTools, bind_inputs, decode_workflow,
-    decoded_workflows, entry_errors, input_problem, secrets_allowed, transform_sample, users_of,
+    decoded_workflows, entry_errors, input_problem, preview_transform, secrets_allowed, users_of,
     webhook_variables_read, workflow_errors,
 };

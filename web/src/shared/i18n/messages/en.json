@@ -1599,6 +1599,8 @@
       "fromSample": "from the answer structure",
       "fromRun": "from the last run",
       "noSample": "No preview: set the input from a step whose answer structure or last run is known.",
+      "computing": "Computing the preview…",
+      "unreachable": "Cannot reach the portal to compute the preview.",
       "cannot": "Cannot take this value: {error}",
       "where": "Keep items where",
       "to": "Turn each item into",

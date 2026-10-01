@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "times": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "timezone": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "timezone",
+    "times"
+  ],
+  "title": "ScheduleResponse",
+  "type": "object"
+}

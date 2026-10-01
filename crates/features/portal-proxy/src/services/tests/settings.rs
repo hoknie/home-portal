@@ -10,7 +10,7 @@ use crate::services::{
 };
 use crate::types::AdminAddress;
 
-const ENABLED: &str = "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\ncookie_domain = \"example.com\"\n";
+const ENABLED: &str = "[modules]\nproxy = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nportal_host = \"portal.example.com\"\ncookie_domain = \"example.com\"\n";
 
 fn document(text: &str) -> DocumentMut {
     text.parse().unwrap()
@@ -60,7 +60,7 @@ fn an_admin_address_may_be_localhost_or_an_absolute_unix_socket() {
 #[test]
 fn loopback_must_be_trusted_when_the_proxy_is_enabled() {
     let errors = validate_settings(&document(
-        "[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\n",
+        "[modules]\nproxy = true\n\n[proxy]\nportal_host = \"portal.example.com\"\n",
     ));
     assert_eq!(fields(&errors), vec!["network.trusted_proxies"]);
     assert_eq!(errors[0].message, LOOPBACK_NOT_TRUSTED);
@@ -69,7 +69,7 @@ fn loopback_must_be_trusted_when_the_proxy_is_enabled() {
 #[test]
 fn a_range_covering_loopback_is_trusted_enough() {
     let errors = validate_settings(&document(
-        "[network]\ntrusted_proxies = [\"127.0.0.0/8\"]\n\n[proxy]\nenabled = true\nportal_host = \"portal.example.com\"\n",
+        "[modules]\nproxy = true\n\n[network]\ntrusted_proxies = [\"127.0.0.0/8\"]\n\n[proxy]\nportal_host = \"portal.example.com\"\n",
     ));
     assert!(errors.is_empty(), "{errors:?}");
 }
@@ -77,7 +77,7 @@ fn a_range_covering_loopback_is_trusted_enough() {
 #[test]
 fn an_enabled_proxy_needs_the_portal_host() {
     let errors = validate_settings(&document(
-        "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\n",
+        "[modules]\nproxy = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\n",
     ));
     assert_eq!(fields(&errors), vec!["proxy.portal_host"]);
     assert_eq!(errors[0].message, REQUIRED);
@@ -203,25 +203,38 @@ fn a_pre_release_caddy_version_is_accepted() {
 #[test]
 fn dns_over_https_gets_its_own_route_only_on_another_host_while_it_is_on() {
     let host = |dns: &str| {
-        read_settings(&document(&format!("{ENABLED}\n{dns}")))
+        let on = "[modules]\ndns = true\n\n";
+        let base = if dns.contains(on) {
+            ENABLED.replace(
+                "[modules]\nproxy = true\n",
+                "[modules]\nproxy = true\ndns = true\n",
+            )
+        } else {
+            ENABLED.to_string()
+        };
+        read_settings(&document(&format!("{base}\n{}", dns.replace(on, ""))))
             .unwrap()
             .doh_host
     };
     assert_eq!(host(""), None);
     assert_eq!(
-        host("[dns]\nenabled = true\n[dns.https]\nenabled = true\n"),
+        host("[modules]\ndns = true\n\n[dns]\n[dns.https]\nenabled = true\n"),
         None
     );
     assert_eq!(
-        host("[dns]\nenabled = true\n[dns.https]\nenabled = true\nhost = \"portal.example.com\"\n"),
+        host(
+            "[modules]\ndns = true\n\n[dns]\n[dns.https]\nenabled = true\nhost = \"portal.example.com\"\n"
+        ),
         None
     );
     assert_eq!(
-        host("[dns]\nenabled = false\n[dns.https]\nenabled = true\nhost = \"dns.example.com\"\n"),
+        host("[dns]\n[dns.https]\nenabled = true\nhost = \"dns.example.com\"\n"),
         None
     );
     assert_eq!(
-        host("[dns]\nenabled = true\n[dns.https]\nenabled = true\nhost = \"DNS.example.com.\"\n"),
+        host(
+            "[modules]\ndns = true\n\n[dns]\n[dns.https]\nenabled = true\nhost = \"DNS.example.com.\"\n"
+        ),
         Some("dns.example.com".to_string())
     );
 }
@@ -239,6 +252,6 @@ fn a_publication_is_checked_against_the_settings_by_its_own_field_names() {
     let errors = publication_problems(&document(ENABLED), &outside);
     assert_eq!(fields(&errors), vec!["proxy.auth"]);
     assert_eq!(errors[0].message, OUTSIDE_COOKIE_DOMAIN);
-    let disabled = ENABLED.replace("enabled = true", "enabled = false");
+    let disabled = ENABLED.replace("proxy = true", "proxy = false");
     assert!(publication_problems(&document(&disabled), &outside).is_empty());
 }

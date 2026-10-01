@@ -13,4 +13,4 @@ mod transform_step;
 pub use budget::Budget;
 pub use runner::WorkflowRunner;
 pub use tools::WorkflowTools;
-pub use transform_step::transform_sample;
+pub use transform_step::preview_transform;

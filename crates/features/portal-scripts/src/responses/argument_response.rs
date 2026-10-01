@@ -1,7 +1,8 @@
 use portal_model::ScriptArgument;
+use schemars::JsonSchema;
 use serde::Serialize;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct ArgumentResponse {
     pub name: String,
     pub option: bool,

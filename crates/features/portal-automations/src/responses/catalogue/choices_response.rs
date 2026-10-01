@@ -1,8 +1,9 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{ChoiceResponse, WebhookChoiceResponse};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct ChoicesResponse {
     pub services: Vec<ChoiceResponse>,
     pub users: Vec<String>,

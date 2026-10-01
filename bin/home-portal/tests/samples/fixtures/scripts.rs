@@ -1,7 +1,7 @@
 use portal_model::ScriptHeader;
 use serde_json::{Value, json};
 
-use crate::check;
+use crate::{check, typed};
 
 fn cases() -> Vec<(&'static str, &'static str)> {
     vec![
@@ -107,9 +107,9 @@ fn the_scripts_samples_match_their_serializers() {
         entry("media/restart.sh", restart, None),
         entry("tool", "", Some(Unreadable::Binary)),
     ];
-    check(
+    typed(
         "scripts-tree",
-        serde_json::to_value(ScriptTreeResponse {
+        &ScriptTreeResponse {
             directory: "/srv/home-portal/scripts".into(),
             exists: true,
             user_id: 501,
@@ -117,17 +117,15 @@ fn the_scripts_samples_match_their_serializers() {
             inside: true,
             folders: vec!["media".into()],
             files: files.iter().map(ScriptFileResponse::of).collect(),
-        })
-        .unwrap(),
+        },
     );
-    check(
+    typed(
         "script-text",
-        serde_json::to_value(ScriptTextResponse {
+        &ScriptTextResponse {
             path: "media/restart.sh".into(),
             content: restart.into(),
             revision: portal_config::Revision::of(restart.as_bytes()).to_string(),
             entry: ScriptFileResponse::of(&files[1]),
-        })
-        .unwrap(),
+        },
     );
 }

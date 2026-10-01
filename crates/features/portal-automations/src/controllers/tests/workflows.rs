@@ -302,17 +302,14 @@ async fn workflow_tags_join_the_tags_shared_with_automations_and_webhooks() {
 }
 
 #[tokio::test]
-async fn an_old_telegram_step_loads_and_is_saved_as_a_notify_step_to_telegram() {
+async fn an_old_telegram_step_is_refused_naming_its_kind() {
     let api = ready();
     let current = revision(&api).await;
     let body = json!({
         "id": "revive",
         "title": "Revive",
         "inputs": ["service"],
-        "steps": [
-            {"id": "tell", "kind": "telegram", "text": "{{inputs.service}} is down"},
-            {"id": "both", "kind": "parallel", "branches": [[{"id": "a", "kind": "telegram", "text": "a"}], [{"id": "b", "kind": "wait", "seconds": 1}]]}
-        ]
+        "steps": [{"id": "tell", "kind": "telegram", "text": "{{inputs.service}} is down"}]
     });
     let (status, _, answer) = send(
         &api,
@@ -324,16 +321,8 @@ async fn an_old_telegram_step_loads_and_is_saved_as_a_notify_step_to_telegram() 
         ),
     )
     .await;
-    assert_eq!(status, StatusCode::OK, "{answer}");
-    let saved = text(&api);
-    assert!(!saved.contains("kind = \"telegram\""), "{saved}");
-    assert_eq!(
-        saved.matches("channel = \"telegram\"").count(),
-        2,
-        "{saved}"
-    );
-    assert_eq!(answer["steps"][0]["kind"], "notify");
-    assert_eq!(answer["steps"][0]["channel"], "telegram");
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{answer}");
+    assert!(answer.to_string().contains("steps[0].kind"), "{answer}");
 }
 
 #[tokio::test]

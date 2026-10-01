@@ -1,9 +1,10 @@
 use std::collections::BTreeMap;
 
 use portal_feature::{Principal, Rights};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct SessionResponse {
     pub name: String,
     pub group: Option<String>,

@@ -1,11 +1,8 @@
 import { z } from "zod";
 
-export const sessionSchema = z.object({
-  name: z.string(),
-  group: z.string().nullable(),
-  admin: z.boolean(),
-  rights: z.record(z.string(), z.array(z.string())),
-});
+import { generated } from "@/shared/api";
+
+export const sessionSchema = generated.session.sessionResponseSchema;
 
 export type Session = z.infer<typeof sessionSchema>;
 

@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { scopeAt } from "../scope";
 import { checkTemplate, templateNames } from "../suggestions/check";
-import type { Step } from "../schema";
-import { previewOperations } from "./operations";
+import { type Step, workflowCatalogueSchema } from "../schema";
+import { apiSamples } from "@/shared/api";
+
 import { parseChain } from "./parse";
-import { renderText } from "./render";
+import { type PreviewQuestion, askPreview } from "./previews";
 import { chainProblem } from "./types";
+
+const filters = workflowCatalogueSchema.parse(apiSamples.workflowCatalogue).filters;
 
 const steps: Step[] = [
   { id: "ping", kind: "http", url: "http://nas" },
@@ -16,7 +19,7 @@ const steps: Step[] = [
 
 function problems(text: string, at = 2, field = "text") {
   const scope = scopeAt(steps, [{ list: "steps", index: at }], ["service"], field);
-  return checkTemplate(text, scope).map((problem) => [problem.reason, problem.params]);
+  return checkTemplate(text, scope, null, null, filters).map((problem) => [problem.reason, problem.params]);
 }
 
 describe("filters in templates", () => {
@@ -52,18 +55,22 @@ describe("variables in filter and operation arguments", () => {
     expect(parseChain("get(name)").error).toBe("get(name)");
   });
 
-  it("a name argument reads the value the template sees, and an unknown one says it is known only when the step runs", () => {
-    const lookup = (name: string) => ({ "vars.map": { nas: "down" }, "loop.item": "nas" })[name];
-    expect(renderText("{{vars.map | get(loop.item)}}", lookup)).toBe("down");
-    const [preview] = previewOperations({ nas: 2 }, [{ op: "get", args: ["{{vars.which}}"] }]);
-    expect(preview.unknown).toBe("{{vars.which}}");
-    expect(previewOperations({ nas: 2 }, [{ op: "get", args: ["{{vars.which}}"] }], (name) => (name === "vars.which" ? "nas" : undefined))[0].value).toBe(2);
+  it("a name the editor knows is sent with the preview, and an unknown one says it is known only when the step runs", () => {
+    const asked: PreviewQuestion[] = [];
+    const cache = (question: PreviewQuestion) => {
+      asked.push(question);
+      return { state: "ready" as const, answer: { input: { value: { nas: 2 }, error: null }, steps: [{ value: 2, error: null }], examples: [] } };
+    };
+    const question = { value: { nas: 2 }, filters: "", operations: [{ op: "get", args: ["{{vars.which}}"] }], examples: [] };
+    expect(askPreview(cache, question, () => null).steps[0].unknown).toBe("vars.which");
+    expect(askPreview(cache, question, (name) => (name === "vars.which" ? { value: "nas" } : null)).steps[0].value).toBe(2);
+    expect(asked.at(-1)?.names).toEqual({ "vars.which": "nas" });
   });
 
   it("a templated argument skips the literal type check", () => {
-    expect(chainProblem("text", [{ name: "slice", arguments: ["{{inputs.start}}"] }])).toBeNull();
-    expect(chainProblem("text", [{ name: "slice", arguments: [null], names: [{ position: 0, name: "inputs.start" }] }])).toBeNull();
-    expect(chainProblem("text", [{ name: "slice", arguments: ["x"] }])?.reason).toBe("filterArgument");
+    expect(chainProblem("text", [{ name: "slice", arguments: ["{{inputs.start}}"] }], filters)).toBeNull();
+    expect(chainProblem("text", [{ name: "slice", arguments: [null], names: [{ position: 0, name: "inputs.start" }] }], filters)).toBeNull();
+    expect(chainProblem("text", [{ name: "slice", arguments: ["x"] }], filters)?.reason).toBe("filterArgument");
   });
 });
 

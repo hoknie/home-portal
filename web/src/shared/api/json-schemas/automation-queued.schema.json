@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "run_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id"
+  ],
+  "title": "QueuedResponse",
+  "type": "object"
+}

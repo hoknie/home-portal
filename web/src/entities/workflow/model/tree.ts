@@ -270,14 +270,3 @@ export function newStep(kind: Kind, taken: Set<string>): Step {
   return { ...initial(kind), id: idFor(kind.name, taken), kind: kind.name };
 }
 
-export const LEGACY_TELEGRAM = "telegram";
-
-export function withNotifySteps(steps: Step[]): Step[] {
-  return steps.map((step) => {
-    let copy: Step = step.kind === LEGACY_TELEGRAM ? { ...step, kind: "notify", channel: step.channel ?? LEGACY_TELEGRAM } : step;
-    for (const list of listsOf(copy).filter((name) => childList(copy, name).length > 0)) {
-      copy = withChildList(copy, list, withNotifySteps(childList(copy, list)));
-    }
-    return copy;
-  });
-}

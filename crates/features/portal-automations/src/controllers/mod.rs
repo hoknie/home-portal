@@ -17,6 +17,6 @@ pub use webhooks::{
     update_webhook,
 };
 pub use workflows::{
-    create_workflow, delete_workflow, list_workflows, portal_values, run_workflow, update_workflow,
-    workflow_catalogue,
+    create_workflow, delete_workflow, list_workflows, portal_values, run_workflow,
+    transform_preview, update_workflow, workflow_catalogue,
 };

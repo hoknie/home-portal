@@ -1,16 +1,18 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 use time::OffsetDateTime;
 
 use super::{ArgumentResponse, HeaderProblemResponse};
 use crate::types::ScriptFile;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct ScriptFileResponse {
     pub path: String,
     pub folder: Option<String>,
     pub name: String,
     pub size: u64,
     #[serde(with = "time::serde::rfc3339::option")]
+    #[schemars(with = "Option<String>")]
     pub modified: Option<OffsetDateTime>,
     pub mode: String,
     pub runnable: bool,

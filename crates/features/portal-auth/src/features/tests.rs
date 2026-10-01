@@ -11,7 +11,6 @@ use axum::http::{HeaderMap, Request, StatusCode};
 use axum::middleware::{self, Next};
 use axum::response::Response;
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::{EventName, EventSink, Feature, Gate, PortalEvent};
 use portal_model::{DetectedEnvironment, Environment, Environments};
 use tempfile::TempDir;
@@ -101,7 +100,7 @@ fn portal_behind(connection: Arc<dyn Connection>) -> Portal {
         format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"),
     )
     .unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let events = Arc::new(Recorder::default());
     let feature = AuthFeature::new(store, connection, events.clone());
     let gate = feature.gate();

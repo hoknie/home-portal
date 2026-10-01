@@ -1,4 +1,5 @@
 use portal_feature::{EventName, PortalEvent};
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{ChoiceResponse, ChoicesResponse, EventResponse, FieldResponse, WebhookChoiceResponse};
@@ -6,7 +7,7 @@ use crate::helpers::sample_of;
 use crate::ports::Directory;
 use crate::types::{Catalogue, FilterName, Webhook};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct CatalogueResponse {
     pub events: Vec<EventResponse>,
     pub states: Vec<String>,

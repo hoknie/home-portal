@@ -1,9 +1,10 @@
 use portal_model::Environment;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{PublicSection, PublicService, PublicWidget};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct PortalResponse {
     pub environment: Environment,
     pub detected: Environment,

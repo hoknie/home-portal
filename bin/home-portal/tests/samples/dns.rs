@@ -5,7 +5,7 @@ use portal_dns::{
     EnvironmentAnswerResponse, NameResponse, RecordResponse, TransportResponse, ZoneResponse,
 };
 
-use crate::check;
+use crate::typed;
 
 fn record(kind: &str, value: &str) -> RecordResponse {
     RecordResponse {
@@ -93,5 +93,5 @@ fn the_dns_sample_matches_its_serializer() {
             },
         },
     };
-    check("dns", serde_json::to_value(&dns).unwrap());
+    typed("dns", &dns);
 }

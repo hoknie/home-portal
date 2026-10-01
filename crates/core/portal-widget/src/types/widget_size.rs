@@ -1,6 +1,8 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[schemars(extend("x-open" = "full"))]
 #[serde(rename_all = "kebab-case")]
 pub enum WidgetSize {
     Quarter,
@@ -10,6 +12,7 @@ pub enum WidgetSize {
     #[default]
     Full,
     #[serde(other)]
+    #[schemars(skip)]
     Unknown,
 }
 

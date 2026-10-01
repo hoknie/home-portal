@@ -4,6 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+schemars.workspace = true
 async-trait.workspace = true
 axum.workspace = true
 ipnet.workspace = true
@@ -21,6 +22,7 @@ portal-feature.workspace = true
 portal-model.workspace = true
 
 [dev-dependencies]
+portal-testing.workspace = true
 http-body-util.workspace = true
 tempfile.workspace = true
 tokio = { workspace = true, features = ["test-util"] }

@@ -31,9 +31,8 @@
 # automations = "rules.toml"
 # webhooks = "rules.toml"
 #
-# A section found in this file (or in an included file) is moved to its own file at start,
-# keeping its comments, with a .previous copy of every file rewritten. `include` still reads
-# further files, but their sections are moved the same way.
+# Every section lives in its own file; one found anywhere else stops the start with a message
+# naming the section and its file.
 
 # Where the portal keeps what it writes (sessions.json, icons/, history/, automations/,
 # caddy/) and the scripts/ that automations run. Relative paths are relative to this
@@ -266,8 +265,6 @@ description = "Home router admin page"
 
 # Notifications: which state changes are announced, to every ready channel. A service with
 # notify = false stays silent. Management → Notifications edits these and sends a test message.
-# Older files kept states and recovered under [notifications.telegram]; they are still read
-# there, and the first save from the interface moves them here.
 # [notifications]
 # states = ["down", "unreadable"]
 # recovered = true
@@ -279,4 +276,3 @@ description = "Home router admin page"
 # secret = "telegram_token"
 # chat_id = "123456789"
 
-# [configuration] writes_to is no longer used: every part is written to its own file.

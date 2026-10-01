@@ -5,13 +5,10 @@ import { apiSamples } from "@/shared/api";
 import { PENDING_REFRESH_MILLISECONDS, pendingRefresh } from "./queries";
 import { anyPending, needsAction, permissionsSchema, subjectOf } from "./schema";
 
-it("the permissions sample parses with every state", () => {
+it("a list with a permission awaiting an answer is pending", () => {
   const permissions = permissionsSchema.parse(apiSamples.permissions);
-  expect(permissions.owner).toEqual({ kind: "binary", name: "/usr/local/bin/home-portal" });
-  expect(new Set(permissions.permissions.map((permission) => permission.state))).toEqual(
-    new Set(["granted", "denied", "pending", "not-applicable", "unknown"]),
-  );
   expect(anyPending(permissions)).toBe(true);
+  expect(anyPending({ ...permissions, permissions: permissions.permissions.filter((permission) => permission.state !== "pending") })).toBe(false);
 });
 
 it("a code names its folder or application after the colon", () => {

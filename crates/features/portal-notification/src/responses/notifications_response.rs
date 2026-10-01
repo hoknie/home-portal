@@ -1,15 +1,16 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::ChannelResponse;
 use crate::types::NotificationsView;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct RulesResponse {
     pub states: Vec<String>,
     pub recovered: bool,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct NotificationsResponse {
     pub enabled: bool,
     pub rules: RulesResponse,

@@ -8,21 +8,19 @@ use tempfile::TempDir;
 use time::macros::datetime;
 
 use super::CalendarProvider;
-use crate::fakes::FeedService;
 use crate::types::CalendarSettings;
+use portal_testing::{Answer, FakeHttp, Request};
 
 const FEED: &str = "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:Dentist\r\nDTSTART:20260923T090000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
 
 fn store_with(text: &str) -> (TempDir, Arc<ConfigStore>) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
+    let (directory, path) = portal_testing::written(text);
     #[cfg(unix)]
     if text.contains("[secrets]") {
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).unwrap();
     }
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     (directory, store)
 }
 
@@ -32,10 +30,11 @@ fn settings(url: &str) -> serde_json::Value {
 
 #[tokio::test]
 async fn the_events_of_a_feed_become_the_widget_data() {
-    let upstream = FeedService::start(FEED.to_string()).await;
+    let upstream = FakeHttp::always(Answer::ok("text/calendar", FEED.to_string())).await;
     let (_directory, store) = store_with("");
     let provider = CalendarProvider::new(store).unwrap();
-    let parsed: CalendarSettings = serde_json::from_value(settings(&upstream.url())).unwrap();
+    let parsed: CalendarSettings =
+        serde_json::from_value(settings(&format!("{}/calendar.ics", upstream.url()))).unwrap();
     let events = provider
         .events(&parsed, datetime!(2026-09-22 08:00 UTC))
         .await
@@ -46,17 +45,21 @@ async fn the_events_of_a_feed_become_the_widget_data() {
 
 #[tokio::test]
 async fn a_named_secret_is_sent_as_a_bearer_token() {
-    let upstream = FeedService::start(FEED.to_string()).await;
+    let upstream = FakeHttp::always(Answer::ok("text/calendar", FEED.to_string())).await;
     let (_directory, store) = store_with("[secrets]\ncalendar_password = \"open-sesame\"\n");
     let provider = CalendarProvider::new(store).unwrap();
-    let mut value = settings(&upstream.url());
+    let mut value = settings(&format!("{}/calendar.ics", upstream.url()));
     value["secret"] = json!("calendar_password");
     let parsed: CalendarSettings = serde_json::from_value(value).unwrap();
     provider
         .events(&parsed, datetime!(2026-09-22 08:00 UTC))
         .await
         .unwrap();
-    let request = upstream.requests().first().cloned().unwrap_or_default();
+    let request = upstream
+        .requests()
+        .first()
+        .map(Request::text)
+        .unwrap_or_default();
     assert!(
         request
             .to_lowercase()
@@ -71,10 +74,11 @@ async fn a_feed_larger_than_the_ceiling_is_refused_by_size() {
         "BEGIN:VCALENDAR\r\n{}\r\nEND:VCALENDAR\r\n",
         "X-PADDING:".to_string() + &"x".repeat(6 * 1024 * 1024)
     );
-    let upstream = FeedService::start(big).await;
+    let upstream = FakeHttp::always(Answer::ok("text/calendar", big)).await;
     let (_directory, store) = store_with("");
     let provider = CalendarProvider::new(store).unwrap();
-    let parsed: CalendarSettings = serde_json::from_value(settings(&upstream.url())).unwrap();
+    let parsed: CalendarSettings =
+        serde_json::from_value(settings(&format!("{}/calendar.ics", upstream.url()))).unwrap();
     let problem = provider
         .events(&parsed, datetime!(2026-09-22 08:00 UTC))
         .await

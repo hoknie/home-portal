@@ -3,7 +3,6 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 import { pushAddress } from "@/shared/lib/navigation";
 
-import { legacyTarget } from "./edit/legacy-workflow-edit";
 import { WorkflowsRoute } from "./workflows-route";
 
 vi.mock("next/navigation", () => ({ usePathname: () => null }));
@@ -60,7 +59,3 @@ it("moving between addresses changes the screen, and the editor gets the run las
   expect(screen.getByText("list")).toBeInTheDocument();
 });
 
-it("the old edit link leads to the workflow's own edit address", () => {
-  expect(legacyTarget("?id=revive")).toBe("/admin/workflows/revive/edit/");
-  expect(legacyTarget("")).toBe("/admin/workflows/");
-});

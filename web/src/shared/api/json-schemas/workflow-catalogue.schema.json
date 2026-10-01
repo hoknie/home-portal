@@ -1,0 +1,234 @@
+{
+  "$defs": {
+    "ArgumentResponse": {
+      "properties": {
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "required",
+        "choices"
+      ],
+      "type": "object"
+    },
+    "EventFieldsResponse": {
+      "properties": {
+        "fields": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "type": "object"
+    },
+    "FilterResponse": {
+      "properties": {
+        "accepts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "arguments": {
+          "items": {
+            "$ref": "#/$defs/ArgumentResponse"
+          },
+          "type": "array"
+        },
+        "element": {
+          "type": "boolean"
+        },
+        "gives": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "arguments",
+        "accepts",
+        "gives",
+        "element"
+      ],
+      "type": "object"
+    },
+    "OperatorResponse": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "takes_right": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "takes_right"
+      ],
+      "type": "object"
+    },
+    "StepFieldResponse": {
+      "properties": {
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "default": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maximum": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "minimum": {
+          "format": "int64",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "template_keys": {
+          "type": "boolean"
+        },
+        "templated": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "required",
+        "default",
+        "minimum",
+        "maximum",
+        "choices",
+        "templated",
+        "template_keys"
+      ],
+      "type": "object"
+    },
+    "StepKindResponse": {
+      "properties": {
+        "exclusive": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/StepFieldResponse"
+          },
+          "type": "array"
+        },
+        "group": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "results": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "group",
+        "fields",
+        "results",
+        "exclusive"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "events": {
+      "items": {
+        "$ref": "#/$defs/EventFieldsResponse"
+      },
+      "type": "array"
+    },
+    "filters": {
+      "items": {
+        "$ref": "#/$defs/FilterResponse"
+      },
+      "type": "array"
+    },
+    "kinds": {
+      "items": {
+        "$ref": "#/$defs/StepKindResponse"
+      },
+      "type": "array"
+    },
+    "operations": {
+      "items": {
+        "$ref": "#/$defs/FilterResponse"
+      },
+      "type": "array"
+    },
+    "operators": {
+      "items": {
+        "$ref": "#/$defs/OperatorResponse"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "kinds",
+    "operators",
+    "events",
+    "filters",
+    "operations"
+  ],
+  "title": "WorkflowCatalogueResponse",
+  "type": "object"
+}

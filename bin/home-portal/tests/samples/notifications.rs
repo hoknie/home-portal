@@ -4,7 +4,7 @@ use portal_notification::{
 };
 use serde_json::json;
 
-use crate::check;
+use crate::typed;
 
 fn delivered() -> DeliveryResponse {
     DeliveryResponse {
@@ -37,7 +37,7 @@ fn the_notification_samples_match_their_serializers() {
             dropped: 0,
         }],
     };
-    check("notifications", serde_json::to_value(&listed).unwrap());
+    typed("notifications", &listed);
     let missing = ChannelResponse {
         name: "telegram".into(),
         readiness: "missing".into(),
@@ -51,12 +51,6 @@ fn the_notification_samples_match_their_serializers() {
         queued: 3,
         dropped: 0,
     };
-    check(
-        "notification-channel-missing",
-        serde_json::to_value(&missing).unwrap(),
-    );
-    check(
-        "notification-test",
-        serde_json::to_value(delivered()).unwrap(),
-    );
+    typed("notification-channel-missing", &missing);
+    typed("notification-test", &delivered());
 }

@@ -1,12 +1,14 @@
-import { z } from "zod";
+import type { z } from "zod";
+
+import { generated } from "@/shared/api";
 
 export const ADMIN_GROUP = "admin";
 
-export const userSchema = z.object({ name: z.string(), group: z.string().nullable(), you: z.boolean() });
+export const userSchema = generated.users.userResponseSchema;
 
 export type User = z.infer<typeof userSchema>;
 
-export const usersSchema = z.object({ users: z.array(userSchema), editable: z.boolean() });
+export const usersSchema = generated.users.usersResponseSchema;
 
 export type Users = z.infer<typeof usersSchema>;
 

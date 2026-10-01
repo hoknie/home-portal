@@ -1,8 +1,9 @@
 use std::fmt;
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, JsonSchema)]
 pub struct Environment(String);
 
 #[derive(Debug, Clone, PartialEq, Eq)]

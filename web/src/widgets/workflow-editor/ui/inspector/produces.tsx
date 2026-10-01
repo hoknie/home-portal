@@ -4,7 +4,7 @@ import { Check, Copy } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { type Step, inputSample, previewOperations, typeOfValue } from "@/entities/workflow";
+import { type Step, sampleOf, typeOfValue } from "@/entities/workflow";
 
 import { useEditor } from "../../model/editor-context";
 
@@ -19,9 +19,8 @@ export function Produces({ step }: { step: Step }) {
     if (step.kind !== "transform" || result !== "value") {
       return null;
     }
-    const input = inputSample(step, editor.knownAt([], "input"));
-    const last = input === null ? undefined : previewOperations(input.value, step.operations ?? []).at(-1);
-    return last && last.error === null ? typeOfValue(last.value) : null;
+    const last = sampleOf(`steps.${step.id}.value`, editor.knownAt([], "input"));
+    return last === null ? null : typeOfValue(last.value);
   };
   if (results.length === 0) {
     return null;

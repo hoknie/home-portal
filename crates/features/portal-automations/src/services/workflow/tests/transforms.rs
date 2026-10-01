@@ -2,11 +2,23 @@ use serde_json::json;
 
 use super::running::run;
 use super::support::fields;
-use crate::services::transform_sample;
-use crate::types::RawOperation;
+use crate::services::preview_transform;
+use crate::types::{PreviewQuestion, RawOperation};
 
 fn operations(value: serde_json::Value) -> Vec<RawOperation> {
     serde_json::from_value(value).unwrap()
+}
+
+fn transform_sample(
+    value: serde_json::Value,
+    operations: &[RawOperation],
+) -> Result<serde_json::Value, String> {
+    let preview = preview_transform(&PreviewQuestion {
+        value,
+        operations: operations.to_vec(),
+        ..PreviewQuestion::default()
+    })?;
+    preview.steps.last().cloned().unwrap_or(preview.input)
 }
 
 const DISKS: &str = "[[workflows]]\nid = \"w\"\ntitle = \"W\"\n[[workflows.steps]]\nid = \"list\"\nkind = \"set\"\nvariable = \"disks\"\njson = '[{\"name\": \"sda\", \"health\": \"ok\"}, {\"name\": \"sdb\", \"health\": \"failing\"}, {\"name\": \"sdc\", \"health\": \"failing\"}]'\n";

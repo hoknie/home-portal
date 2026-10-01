@@ -8,7 +8,6 @@ use axum::extract::ConnectInfo;
 use axum::http::Request;
 use axum::response::Response;
 use http_body_util::BodyExt;
-use portal_config::ConfigStore;
 use portal_feature::Feature;
 use portal_model::{DetectedEnvironment, Environment, Environments};
 use serde_json::Value;
@@ -32,7 +31,7 @@ pub struct Portal {
 
 pub fn file(admin: &str) -> String {
     format!(
-        "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nadmin = \"{admin}\"\nportal_host = \"portal.example.com\"\ncookie_domain = \"example.com\"\n\n[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"http://192.168.1.5\"\nproxy = {{ host = \"nas.example.com\", auth = [\"internet\"] }}\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://192.168.1.10:8096\"\nproxy = {{ host = \"media.home.arpa\", tls = {{ mode = \"internal\" }} }}\n"
+        "[modules]\nproxy = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nadmin = \"{admin}\"\nportal_host = \"portal.example.com\"\ncookie_domain = \"example.com\"\n\n[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"http://192.168.1.5\"\nproxy = {{ host = \"nas.example.com\", auth = [\"internet\"] }}\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://192.168.1.10:8096\"\nproxy = {{ host = \"media.home.arpa\", tls = {{ mode = \"internal\" }} }}\n"
     )
 }
 
@@ -53,7 +52,7 @@ pub fn portal_pinned(text: &str, source: &str, version: &str) -> Portal {
         1,
     );
     fs::write(&path, text).unwrap();
-    let configuration = Arc::new(ConfigStore::open(&path).unwrap());
+    let configuration = Arc::new(portal_testing::opened(&path).unwrap());
     configuration.adopt(vec![ProxyFeature::validate]).unwrap();
     let setup = SyncSetup {
         portal: "127.0.0.1:8080".parse().unwrap(),

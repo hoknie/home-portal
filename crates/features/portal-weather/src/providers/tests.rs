@@ -2,7 +2,7 @@ use portal_feature::WidgetProvider;
 use serde_json::json;
 
 use super::WeatherProvider;
-use crate::fakes::ForecastService;
+use portal_testing::{Answer, FakeHttp, Request};
 
 const FORECAST: &str = r#"{
   "timezone": "Europe/Riga",
@@ -29,8 +29,14 @@ fn settings() -> serde_json::Value {
 
 #[tokio::test]
 async fn a_forecast_becomes_the_widget_data() {
-    let upstream = ForecastService::start(FORECAST, 200).await;
-    let provider = WeatherProvider::new(&upstream.endpoint(), "Europe/Moscow").unwrap();
+    let upstream = FakeHttp::always(
+        Answer::status(200)
+            .with_header("content-type", "application/json")
+            .with_body(FORECAST),
+    )
+    .await;
+    let provider =
+        WeatherProvider::new(&format!("{}/v1/forecast", upstream.url()), "Europe/Moscow").unwrap();
     let data = provider.data(&settings()).await.unwrap();
     assert_eq!(data["current"]["temperature"], 12.4);
     assert_eq!(data["current"]["condition"], "rain");
@@ -49,8 +55,14 @@ async fn a_forecast_becomes_the_widget_data() {
 
 #[tokio::test]
 async fn a_code_the_portal_does_not_map_keeps_its_number() {
-    let upstream = ForecastService::start(FORECAST, 200).await;
-    let provider = WeatherProvider::new(&upstream.endpoint(), "Europe/Moscow").unwrap();
+    let upstream = FakeHttp::always(
+        Answer::status(200)
+            .with_header("content-type", "application/json")
+            .with_body(FORECAST),
+    )
+    .await;
+    let provider =
+        WeatherProvider::new(&format!("{}/v1/forecast", upstream.url()), "Europe/Moscow").unwrap();
     let data = provider.data(&settings()).await.unwrap();
     assert_eq!(data["daily"][2]["condition"], "unknown");
     assert_eq!(data["daily"][2]["weather_code"], 7);
@@ -58,10 +70,20 @@ async fn a_code_the_portal_does_not_map_keeps_its_number() {
 
 #[tokio::test]
 async fn the_request_carries_only_what_the_forecast_needs() {
-    let upstream = ForecastService::start(FORECAST, 200).await;
-    let provider = WeatherProvider::new(&upstream.endpoint(), "Europe/Moscow").unwrap();
+    let upstream = FakeHttp::always(
+        Answer::status(200)
+            .with_header("content-type", "application/json")
+            .with_body(FORECAST),
+    )
+    .await;
+    let provider =
+        WeatherProvider::new(&format!("{}/v1/forecast", upstream.url()), "Europe/Moscow").unwrap();
     provider.data(&settings()).await.unwrap();
-    let request = upstream.requests().first().cloned().unwrap_or_default();
+    let request = upstream
+        .requests()
+        .first()
+        .map(Request::text)
+        .unwrap_or_default();
     let line = request.lines().next().unwrap_or_default().to_string();
     assert!(
         line.contains("latitude=56.95") && line.contains("longitude=24.11"),
@@ -81,8 +103,14 @@ async fn the_request_carries_only_what_the_forecast_needs() {
 
 #[tokio::test]
 async fn an_unhappy_forecast_becomes_a_problem_rather_than_data() {
-    let upstream = ForecastService::start("nope", 503).await;
-    let provider = WeatherProvider::new(&upstream.endpoint(), "Europe/Moscow").unwrap();
+    let upstream = FakeHttp::always(
+        Answer::status(503)
+            .with_header("content-type", "application/json")
+            .with_body("nope"),
+    )
+    .await;
+    let provider =
+        WeatherProvider::new(&format!("{}/v1/forecast", upstream.url()), "Europe/Moscow").unwrap();
     let problem = provider.data(&settings()).await.unwrap_err();
     assert!(problem.to_string().contains("503"), "{problem}");
 }

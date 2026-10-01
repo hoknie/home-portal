@@ -23,6 +23,7 @@ import {
   remove,
   suggestionsAt,
   updateAt,
+  usePreviewCache,
 } from "@/entities/workflow";
 
 import { type Draft, draftOf } from "./draft";
@@ -79,6 +80,7 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
   const taken = useMemo(() => others.map((candidate) => candidate.id), [others]);
   const lastRecord = useRun(liveRun ? null : (workflow?.last_run?.id ?? null));
   const lastRun: Trace | null = liveRun?.trace ?? lastRecord.data?.trace ?? null;
+  const preview = usePreviewCache();
   const visible = readOnly && shownRun !== null;
   const shownTrace = visible ? (liveRun?.trace ?? null) : null;
   const overlay = useMemo(() => overlayOf(shownTrace?.entries ?? []), [shownTrace]);
@@ -131,10 +133,11 @@ export function useEditorState({ workflow, selfId, initial, workflows, catalogue
         secrets: sources.secrets,
         lastRun,
         portal: sources.portal,
+        preview,
       }),
     filtersFor: (path: Path, field: string, subject: string, chain: string) =>
-      filterOffers({ steps: draft.steps, inputs: namedInputs(draft.inputs), path, field, lastRun, catalogue, portal: sources.portal }, subject, chain),
-    knownAt: (path: Path, field: string) => ({ steps: draft.steps, inputs: namedInputs(draft.inputs), path, field, lastRun, catalogue, portal: sources.portal }),
+      filterOffers({ steps: draft.steps, inputs: namedInputs(draft.inputs), path, field, lastRun, catalogue, portal: sources.portal, preview }, subject, chain),
+    knownAt: (path: Path, field: string) => ({ steps: draft.steps, inputs: namedInputs(draft.inputs), path, field, lastRun, catalogue, portal: sources.portal, preview }),
     select: setSelected,
     openPalette: (target) => {
       if (!readOnly) {

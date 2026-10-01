@@ -4,8 +4,7 @@ use axum::http::StatusCode;
 use serde_json::json;
 
 use super::support::{
-    OFF, ON, Portal, entry, get, member, portal, revision, send, signed_in, text_of, users_text_of,
-    write,
+    OFF, ON, Portal, entry, get, member, portal, revision, send, signed_in, users_text_of, write,
 };
 use crate::features::AuthFeature;
 
@@ -179,15 +178,15 @@ async fn renaming_a_group_renames_every_member() {
 }
 
 #[tokio::test]
-async fn renaming_follows_members_kept_in_another_file() {
+async fn renaming_follows_members_added_by_hand() {
     let portal = household(ON);
     let cookie = signed_in(&portal, "root", "secret99").await.unwrap();
-    let main = format!(
+    let users = format!(
         "{}\n{}",
-        text_of(&portal),
+        users_text_of(&portal),
         member("bob", "correct horse", Some("family"))
     );
-    fs::write(&portal.main, main).unwrap();
+    fs::write(portal.main.with_file_name("users.toml"), users).unwrap();
     let revision = revision(&portal, &cookie).await;
     let (status, _, body) = send(
         &portal,
@@ -202,6 +201,6 @@ async fn renaming_follows_members_kept_in_another_file() {
     .await;
     assert_eq!(status, StatusCode::OK, "{body}");
     assert_eq!(body["groups"][1]["members"], json!(["anna", "bob"]));
-    assert!(text_of(&portal).contains("group = \"household\""));
+    assert!(users_text_of(&portal).contains("group = \"household\""));
     assert!(!users_text_of(&portal).contains("family"));
 }

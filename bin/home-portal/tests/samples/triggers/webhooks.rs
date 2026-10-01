@@ -5,7 +5,7 @@ use portal_automations::{
     ReceptionResponse, TokenResponse, Webhook, WebhookResponse, WebhooksResponse,
 };
 
-use crate::check;
+use crate::typed;
 
 pub fn webhooks() -> Vec<Webhook> {
     let deploy = RawWebhook {
@@ -66,41 +66,36 @@ pub fn webhooks() -> Vec<Webhook> {
 #[test]
 fn the_webhook_samples_match_their_serializers() {
     let all = webhooks();
-    let listed = WebhooksResponse {
+    let mut listed = WebhooksResponse {
         webhooks: vec![
             WebhookResponse::of(&all[0], None),
             WebhookResponse::of(&all[1], None),
             WebhookResponse::of(&all[2], None),
         ],
     };
-    let mut listed = serde_json::to_value(listed).unwrap();
-    listed["webhooks"][0]["last_received"] = serde_json::to_value(ReceptionResponse {
+    listed.webhooks[0].last_received = Some(ReceptionResponse {
         at: "2026-09-25T10:00:00Z".into(),
         status: 202,
-    })
-    .unwrap();
-    check("webhooks", listed);
-    check(
+    });
+    typed("webhooks", &listed);
+    typed(
         "webhook-created",
-        serde_json::to_value(CreatedWebhookResponse {
+        &CreatedWebhookResponse {
             webhook: WebhookResponse::of(&all[1], None),
             token: Some("f".repeat(64)),
-        })
-        .unwrap(),
+        },
     );
-    check(
+    typed(
         "webhook-token",
-        serde_json::to_value(TokenResponse {
+        &TokenResponse {
             token: "e".repeat(64),
-        })
-        .unwrap(),
+        },
     );
-    check(
+    typed(
         "webhook-accepted",
-        serde_json::to_value(AcceptedResponse {
+        &AcceptedResponse {
             accepted: true,
             run_id: Some("42".into()),
-        })
-        .unwrap(),
+        },
     );
 }

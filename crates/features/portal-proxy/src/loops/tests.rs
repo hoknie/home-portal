@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
-use portal_config::ConfigStore;
 use serde_json::json;
 use tempfile::TempDir;
 
@@ -27,15 +26,13 @@ struct Setup {
 
 fn file(admin: &str, services: &str) -> String {
     format!(
-        "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nenabled = true\nadmin = \"{admin}\"\nportal_host = \"portal.example.com\"\n{services}"
+        "[modules]\nproxy = true\n\n[network]\ntrusted_proxies = [\"127.0.0.1\"]\n\n[proxy]\nadmin = \"{admin}\"\nportal_host = \"portal.example.com\"\n{services}"
     )
 }
 
 fn setup(text: &str) -> Setup {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let configuration = Arc::new(ConfigStore::open(&path).unwrap());
+    let (directory, path) = portal_testing::written(text);
+    let configuration = Arc::new(portal_testing::opened(&path).unwrap());
     let catalogue = Arc::new(Catalogue {
         configuration: configuration.clone(),
     });
@@ -144,7 +141,7 @@ async fn a_refusal_counts_as_an_answer() {
 #[tokio::test]
 async fn a_disabled_proxy_is_never_contacted() {
     let (caddy, url) = Caddy::on_tcp().await;
-    let setup = setup(&file(&url, "").replace("enabled = true", "enabled = false"));
+    let setup = setup(&file(&url, "").replace("proxy = true", "proxy = false"));
     tokio::spawn(setup.sync.clone().run());
     tokio::time::sleep(Duration::from_millis(200)).await;
     assert_eq!(caddy.with(|recorded| recorded.loads), 0);
@@ -183,9 +180,8 @@ fn stop_fakes(home: &CaddyHome) {
 #[cfg(unix)]
 #[tokio::test]
 async fn a_managed_caddy_that_does_not_answer_is_started_again() {
-    let setup = setup(
-        &file("http://127.0.0.1:9", "").replace("enabled = true", "enabled = true\nmanaged = true"),
-    );
+    let setup =
+        setup(&file("http://127.0.0.1:9", "").replace("[proxy]\n", "[proxy]\nmanaged = true\n"));
     let home = install_fake_caddy(&setup.path);
     tokio::spawn(setup.sync.clone().run());
     assert!(
@@ -210,7 +206,7 @@ async fn an_unmanaged_caddy_is_never_started() {
 #[tokio::test]
 async fn a_managed_caddy_that_answers_is_left_alone() {
     let (_caddy, url) = Caddy::on_tcp().await;
-    let setup = setup(&file(&url, "").replace("enabled = true", "enabled = true\nmanaged = true"));
+    let setup = setup(&file(&url, "").replace("[proxy]\n", "[proxy]\nmanaged = true\n"));
     let home = install_fake_caddy(&setup.path);
     tokio::spawn(setup.sync.clone().run());
     tokio::time::sleep(FAST.restart_every * 3).await;
@@ -222,8 +218,7 @@ async fn a_managed_caddy_that_answers_is_left_alone() {
 async fn a_process_holding_the_admin_address_without_answering_is_not_joined_by_another() {
     let silent = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let address = format!("http://{}", silent.local_addr().unwrap());
-    let setup =
-        setup(&file(&address, "").replace("enabled = true", "enabled = true\nmanaged = true"));
+    let setup = setup(&file(&address, "").replace("[proxy]\n", "[proxy]\nmanaged = true\n"));
     let home = install_fake_caddy(&setup.path);
     tokio::spawn(setup.sync.clone().run());
     tokio::time::sleep(FAST.restart_every * 3).await;

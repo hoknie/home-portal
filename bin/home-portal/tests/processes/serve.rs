@@ -52,6 +52,7 @@ fn the_serve_command_starts_the_portal_and_stops_on_a_signal() {
         ),
     )
     .unwrap();
+    portal_testing::split(&path);
     let mut child = Command::new(BINARY)
         .arg("serve")
         .env("HOME_PORTAL_CONFIG", &path)

@@ -6,7 +6,6 @@ use toml_edit::{Array, DocumentMut, Item, Table, Value, value};
 use crate::types::Rules;
 
 pub const SECTION: &str = Rules::SECTION;
-pub const LEGACY_KEYS: [&str; 2] = ["states", "recovered"];
 
 pub fn section_mut(document: &mut DocumentMut) -> &mut Table {
     if !document.contains_key(SECTION) || document[SECTION].as_table().is_none() {
@@ -35,11 +34,6 @@ pub fn write_rules(document: &mut DocumentMut, rules: &Rules) {
     let states: Array = rules.states.iter().map(String::as_str).collect();
     put(section, "states", Value::Array(states));
     put(section, "recovered", rules.recovered.into());
-    if let Some(legacy) = section.get_mut(Rules::LEGACY).and_then(Item::as_table_mut) {
-        for key in LEGACY_KEYS {
-            legacy.remove(key);
-        }
-    }
 }
 
 pub fn rules_origin(snapshot: &Snapshot) -> Option<PathBuf> {

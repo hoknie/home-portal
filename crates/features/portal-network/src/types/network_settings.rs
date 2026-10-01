@@ -1,13 +1,15 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use ipnet::IpNet;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct NetworkSettings {
     pub address: IpAddr,
     pub port: u16,
     pub public_url: Option<String>,
+    #[schemars(with = "Vec<String>")]
     pub trusted_proxies: Vec<IpNet>,
 }
 

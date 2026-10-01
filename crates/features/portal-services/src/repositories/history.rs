@@ -16,7 +16,6 @@ pub struct HistoryFiles {
 
 impl HistoryFiles {
     pub const EXTENSION: &'static str = "ndjson";
-    pub const LEGACY_EXTENSION: &'static str = "json";
     pub const BROKEN_SUFFIX: &'static str = ".broken";
     pub const TEMPORARY_SUFFIX: &'static str = ".tmp";
     pub const PRIVATE_MODE: u32 = 0o600;
@@ -32,11 +31,6 @@ impl HistoryFiles {
 
     pub fn file_of(&self, id: &str) -> PathBuf {
         self.directory.join(format!("{id}.{}", Self::EXTENSION))
-    }
-
-    fn legacy_of(&self, id: &str) -> PathBuf {
-        self.directory
-            .join(format!("{id}.{}", Self::LEGACY_EXTENSION))
     }
 
     pub fn load(&self, wanted: &[String]) -> HashMap<String, ServiceHistory> {
@@ -55,7 +49,7 @@ impl HistoryFiles {
                 continue;
             }
             let extension = path.extension().and_then(|extension| extension.to_str());
-            if extension != Some(Self::EXTENSION) && extension != Some(Self::LEGACY_EXTENSION) {
+            if extension != Some(Self::EXTENSION) {
                 continue;
             }
             let Some(id) = path.file_stem().and_then(|stem| stem.to_str()) else {
@@ -77,34 +71,20 @@ impl HistoryFiles {
     }
 
     fn load_one(&self, id: &str, now: i64) -> Option<ServiceHistory> {
-        let legacy_path = self.legacy_of(id);
         let lines_path = self.file_of(id);
         let mut lines = Vec::new();
-        if legacy_path.exists() {
-            match Self::read_legacy(&legacy_path) {
-                Ok(legacy) => lines.extend(legacy.lines()),
-                Err(error) => self.quarantine(&legacy_path, &error),
-            }
-        }
         if lines_path.exists() {
             match Self::read_lines(&lines_path) {
                 Ok(read) => lines.extend(read),
                 Err(error) => self.quarantine(&lines_path, &error),
             }
         }
-        if lines.is_empty() && !lines_path.exists() && !legacy_path.exists() {
+        if lines.is_empty() && !lines_path.exists() {
             return None;
         }
         let history = ServiceHistory::from_lines(lines, now);
-        match self.compact(id, &history) {
-            Ok(()) => {
-                if legacy_path.exists() {
-                    let _ = fs::remove_file(&legacy_path);
-                }
-            }
-            Err(error) => {
-                tracing::warn!(service = %id, %error, "cannot rewrite the service history");
-            }
+        if let Err(error) = self.compact(id, &history) {
+            tracing::warn!(service = %id, %error, "cannot rewrite the service history");
         }
         Some(history)
     }
@@ -166,13 +146,10 @@ impl HistoryFiles {
     }
 
     pub fn delete(&self, id: &str) -> io::Result<()> {
-        for path in [self.file_of(id), self.legacy_of(id)] {
-            match fs::remove_file(path) {
-                Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-                other => other?,
-            }
+        match fs::remove_file(self.file_of(id)) {
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+            other => other,
         }
-        Ok(())
     }
 
     fn text_of(lines: &[HistoryLine]) -> io::Result<String> {
@@ -209,11 +186,6 @@ impl HistoryFiles {
             tracing::warn!(path = %path.display(), broken, "some lines of a history file could not be read and were skipped");
         }
         Ok(lines)
-    }
-
-    fn read_legacy(path: &Path) -> io::Result<ServiceHistory> {
-        let text = fs::read_to_string(path)?;
-        serde_json::from_str(&text).map_err(io::Error::other)
     }
 
     fn quarantine(&self, path: &Path, error: &io::Error) {

@@ -2,7 +2,6 @@ use portal_feature::Module;
 use toml_edit::{DocumentMut, Item, Table, Value};
 
 pub const SECTION: &str = "modules";
-pub const LEGACY_KEY: &str = "enabled";
 
 pub fn write_switch(document: &mut DocumentMut, module: Module, on: bool) {
     if document
@@ -20,13 +19,4 @@ pub fn write_switch(document: &mut DocumentMut, module: Module, on: bool) {
         *fresh.decor_mut() = existing.decor().clone();
     }
     table.insert(module.name(), Item::Value(fresh));
-}
-
-pub fn remove_legacy_switch(document: &mut DocumentMut, module: Module) {
-    let Some(section) = module.legacy_section() else {
-        return;
-    };
-    if let Some(table) = document.get_mut(section).and_then(Item::as_table_like_mut) {
-        table.remove(LEGACY_KEY);
-    }
 }

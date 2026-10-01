@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{EventFieldsResponse, FilterResponse, OperatorResponse, StepKindResponse};
 use crate::types::WorkflowCatalogueView;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct WorkflowCatalogueResponse {
     pub kinds: Vec<StepKindResponse>,
     pub operators: Vec<OperatorResponse>,

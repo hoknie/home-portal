@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { apiSamples } from "@/shared/api";
 
 import { type Step, workflowCatalogueSchema } from "./schema";
-import { at, duplicate, idFor, idsOf, insert, move, moveBy, newStep, parsePath, pathText, remove, stepsIn, updateAt, withNotifySteps } from "./tree";
+import { at, duplicate, idFor, idsOf, insert, move, moveBy, newStep, parsePath, pathText, remove, stepsIn, updateAt } from "./tree";
 
 const catalogue = workflowCatalogueSchema.parse(apiSamples.workflowCatalogue);
 
@@ -81,18 +81,5 @@ describe("workflow tree", () => {
     expect(newStep(kind("loop"), new Set())).toMatchObject({ kind: "loop", repeat: 1, body: [] });
     expect(newStep(kind("parallel"), new Set(["parallel"]))).toMatchObject({ id: "parallel_2", branches: [[], []] });
     expect(newStep(kind("http"), new Set())).toMatchObject({ method: "GET", url: "" });
-  });
-});
-
-describe("the telegram alias", () => {
-  it("an old telegram step, however deep, becomes a notify step to telegram and nothing else changes", () => {
-    const steps: Step[] = [
-      { id: "check", kind: "if", condition: { left: "a", op: "==", right: "a" }, then: [{ id: "tell", kind: "telegram", text: "down" }] },
-      { id: "sms", kind: "notify", channel: "sms", text: "x" },
-    ];
-    expect(withNotifySteps(steps)).toEqual([
-      { id: "check", kind: "if", condition: { left: "a", op: "==", right: "a" }, then: [{ id: "tell", kind: "notify", channel: "telegram", text: "down" }] },
-      { id: "sms", kind: "notify", channel: "sms", text: "x" },
-    ]);
   });
 });

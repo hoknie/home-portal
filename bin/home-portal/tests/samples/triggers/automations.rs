@@ -8,7 +8,7 @@ use portal_automations::{
 };
 use portal_model::ScriptHeader;
 
-use crate::check;
+use crate::typed;
 
 struct Home;
 
@@ -249,14 +249,11 @@ fn the_automation_samples_match_their_serializers() {
             },
         ],
     };
-    check("automations", serde_json::to_value(&automations).unwrap());
-    check(
-        "automation-runs",
-        serde_json::to_value(RunsResponse { runs: history }).unwrap(),
-    );
-    check(
+    typed("automations", &automations);
+    typed("automation-runs", &RunsResponse { runs: history });
+    typed(
         "automation-catalogue",
-        serde_json::to_value(CatalogueResponse::of(
+        &CatalogueResponse::of(
             &Home,
             &super::webhooks(),
             vec![
@@ -266,12 +263,11 @@ fn the_automation_samples_match_their_serializers() {
                 "media".into(),
                 "night".into(),
             ],
-        ))
-        .unwrap(),
+        ),
     );
-    check(
+    typed(
         "automation-scripts",
-        serde_json::to_value(ScriptsResponse {
+        &ScriptsResponse {
             directory: "/srv/home-portal/scripts".into(),
             exists: true,
             user_id: 501,
@@ -304,12 +300,11 @@ fn the_automation_samples_match_their_serializers() {
                     header: ScriptHeader::default(),
                 }),
             ],
-        })
-        .unwrap(),
+        },
     );
-    check(
+    typed(
         "automation-schedule",
-        serde_json::to_value(ScheduleResponse {
+        &ScheduleResponse {
             timezone: "Europe/Berlin".into(),
             times: vec![
                 "2026-09-28T03:00:00+02:00".into(),
@@ -318,14 +313,12 @@ fn the_automation_samples_match_their_serializers() {
                 "2026-10-01T03:00:00+02:00".into(),
                 "2026-10-02T03:00:00+02:00".into(),
             ],
-        })
-        .unwrap(),
+        },
     );
-    check(
+    typed(
         "automation-queued",
-        serde_json::to_value(QueuedResponse {
+        &QueuedResponse {
             run_id: "42".into(),
-        })
-        .unwrap(),
+        },
     );
 }

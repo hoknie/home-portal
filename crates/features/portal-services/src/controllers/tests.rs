@@ -6,14 +6,13 @@ use axum::body::Body;
 use axum::http::header::RETRY_AFTER;
 use axum::http::{Request, StatusCode};
 use axum::response::Response;
-use portal_config::ConfigStore;
 use portal_feature::Feature;
 use portal_model::Environment;
 use tempfile::TempDir;
 use tower::ServiceExt;
 
 use crate::ServicesFeature;
-use crate::fakes::{Behaviour, Upstream};
+use portal_testing::{Answer, FakeHttp};
 
 struct Portal {
     router: Router,
@@ -21,10 +20,8 @@ struct Portal {
 }
 
 fn portal_with(text: &str) -> Portal {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (directory, path) = portal_testing::written(text);
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = ServicesFeature::new(
         store.clone(),
         Environment::internet(),
@@ -52,10 +49,11 @@ fn services(url: &str) -> String {
 
 #[tokio::test]
 async fn asking_for_a_probe_answers_202_and_the_probe_runs_at_once() {
-    let upstream = Upstream::start(Behaviour::Status {
-        code: 200,
-        delay: std::time::Duration::ZERO,
-    })
+    let upstream = FakeHttp::always(
+        Answer::status(200)
+            .with_body("ok")
+            .after(std::time::Duration::ZERO),
+    )
     .await;
     let portal = portal_with(&services(&upstream.url()));
     let response = post(
@@ -197,10 +195,8 @@ async fn an_unknown_range_is_400_and_an_unknown_or_hidden_service_is_404() {
 const PUBLISHED: &str = "[environments.local]\nnetworks = [\"192.168.0.0/16\"]\n\n[environments.vpn]\nnetworks = [\"10.8.0.0/24\"]\n\n[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://192.168.1.10:8096\"\nproxy = { host = \"media.example.com\", environments = [\"internet\", \"vpn\"] }\nprobe = { enabled = false }\n";
 
 fn published_portal(switch: Arc<crate::fakes::Switch>) -> (Router, std::path::PathBuf, TempDir) {
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, PUBLISHED).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (directory, path) = portal_testing::written(PUBLISHED);
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = ServicesFeature::new(
         store.clone(),
         Environment::internet(),
@@ -303,10 +299,8 @@ async fn a_host_another_service_publishes_is_refused_on_the_host_field() {
     let text = format!(
         "{PUBLISHED}\n[[services]]\nid = \"nas\"\nname = \"NAS\"\nurl = \"http://192.168.1.5\"\nprobe = {{ enabled = false }}\n"
     );
-    let directory = tempfile::tempdir().unwrap();
-    let path = directory.path().join("home-portal.toml");
-    fs::write(&path, text).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (_directory, path) = portal_testing::written(&text);
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let feature = ServicesFeature::new(
         store.clone(),
         Environment::internet(),

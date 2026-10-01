@@ -1,23 +1,15 @@
-use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::process::Command;
-use std::thread;
+
+use portal_testing::{Answer, FakeHttp};
 
 const BINARY: &str = env!("CARGO_BIN_EXE_home-portal");
 
-fn answering_http() -> u16 {
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let port = listener.local_addr().unwrap().port();
-    thread::spawn(move || {
-        for stream in listener.incoming() {
-            let Ok(mut stream) = stream else { continue };
-            let mut buffer = [0u8; 1024];
-            let _ = stream.read(&mut buffer);
-            let _ = stream
-                .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nok");
-        }
-    });
-    port
+async fn answering_http() -> u16 {
+    FakeHttp::always(Answer::status(200).with_body("ok"))
+        .await
+        .address
+        .port()
 }
 
 fn closed_port() -> u16 {
@@ -28,9 +20,9 @@ fn closed_port() -> u16 {
         .port()
 }
 
-#[test]
-fn probing_a_url_that_answers_prints_up_and_exits_zero() {
-    let port = answering_http();
+#[tokio::test(flavor = "multi_thread")]
+async fn probing_a_url_that_answers_prints_up_and_exits_zero() {
+    let port = answering_http().await;
     let output = Command::new(BINARY)
         .args(["probe", &format!("http://127.0.0.1:{port}")])
         .output()
@@ -55,9 +47,9 @@ fn probing_a_closed_port_prints_the_diagnosis_and_advice_and_exits_non_zero() {
     assert!(text.contains("advice     "), "{text}");
 }
 
-#[test]
-fn probing_a_configured_service_uses_its_address_and_settings() {
-    let port = answering_http();
+#[tokio::test(flavor = "multi_thread")]
+async fn probing_a_configured_service_uses_its_address_and_settings() {
+    let port = answering_http().await;
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     std::fs::write(
@@ -67,6 +59,7 @@ fn probing_a_configured_service_uses_its_address_and_settings() {
         ),
     )
     .unwrap();
+    portal_testing::split(&path);
     let output = Command::new(BINARY)
         .args(["probe", "media"])
         .env("HOME_PORTAL_CONFIG", &path)
@@ -98,6 +91,7 @@ fn an_unknown_service_id_fails_with_an_error_line_and_status_one() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("home-portal.toml");
     std::fs::write(&path, "").unwrap();
+    portal_testing::split(&path);
     let output = Command::new(BINARY)
         .args(["probe", "nothing"])
         .env("HOME_PORTAL_CONFIG", &path)
@@ -110,9 +104,9 @@ fn an_unknown_service_id_fails_with_an_error_line_and_status_one() {
     assert!(error.contains(&path.display().to_string()), "{error}");
 }
 
-#[test]
-fn a_piped_probe_report_has_no_escape_sequences() {
-    let port = answering_http();
+#[tokio::test(flavor = "multi_thread")]
+async fn a_piped_probe_report_has_no_escape_sequences() {
+    let port = answering_http().await;
     let output = Command::new(BINARY)
         .args(["probe", &format!("http://127.0.0.1:{port}")])
         .env_remove("CLICOLOR_FORCE")

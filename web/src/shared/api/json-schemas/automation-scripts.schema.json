@@ -1,0 +1,151 @@
+{
+  "$defs": {
+    "ArgumentResponse": {
+      "properties": {
+        "choices": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "default": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "option": {
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "option",
+        "required",
+        "type",
+        "choices",
+        "default",
+        "description"
+      ],
+      "type": "object"
+    },
+    "HeaderProblemResponse": {
+      "properties": {
+        "line": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "line",
+        "message"
+      ],
+      "type": "object"
+    },
+    "ScriptResponse": {
+      "properties": {
+        "argument_problems": {
+          "items": {
+            "$ref": "#/$defs/HeaderProblemResponse"
+          },
+          "type": "array"
+        },
+        "arguments": {
+          "items": {
+            "$ref": "#/$defs/ArgumentResponse"
+          },
+          "type": "array"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "concerns": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runnable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path",
+        "runnable",
+        "problem",
+        "code",
+        "concerns",
+        "description",
+        "arguments",
+        "argument_problems"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "directory": {
+      "type": "string"
+    },
+    "editing": {
+      "type": "boolean"
+    },
+    "exists": {
+      "type": "boolean"
+    },
+    "scripts": {
+      "items": {
+        "$ref": "#/$defs/ScriptResponse"
+      },
+      "type": "array"
+    },
+    "user_id": {
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "directory",
+    "exists",
+    "user_id",
+    "editing",
+    "scripts"
+  ],
+  "title": "ScriptsResponse",
+  "type": "object"
+}

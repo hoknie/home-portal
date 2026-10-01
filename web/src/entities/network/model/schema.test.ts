@@ -11,12 +11,6 @@ function messages(form: unknown) {
 }
 
 describe("network", () => {
-  it("the network sample parses", () => {
-    const parsed = networkSchema.parse(apiSamples.network);
-    expect(parsed.restart_required).toBe(true);
-    expect(parsed.interfaces[0].name).toBe("en0");
-  });
-
   it("the form round-trips the configured settings", () => {
     const configured = networkSchema.parse(apiSamples.network).configured;
     expect(networkRequestOf(networkFormOf(configured))).toEqual(configured);

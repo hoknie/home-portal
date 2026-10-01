@@ -51,7 +51,6 @@ export {
   stepsIn,
   updateAt,
   withChildList,
-  withNotifySteps,
 } from "./model/tree";
 export type { Path, Place, Target } from "./model/tree";
 export { chipsOf, scopeAt } from "./model/scope";
@@ -83,12 +82,14 @@ export { templatesOf } from "./model/suggestions/fields";
 export type { TemplateField } from "./model/suggestions/fields";
 export { jsonKeys } from "./model/suggestions/json-keys";
 export { lastOutput } from "./model/suggestions/last-output";
-export { FILTERS } from "./model/transforming/filters";
-export { filterOffers, inputSample, itemSample, knownType, operationIndex, sampleOf, valueBefore } from "./model/transforming/known";
+export { filterOffers, inputSample, itemSample, knownType, operationIndex, previewChain, sampleOf, valueBefore } from "./model/transforming/known";
+export { settled } from "./model/transforming/previews";
+export type { ChainPreview, Preview, PreviewCache } from "./model/transforming/previews";
+export { usePreviewCache } from "./model/previewing";
 export type { FilterOffer, KnownContext, Sample } from "./model/transforming/known";
-export { DEEPEST_EACH, LIST_OPERATIONS, MOST_OPERATIONS, applyOperation, previewOperations, transformSample } from "./model/transforming/operations";
-export type { Operation, Preview } from "./model/transforming/operations";
-export { canonical, described, textOf, typeOfValue } from "./model/transforming/values";
+export { DEEPEST_EACH, LIST_OPERATIONS, MOST_OPERATIONS } from "./model/transforming/operations";
+export type { Operation } from "./model/transforming/operations";
+export { canonical, textOf, typeOfValue } from "./model/transforming/values";
 export type { ValueType } from "./model/transforming/values";
 export { SUGGESTION_GROUPS, suggestionsAt } from "./model/suggestions/scope-suggestions";
 export type { Suggestion, SuggestionContext, SuggestionGroup } from "./model/suggestions/scope-suggestions";

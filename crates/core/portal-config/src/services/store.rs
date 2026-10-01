@@ -7,8 +7,7 @@ use std::sync::{Mutex, PoisonError, RwLock};
 use portal_feature::{Check, FieldError, Validator};
 use toml_edit::DocumentMut;
 
-use super::loading::{WRITES_TO_IGNORED, load, names_writes_to, read_main, workflow_files};
-use super::settling::settle;
+use super::loading::{load, read_main, workflow_files};
 use crate::helpers::{
     layout_errors, layout_of, stamp_of, storage_errors, storage_places, stray_configuration,
 };
@@ -55,14 +54,10 @@ impl ConfigStore {
             return Err(ConfigError::Invalid { path: main, errors });
         }
         let layout = layout_of(&main, &written);
-        settle(&main, &layout)?;
         let loaded = load(&main, &layout)?;
         let errors = storage_errors(&main, &loaded.snapshot.document);
         if !errors.is_empty() {
             return Err(ConfigError::Invalid { path: main, errors });
-        }
-        if names_writes_to(&loaded.snapshot.document) {
-            tracing::warn!(path = %main.display(), "{WRITES_TO_IGNORED}");
         }
         let storage = storage_places(&main, &loaded.snapshot.document);
         let store = ConfigStore {

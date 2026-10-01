@@ -7,8 +7,8 @@ use portal_automations::{
 use serde_json::{Map, Value, json};
 use toml_edit::{Array, DocumentMut, InlineTable};
 
-use crate::check;
 use crate::triggers::{outcome, run};
+use crate::{check, typed};
 
 fn revive() -> WorkflowResponse {
     let mut last = run(
@@ -85,7 +85,7 @@ fn revive() -> WorkflowResponse {
                     [{"id": "router_state", "kind": "status", "service": "router"}]
                 ]
             },
-            {"id": "tell", "kind": "telegram", "text": "{{inputs.service}} is {{steps.nas_state.state}}"}
+            {"id": "tell", "kind": "notify", "channel": "telegram", "text": "{{inputs.service}} is {{steps.nas_state.state}}"}
         ]),
         used_by: vec![
             WorkflowUsageResponse {
@@ -131,17 +131,16 @@ fn the_workflow_samples_match_their_serializers() {
     let listed = WorkflowsResponse {
         workflows: vec![revive(), spare()],
     };
-    check("workflows", serde_json::to_value(&listed).unwrap());
-    check(
+    typed("workflows", &listed);
+    typed(
         "workflow-catalogue",
-        serde_json::to_value(WorkflowCatalogueResponse::of(&WorkflowCatalogue.run())).unwrap(),
+        &WorkflowCatalogueResponse::of(&WorkflowCatalogue.run()),
     );
-    check(
+    typed(
         "workflow-run",
-        serde_json::to_value(QueuedResponse {
+        &QueuedResponse {
             run_id: "13".into(),
-        })
-        .unwrap(),
+        },
     );
 }
 

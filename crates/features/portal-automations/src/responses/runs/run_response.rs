@@ -1,12 +1,13 @@
 use std::collections::BTreeMap;
 
 use portal_feature::PortalEvent;
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{OutcomeResponse, OutputResponse, TraceResponse};
 use crate::types::{ActiveRun, RunRecord};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct RunResponse {
     pub id: String,
     pub automation: String,

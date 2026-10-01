@@ -4,6 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+schemars.workspace = true
 async-trait.workspace = true
 axum.workspace = true
 portal-feature.workspace = true

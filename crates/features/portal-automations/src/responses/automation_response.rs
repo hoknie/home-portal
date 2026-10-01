@@ -1,9 +1,10 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{MarksResponse, RunResponse, RunSettingsResponse, WhenResponse, WorkflowCallResponse};
 use crate::types::{ActiveRun, Automation, RunRecord};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, JsonSchema)]
 pub struct AutomationResponse {
     pub id: String,
     pub title: String,

@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::Serialize;
 
 use super::{
@@ -8,7 +9,7 @@ use crate::types::{DnsSettings, DnsState, TransportState, ZoneBook};
 
 pub const HTTPS_OFF: &str = "DNS over HTTPS is off";
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct DnsResponse {
     pub enabled: bool,
     pub plain: TransportResponse,

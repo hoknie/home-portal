@@ -2,7 +2,7 @@ use std::fs;
 use std::sync::Arc;
 
 use axum::http::StatusCode;
-use portal_config::{ConfigStore, Revision};
+use portal_config::Revision;
 use portal_feature::{ApiError, Principal};
 
 use super::support::{
@@ -160,10 +160,8 @@ async fn deleting_yourself_is_refused_and_an_unknown_user_is_not_found() {
 
 #[tokio::test]
 async fn the_last_user_cannot_be_deleted() {
-    let folder = tempfile::tempdir().unwrap();
-    let path = folder.path().join("home-portal.toml");
-    fs::write(&path, format!("{ON}{}", entry("admin", "secret99"))).unwrap();
-    let store = Arc::new(ConfigStore::open(&path).unwrap());
+    let (_folder, path) = portal_testing::written(&format!("{ON}{}", entry("admin", "secret99")));
+    let store = Arc::new(portal_testing::opened(&path).unwrap());
     let revision: Revision = store.read().revision;
     let refused = DeleteUser::new(store)
         .run(&Principal::admin("someone-else"), "admin", &revision)

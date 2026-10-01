@@ -4,6 +4,7 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+schemars.workspace = true
 argon2.workspace = true
 axum.workspace = true
 rand.workspace = true
@@ -19,6 +20,7 @@ portal-model.workspace = true
 toml_edit.workspace = true
 
 [dev-dependencies]
+portal-testing.workspace = true
 async-trait.workspace = true
 http-body-util.workspace = true
 tempfile.workspace = true

@@ -1,0 +1,158 @@
+{
+  "$defs": {
+    "ReceptionResponse": {
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "status": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "at",
+        "status"
+      ],
+      "type": "object"
+    },
+    "RunSettingsResponse": {
+      "properties": {
+        "args": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "script": {
+          "type": "string"
+        },
+        "timeout_seconds": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "script",
+        "args",
+        "timeout_seconds"
+      ],
+      "type": "object"
+    },
+    "WebhookResponse": {
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "last_received": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReceptionResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protected": {
+          "type": "boolean"
+        },
+        "run": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunSettingsResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        },
+        "variables": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "workflow": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkflowCallResponse"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "enabled",
+        "tags",
+        "address",
+        "protected",
+        "variables",
+        "action",
+        "run",
+        "workflow",
+        "last_received"
+      ],
+      "type": "object"
+    },
+    "WorkflowCallResponse": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "inputs": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "inputs"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "token": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "webhook": {
+      "$ref": "#/$defs/WebhookResponse"
+    }
+  },
+  "required": [
+    "webhook",
+    "token"
+  ],
+  "title": "CreatedWebhookResponse",
+  "type": "object"
+}
