@@ -14,8 +14,9 @@ const BODY_TEXT = ["--foreground", "--muted-foreground"];
 const STATUS_TEXT = ["--status-up", "--status-degraded", "--status-down", "--status-unreadable", "--status-unknown"];
 const BODY_CONTRAST = 4.5;
 const STATUS_CONTRAST = 3;
+const NO_BLUR = "@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))";
 const FALLBACKS = [
-  "@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))",
+  NO_BLUR,
   "@media (prefers-reduced-transparency: reduce)",
   "@media (prefers-contrast: more)",
 ];
@@ -45,25 +46,31 @@ describe("glass look", () => {
     expect(THEMES.flatMap((theme) => shortfalls(themeTokens(CSS, theme), theme))).toEqual([]);
   });
 
-  it("glass falls back to opaque surfaces without backdrop-filter or with reduced transparency or more contrast", () => {
+  it("floating glass is opaque without backdrop-filter, and every glass surface with reduced transparency or more contrast", () => {
     for (const header of FALLBACKS) {
       const fallback = declarations(blockAfter(CSS, header));
-      expect(fallback.get("--glass-blur-panel")).toBe("0px");
       expect(fallback.get("--glass-blur-overlay")).toBe("0px");
+      const opaque = header === NO_BLUR ? ["--glass-overlay"] : SURFACES;
       for (const theme of THEMES) {
         const tokens = new Map([...themeTokens(CSS, theme), ...fallback]);
-        for (const surface of SURFACES) {
+        for (const surface of opaque) {
           expect(tokenColor(tokens, surface).alpha, `${header} ${theme} ${surface}`).toBe(1);
         }
       }
     }
   });
 
-  it("glass surfaces blur through the utilities alone", () => {
-    for (const utility of ["glass-panel", "glass-overlay"]) {
-      const block = blockAfter(CSS, `@utility ${utility} {`);
-      expect(block).toContain("-webkit-backdrop-filter:");
-      expect(block).toMatch(/\n\s+backdrop-filter:/);
-    }
+  it("only the floating glass blurs, and panels carry no shadow that could square off", () => {
+    const panel = blockAfter(CSS, "@utility glass-panel {");
+    expect(panel).not.toMatch(/backdrop-filter|box-shadow/);
+    const overlay = blockAfter(CSS, "@utility glass-overlay {");
+    expect(overlay).toContain("-webkit-backdrop-filter:");
+    expect(overlay).toMatch(/\n\s+backdrop-filter:/);
+  });
+
+  it("a panel too transparent for its text is caught", () => {
+    const thin = CSS.replace("--glass-panel: oklch(1 0 0 / 70%);", "--glass-panel: oklch(1 0 0 / 15%);");
+    expect(thin).not.toBe(CSS);
+    expect(shortfalls(themeTokens(thin, ":root"), ":root").length).toBeGreaterThan(0);
   });
 });

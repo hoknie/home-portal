@@ -48,7 +48,7 @@ export function TemplatesGallery({ onChoose }: TemplatesGalleryProps) {
             <span className="text-xs text-muted-foreground">{t(`${template.name}.description` as "retry.description")}</span>
           </>
         );
-        const className = "grid h-full gap-2 rounded-xl border border-glass-edge bg-card p-3 text-start transition-colors hover:border-primary hover:shadow-md";
+        const className = "grid h-full gap-2 rounded-xl border border-glass-edge bg-card p-3 text-start transition-colors hover:border-primary";
         return (
           <li key={template.name}>
             {onChoose ? (

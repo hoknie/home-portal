@@ -9,7 +9,7 @@ import { FormField } from "@/shared/ui/form-field";
 import { Button, Input, Label } from "@/shared/ui/primitives";
 
 const TEXTAREA =
-  "min-h-28 w-full rounded-md border border-input bg-glass-tint px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+  "min-h-28 w-full rounded-md border border-input bg-glass-tint px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 const ROW = "grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_2.25rem] items-start gap-2";
 

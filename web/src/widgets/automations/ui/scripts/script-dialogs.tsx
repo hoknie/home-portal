@@ -7,7 +7,7 @@ import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 
 import { joined } from "../../model/script-usage";
 
-const SELECT = "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm shadow-xs";
+const SELECT = "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm";
 
 export type PlaceDialogProps = {
   open: boolean;

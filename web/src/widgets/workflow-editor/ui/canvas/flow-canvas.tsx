@@ -19,7 +19,7 @@ import {
 } from "@xyflow/react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 
 import { isActive } from "@/entities/automation";
 import { type Flow, type Overlay, type RunPath, flowOf, runPath } from "@/entities/workflow";
@@ -41,6 +41,8 @@ import { FlowEdge, LoopEdge } from "./flow-edge";
 
 const NODE_TYPES: NodeTypes = { start: StartNode, step: StepNode, join: JoinNode, frame: FrameNode, empty: EmptyNode, marker: MarkerNode, end: EndNode };
 const EDGE_TYPES: EdgeTypes = { flow: FlowEdge, again: LoopEdge };
+
+const FLAT_CONTROLS = { "--xy-controls-box-shadow": "none" } as CSSProperties;
 
 function nodesOf(flow: Flow, selected: string | null, fixed: boolean, path: RunPath | null): CanvasNode[] {
   return flow.nodes.map((node) => ({
@@ -197,7 +199,7 @@ function Canvas() {
       }}
     >
       <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
-      <Controls showInteractive={false} position="bottom-left" />
+      <Controls showInteractive={false} position="bottom-left" className="overflow-hidden rounded-lg border border-glass-edge" style={FLAT_CONTROLS} />
       {editor.readOnly && editor.overlay.size > 0 ? (
         <Panel position="top-right">
           <ValuesSwitch />

@@ -91,7 +91,7 @@ export function TagInput({
     <div className="relative">
       <div
         className={cn(
-          "flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-md border border-input bg-glass-tint px-2 py-1 shadow-xs",
+          "flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-md border border-input bg-glass-tint px-2 py-1",
           "focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
           invalid && "border-destructive",
         )}
@@ -136,7 +136,7 @@ export function TagInput({
         />
       </div>
       {options.length > 0 ? (
-        <ul id={listId} role="listbox" className="glass-overlay absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-lg p-1 text-sm">
+        <ul id={listId} role="listbox" className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-glass-edge bg-[var(--glass-overlay-solid)] text-popover-foreground shadow-[var(--glass-shadow)] p-1 text-sm">
           {options.map((option, index) => (
             <li
               key={`${option.created}-${option.value}`}

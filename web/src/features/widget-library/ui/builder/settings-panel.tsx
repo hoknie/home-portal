@@ -44,7 +44,7 @@ export function SettingsPanel({ tab, failing, onTab, collapse, children }: Setti
                 onClick={() => onTab(name)}
                 className={cn(
                   "relative flex min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  chosen ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                  chosen ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <Icon className="size-3.5 shrink-0" aria-hidden />

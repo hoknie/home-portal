@@ -8,7 +8,7 @@ import { FormField } from "@/shared/ui/form-field";
 import { Input, Label, Switch } from "@/shared/ui/primitives";
 
 const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export function ProbeFields({ form }: { form: UseFormReturn<ServiceForm> }) {
   const t = useTranslations();

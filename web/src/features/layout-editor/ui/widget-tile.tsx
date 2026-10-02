@@ -30,7 +30,7 @@ export type WidgetTileProps = {
   onRemove: () => void;
 };
 
-const TOOL = "flex size-8 items-center justify-center rounded-md bg-background/80 text-muted-foreground shadow-sm backdrop-blur hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
+const TOOL = "flex size-8 items-center justify-center rounded-md border border-glass-edge bg-background text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
 
 export function WidgetTile({ widget, title, type, known, errors, content, onResize, onMove, onStep, onPreviewMove, onConfigure, onRemove }: WidgetTileProps) {
   const t = useTranslations("layoutEditor");

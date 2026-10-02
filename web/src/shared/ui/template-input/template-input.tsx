@@ -39,7 +39,7 @@ export type TemplateInputProps = {
 };
 
 const FRAME =
-  "relative w-full min-w-0 rounded-md border border-input bg-glass-tint shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 has-[[aria-invalid=true]]:border-destructive";
+  "relative w-full min-w-0 rounded-md border border-input bg-glass-tint transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 has-[[aria-invalid=true]]:border-destructive";
 const TEXT = "w-full px-3 py-2 font-mono text-sm leading-5 whitespace-pre-wrap break-words";
 
 type Field = HTMLInputElement | HTMLTextAreaElement;
@@ -236,7 +236,7 @@ export function TemplateInput({
           id={listId}
           role="listbox"
           aria-label={t("suggestions")}
-          className="absolute top-full left-0 z-50 mt-1 max-h-72 w-full min-w-64 overflow-y-auto rounded-lg border border-glass-edge bg-[var(--glass-overlay-solid)] p-1 text-sm text-popover-foreground shadow-xl"
+          className="absolute top-full left-0 z-50 mt-1 max-h-72 w-full min-w-64 overflow-y-auto rounded-lg border border-glass-edge bg-[var(--glass-overlay-solid)] text-popover-foreground shadow-[var(--glass-shadow)] p-1 text-sm"
         >
           {shown.length === 0 ? <p className="px-2 py-1.5 text-xs text-muted-foreground">{t("noMatches")}</p> : null}
           {grouped(shown).map((group) => (

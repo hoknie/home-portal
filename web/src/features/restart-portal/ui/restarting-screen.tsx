@@ -68,7 +68,7 @@ export function RestartingScreen({ target }: RestartingScreenProps) {
     setAttempt((current) => current + 1);
   };
   return (
-    <div role="alertdialog" aria-live="polite" aria-label={t("restarting")} className="fixed inset-0 z-50 grid place-items-center bg-background/90 p-6 backdrop-blur-sm">
+    <div role="alertdialog" aria-live="polite" aria-label={t("restarting")} className="fixed inset-0 z-50 grid place-items-center bg-background/95 p-6">
       <div className="grid max-w-sm justify-items-center gap-3 text-center">
         {gaveUp ? <TriangleAlert className="size-8 text-status-degraded" aria-hidden /> : <LoaderCircle className="size-8 animate-spin" aria-hidden />}
         <p className="text-lg font-medium">{gaveUp ? t("timeout") : t("restarting")}</p>

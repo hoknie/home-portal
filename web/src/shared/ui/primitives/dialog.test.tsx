@@ -19,3 +19,20 @@ it("opens and closes with a labelled close button", async () => {
   await userEvent.click(screen.getByRole("button", { name: "close it" }));
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
+
+it("only dims the page behind it, so a single surface blurs", async () => {
+  render(
+    <Dialog>
+      <DialogTrigger>open</DialogTrigger>
+      <DialogContent closeLabel="close it">
+        <DialogTitle>heading</DialogTitle>
+        <DialogDescription>details</DialogDescription>
+      </DialogContent>
+    </Dialog>,
+  );
+  await userEvent.click(screen.getByText("open"));
+  const overlay = document.querySelector("[data-slot='dialog-overlay']");
+  expect(overlay).not.toBeNull();
+  expect(overlay?.className).not.toMatch(/backdrop-blur/);
+  expect(overlay?.className).toMatch(/bg-black/);
+});

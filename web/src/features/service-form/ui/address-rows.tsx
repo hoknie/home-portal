@@ -12,7 +12,7 @@ import { Button, Input } from "@/shared/ui/primitives";
 import { ProxySettings } from "./proxy-settings";
 
 const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50";
+  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50";
 const COLUMNS = "md:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,2.4fr)_max-content_2.25rem]";
 const SPAN = "md:col-span-full md:grid-cols-subgrid";
 

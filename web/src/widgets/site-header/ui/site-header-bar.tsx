@@ -18,7 +18,7 @@ export function SiteHeaderBar({ environment, user }: SiteHeaderBarProps) {
   return (
     <header className="glass-panel flex flex-wrap items-center gap-3 rounded-xl px-4 py-3">
       <Link href={routes.home} className="flex items-center gap-2.5">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <House className="size-4" aria-hidden />
         </span>
         <span className="text-lg font-semibold tracking-tight">{t("common.appName")}</span>

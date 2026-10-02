@@ -34,7 +34,7 @@ export function DropMarker({ drop, ghost }: { drop: Drop | null; ghost: Ghost | 
         <div
           aria-hidden
           data-drag-ghost=""
-          className="glass-panel pointer-events-none fixed z-50 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium shadow-lg"
+          className="glass-panel pointer-events-none fixed z-50 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium"
           style={{ top: ghost.y + 12, left: ghost.x + 12 }}
         >
           <Icon className="size-3.5 text-primary" aria-hidden />

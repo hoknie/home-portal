@@ -9,14 +9,13 @@
   --backdrop-glow-1: oklch(0.83 0.1 262);
   --backdrop-glow-2: oklch(0.85 0.09 305);
   --backdrop-glow-3: oklch(0.88 0.08 190);
-  --glass-panel: oklch(1 0 0 / 55%);
+  --glass-panel: oklch(1 0 0 / 70%);
   --glass-panel-solid: oklch(1 0 0);
   --glass-overlay: oklch(1 0 0 / 78%);
   --glass-overlay-solid: oklch(1 0 0);
   --glass-edge: oklch(1 0 0 / 65%);
   --glass-tint: oklch(1 0 0 / 45%);
-  --glass-shadow: 0 8px 32px oklch(0.35 0.08 262 / 12%);
-  --glass-blur-panel: 16px;
+  --glass-shadow: 0 8px 24px oklch(0.35 0.08 262 / 10%);
   --glass-blur-overlay: 24px;
   --glass-saturation: 140%;
   --background: oklch(0.985 0.002 247);
@@ -31,7 +30,7 @@
   --secondary-foreground: oklch(0.28 0.03 257);
   --muted: oklch(0.96 0.006 255);
   --muted-foreground: oklch(0.47 0.03 257);
-  --accent: oklch(0.95 0.015 262);
+  --accent: color-mix(in oklch, var(--glass-panel-solid) 92%, var(--primary));
   --accent-foreground: oklch(0.28 0.03 257);
   --destructive: oklch(0.58 0.22 27);
   --border: oklch(0.21 0.02 257 / 10%);
@@ -39,7 +38,7 @@
   --ring: oklch(0.52 0.19 262);
   --sidebar: var(--glass-panel);
   --sidebar-foreground: oklch(0.28 0.03 257);
-  --sidebar-accent: oklch(1 0 0 / 60%);
+  --sidebar-accent: color-mix(in oklch, var(--glass-panel-solid) 90%, var(--primary));
   --sidebar-accent-foreground: oklch(0.28 0.08 262);
   --sidebar-border: var(--glass-edge);
   --status-up: oklch(0.55 0.15 150);
@@ -62,13 +61,13 @@
   --backdrop-glow-1: oklch(0.36 0.11 262);
   --backdrop-glow-2: oklch(0.33 0.12 305);
   --backdrop-glow-3: oklch(0.36 0.07 200);
-  --glass-panel: oklch(0.22 0.02 262 / 55%);
+  --glass-panel: oklch(0.22 0.02 262 / 75%);
   --glass-panel-solid: oklch(0.2 0.018 262);
   --glass-overlay: oklch(0.21 0.02 262 / 82%);
   --glass-overlay-solid: oklch(0.2 0.018 262);
   --glass-edge: oklch(1 0 0 / 12%);
   --glass-tint: oklch(1 0 0 / 7%);
-  --glass-shadow: 0 8px 32px oklch(0 0 0 / 35%);
+  --glass-shadow: 0 8px 24px oklch(0 0 0 / 30%);
   --background: oklch(0.16 0.015 262);
   --foreground: oklch(0.96 0.006 255);
   --card: var(--glass-panel);
@@ -81,7 +80,7 @@
   --secondary-foreground: oklch(0.96 0.006 255);
   --muted: oklch(0.26 0.02 262);
   --muted-foreground: oklch(0.74 0.02 257);
-  --accent: oklch(0.28 0.03 262);
+  --accent: color-mix(in oklch, var(--glass-panel-solid) 86%, var(--primary));
   --accent-foreground: oklch(0.96 0.006 255);
   --destructive: oklch(0.65 0.2 25);
   --border: oklch(1 0 0 / 10%);
@@ -89,7 +88,7 @@
   --ring: oklch(0.68 0.16 262);
   --sidebar: var(--glass-panel);
   --sidebar-foreground: oklch(0.96 0.006 255);
-  --sidebar-accent: oklch(1 0 0 / 10%);
+  --sidebar-accent: color-mix(in oklch, var(--glass-panel-solid) 84%, var(--primary));
   --sidebar-accent-foreground: oklch(0.96 0.006 255);
   --sidebar-border: var(--glass-edge);
   --status-up: oklch(0.72 0.17 150);
@@ -110,9 +109,7 @@
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root,
   .dark {
-    --glass-panel: var(--glass-panel-solid);
     --glass-overlay: var(--glass-overlay-solid);
-    --glass-blur-panel: 0px;
     --glass-blur-overlay: 0px;
     --glass-saturation: 100%;
   }
@@ -123,7 +120,6 @@
   .dark {
     --glass-panel: var(--glass-panel-solid);
     --glass-overlay: var(--glass-overlay-solid);
-    --glass-blur-panel: 0px;
     --glass-blur-overlay: 0px;
     --glass-saturation: 100%;
   }
@@ -134,7 +130,6 @@
   .dark {
     --glass-panel: var(--glass-panel-solid);
     --glass-overlay: var(--glass-overlay-solid);
-    --glass-blur-panel: 0px;
     --glass-blur-overlay: 0px;
     --glass-saturation: 100%;
   }
@@ -188,9 +183,6 @@
 @utility glass-panel {
   background-color: var(--glass-panel);
   border: 1px solid var(--glass-edge);
-  box-shadow: var(--glass-shadow);
-  -webkit-backdrop-filter: blur(var(--glass-blur-panel)) saturate(var(--glass-saturation));
-  backdrop-filter: blur(var(--glass-blur-panel)) saturate(var(--glass-saturation));
 }
 
 @utility glass-overlay {

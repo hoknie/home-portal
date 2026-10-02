@@ -30,7 +30,7 @@ export function MultiSelect({ id, label, options, values, placeholder, disabled 
         aria-label={label}
         aria-invalid={invalid ? true : undefined}
         className={cn(
-          "flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-input bg-glass-tint px-3 text-left text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 aria-invalid:border-destructive",
+          "flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-input bg-glass-tint px-3 text-left text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 aria-invalid:border-destructive",
         )}
       >
         <span className={cn("truncate", chosen.length === 0 && "text-muted-foreground")}>{chosen.length === 0 ? placeholder : chosen.map((option) => option.label).join(", ")}</span>

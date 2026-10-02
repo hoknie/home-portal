@@ -16,7 +16,7 @@ import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
 export const SECRET_SETTING = "secret";
 
 const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export function ChannelSettings({ channel, revision }: { channel: NotificationChannel; revision: string | null }) {
   const t = useTranslations();

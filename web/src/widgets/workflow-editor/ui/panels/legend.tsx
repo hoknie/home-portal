@@ -38,7 +38,7 @@ const ITEMS = [
 export function Legend({ onDismiss }: { onDismiss: () => void }) {
   const t = useTranslations("workflowHelp.legend");
   return (
-    <section aria-label={t("title")} className="glass-panel grid w-80 max-w-[calc(100vw-2rem)] gap-3 rounded-2xl p-4 shadow-lg">
+    <section aria-label={t("title")} className="glass-panel grid w-80 max-w-[calc(100vw-2rem)] gap-3 rounded-2xl p-4">
       <h2 className="text-sm font-semibold">{t("title")}</h2>
       <ul className="grid gap-2">
         {ITEMS.map(({ key, icon: Icon }) => (

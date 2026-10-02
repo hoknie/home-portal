@@ -27,9 +27,9 @@ function NavItem({ href, label, icon: Icon, pathname, onNavigate, compact = fals
       aria-current={active ? "page" : undefined}
       aria-label={compact ? label : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
+        "flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-[color,background-color] duration-150",
         compact ? "justify-center px-2" : nested ? "ml-5 px-3 py-1.5 text-xs" : "px-3",
-        active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
+        active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent",
       )}
     >
       <Icon className="size-4 shrink-0" aria-hidden />
@@ -63,7 +63,7 @@ function Category({ group, collapsed, pathname, onNavigate }: CategoryProps) {
         data-active={collapsed && holdsActive ? "" : undefined}
         onClick={() => toggleCategory(group.category)}
         className={cn(
-          "flex items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60",
+          "flex items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium text-sidebar-foreground/70 transition-[color,background-color] duration-150 hover:bg-sidebar-accent",
           collapsed && holdsActive && "bg-sidebar-accent text-sidebar-accent-foreground",
         )}
       >

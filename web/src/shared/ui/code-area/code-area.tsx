@@ -59,7 +59,7 @@ export function CodeArea({ id, value, onChange, onSave, readOnly = false, classN
   return (
     <div
       className={cn(
-        "flex min-h-64 overflow-hidden rounded-lg border border-input bg-[color-mix(in_oklch,var(--glass-overlay-solid)_70%,transparent)] shadow-xs focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
+        "flex min-h-64 overflow-hidden rounded-lg border border-input bg-[color-mix(in_oklch,var(--glass-overlay-solid)_70%,transparent)] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
         className,
       )}
     >
