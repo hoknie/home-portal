@@ -4,6 +4,20 @@ Every notable change of home-portal. Sections are written by `packaging/changelo
 Conventional Commits between release tags; the release on GitHub carries the section of its tag.
 The versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Features
+
+- Moved primitives to ui kit ([b4397b2](https://github.com/hoknie/home-portal/commit/b4397b22de0d92db69ffc8ed0b7c9eacd1e6b393))
+- Cleaned ui ([316d12b](https://github.com/hoknie/home-portal/commit/316d12b8689b6bd269c7322f96ccd7cb43d64376))
+- Added failure error page and renew docs ([fb2678e](https://github.com/hoknie/home-portal/commit/fb2678e3c050414c34e1e557c03d4f9de5b55e4f))
+
+### Fixes
+
+- Updated widget layout and element inspector ([80bfb11](https://github.com/hoknie/home-portal/commit/80bfb11acba7876cad1d62be286f535d258a6bab))
+
+[Full diff](https://github.com/hoknie/home-portal/compare/v0.2.0...HEAD)
+
 ## [0.2.0] - 2026-10-02
 
 ### Features
