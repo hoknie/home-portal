@@ -56,8 +56,10 @@ verdict '[ "$(stat -c %U:%a /etc/home-portal/home-portal.toml)" = home-portal:60
 verdict '[ "$(stat -c %U:%a /etc/home-portal/initial-password)" = home-portal:600 ]' "initial-password is home-portal's, 0600"
 verdict '[ "$(stat -c %U:%a /var/lib/home-portal/scripts)" = root:755 ]' "the scripts directory is root's, 0755"
 verdict 'grep -qx "directory = \"/var/lib/home-portal\"" /etc/home-portal/home-portal.toml' "the data goes to /var/lib/home-portal"
-verdict 'grep -qx "name = \"admin\"" /etc/home-portal/home-portal.toml' "the configuration holds admin"
-verdict 'grep -qx "group = \"admin\"" /etc/home-portal/home-portal.toml' "admin is in the admin group"
+verdict '[ "$(stat -c %U:%a /etc/home-portal/users.toml)" = home-portal:600 ]' "users.toml is home-portal's, 0600"
+verdict 'grep -qx "name = \"admin\"" /etc/home-portal/users.toml' "users.toml holds admin"
+verdict 'grep -qx "group = \"admin\"" /etc/home-portal/users.toml' "admin is in the admin group"
+verdict '! grep -q "^\[\[users\]\]" /etc/home-portal/home-portal.toml' "the configuration holds no users"
 
 say "the portal runs as home-portal and admin signs in"
 password="$(cat /etc/home-portal/initial-password)"

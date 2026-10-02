@@ -143,6 +143,9 @@ check() {
     local folder="$home/.config/home-portal"
     verdict '[ "$(stat -f %Lp "$folder/home-portal.toml")" = 600 ]' "the configuration is 0600"
     verdict '[ "$(stat -f %Lp "$folder/initial-password")" = 600 ]' "initial-password is 0600"
+    verdict '[ "$(stat -f %Lp "$folder/users.toml")" = 600 ]' "users.toml is 0600"
+    verdict 'grep -qx "name = \"admin\"" "$folder/users.toml"' "users.toml holds admin"
+    verdict '! grep -q "^\[\[users\]\]" "$folder/home-portal.toml"' "the configuration holds no users"
     verdict '[ "$(stat -f %Lp "$folder/scripts")" = 755 ]' "the scripts directory is 0755"
     verdict 'plutil -lint "$home/Library/LaunchAgents/lan.home.portal.plist" >/dev/null' "the LaunchAgent is a valid property list"
     verdict '! grep -q "^\[storage\]" "$folder/home-portal.toml"' "the data lies beside the configuration"
@@ -174,6 +177,7 @@ check() {
     local portal=$!
     for _ in $(seq 1 50); do
         curl -fsS "http://127.0.0.1:$port/health" >/dev/null 2>&1 && break
+        kill -0 "$portal" 2>/dev/null || break
         sleep 0.2
     done
     verdict 'curl -fsS "http://127.0.0.1:$port/health" >/dev/null' "GET /health answers"
@@ -182,10 +186,10 @@ check() {
     local body status
     body="$(printf '{"name":"admin","password":"%s"}' "$password")"
     status="$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$body" \
-        "http://127.0.0.1:$port/api/session")"
+        "http://127.0.0.1:$port/api/session" || true)"
     verdict '[ "$status" -ge 200 ] && [ "$status" -lt 300 ]' \
         "admin signs in with the password from initial-password (HTTP $status)"
-    kill "$portal"; wait "$portal" 2>/dev/null || true
+    kill "$portal" 2>/dev/null || true; wait "$portal" 2>/dev/null || true
     [ "$failed" -eq 0 ] || { cat "$work/portal.log"; die "the package is not what it should be"; }
     say "the .pkg is what it should be"
 }

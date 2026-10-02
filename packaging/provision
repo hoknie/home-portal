@@ -3,8 +3,9 @@
 # configuration is left as it is, so an upgrade never touches it.
 #   provision <configuration> <data directory> <owner> <example> <binary>
 # The data directory becomes [storage] directory unless it is the configuration's own.
-# The administrator is "admin" with a random password, kept in initial-password beside the
-# configuration, mode 0600, readable by the owner only.
+# The administrator is "admin" with a random password, written to users.toml beside the
+# configuration; the password is kept in initial-password there, mode 0600, readable by the
+# owner only.
 
 set -eu
 
@@ -15,6 +16,7 @@ example="$4"
 binary="$5"
 directory="$(dirname "$configuration")"
 secret="$directory/initial-password"
+users="$directory/users.toml"
 
 if [ -e "$configuration" ]; then
     echo "home-portal: $configuration exists and is left as it is"
@@ -45,7 +47,13 @@ else
         || { rm -f "$draft"; echo "home-portal: $example has no [storage] to fill in" >&2; exit 1; }
 fi
 
-cat >> "$draft" <<USERS
+people="$users.provision"
+if [ -e "$users" ]; then
+    cp "$users" "$people"
+else
+    : > "$people"
+fi
+cat >> "$people" <<USERS
 
 # The first administrator, made at installation. Its password is in $secret.
 # To change it: home-portal password-hash, paste the hash below, then delete that file.
@@ -56,9 +64,10 @@ group = "admin"
 USERS
 
 printf '%s\n' "$password" > "$secret"
-chmod 600 "$draft" "$secret"
+chmod 600 "$draft" "$people" "$secret"
 if [ "$(id -u)" -eq 0 ]; then
-    chown "$owner" "$draft" "$secret"
+    chown "$owner" "$draft" "$people" "$secret"
 fi
+mv "$people" "$users"
 mv "$draft" "$configuration"
-echo "home-portal: wrote $configuration with the user admin; the password is in $secret"
+echo "home-portal: wrote $configuration and the user admin in $users; the password is in $secret"

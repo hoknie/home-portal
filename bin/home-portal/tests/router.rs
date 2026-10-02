@@ -178,7 +178,11 @@ fn two_features_claiming_one_path_fail_assembly() {
 #[tokio::test]
 async fn the_real_portal_protects_the_api_and_signs_in_through_the_session_route() {
     let directory = tempfile::tempdir().unwrap();
-    let path = support::with_extra(&directory, "secret", "");
+    let path = support::with_extra(
+        &directory,
+        "secret",
+        "[[services]]\nid = \"router\"\nname = \"Router\"\nurl = \"http://192.168.1.1\"\n",
+    );
     let registry = registered(&support::wiring_for(&path)).unwrap();
     let portal = assemble(&registry);
     assert_eq!(

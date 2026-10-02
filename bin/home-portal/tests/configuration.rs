@@ -38,6 +38,33 @@ fn the_example_on_its_own_refuses_to_start_and_names_the_command() {
     assert!(message.contains("home-portal password-hash"), "{message}");
 }
 
+#[test]
+fn the_example_as_installed_with_admin_in_users_toml_starts_without_any_split() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("home-portal.toml");
+    std::fs::copy(root.join(EXAMPLE), &path).unwrap();
+    let hash = portal_auth::hash_password("secret").unwrap();
+    let users = directory.path().join("users.toml");
+    std::fs::write(
+        &users,
+        format!("[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n"),
+    )
+    .unwrap();
+    std::fs::set_permissions(&users, std::fs::Permissions::from_mode(0o600)).unwrap();
+    let wiring = home_portal::Wiring {
+        configuration: std::sync::Arc::new(ConfigStore::open(&path).unwrap()),
+        ..support::wiring_for(&path)
+    };
+    let registry = registered(&wiring).unwrap();
+    let validators = registry
+        .features
+        .iter()
+        .filter_map(|feature| feature.validator())
+        .collect();
+    wiring.configuration.adopt(validators).unwrap();
+}
+
 fn boot_error(extra: &str) -> String {
     let directory = tempfile::tempdir().unwrap();
     let path = support::with_extra(&directory, "secret", extra);

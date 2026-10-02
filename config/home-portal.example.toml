@@ -169,7 +169,7 @@ trusted_proxies = []
 # [environments.vpn]
 # networks = ["10.8.0.0/24"]
 
-# People who may sign in. At least one is required.
+# People who may sign in, kept in users.toml beside this file. At least one is required.
 # Create a hash with:  home-portal password-hash
 # With [modules] users = true, Management → Users edits these entries too, in the file
 # they live in, keeping comments; a changed password ends that person's other sessions.
@@ -181,15 +181,15 @@ trusted_proxies = []
 # password_hash = "$argon2id$v=19$m=19456,t=2,p=1$..."
 # group = "admin"
 
-# Services shown on the home page and probed in the background. Entries written here are
-# moved to services.toml beside this file at the first start; keep adding them there.
-[[services]]
-id = "router"
-name = "Router"
-url = "http://192.168.1.1"
-group = "Network"
-icon = "router"
-description = "Home router admin page"
+# Services shown on the home page and probed in the background, kept in services.toml
+# beside this file; an entry left here stops the start.
+# [[services]]
+# id = "router"
+# name = "Router"
+# url = "http://192.168.1.1"
+# group = "Network"
+# icon = "router"
+# description = "Home router admin page"
 # Optional probe settings; these are the defaults.
 # probe = { enabled = true, kind = "http", path = "/", every_seconds = 30, timeout_seconds = 5, degraded_after_milliseconds = 1500 }
 # kind = "tcp" connects to a port (probe.port, or the one in url) for services that do not
