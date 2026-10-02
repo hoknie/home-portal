@@ -27,7 +27,6 @@ The versions follow [Semantic Versioning](https://semver.org/).
 
 ### Other
 
-- Updated changelog ([9a2cf35](https://github.com/hoknie/home-portal/commit/9a2cf3504e9c49585d80efb4b6dba08e6a74e26a))
 - Updated arch doc ([f2ab0af](https://github.com/hoknie/home-portal/commit/f2ab0afbb0442cf07058150617a34a83a9c5c3a4))
 - Updated docs ([8b3346e](https://github.com/hoknie/home-portal/commit/8b3346ebeef9926e84fa26fb41d952474b660be0))
 
