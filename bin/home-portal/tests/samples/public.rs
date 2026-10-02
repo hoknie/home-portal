@@ -47,3 +47,27 @@ fn the_public_portal_sample_matches_its_serializer() {
         },
     );
 }
+
+#[test]
+fn the_failure_report_sample_matches_its_serializer() {
+    typed(
+        "failure-report",
+        &home_portal::FailureReportResponse {
+            since: datetime!(2026-10-02 09:00 UTC),
+            checked: datetime!(2026-10-02 09:05:12 UTC),
+            details: true,
+            problems: Some(vec![
+                home_portal::ProblemResponse {
+                    file: Some("/Users/ad/.config/home-portal/home-portal.toml".into()),
+                    field: Some("proxy.enabled".into()),
+                    message: "is no longer read; switch the module with modules.proxy".into(),
+                },
+                home_portal::ProblemResponse {
+                    file: Some("/Users/ad/.config/home-portal/services.toml".into()),
+                    field: None,
+                    message: "configuration file /Users/ad/.config/home-portal/services.toml is not valid TOML: expected `]` at line 3".into(),
+                },
+            ]),
+        },
+    );
+}

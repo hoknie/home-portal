@@ -48,6 +48,18 @@ describe("request", () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
+  it("goes to the failure page when the portal did not start", async () => {
+    respond(503, "the portal did not start", { "Portal-State": "failed" });
+    await expect(request("/api/services", { schema })).rejects.toThrow();
+    expect(assign).toHaveBeenCalledWith("/fatal/");
+  });
+
+  it("stays where it is on any other 503", async () => {
+    respond(503, "busy");
+    await expect(request("/api/services", { schema })).rejects.toThrow();
+    expect(assign).not.toHaveBeenCalled();
+  });
+
   it("maps 422 to field errors", async () => {
     respond(422, JSON.stringify({ errors: [{ field: "url", message: "bad" }] }));
     const error = await request("/api/services", { schema }).catch((caught: unknown) => caught);

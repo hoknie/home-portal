@@ -9,6 +9,7 @@ import dashboard from "./dashboard.json";
 import dashboardLibrary from "./dashboard-library.json";
 import dns from "./dns.json";
 import environment from "./environment.json";
+import failureReport from "./failure-report.json";
 import fieldErrors from "./field-errors.json";
 import groups from "./groups.json";
 import history from "./history.json";
@@ -58,6 +59,7 @@ export const apiSamples = {
   dashboardLibrary,
   dns,
   environment,
+  failureReport,
   fieldErrors,
   groups,
   history,

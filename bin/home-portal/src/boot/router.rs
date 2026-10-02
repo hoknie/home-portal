@@ -7,7 +7,7 @@ use axum::routing::{any, post};
 use portal_network::CurrentNetwork;
 use portal_web::CurrentInterface;
 
-use crate::controllers::{RESTART_PATH, not_found, restart};
+use crate::controllers::{FATAL_PAGE, FATAL_PATH, RESTART_PATH, fatal_to_home, not_found, restart};
 use portal_feature::{Action, Area, Right, Rule};
 
 use crate::middlewares::{
@@ -65,6 +65,8 @@ pub fn assemble(registry: &Registry) -> Router {
         .merge(public)
         .route(API_ROOT, any(not_found))
         .route(API_ANY_PATH, any(not_found))
+        .route(FATAL_PATH, any(fatal_to_home))
+        .route(FATAL_PAGE, any(fatal_to_home))
         .fallback_service(portal_web::interface(registry.interface.clone()))
         .layer(middleware::from_fn(deadline))
         .layer(middleware::from_fn(json_only))

@@ -1,6 +1,7 @@
 export const routes = {
   home: "/",
   login: "/login/",
+  fatal: "/fatal/",
   service: (id: string) => `/service/?id=${encodeURIComponent(id)}`,
   adminServices: "/admin/services/",
   adminLayout: "/admin/layout/",
@@ -47,6 +48,7 @@ export const api = {
     `/api/services/${encodeURIComponent(id)}/history?range=${encodeURIComponent(range)}`,
   network: "/api/network",
   restartPortal: "/api/portal/restart",
+  portalFailure: "/api/portal/failure",
   health: "/health",
   dashboard: "/api/dashboard",
   layout: "/api/dashboard?all=true",

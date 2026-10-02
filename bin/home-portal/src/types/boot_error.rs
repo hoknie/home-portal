@@ -25,6 +25,18 @@ pub enum BootError {
     },
 }
 
+impl BootError {
+    pub fn enters_failure_mode(&self) -> bool {
+        match self {
+            BootError::Configuration(
+                ConfigError::Missing { .. } | ConfigError::NoConfigurationPath,
+            ) => false,
+            BootError::Configuration(_) | BootError::Feature { .. } => true,
+            BootError::Address { .. } | BootError::Bind { .. } | BootError::Serve { .. } => false,
+        }
+    }
+}
+
 impl fmt::Display for BootError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

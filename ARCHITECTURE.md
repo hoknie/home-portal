@@ -135,10 +135,11 @@ pub trait Feature: Send + Sync {
 - **`bin/home-portal/src/features/registry.rs` is the only list of features**, and
   `features/channels.rs` the only list of channels. **Checked:** `tests/architecture/registry.rs`,
   `channels.rs`.
-- **`boot/run.rs` holds only the order of start-up steps**, one step per file in `boot/`. A failure
-  at start names what failed and exits non-zero.
-- **Only the root restarts the process**: the restart handle reaches one controller, and
-  `boot/start.rs` re-`exec`s the same binary.
+- **`boot/run.rs` holds only the order of start-up steps**, one step per file in `boot/`. A
+  configuration or feature failure hands over to `bin/home-portal/src/failures/`, which starts no
+  feature; any other failure names what failed and exits non-zero.
+- **Only the root restarts the process**: the restart handle reaches one controller and the
+  failure recheck, and `boot/start.rs` re-`exec`s the same binary.
 - **Events go to one sink.** Emitting features take the `EventSink` port; `portal-automations`
   provides it.
 - **Optional parts are modules.** Every crate learns whether its module is on only through

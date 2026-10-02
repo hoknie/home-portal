@@ -12,4 +12,4 @@ pub use features::NetworkFeature;
 pub use helpers::{client_address, host_environment, host_interfaces};
 pub use responses::{EnvironmentResponse, InterfaceResponse, NetworkResponse};
 pub use types::{EffectiveAddress, NetworkReading, NetworkSettings};
-pub use usecases::{CurrentEnvironments, CurrentNetwork};
+pub use usecases::{CurrentEnvironments, CurrentNetwork, NetworkOfDocument};

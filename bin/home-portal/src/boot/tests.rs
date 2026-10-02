@@ -181,3 +181,77 @@ async fn a_stuck_request_does_not_hold_the_shutdown_past_its_deadline() {
     let finished = tokio::time::timeout(std::time::Duration::from_secs(3), serving).await;
     assert!(finished.is_ok(), "shutdown waited for the stuck request");
 }
+
+fn admin_configuration(extra: &str) -> (tempfile::TempDir, Arc<ConfigStore>) {
+    let hash = portal_auth::hash_password("secret").unwrap();
+    store(&format!(
+        "[permissions]\nrequest_at_start = false\n\n[[users]]\nname = \"admin\"\npassword_hash = \"{hash}\"\ngroup = \"admin\"\n{extra}"
+    ))
+}
+
+fn wiring(store: &Arc<ConfigStore>) -> crate::types::Wiring {
+    crate::types::Wiring {
+        configuration: store.clone(),
+        effective: portal_network::EffectiveAddress {
+            address: "127.0.0.1:8080".parse().unwrap(),
+            overridden: false,
+        },
+    }
+}
+
+fn open_files() -> usize {
+    fs::read_dir("/dev/fd").map_or(0, Iterator::count)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn building_and_checking_the_features_again_and_again_starts_nothing() {
+    let (_valid_folder, valid) = admin_configuration("");
+    let (_broken_folder, broken) = store("[permissions]\nrequest_at_start = false\n");
+    let check = |store: &Arc<ConfigStore>| {
+        let registry = crate::features::registered(&wiring(store)).unwrap();
+        super::configuration::adopt(store, &registry)
+    };
+    assert!(check(&valid).is_ok());
+    assert!(check(&broken).is_err());
+    let tasks = tokio::runtime::Handle::current()
+        .metrics()
+        .num_alive_tasks();
+    let files = open_files();
+    for _ in 0..50 {
+        assert!(check(&valid).is_ok());
+        assert!(check(&broken).is_err());
+    }
+    assert_eq!(
+        tokio::runtime::Handle::current()
+            .metrics()
+            .num_alive_tasks(),
+        tasks
+    );
+    assert!(
+        open_files() <= files + 2,
+        "{} open files, {files} before",
+        open_files()
+    );
+}
+
+#[tokio::test]
+async fn the_running_portal_sends_the_failure_page_home_and_has_no_failure_report() {
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use tower::ServiceExt;
+
+    let (_folder, valid) = admin_configuration("");
+    let registry = crate::features::registered(&wiring(&valid)).unwrap();
+    let portal = super::assemble(&registry);
+    for path in ["/fatal", "/fatal/"] {
+        let request = Request::get(path).body(Body::empty()).unwrap();
+        let response = portal.clone().oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT, "{path}");
+        assert_eq!(response.headers()["location"], "/", "{path}");
+    }
+    let request = Request::get("/api/portal/failure")
+        .body(Body::empty())
+        .unwrap();
+    let response = portal.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}

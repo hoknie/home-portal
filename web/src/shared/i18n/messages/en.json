@@ -3039,5 +3039,19 @@
       "end": "Bottom"
     },
     "size": "Size of the place it is shown in"
+  },
+  "fatal": {
+    "title": "The portal could not start",
+    "detailsLead": "The configuration has problems that stop the start. Fix them in the files below.",
+    "hiddenLead": "Something in its configuration stops the portal from starting.",
+    "hiddenHint": "The reason is shown only on the portal's own host and on its home networks. It is also written to the portal's log on the host:",
+    "logMac": "macOS:",
+    "logMacPath": "~/Library/Logs/home-portal.log",
+    "logLinux": "Linux:",
+    "logLinuxCommand": "journalctl -u home-portal",
+    "recovers": "The portal starts by itself a few seconds after the files are fixed.",
+    "checked": "Last checked",
+    "waiting": "Waiting for the portal to answer…",
+    "running": "The portal is running. Opening the home page…"
   }
 }

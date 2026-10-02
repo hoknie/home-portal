@@ -5,8 +5,12 @@ use std::process::ExitCode;
 use super::palette::ERROR;
 
 pub fn fail(message: impl Display) -> ExitCode {
-    let _ = writeln!(anstream::stderr(), "{}", failure_line(message));
+    complain(message);
     ExitCode::FAILURE
+}
+
+pub fn complain(message: impl Display) {
+    let _ = writeln!(anstream::stderr(), "{}", failure_line(message));
 }
 
 pub fn failure_line(message: impl Display) -> String {

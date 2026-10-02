@@ -1,0 +1,58 @@
+{
+  "$defs": {
+    "ProblemResponse": {
+      "properties": {
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "file",
+        "field",
+        "message"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "checked": {
+      "type": "string"
+    },
+    "details": {
+      "type": "boolean"
+    },
+    "problems": {
+      "items": {
+        "$ref": "#/$defs/ProblemResponse"
+      },
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "since": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "since",
+    "checked",
+    "details",
+    "problems"
+  ],
+  "title": "FailureReportResponse",
+  "type": "object"
+}

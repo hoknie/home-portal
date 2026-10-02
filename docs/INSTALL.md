@@ -56,9 +56,11 @@ tar -xzf home-portal_<version>.linux.x86_64.tar.gz
 cd home-portal_<version>.linux.x86_64
 mkdir -p ~/.config/home-portal
 cp config/home-portal.example.toml ~/.config/home-portal/home-portal.toml
-./home-portal password-hash          # type a password, then add the hash as a [[users]] entry
+./home-portal password-hash          # type a password, then add the hash to users.toml
 ./home-portal
 ```
+
+`~/.config/home-portal/users.toml`, mode 0600:
 
 ```toml
 [[users]]
@@ -67,11 +69,28 @@ password_hash = "$argon2id$..."
 group = "admin"
 ```
 
-At least one user must be in the `admin` group, or the portal refuses to start and says so.
+At least one user must be in the `admin` group, or the portal does not start and says why (see
+below).
 
 Keep the `web/` folder beside the binary: it is the interface. Without it the portal still
 runs, but its pages answer 503. The archive also holds `examples/` and systemd or launchd files
 for the portal and Caddy.
+
+## When the portal cannot start
+
+When the configuration is wrong, for example a section in the wrong file or a key that is no
+longer read, the portal keeps running and explains the failure instead of exiting:
+- every page leads to `/fatal/`. From the portal's own machine, and from the networks of your
+  `[environments.*]`, it lists each file, key and message. Anyone else sees only that the portal
+  could not start;
+- `/health` answers 503 `failed`, so a monitor notices;
+- the same message is in the log: `~/Library/Logs/home-portal.log` on macOS,
+  `journalctl -u home-portal` on Linux.
+
+Fix the files and save. Within a few seconds the portal starts by itself, and `/fatal/` leads to
+the home page. It listens on the address of `[network]` in the main file, or on
+`127.0.0.1:8080` when that file cannot be read. A missing configuration file, a bad
+`HOME_PORTAL_ADDRESS` or an address in use still stop the process.
 
 ## Next
 

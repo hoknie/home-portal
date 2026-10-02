@@ -32,6 +32,8 @@ interface.
   running after 10 seconds.
 - If the address cannot be used (already taken, or not an address), the portal refuses to start
   and names it.
+- If the configuration is wrong, the portal stays up and shows why at `/fatal/`, and starts by
+  itself once the files are fixed; see [When the portal cannot start](../INSTALL.md#when-the-portal-cannot-start).
 - On macOS, reaching devices on your home network needs the Local Network permission; see the
   note in [`examples/deploy/home-portal.plist`](../../examples/deploy/home-portal.plist).
 

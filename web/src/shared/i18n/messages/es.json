@@ -3039,5 +3039,19 @@
       "end": "Abajo"
     },
     "size": "Tamaño del lugar donde se muestra"
+  },
+  "fatal": {
+    "title": "El portal no pudo iniciarse",
+    "detailsLead": "La configuración tiene problemas que impiden el inicio. Corríjalos en los archivos de abajo.",
+    "hiddenLead": "Algo en su configuración impide que el portal se inicie.",
+    "hiddenHint": "El motivo solo se muestra en el propio equipo del portal y en sus redes domésticas. También queda escrito en el registro del portal en ese equipo:",
+    "logMac": "macOS:",
+    "logMacPath": "~/Library/Logs/home-portal.log",
+    "logLinux": "Linux:",
+    "logLinuxCommand": "journalctl -u home-portal",
+    "recovers": "El portal se inicia solo unos segundos después de corregir los archivos.",
+    "checked": "Última comprobación",
+    "waiting": "Esperando a que el portal responda…",
+    "running": "El portal está en marcha. Abriendo la página de inicio…"
   }
 }

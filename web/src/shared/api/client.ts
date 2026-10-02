@@ -17,6 +17,10 @@ export type RequestOptions<T> = {
 
 export const NEXT_PARAMETER = "next";
 
+export const STATE_HEADER = "Portal-State";
+
+export const FAILED_STATE = "failed";
+
 export function signInLocation(current: { pathname: string; search: string }) {
   const next = `${current.pathname}${current.search}`;
   return `${routes.login}?${NEXT_PARAMETER}=${encodeURIComponent(next)}`;
@@ -88,6 +92,11 @@ async function failure(response: Response, redirectOnUnauthorized: boolean): Pro
     }
     case 429:
       return new ThrottledError(Number(response.headers.get("Retry-After") ?? "60"), text);
+    case 503:
+      if (response.headers.get(STATE_HEADER) === FAILED_STATE && typeof window !== "undefined" && window.location.pathname !== routes.fatal) {
+        window.location.assign(routes.fatal);
+      }
+      return new RequestError(503, text);
     default:
       return new RequestError(response.status, text);
   }

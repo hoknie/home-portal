@@ -14,7 +14,7 @@ mod tests;
 pub use deadline::deadline;
 pub use environment::decide_environment;
 pub use json_only::json_only;
-pub use language::decide_language;
+pub use language::{decide_language, decide_language_from};
 pub use require_right::require_right;
 pub use require_session::require_session;
 pub use same_origin::same_origin;

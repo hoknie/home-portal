@@ -4,7 +4,7 @@ Every notable change of home-portal. Sections are written by `packaging/changelo
 Conventional Commits between release tags; the release on GitHub carries the section of its tag.
 The versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] - 2026-10-02
 
 ### Features
 
@@ -12,6 +12,22 @@ The versions follow [Semantic Versioning](https://semver.org/).
 - Updated automations ui ([651b3a7](https://github.com/hoknie/home-portal/commit/651b3a7af49ea5b4f37e9b4f246757cfb18f5013))
 - Updated upstreams on services and imporved view page ([3f9f3c1](https://github.com/hoknie/home-portal/commit/3f9f3c1553539582bc867c7bd1b4feb653106ce9))
 - Removed support code and improved project sec ([3c781f5](https://github.com/hoknie/home-portal/commit/3c781f5e7727d54254cd60c4da65c0351cd00400))
+
+### Fixes
+
+- Updated widget row, crashed test ([6281a70](https://github.com/hoknie/home-portal/commit/6281a70c0f56b063a489fbd60a95eec0e1f55934))
+
+### Other
+
+- Fixed build packages ([281c753](https://github.com/hoknie/home-portal/commit/281c75331c0f17bb395908e59a11506a2495bcda))
+- Updated changelog ([e00e934](https://github.com/hoknie/home-portal/commit/e00e934637c1512bebddb791a02ff11b09b21f14))
+
+[Full diff](https://github.com/hoknie/home-portal/compare/v0.1.10...v0.2.0)
+
+## [0.1.10] - 2026-09-30
+
+### Features
+
 - Added categories for modules to ui ([29c3c4b](https://github.com/hoknie/home-portal/commit/29c3c4bc7012bcd3f0cba26d8835dc38981f6d1e))
 - Imporved var autocomlete in wf ([52cc8b2](https://github.com/hoknie/home-portal/commit/52cc8b2203a19478cdd77a4f0f39b0ef813cc9c7))
 - Security updates ([5514f6c](https://github.com/hoknie/home-portal/commit/5514f6cce7863c2ea661413b724a8296780221bb))
@@ -21,16 +37,16 @@ The versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixes
 
-- Updated widget row, crashed test ([6281a70](https://github.com/hoknie/home-portal/commit/6281a70c0f56b063a489fbd60a95eec0e1f55934))
 - Updated collapse menu item ([b7d3722](https://github.com/hoknie/home-portal/commit/b7d3722b53ea7215fc785df51f61b787ba2a63eb))
 - Updated crashed test ([f8819c7](https://github.com/hoknie/home-portal/commit/f8819c70a763ea9d9a7dcdaa3c560b799c58647a))
 
 ### Other
 
+- Updated changelog ([9a2cf35](https://github.com/hoknie/home-portal/commit/9a2cf3504e9c49585d80efb4b6dba08e6a74e26a))
 - Updated arch doc ([f2ab0af](https://github.com/hoknie/home-portal/commit/f2ab0afbb0442cf07058150617a34a83a9c5c3a4))
 - Updated docs ([8b3346e](https://github.com/hoknie/home-portal/commit/8b3346ebeef9926e84fa26fb41d952474b660be0))
 
-[Full diff](https://github.com/hoknie/home-portal/compare/v0.1.9...HEAD)
+[Full diff](https://github.com/hoknie/home-portal/compare/v0.1.9...v0.1.10)
 
 ## [0.1.9] - 2026-09-29
 

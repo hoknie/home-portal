@@ -1,4 +1,6 @@
 mod dns;
+#[cfg(unix)]
+mod failing;
 mod home;
 #[cfg(unix)]
 mod interface;

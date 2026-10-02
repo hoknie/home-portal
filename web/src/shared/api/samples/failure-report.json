@@ -1,0 +1,17 @@
+{
+  "checked": "2026-10-02T09:05:12Z",
+  "details": true,
+  "problems": [
+    {
+      "field": "proxy.enabled",
+      "file": "/Users/ad/.config/home-portal/home-portal.toml",
+      "message": "is no longer read; switch the module with modules.proxy"
+    },
+    {
+      "field": null,
+      "file": "/Users/ad/.config/home-portal/services.toml",
+      "message": "configuration file /Users/ad/.config/home-portal/services.toml is not valid TOML: expected `]` at line 3"
+    }
+  ],
+  "since": "2026-10-02T09:00:00Z"
+}

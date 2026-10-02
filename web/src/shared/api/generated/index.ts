@@ -9,6 +9,7 @@ export * as dashboard from "./dashboard";
 export * as dashboardLibrary from "./dashboard-library";
 export * as dns from "./dns";
 export * as environment from "./environment";
+export * as failureReport from "./failure-report";
 export * as groups from "./groups";
 export * as history from "./history";
 export * as icons from "./icons";
