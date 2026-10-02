@@ -4,12 +4,16 @@
       "enum": [
         "neutral",
         "blue",
+        "cyan",
+        "teal",
         "green",
+        "lime",
         "amber",
+        "orange",
         "red",
-        "violet",
         "pink",
-        "teal"
+        "violet",
+        "indigo"
       ],
       "type": "string",
       "x-open": "neutral"

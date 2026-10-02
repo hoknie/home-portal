@@ -73,11 +73,11 @@ width = 4
 | section `appearance` | `title` (`shown`, `hidden`) and `surface` (`none`, `card`) | shown, none |
 | `[[dashboard.library]]` `id`, `type` | A widget: its id and its type from the table above | required |
 | `title`, `settings` | Its title, and options of the type such as `latitude`/`longitude` or `url` | depends on type |
-| `appearance` | `surface` (`card`, `plain`, `tinted`, `outline`), `accent` (`neutral`, `blue`, `green`, `amber`, `red`, `violet`, `pink`, `teal`), `title` (`shown`, `hidden`), `padding` (`normal`, `compact`, `none`), `align` (`start`, `center`) | a card |
+| `appearance` | `surface` (`card`, `plain`, `tinted`, `outline`), `accent` (`neutral`, `blue`, `cyan`, `teal`, `green`, `lime`, `amber`, `orange`, `red`, `pink`, `violet`, `indigo`), `title` (`shown`, `hidden`), `padding` (`normal`, `compact`, `none`), `align` (`start`, `center`, `end`) | a card |
 | `environments`, `public` | Who may see it | everyone signed in |
 | `[[dashboard.widgets]]` `widget` | The library widget this place shows | required |
 | `section` | Which section it belongs to | first section |
-| `column`, `row` | Where it starts: column 1 to 12 and row 1 to 200, both or neither | the next free place |
+| `column`, `row` | Its column (1 to 12) and its place in the section's order (row 1 to 200), both or neither | the next free place |
 | `width` | Columns of a 12-column row, 1 to 12 (`size` — `quarter`, `third`, `half`, `two-thirds`, `full` — still works) | 12 |
 | `height` | `auto`, or 1 to 8 rows of 80 px; content taller than that scrolls | `auto` |
 
@@ -87,9 +87,13 @@ width = 4
   first save writes both into the library.
 - An older `[[dashboard.widgets]]` entry with a `type` instead of a `widget` keeps working and
   moves into the library, with its comments, on the next save.
-- From 1024 px a widget with a `column` and a `row` sits exactly there; the others fill the free
-  places in file order. Below that, widgets go in row and column order: a widget of up to 6
-  columns takes half the row, and on a phone each takes the full width.
+- Widgets are drawn in row and column order, whatever their order in the file. From 1024 px a
+  widget with a `column` starts in that column, and `row` only orders: empty rows close up, so a
+  widget never leaves a gap above it. Saving in the layout editor renumbers the rows 1, 2, 3… in
+  the order shown. Below 1024 px a widget of up to 6 columns takes half the row, and on a phone
+  each takes the full width.
+- A widget as tall as its content is measured before it is first drawn, so it does not grow after
+  the page appears.
 - A widget whose source fails keeps showing its last good data, marked as stale.
 - The layout editor keeps the comments you wrote in `dashboard.toml`.
 
@@ -127,11 +131,14 @@ blocks = [
   `widget.id`, `widget.title` and `fetched_at` are available too.
 - **Alignment.** Every block but `divider` and `row` takes `align` (`start`, `center`, `end`);
   a block without one takes its column's, then the widget's `appearance.align`.
-- **Colours** come from `tone` (`neutral`, `ok`, `info`, `warning`, `danger`), from `thresholds`
-  on a number (`direction = "below"` for values that are bad when low), or from `tones`, a table
-  of values and tones (`{ up = "ok", down = "danger" }`).
+- **Colours** come from `tone`, from `thresholds` on a number (`direction = "below"` for values
+  that are bad when low), or from `tones`, a table of values and tones
+  (`{ up = "ok", down = "danger" }`). A tone is a meaning (`neutral`, `ok`, `info`, `warning`,
+  `danger`) or a colour (`blue`, `cyan`, `teal`, `green`, `lime`, `amber`, `orange`, `red`,
+  `pink`, `violet`, `indigo`); a colour code is refused with the list of names.
 - **Buttons** run an automation (`fields` from the data), a workflow (`inputs` from the data),
-  refresh the widget, or open an `http`/`https` link. `confirm` asks first.
+  refresh the widget, or open an `http`/`https` link. `confirm` asks first. `style` is `primary`,
+  `secondary` or `ghost`, and an optional `tone` colours the button in its style.
 - **Safety.** The portal renders the blocks itself: the page receives the texts, never the data,
   the script, the workflow or a secret, and markdown is shown without HTML or images. Saving a
   source or a button that runs something needs the right to run it (`workflows.execute` or

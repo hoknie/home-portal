@@ -19,7 +19,6 @@ export type SectionBlockProps = {
   section: Section;
   count: number;
   widgetIds: string[];
-  ghost: { column: number; row: number; width: number; rows: number } | null;
   errors: string[];
   children: ReactNode;
   onRename: (title: string) => void;
@@ -87,14 +86,6 @@ export function SectionBlock(props: SectionBlockProps) {
       ))}
       <div {...{ [SECTION_GRID_ATTRIBUTE]: section.id }} className={cn(SECTION_GRID, "relative min-h-20")}>
         {props.children}
-        {props.ghost ? (
-          <div
-            aria-hidden
-            data-move-ghost=""
-            className="pointer-events-none rounded-2xl border-2 border-dashed border-primary bg-primary/5"
-            style={{ gridColumn: `${props.ghost.column} / span ${props.ghost.width}`, gridRow: `${props.ghost.row} / span ${props.ghost.rows}` }}
-          />
-        ) : null}
         {widgetIds.length === 0 ? <p className="col-span-12 self-center py-4 text-center text-sm text-muted-foreground">{t("emptySection")}</p> : null}
       </div>
     </section>

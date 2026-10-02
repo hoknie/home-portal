@@ -38,7 +38,7 @@ export function BoardGrid({ sections, widgets, services, scope = "private" }: Bo
             <div className={SECTION_GRID}>
               <ListTransition items={placed} keyOf={(widget) => widget.key}>
                 {(widget) => (
-                  <GridCell width={widget.width} height={widget.height} position={positionOf(widget)}>
+                  <GridCell width={widget.width} height={widget.height} position={positionOf(widget)} memory={widget.key}>
                     <BoardWidget widget={widget} services={services} scope={scope} />
                   </GridCell>
                 )}

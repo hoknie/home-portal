@@ -1,46 +1,59 @@
-import { GAP_PIXELS, ROW_PIXELS } from "@/shared/lib/widget-grid";
+import { GAP_PIXELS } from "@/shared/lib/widget-grid";
 
-import type { Cell } from "./positions";
+import type { Place } from "./order";
 
 export const SECTION_GRID_ATTRIBUTE = "data-section-grid";
 
 const COLUMNS = 12;
 
-export type Target = { section: string; column: number; row: number };
+export type Tile = { uid: string; top: number; height: number };
+
+export type Snapshot = Record<string, Tile[]>;
 
 function gridOf(section: string) {
   return document.querySelector<HTMLElement>(`[${SECTION_GRID_ATTRIBUTE}="${CSS.escape(section)}"]`);
 }
 
-function step(grid: HTMLElement) {
+function columnStep(grid: HTMLElement) {
   const rect = grid.getBoundingClientRect();
-  return { rect, column: (rect.width - (COLUMNS - 1) * GAP_PIXELS) / COLUMNS + GAP_PIXELS, row: ROW_PIXELS + GAP_PIXELS };
+  return { rect, column: (rect.width - (COLUMNS - 1) * GAP_PIXELS) / COLUMNS + GAP_PIXELS };
 }
 
-export function cellsIn(section: string): Record<string, Cell> {
+function tilesOf(grid: HTMLElement) {
+  return [...grid.querySelectorAll<HTMLElement>(":scope > [data-widget]")];
+}
+
+export function columnsIn(section: string): Record<string, number> {
   const grid = gridOf(section);
   if (!grid) {
     return {};
   }
-  const { rect, column, row } = step(grid);
+  const { rect, column } = columnStep(grid);
   if (!(column > GAP_PIXELS)) {
     return {};
   }
-  const cells: Record<string, Cell> = {};
-  for (const tile of grid.querySelectorAll<HTMLElement>(":scope > [data-widget]")) {
-    const uid = tile.getAttribute("data-widget");
-    const box = tile.getBoundingClientRect();
-    if (uid === null) {
-      continue;
-    }
-    cells[uid] = {
-      column: Math.round((box.left - rect.left) / column) + 1,
-      row: Math.round((box.top - rect.top) / row) + 1,
-      width: Math.max(1, Math.round((box.width + GAP_PIXELS) / column)),
-      rows: Math.max(1, Math.round(box.height / row)),
-    };
-  }
-  return cells;
+  return Object.fromEntries(
+    tilesOf(grid).flatMap((tile) => {
+      const uid = tile.getAttribute("data-widget");
+      return uid === null ? [] : [[uid, Math.round((tile.getBoundingClientRect().left - rect.left) / column) + 1]];
+    }),
+  );
+}
+
+export function snapshotOf(sections: string[]): Snapshot {
+  return Object.fromEntries(
+    sections.map((section) => {
+      const grid = gridOf(section);
+      const tiles = grid
+        ? tilesOf(grid).flatMap((tile) => {
+            const uid = tile.getAttribute("data-widget");
+            const box = tile.getBoundingClientRect();
+            return uid === null ? [] : [{ uid, top: box.top, height: box.height }];
+          })
+        : [];
+      return [section, tiles];
+    }),
+  );
 }
 
 export function sectionAt(x: number, y: number): string | null {
@@ -48,27 +61,24 @@ export function sectionAt(x: number, y: number): string | null {
   return found?.closest(`[${SECTION_GRID_ATTRIBUTE}]`)?.getAttribute(SECTION_GRID_ATTRIBUTE) ?? null;
 }
 
-export function cellAt(section: string, x: number, y: number, grab: { columns: number; rows: number }): { column: number; row: number } | null {
+export function grabbedColumns(tile: HTMLElement, section: string, x: number): number {
+  const grid = gridOf(section);
+  if (!grid) {
+    return 0;
+  }
+  const { column } = columnStep(grid);
+  return column > GAP_PIXELS ? Math.max(0, Math.floor((x - tile.getBoundingClientRect().left) / column)) : 0;
+}
+
+export function placeAt(snapshot: Snapshot, section: string, uid: string, x: number, y: number, grabbed: number): Place | null {
   const grid = gridOf(section);
   if (!grid) {
     return null;
   }
-  const { rect, column, row } = step(grid);
+  const { rect, column } = columnStep(grid);
   if (!(column > GAP_PIXELS)) {
     return null;
   }
-  return {
-    column: Math.floor((x - rect.left) / column) + 1 - grab.columns,
-    row: Math.max(1, Math.floor((y - rect.top) / row) + 1 - grab.rows),
-  };
-}
-
-export function grabOf(tile: HTMLElement, section: string, x: number, y: number) {
-  const grid = gridOf(section);
-  if (!grid) {
-    return { columns: 0, rows: 0 };
-  }
-  const { column, row } = step(grid);
-  const box = tile.getBoundingClientRect();
-  return { columns: Math.max(0, Math.floor((x - box.left) / column)), rows: Math.max(0, Math.floor((y - box.top) / row)) };
+  const before = (snapshot[section] ?? []).find((tile) => tile.uid !== uid && tile.top + tile.height / 2 > y)?.uid ?? null;
+  return { section, column: Math.floor((x - rect.left) / column) + 1 - grabbed, before };
 }

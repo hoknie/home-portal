@@ -506,6 +506,16 @@
             "style": {
               "$ref": "#/$defs/ButtonStyle"
             },
+            "tone": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Tone"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "valign": {
               "anyOf": [
                 {
@@ -526,6 +536,7 @@
             "label",
             "icon",
             "style",
+            "tone",
             "confirm",
             "link"
           ],
@@ -1100,6 +1111,16 @@
             "style": {
               "$ref": "#/$defs/ButtonStyle"
             },
+            "tone": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Tone"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "valign": {
               "anyOf": [
                 {
@@ -1120,6 +1141,7 @@
             "label",
             "icon",
             "style",
+            "tone",
             "confirm",
             "link"
           ],
@@ -1716,6 +1738,16 @@
             "style": {
               "$ref": "#/$defs/ButtonStyle"
             },
+            "tone": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Tone"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "valign": {
               "anyOf": [
                 {
@@ -1736,6 +1768,7 @@
             "label",
             "icon",
             "style",
+            "tone",
             "confirm",
             "link"
           ],
@@ -2225,6 +2258,16 @@
             "style": {
               "$ref": "#/$defs/ButtonStyle"
             },
+            "tone": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Tone"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "valign": {
               "anyOf": [
                 {
@@ -2245,6 +2288,7 @@
             "label",
             "icon",
             "style",
+            "tone",
             "confirm",
             "link"
           ],
@@ -2389,7 +2433,18 @@
         "ok",
         "info",
         "warning",
-        "danger"
+        "danger",
+        "blue",
+        "cyan",
+        "teal",
+        "green",
+        "lime",
+        "amber",
+        "orange",
+        "red",
+        "pink",
+        "violet",
+        "indigo"
       ],
       "type": "string",
       "x-open": "neutral"

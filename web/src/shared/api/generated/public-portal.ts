@@ -36,7 +36,7 @@ export const publicServiceSchema = z.object({ "address": z.string(), "descriptio
 
 export type PublicService = z.infer<typeof publicServiceSchema>;
 
-export const accentSchema = z.enum(["neutral", "blue", "green", "amber", "red", "violet", "pink", "teal"]).catch("neutral");
+export const accentSchema = z.enum(["neutral", "blue", "cyan", "teal", "green", "lime", "amber", "orange", "red", "pink", "violet", "indigo"]).catch("neutral");
 
 export type Accent = z.infer<typeof accentSchema>;
 

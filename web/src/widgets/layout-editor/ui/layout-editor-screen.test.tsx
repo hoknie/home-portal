@@ -41,36 +41,36 @@ async function saved(sent: ReturnType<typeof serve>) {
   return { revision: put?.revision, body: put?.body as { sections: Array<{ id: string }>; widgets: Placement[] } };
 }
 
-it("moves a widget by keyboard on its left-edge handle, one column or row per arrow, and saves its place", async () => {
+it("moves a widget by keyboard on its left-edge handle: sideways by a column, up and down through the order, and saves it", async () => {
   const sent = serve();
   const handle = await screen.findByRole("button", { name: "Move “Summary”" });
   expect(tileOf("#0").querySelector("[data-tile-content]")?.contains(handle)).toBe(false);
+  expect(order("now")).toEqual(["#1", "#0"]);
   await press(handle, "ArrowRight");
   await press(handle, "ArrowRight");
-  await press(handle, "ArrowDown");
+  await press(handle, "ArrowUp");
+  expect(order("now")).toEqual(["#0", "#1"]);
   expect(tileOf("#0")).toHaveAttribute("data-column", "3");
-  expect(tileOf("#0")).toHaveAttribute("data-row", "2");
-  expect(document.querySelector("[data-resize-notice]")).toHaveTextContent("“Summary” is at column 3, row 2 of “Now”.");
+  expect(document.querySelector("[data-resize-notice]")).toHaveTextContent("“Summary” is at column 3, place 1 of 2 in “Now”.");
   const { revision, body } = await saved(sent);
   expect(revision).toBe('"r1"');
-  expect(body.widgets[0]).toEqual({ key: "#0", widget: "status-summary", section: "now", column: 3, row: 2, width: 8, height: "auto" });
-  expect(body.widgets[1]).toMatchObject({ key: "#1", widget: "riga", column: 9 });
-  expect(body.widgets[1].row).toBeGreaterThanOrEqual(4);
+  expect(body.widgets[0]).toEqual({ key: "#0", widget: "status-summary", section: "now", column: 3, row: 1, width: 8, height: "auto" });
+  expect(body.widgets[1]).toMatchObject({ key: "#1", widget: "riga", column: 9, row: 2 });
 });
 
-it("places a narrow widget below on the other side by dragging, leaving a gap on the first row", async () => {
+it("drags a widget with a live placeholder, and it lands where the placeholder stood", async () => {
   const sent = serve();
   const width = await screen.findByRole("slider", { name: "Width of the widget “Summary”" });
   for (let step = 0; step < 4; step += 1) {
     fireEvent.keyDown(width, { key: "ArrowLeft" });
   }
   const handle = within(tileOf("#1")).getByRole("button", { name: "Move “Weather”" });
-  const start = { clientX: 8 * COLUMN_PIXELS + 5, clientY: 5 };
-  fireEvent.pointerDown(handle, { pointerId: 1, ...start });
-  fireEvent.pointerMove(handle, { pointerId: 1, clientX: 8 * COLUMN_PIXELS + 10, clientY: ROW_STEP + 10 });
-  expect(document.querySelector("[data-move-ghost]")).toHaveStyle({ gridColumn: "9 / span 4", gridRow: "2 / span 1" });
-  fireEvent.pointerUp(handle, { pointerId: 1 });
-  expect(document.querySelector("[data-move-ghost]")).toBeNull();
+  fireEvent.pointerDown(handle, { pointerId: 1, button: 0, clientX: 8 * COLUMN_PIXELS + 5, clientY: 5 });
+  fireEvent.pointerMove(window, { pointerId: 1, clientX: 8 * COLUMN_PIXELS + 10, clientY: 5 * ROW_STEP });
+  expect(tileOf("#1")).toHaveAttribute("data-placeholder", "true");
+  expect(order("now")).toEqual(["#0", "#1"]);
+  fireEvent.pointerUp(window, { pointerId: 1 });
+  expect(tileOf("#1")).not.toHaveAttribute("data-placeholder");
   const { body } = await saved(sent);
   expect(body.widgets.slice(0, 2)).toEqual([
     { key: "#0", widget: "status-summary", section: "now", column: 1, row: 1, width: 4, height: "auto" },
@@ -78,29 +78,32 @@ it("places a narrow widget below on the other side by dragging, leaving a gap on
   ]);
 });
 
-it("a move that lands on a widget pushes it down, and Escape cancels a move", async () => {
+it("a drag over another widget moves it aside before the release, and Escape puts everything back", async () => {
   serve();
-  const handle = await screen.findByRole("button", { name: "Move “Weather”" });
-  fireEvent.pointerDown(handle, { pointerId: 1, clientX: 8 * COLUMN_PIXELS + 5, clientY: 5 });
-  fireEvent.pointerMove(handle, { pointerId: 1, clientX: 5, clientY: 5 });
+  const handle = await screen.findByRole("button", { name: "Move “Summary”" });
+  fireEvent.pointerDown(handle, { pointerId: 1, button: 0, clientX: 5, clientY: 3 * ROW_STEP + 5 });
+  fireEvent.pointerMove(window, { pointerId: 1, clientX: 5, clientY: 5 });
+  expect(order("now")).toEqual(["#0", "#1"]);
   fireEvent.keyDown(window, { key: "Escape" });
-  fireEvent.pointerUp(handle, { pointerId: 1 });
+  fireEvent.pointerUp(window, { pointerId: 1 });
+  expect(order("now")).toEqual(["#1", "#0"]);
   expect(screen.queryByText("There are unsaved changes")).not.toBeInTheDocument();
-  await press(handle, "ArrowLeft");
-  for (let step = 0; step < 7; step += 1) {
-    await press(handle, "ArrowLeft");
+  const weather = within(tileOf("#1")).getByRole("button", { name: "Move “Weather”" });
+  for (let step = 0; step < 8; step += 1) {
+    await press(weather, "ArrowLeft");
   }
   expect(tileOf("#1")).toHaveAttribute("data-column", "1");
   expect(Number(tileOf("#0").dataset.row)).toBeGreaterThan(Number(tileOf("#1").dataset.row));
 });
 
-it("Page Down moves a widget into the next section", async () => {
+it("Page Down moves a widget to the end of the next section", async () => {
   const sent = serve();
   const handle = await screen.findByRole("button", { name: "Move “Weather”" });
   await press(handle, "PageDown");
-  expect(order("media")).toContain("#1");
+  expect(order("media")).toEqual(["#2", "#1"]);
   const { body } = await saved(sent);
-  expect(body.widgets.find((widget) => widget.key === "#1")).toMatchObject({ section: "media", row: 1 });
+  expect(body.widgets.find((widget) => widget.key === "#1")).toMatchObject({ section: "media", row: 2 });
+  expect(body.widgets.find((widget) => widget.key === "#2")).toMatchObject({ section: "media", row: 1, column: 1 });
 });
 
 it("offers no list for a widget's place, size or section", async () => {

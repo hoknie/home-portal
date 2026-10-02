@@ -13,6 +13,17 @@ pub enum Tone {
     Info,
     Warning,
     Danger,
+    Blue,
+    Cyan,
+    Teal,
+    Green,
+    Lime,
+    Amber,
+    Orange,
+    Red,
+    Pink,
+    Violet,
+    Indigo,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]

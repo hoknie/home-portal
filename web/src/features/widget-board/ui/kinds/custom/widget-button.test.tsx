@@ -12,7 +12,7 @@ vi.mock("sonner", () => ({ toast }));
 const navigation = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: navigation.push, replace: vi.fn() }) }));
 
-const restart: ButtonLeaf = { kind: "button", align: null, valign: null, action: "restart", does: "automation", label: "Restart", icon: "rotate-ccw", style: "primary", confirm: "Restart Jellyfin?", link: null };
+const restart: ButtonLeaf = { kind: "button", align: null, valign: null, action: "restart", does: "automation", label: "Restart", icon: "rotate-ccw", style: "primary", tone: null, confirm: "Restart Jellyfin?", link: null };
 
 function signedIn(rights: Record<string, string[]>) {
   const client = testQueryClient();
@@ -65,4 +65,19 @@ it("a refresh asks the portal again and says the widget is refreshing", async ()
   renderWithProviders(<WidgetButton button={refresh} widget="disks" />, signedIn({}));
   await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
   await waitFor(() => expect(toast.success).toHaveBeenCalledWith("The widget is refreshing"));
+});
+
+it("a toned button takes its colour in each style, and an untoned one keeps the plain style", () => {
+  const styles = [
+    ["primary", "bg-palette-red"],
+    ["secondary", "text-palette-red"],
+    ["ghost", "text-palette-red"],
+  ] as const;
+  for (const [style, colour] of styles) {
+    const { unmount } = renderWithProviders(<WidgetButton button={{ ...restart, style, tone: "red", confirm: null }} widget="disks" />, signedIn({ automations: ["execute"] }));
+    expect(screen.getByRole("button", { name: "Restart" }), style).toHaveClass(colour);
+    unmount();
+  }
+  renderWithProviders(<WidgetButton button={restart} widget="disks" />, signedIn({ automations: ["execute"] }));
+  expect(screen.getByRole("button", { name: "Restart" }).className).not.toMatch(/palette|tone-/);
 });

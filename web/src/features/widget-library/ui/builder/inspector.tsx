@@ -4,13 +4,13 @@ import { ArrowDown, ArrowDownRight, ArrowUp, ArrowUpLeft, Copy, Trash2 } from "l
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-import { ChoiceGroup } from "@/shared/ui/choice-group";
-import { Button, Heading, Input } from "@/shared/ui/kit";
+import { Button, Heading, IconChoice, Input } from "@/shared/ui/kit";
 
 import { BLOCK_ICONS } from "../../model/block-icons";
 import type { BlockKind, RawBlock } from "../../model/blocks";
 import { type BlockPath, type Command, childrenOf } from "../../model/block-tree";
 import { BlockEditor } from "../settings-dialog/block-editor";
+import { ALIGN_ICONS, VALIGN_ICONS } from "../settings-dialog/choice-icons";
 
 export type InspectorAction = Command | "duplicate" | "delete";
 
@@ -119,27 +119,27 @@ export function Inspector({ slot = false, block, path, parentKind, errors, missi
       ) : null}
       {kind === "row" ? (
         <>
-          <ChoiceGroup
+          <IconChoice
             label={t("widgetBuilder.inspector.rowAlign")}
             value={(align ?? "stretch") as (typeof ROW_ALIGNS)[number]}
-            choices={ROW_ALIGNS.map((value) => ({ value, label: t(`widgetBuilder.rowAligns.${value}`) }))}
+            options={ROW_ALIGNS.map((value) => ({ value, label: t(`widgetBuilder.rowAligns.${value}`), icon: VALIGN_ICONS[value] }))}
             onChange={(value) => onChange({ ...block, align: value === "stretch" ? undefined : value })}
           />
           <Widths block={block} onChange={onChange} />
         </>
       ) : kind !== "divider" ? (
-        <ChoiceGroup
+        <IconChoice
           label={t("widgetBuilder.inspector.align")}
           value={(align ?? "inherit") as (typeof ALIGNS)[number]}
-          choices={ALIGNS.map((value) => ({ value, label: t(`widgetBuilder.aligns.${value}`) }))}
+          options={ALIGNS.map((value) => ({ value, label: t(`widgetBuilder.aligns.${value}`), icon: ALIGN_ICONS[value] }))}
           onChange={(value) => onChange({ ...block, align: value === "inherit" ? undefined : value })}
         />
       ) : null}
       {vertical ? (
-        <ChoiceGroup
+        <IconChoice
           label={t(kind === "column" ? "widgetBuilder.inspector.columnValign" : "widgetBuilder.inspector.valign")}
           value={(valign ?? "inherit") as (typeof VALIGNS)[number]}
-          choices={VALIGNS.map((value) => ({ value, label: t(`widgetBuilder.valigns.${value}`) }))}
+          options={VALIGNS.map((value) => ({ value, label: t(`widgetBuilder.valigns.${value}`), icon: VALIGN_ICONS[value] }))}
           onChange={(value) => onChange({ ...block, valign: value === "inherit" ? undefined : value })}
         />
       ) : null}

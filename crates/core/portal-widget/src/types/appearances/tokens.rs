@@ -29,8 +29,9 @@ macro_rules! tokens {
 
 tokens!(Surface, "card", [Card => "card", Plain => "plain", Tinted => "tinted", Outline => "outline"]);
 tokens!(Accent, "neutral", [
-    Neutral => "neutral", Blue => "blue", Green => "green", Amber => "amber",
-    Red => "red", Violet => "violet", Pink => "pink", Teal => "teal",
+    Neutral => "neutral", Blue => "blue", Cyan => "cyan", Teal => "teal",
+    Green => "green", Lime => "lime", Amber => "amber", Orange => "orange",
+    Red => "red", Pink => "pink", Violet => "violet", Indigo => "indigo",
 ]);
 tokens!(TitleVisibility, "shown", [Shown => "shown", Hidden => "hidden"]);
 tokens!(Padding, "normal", [Normal => "normal", Compact => "compact", NoPadding => "none"]);

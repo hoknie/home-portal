@@ -1,12 +1,15 @@
 "use client";
 
+import { Eye, EyeOff, Square, SquareDashed } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { SECTION_SURFACES, type Section, TITLE_VISIBILITIES } from "@/shared/api";
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, FormField, Input } from "@/shared/ui/kit";
+import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, FormField, IconChoice, Input } from "@/shared/ui/kit";
 
-import { ChoiceGroup } from "@/shared/ui/choice-group";
+const TITLE_ICONS = { shown: <Eye aria-hidden />, hidden: <EyeOff aria-hidden /> };
+
+const SURFACE_ICONS = { none: <SquareDashed aria-hidden />, card: <Square aria-hidden /> };
 
 export type SectionDialogProps = { section: Section | null; onApply: (patch: Partial<Omit<Section, "id">>) => void; onClose: () => void };
 
@@ -22,17 +25,17 @@ function Opened({ section, onApply, onClose }: { section: Section; onApply: Sect
         <FormField id="section-title" label={t("section.title")} optional>
           <Input id="section-title" value={edited.title ?? ""} onChange={(event) => setEdited({ ...edited, title: event.target.value.trim() === "" ? null : event.target.value })} />
         </FormField>
-        <ChoiceGroup
+        <IconChoice
           label={t("section.titleShown")}
           value={edited.appearance.title}
           onChange={(title) => setEdited({ ...edited, appearance: { ...edited.appearance, title } })}
-          choices={TITLE_VISIBILITIES.map((value) => ({ value, label: t(`section.titles.${value}`) }))}
+          options={TITLE_VISIBILITIES.map((value) => ({ value, label: t(`section.titles.${value}`), icon: TITLE_ICONS[value] }))}
         />
-        <ChoiceGroup
+        <IconChoice
           label={t("section.surface")}
           value={edited.appearance.surface}
           onChange={(surface) => setEdited({ ...edited, appearance: { ...edited.appearance, surface } })}
-          choices={SECTION_SURFACES.map((value) => ({ value, label: t(`section.surfaces.${value}`) }))}
+          options={SECTION_SURFACES.map((value) => ({ value, label: t(`section.surfaces.${value}`), icon: SURFACE_ICONS[value] }))}
         />
       </div>
       <DialogFooter className="flex-row justify-end gap-2">

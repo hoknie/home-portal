@@ -26,3 +26,16 @@ it("keeps the primary action opaque and tints the quieter variants", () => {
   expect(screen.getByRole("button", { name: "outline" })).toHaveClass("bg-glass-tint");
   expect(screen.getByRole("button", { name: "secondary" })).toHaveClass("bg-glass-tint");
 });
+
+it("has filled success, warning and info variants on the status colours", () => {
+  render(
+    <>
+      <Button variant="success">success</Button>
+      <Button variant="warning">warning</Button>
+      <Button variant="info">info</Button>
+    </>,
+  );
+  expect(screen.getByRole("button", { name: "success" })).toHaveClass("bg-tone-ok", "text-primary-foreground");
+  expect(screen.getByRole("button", { name: "warning" })).toHaveClass("bg-tone-warning", "text-primary-foreground");
+  expect(screen.getByRole("button", { name: "info" })).toHaveClass("bg-tone-info", "text-primary-foreground");
+});

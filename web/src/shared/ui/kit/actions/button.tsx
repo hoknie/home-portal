@@ -18,6 +18,9 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-glass-tint hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        success: "bg-tone-ok text-primary-foreground hover:bg-tone-ok/90",
+        warning: "bg-tone-warning text-primary-foreground hover:bg-tone-warning/90",
+        info: "bg-tone-info text-primary-foreground hover:bg-tone-info/90",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

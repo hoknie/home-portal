@@ -143,6 +143,7 @@
           "label": "Restart",
           "link": null,
           "style": "primary",
+          "tone": null,
           "valign": null
         },
         {
@@ -155,6 +156,7 @@
           "label": "Refresh",
           "link": null,
           "style": "ghost",
+          "tone": null,
           "valign": null
         },
         {
@@ -167,6 +169,7 @@
           "label": "Open",
           "link": "https://nas.home.lan",
           "style": "secondary",
+          "tone": null,
           "valign": null
         }
       ],

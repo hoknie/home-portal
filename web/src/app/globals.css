@@ -58,6 +58,10 @@
   --palette-violet: oklch(0.53 0.2 300);
   --palette-pink: oklch(0.58 0.19 350);
   --palette-teal: oklch(0.56 0.1 195);
+  --palette-cyan: oklch(0.56 0.11 220);
+  --palette-lime: oklch(0.57 0.15 130);
+  --palette-orange: oklch(0.6 0.16 45);
+  --palette-indigo: oklch(0.51 0.19 280);
 }
 
 .dark {
@@ -108,6 +112,10 @@
   --palette-violet: oklch(0.72 0.16 300);
   --palette-pink: oklch(0.74 0.15 350);
   --palette-teal: oklch(0.75 0.1 195);
+  --palette-cyan: oklch(0.75 0.11 220);
+  --palette-lime: oklch(0.79 0.16 130);
+  --palette-orange: oklch(0.75 0.15 50);
+  --palette-indigo: oklch(0.72 0.14 280);
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -190,6 +198,10 @@
   --color-palette-violet: var(--palette-violet);
   --color-palette-pink: var(--palette-pink);
   --color-palette-teal: var(--palette-teal);
+  --color-palette-cyan: var(--palette-cyan);
+  --color-palette-lime: var(--palette-lime);
+  --color-palette-orange: var(--palette-orange);
+  --color-palette-indigo: var(--palette-indigo);
 }
 
 @utility glass-panel {
@@ -286,6 +298,22 @@
 
 [data-accent="teal"] {
   --widget-accent: var(--palette-teal);
+}
+
+[data-accent="cyan"] {
+  --widget-accent: var(--palette-cyan);
+}
+
+[data-accent="lime"] {
+  --widget-accent: var(--palette-lime);
+}
+
+[data-accent="orange"] {
+  --widget-accent: var(--palette-orange);
+}
+
+[data-accent="indigo"] {
+  --widget-accent: var(--palette-indigo);
 }
 
 @utility widget-tint {

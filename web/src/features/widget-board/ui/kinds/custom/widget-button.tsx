@@ -10,15 +10,18 @@ import { isActive, useRun } from "@/entities/automation";
 import { useCan } from "@/entities/session";
 import { type RenderedLeaf, pressWidgetAction, widgetKey } from "@/entities/widget";
 import { RequestError, ThrottledError } from "@/shared/api";
+import { cn } from "@/shared/lib/cn";
 import { routes } from "@/shared/config";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Button } from "@/shared/ui/kit";
+import { Button, toneOf } from "@/shared/ui/kit";
 
 import { BlockIcon } from "./block-icon";
 
 export type ButtonLeaf = Extract<RenderedLeaf, { kind: "button" }>;
 
 const VARIANTS = { primary: "default", secondary: "outline", ghost: "ghost" } as const;
+
+const TONED = { primary: "solid", secondary: "outline", ghost: "ghost" } as const;
 
 const FORBIDDEN = 403;
 
@@ -44,6 +47,7 @@ export function WidgetButton({ button, widget }: { button: ButtonLeaf; widget: s
   const [pending, setPending] = useState(false);
   const [watching, setWatching] = useState<string | null>(null);
   const variant = VARIANTS[button.style];
+  const toned = button.tone ? toneOf(button.tone)[TONED[button.style]] : "";
   const content = (
     <>
       <BlockIcon name={button.icon} />
@@ -52,13 +56,13 @@ export function WidgetButton({ button, widget }: { button: ButtonLeaf; widget: s
   );
   if (button.does === "link") {
     return button.link ? (
-      <Button asChild variant={variant} size="sm" className="w-fit">
+      <Button asChild variant={variant} size="sm" className={cn("w-fit", toned)}>
         <a href={button.link} target="_blank" rel="noreferrer noopener">
           {content}
         </a>
       </Button>
     ) : (
-      <Button variant={variant} size="sm" className="w-fit" disabled title={t("badLink")}>
+      <Button variant={variant} size="sm" className={cn("w-fit", toned)} disabled title={t("badLink")}>
         {content}
       </Button>
     );
@@ -96,7 +100,7 @@ export function WidgetButton({ button, widget }: { button: ButtonLeaf; widget: s
         type="button"
         variant={variant}
         size="sm"
-        className="w-fit"
+        className={cn("w-fit", toned)}
         disabled={!allowed || pending}
         title={allowed ? undefined : t("needsRight", { area: needed ?? "" })}
         onClick={() => (button.confirm ? setAsking(true) : void press())}

@@ -569,7 +569,7 @@
       "redone": "Redone: {change}.",
       "resizedHeight": "Height of the widget “{title}”: {size}.",
       "resizedBoth": "Size of the widget “{title}”: {size}.",
-      "moved": "“{title}” is at column {column}, row {row} of “{section}”."
+      "moved": "“{title}” is at column {column}, place {place} of {count} in “{section}”."
     },
     "columns": "{count, plural, one {# of 12 columns} other {# of 12 columns}}",
     "undo": "Undo",
@@ -632,7 +632,11 @@
         "red": "Red",
         "violet": "Violet",
         "pink": "Pink",
-        "teal": "Teal"
+        "teal": "Teal",
+        "cyan": "Cyan",
+        "lime": "Lime",
+        "orange": "Orange",
+        "indigo": "Indigo"
       },
       "titles": {
         "shown": "Shown",
@@ -707,7 +711,8 @@
         "maximum": "Maximum",
         "confirm": "Ask first",
         "style": "Style",
-        "gap": "Gap"
+        "gap": "Gap",
+        "tone": "Colour"
       },
       "sizes": {
         "small": "Small",
@@ -751,7 +756,18 @@
           "ok": "Good",
           "info": "Info",
           "warning": "Warning",
-          "danger": "Danger"
+          "danger": "Danger",
+          "blue": "Blue",
+          "cyan": "Cyan",
+          "teal": "Teal",
+          "green": "Green",
+          "lime": "Lime",
+          "amber": "Amber",
+          "orange": "Orange",
+          "red": "Red",
+          "pink": "Pink",
+          "violet": "Violet",
+          "indigo": "Indigo"
         }
       },
       "action": {

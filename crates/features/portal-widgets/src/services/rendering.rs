@@ -188,6 +188,7 @@ fn render_block(
                 label: text(&button.label, frame)?,
                 icon: button.icon.clone(),
                 style: button.style,
+                tone: button.tone,
                 confirm: optional(&button.confirm, frame)?,
                 link,
             }

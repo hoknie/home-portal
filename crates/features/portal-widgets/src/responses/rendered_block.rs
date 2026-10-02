@@ -77,6 +77,7 @@ macro_rules! rendered_blocks {
                 label: String,
                 icon: Option<String>,
                 style: ButtonStyle,
+                tone: Option<Tone>,
                 confirm: Option<String>,
                 link: Option<String>,
             },

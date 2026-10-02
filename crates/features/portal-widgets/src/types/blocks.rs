@@ -2,7 +2,7 @@ use portal_widget::Align;
 use serde::Deserialize;
 use serde_json::Value;
 
-use super::{RawAction, ToneFields};
+use super::{RawAction, Tone, ToneFields};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
@@ -226,6 +226,8 @@ pub struct ButtonBlock {
     pub confirm: Option<String>,
     #[serde(default)]
     pub style: ButtonStyle,
+    #[serde(default)]
+    pub tone: Option<Tone>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]

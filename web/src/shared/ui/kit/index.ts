@@ -66,3 +66,7 @@ export { TemplateInput } from "./fields/template-input";
 export type { TemplateInputProps } from "./fields/template-input";
 export { applied, completionAt, filterCompletionAt, matching, segmentsOf, templateRanges } from "./fields/completion";
 export type { Completion, Mode, Segment, TemplateRange, TemplateSuggestion, Trigger } from "./fields/completion";
+export { TONE_NAMES, TONES, toneOf } from "./data/tones";
+export type { ToneClasses, ToneName } from "./data/tones";
+export { IconChoice } from "./fields/icon-choice";
+export type { IconChoiceProps, IconOption } from "./fields/icon-choice";

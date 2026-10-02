@@ -54,3 +54,24 @@ it("a button chooses what it does and keeps its id", async () => {
   expect((seen.block.action as { automation: string }).automation).toBe("restart-media");
   expect(within(screen.getByRole("group", { name: "What it does" })).getByRole("combobox", { name: "Automation" })).toBeInTheDocument();
 });
+
+it("visual choices are icons named by their labels: text size, a fixed colour and the threshold direction", async () => {
+  const seen = edit({ kind: "text", text: "hi" });
+  await userEvent.click(within(screen.getByRole("radiogroup", { name: "Size" })).getByRole("radio", { name: "Large" }));
+  expect(seen.block.size).toBe("large");
+  await userEvent.click(within(screen.getByRole("radiogroup", { name: "Fixed" })).getByRole("radio", { name: "Violet" }));
+  expect(seen.block.tone).toBe("violet");
+  await userEvent.selectOptions(screen.getByRole("combobox", { name: "Colour" }), "thresholds");
+  await userEvent.click(within(screen.getByRole("radiogroup", { name: "Bad when" })).getByRole("radio", { name: "Lower" }));
+  expect(seen.block.thresholds).toMatchObject({ direction: "below" });
+});
+
+it("a button takes its style and colour from icon choices", async () => {
+  const seen = edit({ kind: "button", label: "Stop", action: { refresh: true } });
+  await userEvent.click(within(screen.getByRole("radiogroup", { name: "Style" })).getByRole("radio", { name: "Quiet" }));
+  expect(seen.block.style).toBe("ghost");
+  const colours = screen.getByRole("radiogroup", { name: "Colour" });
+  expect(within(colours).getAllByRole("radio")).toHaveLength(16);
+  await userEvent.click(within(colours).getByRole("radio", { name: "Red" }));
+  expect(seen.block.tone).toBe("red");
+});

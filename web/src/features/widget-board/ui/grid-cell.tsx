@@ -12,12 +12,13 @@ export type GridCellProps = {
   height: WidgetHeight;
   position?: Position;
   className?: string;
+  memory?: string;
   children: ReactNode;
 };
 
-export function GridCell({ width, height, position = null, className, children }: GridCellProps) {
+export function GridCell({ width, height, position = null, className, memory, children }: GridCellProps) {
   const auto = height === "auto";
-  const [content, rows] = useAutoRows<HTMLDivElement>(auto);
+  const [content, rows] = useAutoRows<HTMLDivElement>(auto, memory);
   return (
     <div
       className={cn("@container", cellClasses(position), className)}

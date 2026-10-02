@@ -2,15 +2,14 @@
 
 import { useTranslations } from "next-intl";
 
-import { Button, Input, NativeSelect } from "@/shared/ui/kit";
+import { Button, IconChoice, Input, NativeSelect, TONE_NAMES } from "@/shared/ui/kit";
 
 import { type RawBlock, type ToneMode, toneModeOf, withToneMode } from "../../model/blocks";
-
-const TONES = ["neutral", "ok", "info", "warning", "danger"] as const;
+import { DIRECTION_ICONS, toneSwatch } from "./choice-icons";
 
 type Thresholds = { warning?: number; danger?: number; direction?: "above" | "below" };
 
-export function ToneEditor({ id, block, onChange }: { id: string; block: RawBlock; onChange: (block: RawBlock) => void }) {
+export function ToneEditor({ block, onChange }: { block: RawBlock; onChange: (block: RawBlock) => void }) {
   const t = useTranslations("layoutEditor.blocks.tone");
   const mode = toneModeOf(block);
   const thresholds = (block.thresholds ?? {}) as Thresholds;
@@ -27,13 +26,13 @@ export function ToneEditor({ id, block, onChange }: { id: string; block: RawBloc
         ))}
       </NativeSelect>
       {mode === "fixed" ? (
-        <NativeSelect id={`${id}-tone`} aria-label={t("modes.fixed")} value={(block.tone as string | undefined) ?? "neutral"} onChange={(event) => onChange({ ...block, tone: event.target.value })}>
-          {TONES.map((tone) => (
-            <option key={tone} value={tone}>
-              {t(`names.${tone}`)}
-            </option>
-          ))}
-        </NativeSelect>
+        <IconChoice
+          label={t("modes.fixed")}
+          value={(block.tone as string | undefined) ?? "neutral"}
+          swatch
+          onChange={(tone) => onChange({ ...block, tone })}
+          options={TONE_NAMES.map((tone) => ({ value: tone, label: t(`names.${tone}`), icon: toneSwatch(tone) }))}
+        />
       ) : null}
       {mode === "thresholds" ? (
         <div className="grid gap-2 @md:grid-cols-3">
@@ -45,13 +44,12 @@ export function ToneEditor({ id, block, onChange }: { id: string; block: RawBloc
             {t("danger")}
             <Input type="number" value={thresholds.danger ?? ""} onChange={(event) => onChange({ ...block, thresholds: { ...thresholds, danger: number(event.target.value) } })} />
           </label>
-          <label className="grid gap-1 text-xs">
-            {t("direction")}
-            <NativeSelect value={thresholds.direction ?? "above"} onChange={(event) => onChange({ ...block, thresholds: { ...thresholds, direction: event.target.value as "above" | "below" } })}>
-              <option value="above">{t("directions.above")}</option>
-              <option value="below">{t("directions.below")}</option>
-            </NativeSelect>
-          </label>
+          <IconChoice
+            label={t("direction")}
+            value={thresholds.direction ?? "above"}
+            onChange={(direction) => onChange({ ...block, thresholds: { ...thresholds, direction } })}
+            options={(["above", "below"] as const).map((direction) => ({ value: direction, label: t(`directions.${direction}`), icon: DIRECTION_ICONS[direction] }))}
+          />
         </div>
       ) : null}
       {mode === "tones" ? (
@@ -68,7 +66,7 @@ export function ToneEditor({ id, block, onChange }: { id: string; block: RawBloc
                 value={tone}
                 onChange={(event) => onChange({ ...block, tones: Object.fromEntries(tones.map(([key, chosen], position) => [key, position === index ? event.target.value : chosen])) })}
               >
-                {TONES.map((name) => (
+                {TONE_NAMES.map((name) => (
                   <option key={name} value={name}>
                     {t(`names.${name}`)}
                   </option>

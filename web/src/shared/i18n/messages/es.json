@@ -569,7 +569,7 @@
       "redone": "Rehecho: {change}.",
       "resizedHeight": "Alto del widget «{title}»: {size}.",
       "resizedBoth": "Tamaño del widget «{title}»: {size}.",
-      "moved": "«{title}» está en la columna {column}, fila {row} de «{section}»."
+      "moved": "«{title}» está en la columna {column}, lugar {place} de {count} en «{section}»."
     },
     "columns": "{count, plural, one {# de 12 columnas} other {# de 12 columnas}}",
     "undo": "Deshacer",
@@ -632,7 +632,11 @@
         "red": "Rojo",
         "violet": "Violeta",
         "pink": "Rosa",
-        "teal": "Turquesa"
+        "teal": "Turquesa",
+        "cyan": "Cian",
+        "lime": "Lima",
+        "orange": "Naranja",
+        "indigo": "Índigo"
       },
       "titles": {
         "shown": "Visible",
@@ -707,7 +711,8 @@
         "maximum": "Máximo",
         "confirm": "Preguntar antes",
         "style": "Estilo",
-        "gap": "Espacio"
+        "gap": "Espacio",
+        "tone": "Color"
       },
       "sizes": {
         "small": "Pequeño",
@@ -751,7 +756,18 @@
           "ok": "Bien",
           "info": "Información",
           "warning": "Aviso",
-          "danger": "Peligro"
+          "danger": "Peligro",
+          "blue": "Azul",
+          "cyan": "Cian",
+          "teal": "Verde azulado",
+          "green": "Verde",
+          "lime": "Lima",
+          "amber": "Ámbar",
+          "orange": "Naranja",
+          "red": "Rojo",
+          "pink": "Rosa",
+          "violet": "Violeta",
+          "indigo": "Índigo"
         }
       },
       "action": {

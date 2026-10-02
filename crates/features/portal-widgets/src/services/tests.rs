@@ -140,3 +140,32 @@ fn a_block_takes_its_own_align_else_its_nearest_column_and_groups_keep_their_nes
     assert_eq!(column["blocks"][0]["align"], "end");
     assert_eq!(column["blocks"][1]["align"], "start");
 }
+
+#[test]
+fn a_tone_may_be_a_colour_by_name_directly_or_through_a_map() {
+    let violet: ToneFields = serde_json::from_value(json!({ "tone": "violet" })).unwrap();
+    assert_eq!(tone_for(&violet, "anything"), Tone::Violet);
+    let states: ToneFields =
+        serde_json::from_value(json!({ "tones": { "on": "lime", "off": "orange" } })).unwrap();
+    assert_eq!(tone_for(&states, "off"), Tone::Orange);
+    let code = serde_json::from_value::<ToneFields>(json!({ "tone": "#ff0000" }))
+        .unwrap_err()
+        .to_string();
+    assert!(code.contains("indigo") && code.contains("danger"), "{code}");
+}
+
+#[test]
+fn a_button_may_carry_a_tone() {
+    let button: crate::types::Block = serde_json::from_value(json!({
+        "kind": "button",
+        "label": "Stop",
+        "style": "secondary",
+        "tone": "red",
+        "action": { "refresh": true }
+    }))
+    .unwrap();
+    let crate::types::Block::Button(button) = button else {
+        panic!("not a button");
+    };
+    assert_eq!(button.tone, Some(Tone::Red));
+}

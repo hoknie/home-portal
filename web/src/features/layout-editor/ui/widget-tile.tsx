@@ -10,9 +10,9 @@ import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Badge, Button } from "@/shared/ui/kit";
 
 import type { DraftWidget } from "../model/draft";
-import type { Target } from "../model/measure";
+import type { Place, Step } from "../model/order";
 import type { Size } from "../model/resize";
-import { MoveHandle, type Step } from "./move-handle";
+import { MoveHandle } from "./move-handle";
 import { ResizeHandle, useSizeText } from "./resize-handle";
 
 export type WidgetTileProps = {
@@ -23,16 +23,18 @@ export type WidgetTileProps = {
   errors: string[];
   content: ReactNode;
   onResize: (size: Size) => void;
-  onMove: (target: Target) => void;
+  placeholder?: boolean;
+  sections: () => string[];
+  onMove: (place: Place) => void;
   onStep: (step: Step) => void;
-  onPreviewMove: (target: Target | null) => void;
+  onPreviewMove: (place: Place | null) => void;
   onConfigure: () => void;
   onRemove: () => void;
 };
 
 const TOOL = "flex size-8 items-center justify-center rounded-md border border-glass-edge bg-background text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
 
-export function WidgetTile({ widget, title, type, known, errors, content, onResize, onMove, onStep, onPreviewMove, onConfigure, onRemove }: WidgetTileProps) {
+export function WidgetTile({ widget, title, type, known, errors, content, placeholder = false, sections, onResize, onMove, onStep, onPreviewMove, onConfigure, onRemove }: WidgetTileProps) {
   const t = useTranslations("layoutEditor");
   const text = useSizeText();
   const [removing, setRemoving] = useState(false);
@@ -40,7 +42,7 @@ export function WidgetTile({ widget, title, type, known, errors, content, onResi
   const element = useRef<HTMLDivElement | null>(null);
   const size: Size = { width: widget.width, height: widget.height };
   const shown = preview ?? size;
-  const [body, rows] = useAutoRows<HTMLDivElement>(shown.height === "auto");
+  const [body, rows] = useAutoRows<HTMLDivElement>(shown.height === "auto", widget.key ?? widget.uid);
   const position = positionOf(widget);
   const measure = () => ({
     gridWidth: element.current?.parentElement?.getBoundingClientRect().width ?? 0,
@@ -56,16 +58,18 @@ export function WidgetTile({ widget, title, type, known, errors, content, onResi
       data-height={widget.height}
       data-column={widget.column ?? undefined}
       data-row={widget.row ?? undefined}
+      data-placeholder={placeholder || undefined}
     >
       <div
         className={cn(
           "relative h-full rounded-2xl outline-2 outline-offset-2 outline-transparent transition-[outline-color] group-hover/tile:outline-primary/30 group-focus-within/tile:outline-primary/50",
           errors.length > 0 && "outline-destructive",
           preview && "outline-primary",
+          placeholder && "outline-dashed outline-primary",
         )}
       >
         <div ref={body} className={cn(shown.height !== "auto" && "h-full overflow-hidden")}>
-          <div inert className="pointer-events-none h-full select-none" data-tile-content="">
+          <div inert className={cn("pointer-events-none h-full select-none", placeholder && "opacity-40")} data-tile-content="">
             {known ? content : <UnknownTile label={t("unknownType", { type })} />}
           </div>
         </div>
@@ -83,12 +87,16 @@ export function WidgetTile({ widget, title, type, known, errors, content, onResi
           </Badge>
         ) : null}
       </div>
-      {errors.map((error) => (
-        <p key={error} role="alert" className="mt-1 text-xs text-destructive">
-          {error}
-        </p>
-      ))}
-      <MoveHandle title={title} section={widget.section} tile={() => element.current} onPreview={onPreviewMove} onMove={onMove} onStep={onStep} />
+      {errors.length > 0 ? (
+        <div className="absolute inset-x-2 bottom-6 z-10 grid gap-1" data-tile-errors="">
+          {errors.map((error) => (
+            <p key={error} role="alert" className="rounded-md bg-background px-2 py-1 text-xs text-destructive">
+              {error}
+            </p>
+          ))}
+        </div>
+      ) : null}
+      <MoveHandle title={title} uid={widget.uid} section={widget.section} sections={sections} tile={() => element.current} onPreview={onPreviewMove} onMove={onMove} onStep={onStep} />
       {(["width", "height", "both"] as const).map((axis) => (
         <ResizeHandle key={axis} axis={axis} title={title} size={size} measure={measure} onPreview={setPreview} onResize={onResize} />
       ))}

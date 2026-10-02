@@ -2,11 +2,13 @@
 
 import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 
-import { Button, Checkbox, Input, NativeSelect } from "@/shared/ui/kit";
+import { Button, Checkbox, IconChoice, Input, TONE_NAMES } from "@/shared/ui/kit";
 
 import { type RawBlock, TONED, replaced, without } from "../../model/blocks";
 import { ActionEditor } from "./action-editor";
+import { GAP_ICONS, SIZE_ICONS, STYLE_ICONS, WEIGHT_ICONS, toneSwatch } from "./choice-icons";
 import { TemplateField } from "./template-field";
 import { ToneEditor } from "./tone-editor";
 
@@ -35,17 +37,8 @@ export function BlockEditor({ id, block, errors, onChange }: BlockEditorProps) {
       onChange={(value) => set(key, value)}
     />
   );
-  const choose = (key: string, values: readonly string[], fallback: string, labels: (value: string) => string) => (
-    <label className="grid gap-1 text-sm">
-      {t(`fields.${key}` as "fields.size")}
-      <NativeSelect value={string(key) || fallback} onChange={(event) => set(key, event.target.value)}>
-        {values.map((value) => (
-          <option key={value} value={value}>
-            {labels(value)}
-          </option>
-        ))}
-      </NativeSelect>
-    </label>
+  const choose = (key: string, values: readonly string[], fallback: string, labels: (value: string) => string, icons: (value: string) => ReactNode, swatch = false) => (
+    <IconChoice label={t(`fields.${key}` as "fields.size")} value={string(key) || fallback} swatch={swatch} onChange={(value) => set(key, value)} options={values.map((value) => ({ value, label: labels(value), icon: icons(value) }))} />
   );
   const limit = (
     <label className="grid gap-1 text-sm">
@@ -103,8 +96,8 @@ export function BlockEditor({ id, block, errors, onChange }: BlockEditorProps) {
         <>
           {field("text", { multiline: true })}
           <div className="grid gap-3 @md:grid-cols-3">
-            {choose("size", ["small", "normal", "large"], "normal", (value) => t(`sizes.${value as "small"}`))}
-            {choose("weight", ["normal", "strong"], "normal", (value) => t(`weights.${value as "normal"}`))}
+            {choose("size", ["small", "normal", "large"], "normal", (value) => t(`sizes.${value as "small"}`), (value) => SIZE_ICONS[value])}
+            {choose("weight", ["normal", "strong"], "normal", (value) => t(`weights.${value as "normal"}`), (value) => WEIGHT_ICONS[value])}
             <label className="flex items-center gap-2 self-end text-sm">
               <Checkbox checked={block.muted === true} onCheckedChange={(checked) => set("muted", checked === true || "")} />
               {t("fields.muted")}
@@ -150,7 +143,8 @@ export function BlockEditor({ id, block, errors, onChange }: BlockEditorProps) {
         <>
           <div className="grid gap-3 @sm:grid-cols-2">
             {field("label")}
-            {choose("style", ["primary", "secondary", "ghost"], "secondary", (value) => t(`styles.${value as "primary"}`))}
+            {choose("style", ["primary", "secondary", "ghost"], "secondary", (value) => t(`styles.${value as "primary"}`), (value) => STYLE_ICONS[value])}
+            {choose("tone", TONE_NAMES, "neutral", (value) => t(`tone.names.${value as "neutral"}`), toneSwatch, true)}
           </div>
           <label className="grid gap-1 text-sm">
             {t("fields.icon")}
@@ -165,8 +159,8 @@ export function BlockEditor({ id, block, errors, onChange }: BlockEditorProps) {
           />
         </>
       ) : null}
-      {block.kind === "row" || block.kind === "column" ? choose("gap", ["small", "normal"], "normal", (value) => t(`gaps.${value as "small"}`)) : null}
-      {TONED.includes(block.kind) ? <ToneEditor id={id} block={block} onChange={onChange} /> : null}
+      {block.kind === "row" || block.kind === "column" ? choose("gap", ["small", "normal"], "normal", (value) => t(`gaps.${value as "small"}`), (value) => GAP_ICONS[value]) : null}
+      {TONED.includes(block.kind) ? <ToneEditor block={block} onChange={onChange} /> : null}
       {errors.tone ? <p role="alert" className="text-xs text-destructive">{errors.tone}</p> : null}
     </div>
   );

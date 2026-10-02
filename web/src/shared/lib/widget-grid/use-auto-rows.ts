@@ -1,20 +1,37 @@
 "use client";
 
-import { type RefObject, useEffect, useRef, useState } from "react";
+import { type RefObject, useLayoutEffect, useRef, useState } from "react";
 
 import { rowsFor } from "./grid";
 
-export function useAutoRows<T extends HTMLElement>(enabled: boolean): [RefObject<T | null>, number] {
+const remembered = new Map<string, number>();
+
+export function rememberedRows(memory: string): number | undefined {
+  return remembered.get(memory);
+}
+
+export function useAutoRows<T extends HTMLElement>(enabled: boolean, memory?: string): [RefObject<T | null>, number] {
   const ref = useRef<T>(null);
-  const [rows, setRows] = useState(1);
-  useEffect(() => {
+  const [rows, setRows] = useState(() => (memory === undefined ? undefined : remembered.get(memory)) ?? 1);
+  useLayoutEffect(() => {
     const element = ref.current;
-    if (!enabled || !element || typeof ResizeObserver === "undefined") {
+    if (!enabled || !element) {
       return;
     }
-    const observer = new ResizeObserver(() => setRows(rowsFor(element.getBoundingClientRect().height)));
+    const measure = () => {
+      const measured = rowsFor(element.getBoundingClientRect().height);
+      if (memory !== undefined) {
+        remembered.set(memory, measured);
+      }
+      setRows(measured);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [enabled, memory]);
   return [ref, rows];
 }

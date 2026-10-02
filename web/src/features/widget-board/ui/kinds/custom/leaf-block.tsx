@@ -4,9 +4,9 @@ import { useTranslations } from "next-intl";
 
 import type { RenderedLeaf } from "@/entities/widget";
 import { cn } from "@/shared/lib/cn";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/kit";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, toneOf } from "@/shared/ui/kit";
 
-import { TONE_BADGE, TONE_FILL, TONE_TEXT, percentOf } from "../../../model/tones";
+import { percentOf } from "../../../model/tones";
 import { BlockIcon } from "./block-icon";
 import { MarkdownBlock } from "./markdown-block";
 import { WidgetButton } from "./widget-button";
@@ -31,7 +31,7 @@ export function LeafBlock({ block, align = "start", widget, scope }: LeafProps) 
             <BlockIcon name={block.icon} className="size-3.5" />
             {block.label}
           </p>
-          <p className={cn("text-2xl font-semibold tabular-nums", TONE_TEXT[block.tone])}>
+          <p className={cn("text-2xl font-semibold tabular-nums", toneOf(block.tone).text)}>
             {block.value}
             {block.unit ? <span className="ml-1 text-sm font-normal text-muted-foreground">{block.unit}</span> : null}
           </p>
@@ -43,7 +43,7 @@ export function LeafBlock({ block, align = "start", widget, scope }: LeafProps) 
         <p
           data-block="text"
           data-tone={block.tone}
-          className={cn(SIZES[block.size], block.weight === "strong" && "font-semibold", block.muted ? "text-muted-foreground" : TONE_TEXT[block.tone], "break-words whitespace-pre-line")}
+          className={cn(SIZES[block.size], block.weight === "strong" && "font-semibold", block.muted ? "text-muted-foreground" : toneOf(block.tone).text, "break-words whitespace-pre-line")}
         >
           {block.text}
         </p>
@@ -52,7 +52,7 @@ export function LeafBlock({ block, align = "start", widget, scope }: LeafProps) 
       return <MarkdownBlock text={block.text} />;
     case "badge":
       return (
-        <span data-block="badge" data-tone={block.tone} className={cn("inline-flex w-fit items-center rounded-full border px-2.5 py-0.5 text-xs font-medium", TONE_BADGE[block.tone])}>
+        <span data-block="badge" data-tone={block.tone} className={cn("inline-flex w-fit items-center rounded-full border px-2.5 py-0.5 text-xs font-medium", toneOf(block.tone).badge)}>
           {block.text}
         </span>
       );
@@ -67,7 +67,7 @@ export function LeafBlock({ block, align = "start", widget, scope }: LeafProps) 
             </div>
           ) : null}
           <div role="meter" aria-label={block.label ?? t("progress")} aria-valuenow={Math.round(percent)} aria-valuemin={0} aria-valuemax={100} className="h-2 overflow-hidden rounded-full bg-muted">
-            <div className={cn("h-full rounded-full transition-[width]", TONE_FILL[block.tone])} style={{ width: `${percent}%` }} />
+            <div className={cn("h-full rounded-full transition-[width]", toneOf(block.tone).fill)} style={{ width: `${percent}%` }} />
           </div>
           {block.caption ? <p className="text-xs text-muted-foreground">{block.caption}</p> : null}
         </div>
@@ -91,7 +91,7 @@ export function LeafBlock({ block, align = "start", widget, scope }: LeafProps) 
         <ul className="grid w-full gap-1.5 text-sm" data-block="list">
           {block.items.map((item, index) => (
             <li key={index} className={cn("flex items-baseline gap-3", SPREADS[align])}>
-              <span className={cn("min-w-0 truncate", TONE_TEXT[item.tone])}>{item.text}</span>
+              <span className={cn("min-w-0 truncate", toneOf(item.tone).text)}>{item.text}</span>
               {item.secondary ? <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{item.secondary}</span> : null}
             </li>
           ))}

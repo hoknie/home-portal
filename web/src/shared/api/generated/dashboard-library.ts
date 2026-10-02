@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const accentSchema = z.enum(["neutral", "blue", "green", "amber", "red", "violet", "pink", "teal"]).catch("neutral");
+export const accentSchema = z.enum(["neutral", "blue", "cyan", "teal", "green", "lime", "amber", "orange", "red", "pink", "violet", "indigo"]).catch("neutral");
 
 export type Accent = z.infer<typeof accentSchema>;
 

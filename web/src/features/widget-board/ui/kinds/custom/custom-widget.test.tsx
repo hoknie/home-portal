@@ -98,3 +98,20 @@ it("a block placed lower in its row and a column centring its blocks", () => {
   expect(screen.getByText("low").parentElement).toHaveClass("sm:self-end");
   expect(container.querySelector('[data-block="column"]')).toHaveClass("content-center", "h-full");
 });
+
+it("draws stat, text, badge, progress and list items in a colour tone, and an unknown tone neutral", () => {
+  const { container } = draw({
+    blocks: [
+      { kind: "stat", align: null, valign: null, label: "Load", value: "3", unit: null, caption: null, icon: null, tone: "cyan" },
+      { kind: "text", align: null, valign: null, text: "calm", size: "normal", weight: "normal", muted: false, tone: "indigo" },
+      { kind: "badge", align: null, valign: null, text: "beta", tone: "lime" },
+      { kind: "progress", align: null, valign: null, label: "Fill", value: 40, maximum: 100, caption: null, tone: "orange" },
+      { kind: "list", align: null, valign: null, items: [{ text: "pink item", secondary: null, tone: "pink" }], more: 0, empty: null },
+    ],
+  } as unknown as CustomWidgetData);
+  expect(container.querySelector('[data-block="stat"] .text-palette-cyan')).not.toBeNull();
+  expect(screen.getByText("calm")).toHaveClass("text-palette-indigo");
+  expect(screen.getByText("beta")).toHaveClass("text-palette-lime");
+  expect(container.querySelector('[data-block="progress"] .bg-palette-orange')).not.toBeNull();
+  expect(screen.getByText("pink item")).toHaveClass("text-palette-pink");
+});
