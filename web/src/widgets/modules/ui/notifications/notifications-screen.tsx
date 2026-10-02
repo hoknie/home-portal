@@ -3,11 +3,10 @@
 import { useTranslations } from "next-intl";
 
 import { useNotifications } from "@/entities/notification";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, ErrorNotice, SkeletonCard, SkeletonForm } from "@/shared/ui/kit";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Skeleton } from "@/shared/ui/primitives";
 
 import { ChannelCard } from "./channel-card";
 import { RulesForm } from "./rules-form";
@@ -26,16 +25,22 @@ export function NotificationsScreen() {
         <ErrorNotice title={t("errors.loadFailed")} description={notifications.error.message} onRetry={() => void notifications.refetch()} />
       ) : null}
       {data ? (
-        <>
+        <Appear className="grid gap-8">
           <div className="grid gap-4 lg:grid-cols-2">
             {data.channels.map((channel) => (
               <ChannelCard key={channel.name} channel={channel} revision={revision} moduleOn={data.enabled} />
             ))}
           </div>
           <RulesForm rules={data.rules} revision={revision} />
-        </>
+        </Appear>
       ) : notifications.error ? null : (
-        <Skeleton className="h-64 w-full" aria-busy="true" />
+        <div className="grid gap-8" data-skeleton="notifications" aria-busy="true">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <SkeletonForm fields={2} />
+            <SkeletonForm fields={2} />
+          </div>
+          <SkeletonCard lines={3} />
+        </div>
       )}
     </div>
   );

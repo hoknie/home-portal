@@ -4,9 +4,7 @@ import { useTranslations } from "next-intl";
 
 import type { CatalogueEvent } from "@/entities/automation";
 import { type InputDeclaration, InputValueField } from "@/entities/workflow";
-import { FormField } from "@/shared/ui/form-field";
-import { Label, Switch } from "@/shared/ui/primitives";
-import { TemplateInput } from "@/shared/ui/template-input";
+import { FormField, Label, Switch, TemplateInput } from "@/shared/ui/kit";
 
 import { unknownPlaceholders, unknownRanges } from "../../model/placeholders";
 import { type InputEntry, switched, templated } from "../../model/workflow-call";

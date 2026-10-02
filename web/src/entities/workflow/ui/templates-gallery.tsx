@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { routes } from "@/shared/config";
 import { AddressLink } from "@/shared/ui/address-link";
+import { BareButton } from "@/shared/ui/kit";
 
 import { TEMPLATES, type TemplateName } from "../model/templates";
 
@@ -24,8 +25,8 @@ function Preview({ kinds }: { kinds: string[] }) {
     <ol className="flex flex-col items-center gap-0.5" aria-hidden>
       {kinds.map((kind, index) => (
         <li key={`${kind}-${index}`} className="flex flex-col items-center gap-0.5">
-          {index > 0 ? <ArrowDown className="size-3 text-muted-foreground/60" /> : null}
-          <span className="rounded-md border border-glass-edge bg-background px-2 py-0.5 text-[11px]">{help(`${kind}.name` as "if.name")}</span>
+          {index > 0 ? <ArrowDown className="size-3 text-muted-foreground" /> : null}
+          <span className="rounded-md border border-glass-edge bg-background px-2 py-0.5 text-xs">{help(`${kind}.name` as "if.name")}</span>
         </li>
       ))}
     </ol>
@@ -52,9 +53,9 @@ export function TemplatesGallery({ onChoose }: TemplatesGalleryProps) {
         return (
           <li key={template.name}>
             {onChoose ? (
-              <button type="button" className={className} onClick={() => onChoose(template.name)}>
+              <BareButton className={className} onClick={() => onChoose(template.name)}>
                 {content}
-              </button>
+              </BareButton>
             ) : (
               <AddressLink href={templateHref(template.name)} className={className}>
                 {content}

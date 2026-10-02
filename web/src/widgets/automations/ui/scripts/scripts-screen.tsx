@@ -16,10 +16,8 @@ import { routes } from "@/shared/config";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, Button, EmptyState, ErrorNotice, SkeletonCard } from "@/shared/ui/kit";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Button, Skeleton } from "@/shared/ui/primitives";
 
 import { NEW_SCRIPT, usersOf } from "../../model/script-usage";
 import { PlaceDialog } from "./script-dialogs";
@@ -110,7 +108,10 @@ export function ScriptsScreen() {
     return (
       <div className="grid gap-8">
         {header}
-        <Skeleton className="h-64 w-full" aria-busy="true" />
+        <div className="grid gap-4 lg:grid-cols-[18rem_1fr]" data-skeleton="scripts" aria-busy="true">
+          <SkeletonCard lines={8} />
+          <SkeletonCard lines={10} />
+        </div>
       </div>
     );
   }
@@ -128,124 +129,126 @@ export function ScriptsScreen() {
   return (
     <div className="grid gap-8">
       {header}
-      {tree.error && !data ? <ErrorNotice title={t("title")} description={tree.error.message} onRetry={() => void tree.refetch()} /> : null}
-      {data && readOnly ? (
-        <p role="note" className="rounded-lg border border-glass-edge p-3 text-sm text-muted-foreground">
-          {t("readOnly")}
-        </p>
-      ) : null}
-      {data && !data.exists ? (
-        <div role="note" className="grid justify-items-start gap-3 rounded-lg border border-glass-edge p-4 text-sm">
-          <p>{t("missing", { directory: data.directory })}</p>
-          {readOnly || !can("scripts", "create") ? null : (
-            <Button type="button" size="sm" onClick={() => void attempt(() => createFolder.mutateAsync(null))}>
-              {t("createDirectory")}
-            </Button>
-          )}
-        </div>
-      ) : null}
-      {data && data.exists ? (
-        <div className="grid items-start gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
-          <ScriptTreePane
-            tree={data}
-            selected={selected}
-            readOnly={readOnly}
-            onSelect={select}
-            onNewScript={() => ask({ kind: "script" })}
-            onNewFolder={() => ask({ kind: "folder" })}
-            onRename={(chosen) => ask({ kind: "rename", entry: chosen })}
-            onDelete={(chosen) => ask({ kind: "delete", entry: chosen })}
-            onDeleteFolder={(name) => void deleteFolder.mutateAsync(name).catch((error: unknown) => toast.error(messageOf(error)))}
-          />
-          <div className="min-w-0">
-            {entry ? (
-              <ScriptEditor key={entry.path} entry={entry} userId={data.user_id} directory={data.directory} readOnly={readOnly || !can("scripts", "update")} onDirty={onDirty} />
-            ) : (
-              <EmptyState icon={FileCode} title={t("chooseTitle")} description={t("choose")} />
+      <Appear className="grid gap-8">
+        {tree.error && !data ? <ErrorNotice title={t("title")} description={tree.error.message} onRetry={() => void tree.refetch()} /> : null}
+        {data && readOnly ? (
+          <p role="note" className="rounded-lg border border-glass-edge p-3 text-sm text-muted-foreground">
+            {t("readOnly")}
+          </p>
+        ) : null}
+        {data && !data.exists ? (
+          <div role="note" className="grid justify-items-start gap-3 rounded-lg border border-glass-edge p-4 text-sm">
+            <p>{t("missing", { directory: data.directory })}</p>
+            {readOnly || !can("scripts", "create") ? null : (
+              <Button type="button" size="sm" onClick={() => void attempt(() => createFolder.mutateAsync(null))}>
+                {t("createDirectory")}
+              </Button>
             )}
           </div>
-        </div>
-      ) : null}
-      {data ? (
-        <>
-          <PlaceDialog
-            open={asking?.kind === "script"}
-            title={t("newScriptTitle")}
-            confirmLabel={t("create")}
-            folders={data.folders}
-            folder={entry?.folder ?? ""}
-            error={problem}
-            pending={createScript.isPending}
-            onOpenChange={(open) => ask(open ? { kind: "script" } : null)}
-            onConfirm={(path) =>
-              void attempt(
-                () => createScript.mutateAsync({ path, content: NEW_SCRIPT }),
-                () => setSelected(path),
-              )
-            }
-          />
-          <PlaceDialog
-            open={asking?.kind === "folder"}
-            title={t("newFolderTitle")}
-            confirmLabel={t("create")}
-            folders={[]}
-            withFolder={false}
-            error={problem}
-            pending={createFolder.isPending}
-            onOpenChange={(open) => ask(open ? { kind: "folder" } : null)}
-            onConfirm={(name) => void attempt(() => createFolder.mutateAsync(name))}
-          />
-          <PlaceDialog
-            open={asking?.kind === "rename"}
-            title={t("renameTitle", {
-              path: asking?.kind === "rename" ? asking.entry.path : "",
-            })}
-            confirmLabel={t("move")}
-            folders={data.folders}
-            folder={asking?.kind === "rename" ? (asking.entry.folder ?? "") : ""}
-            name={asking?.kind === "rename" ? asking.entry.name : ""}
-            error={problem}
-            pending={moveScript.isPending}
-            onOpenChange={(open) => (open ? null : ask(null))}
-            onConfirm={(to) => {
-              if (asking?.kind === "rename") {
-                const from = asking.entry;
+        ) : null}
+        {data && data.exists ? (
+          <div className="grid items-start gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
+            <ScriptTreePane
+              tree={data}
+              selected={selected}
+              readOnly={readOnly}
+              onSelect={select}
+              onNewScript={() => ask({ kind: "script" })}
+              onNewFolder={() => ask({ kind: "folder" })}
+              onRename={(chosen) => ask({ kind: "rename", entry: chosen })}
+              onDelete={(chosen) => ask({ kind: "delete", entry: chosen })}
+              onDeleteFolder={(name) => void deleteFolder.mutateAsync(name).catch((error: unknown) => toast.error(messageOf(error)))}
+            />
+            <div className="min-w-0">
+              {entry ? (
+                <ScriptEditor key={entry.path} entry={entry} userId={data.user_id} directory={data.directory} readOnly={readOnly || !can("scripts", "update")} onDirty={onDirty} />
+              ) : (
+                <EmptyState icon={FileCode} title={t("chooseTitle")} description={t("choose")} />
+              )}
+            </div>
+          </div>
+        ) : null}
+        {data ? (
+          <>
+            <PlaceDialog
+              open={asking?.kind === "script"}
+              title={t("newScriptTitle")}
+              confirmLabel={t("create")}
+              folders={data.folders}
+              folder={entry?.folder ?? ""}
+              error={problem}
+              pending={createScript.isPending}
+              onOpenChange={(open) => ask(open ? { kind: "script" } : null)}
+              onConfirm={(path) =>
                 void attempt(
-                  () =>
-                    moveScript.mutateAsync({
-                      from: from.path,
-                      to,
-                      revision: from.revision ?? "",
-                    }),
-                  () => selected === from.path && setSelected(to),
-                );
+                  () => createScript.mutateAsync({ path, content: NEW_SCRIPT }),
+                  () => setSelected(path),
+                )
               }
-            }}
-          />
-          <ConfirmDialog
-            open={deleting !== null}
-            title={t("deleteTitle", { path: deleting?.path ?? "" })}
-            description={[t("deleteDescription"), usedBy.length > 0 ? t("deleteUsed", { users: usedBy.join(", ") }) : "", problem ?? ""]
-              .filter(Boolean)
-              .join(" ")}
-            confirmLabel={t("delete")}
-            pending={deleteScript.isPending}
-            onOpenChange={(open) => (open ? null : ask(null))}
-            onConfirm={() => {
-              if (deleting) {
-                void attempt(
-                  () =>
-                    deleteScript.mutateAsync({
-                      path: deleting.path,
-                      revision: deleting.revision ?? "",
-                    }),
-                  () => selected === deleting.path && setSelected(null),
-                );
-              }
-            }}
-          />
-        </>
-      ) : null}
+            />
+            <PlaceDialog
+              open={asking?.kind === "folder"}
+              title={t("newFolderTitle")}
+              confirmLabel={t("create")}
+              folders={[]}
+              withFolder={false}
+              error={problem}
+              pending={createFolder.isPending}
+              onOpenChange={(open) => ask(open ? { kind: "folder" } : null)}
+              onConfirm={(name) => void attempt(() => createFolder.mutateAsync(name))}
+            />
+            <PlaceDialog
+              open={asking?.kind === "rename"}
+              title={t("renameTitle", {
+                path: asking?.kind === "rename" ? asking.entry.path : "",
+              })}
+              confirmLabel={t("move")}
+              folders={data.folders}
+              folder={asking?.kind === "rename" ? (asking.entry.folder ?? "") : ""}
+              name={asking?.kind === "rename" ? asking.entry.name : ""}
+              error={problem}
+              pending={moveScript.isPending}
+              onOpenChange={(open) => (open ? null : ask(null))}
+              onConfirm={(to) => {
+                if (asking?.kind === "rename") {
+                  const from = asking.entry;
+                  void attempt(
+                    () =>
+                      moveScript.mutateAsync({
+                        from: from.path,
+                        to,
+                        revision: from.revision ?? "",
+                      }),
+                    () => selected === from.path && setSelected(to),
+                  );
+                }
+              }}
+            />
+            <ConfirmDialog
+              open={deleting !== null}
+              title={t("deleteTitle", { path: deleting?.path ?? "" })}
+              description={[t("deleteDescription"), usedBy.length > 0 ? t("deleteUsed", { users: usedBy.join(", ") }) : "", problem ?? ""]
+                .filter(Boolean)
+                .join(" ")}
+              confirmLabel={t("delete")}
+              pending={deleteScript.isPending}
+              onOpenChange={(open) => (open ? null : ask(null))}
+              onConfirm={() => {
+                if (deleting) {
+                  void attempt(
+                    () =>
+                      deleteScript.mutateAsync({
+                        path: deleting.path,
+                        revision: deleting.revision ?? "",
+                      }),
+                    () => selected === deleting.path && setSelected(null),
+                  );
+                }
+              }}
+            />
+          </>
+        ) : null}
+      </Appear>
     </div>
   );
 }

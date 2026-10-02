@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { ChoiceGroup } from "@/shared/ui/choice-group";
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, Heading, Input } from "@/shared/ui/kit";
 
 import { BLOCK_ICONS } from "../../model/block-icons";
 import type { BlockKind, RawBlock } from "../../model/blocks";
@@ -95,7 +95,7 @@ export function Inspector({ slot = false, block, path, parentKind, errors, missi
           <Icon className="size-4" aria-hidden />
         </span>
         <div className="grid min-w-0 flex-1">
-          <h3 className="text-sm font-semibold">{t(`layoutEditor.blocks.kinds.${kind}`)}</h3>
+          <Heading level="group" as="h3" className="text-sm font-semibold">{t(`layoutEditor.blocks.kinds.${kind}`)}</Heading>
           <p className="truncate text-xs text-muted-foreground">{t(`layoutEditor.blocks.descriptions.${kind}`)}</p>
         </div>
       </div>

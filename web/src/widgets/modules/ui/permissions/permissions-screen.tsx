@@ -5,9 +5,8 @@ import { useTranslations } from "next-intl";
 import { Allowed } from "@/entities/session";
 import { usePermissions } from "@/entities/permission";
 import { useTrail } from "@/shared/lib/breadcrumbs";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, ErrorNotice, SkeletonCard } from "@/shared/ui/kit";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import { PermissionRow } from "./permission-row";
@@ -38,18 +37,20 @@ export function PermissionsScreen() {
         <ErrorNotice title={t("loadFailed")} description={permissions.error.message} onRetry={() => void permissions.refetch()} />
       ) : null}
       {data ? (
-        <SectionCard
-          title={t("listTitle")}
-          description={data.platform === MACOS ? t(`owner.${data.owner.kind}`, { name: data.owner.name }) : t("elsewhere")}
-        >
-          <ul className="grid">
-            {data.permissions.map((permission) => (
-              <PermissionRow key={permission.code} permission={permission} owner={data.owner.name} />
-            ))}
-          </ul>
-        </SectionCard>
+        <Appear>
+          <SectionCard
+            title={t("listTitle")}
+            description={data.platform === MACOS ? t(`owner.${data.owner.kind}`, { name: data.owner.name }) : t("elsewhere")}
+          >
+            <ul className="grid">
+              {data.permissions.map((permission) => (
+                <PermissionRow key={permission.code} permission={permission} owner={data.owner.name} />
+              ))}
+            </ul>
+          </SectionCard>
+        </Appear>
       ) : permissions.error ? null : (
-        <Skeleton className="h-96 w-full" aria-busy="true" />
+        <SkeletonCard lines={6} />
       )}
     </div>
   );

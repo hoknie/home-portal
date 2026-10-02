@@ -11,7 +11,7 @@ import { useEnvironment } from "@/entities/environment";
 import { useSession } from "@/entities/session";
 import { UnauthorizedError, signInLocation } from "@/shared/api";
 import { cn } from "@/shared/lib/cn";
-import { Button, Separator, Sheet, SheetContent, SheetTitle, SheetTrigger, Skeleton, TooltipProvider } from "@/shared/ui/primitives";
+import { Button, PageTransition, Panel, Separator, Sheet, SheetContent, SheetTitle, SheetTrigger, Skeleton, TooltipProvider } from "@/shared/ui/kit";
 
 import { readCollapsed, writeCollapsed } from "../model/menu-state";
 
@@ -101,12 +101,17 @@ export function AppShell({ children, redirectGuests = true }: AppShellProps) {
   return (
     <div className={cn("min-h-svh md:grid", collapsed ? "md:grid-cols-[4.5rem_1fr]" : "md:grid-cols-[16rem_1fr]")} data-menu={collapsed ? "collapsed" : "expanded"}>
       <TooltipProvider>
-        <aside className={cn("glass-panel sticky top-3 m-3 mr-0 hidden h-[calc(100svh-1.5rem)] rounded-xl md:block", collapsed ? "overflow-y-auto" : "overflow-hidden")} aria-label={t("nav.menu")}>
+        <Panel
+          as="aside"
+          padding="none"
+          className={cn("sticky top-3 m-3 mr-0 hidden h-[calc(100svh-1.5rem)] rounded-xl md:block", collapsed ? "overflow-y-auto" : "overflow-hidden")}
+          aria-label={t("nav.menu")}
+        >
           {collapsed ? rail : expanded}
-        </aside>
+        </Panel>
       </TooltipProvider>
       <div className="flex min-w-0 flex-col">
-        <header className="glass-panel sticky top-2 z-30 mx-2 mt-2 flex h-14 items-center gap-3 rounded-xl px-4 md:hidden">
+        <Panel as="header" padding="none" className="sticky top-2 z-30 mx-2 mt-2 flex h-14 items-center gap-3 rounded-xl px-4 md:hidden">
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label={t("nav.openMenu")}>
@@ -119,8 +124,10 @@ export function AppShell({ children, redirectGuests = true }: AppShellProps) {
             </SheetContent>
           </Sheet>
           <Brand />
-        </header>
-        <main className={cn("mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-10", collapsed ? "max-w-6xl md:max-w-[83.5rem]" : "max-w-6xl")}>{children}</main>
+        </Panel>
+        <main className={cn("mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-10", collapsed ? "max-w-6xl md:max-w-[83.5rem]" : "max-w-6xl")}>
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/lib/cn";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/primitives";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/kit";
 
 export type SectionCardProps = {
   title?: string;

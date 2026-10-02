@@ -44,9 +44,9 @@ it("a whole area ticks its actions and leaves the columns mixed", async () => {
   await userEvent.click(box("Every action: Automations"));
   for (const action of ["Read", "Create", "Change", "Delete", "Run"]) {
     expect(box(`Automations: ${action}`)).toBeChecked();
-    const column = box(`Every area: ${action}`) as HTMLInputElement;
+    const column = box(`Every area: ${action}`);
     expect(column).toHaveAttribute("aria-checked", "mixed");
-    expect(column.indeterminate).toBe(true);
+    expect(column).toBePartiallyChecked();
   }
 });
 
@@ -57,13 +57,13 @@ it("select all, clear one cell, then clear all", async () => {
   expect(clear).toBeDisabled();
   await userEvent.click(screen.getByRole("button", { name: "Select all" }));
   expect(screen.getByRole("button", { name: "Select all" })).toBeDisabled();
-  expect(screen.getAllByRole("checkbox").every((input) => (input as HTMLInputElement).checked)).toBe(true);
+  expect(screen.getAllByRole("checkbox").every((input) => input.getAttribute("aria-checked") === "true")).toBe(true);
   await userEvent.click(box("Workflows: Run"));
   expect(box("Every action: Workflows")).toHaveAttribute("aria-checked", "mixed");
   expect(box("Every area: Run")).toHaveAttribute("aria-checked", "mixed");
   await userEvent.click(screen.getByRole("button", { name: "Clear all" }));
   expect(last).toEqual({});
-  expect(screen.getAllByRole("checkbox").some((input) => (input as HTMLInputElement).checked)).toBe(false);
+  expect(screen.getAllByRole("checkbox").some((input) => input.getAttribute("aria-checked") === "true")).toBe(false);
 });
 
 it("the read-only matrix has no bulk controls", () => {

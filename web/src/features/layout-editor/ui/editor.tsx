@@ -14,8 +14,7 @@ import { routes } from "@/shared/config";
 import { useDraftHistory } from "@/shared/lib/history";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { Button } from "@/shared/ui/primitives";
+import { Button, ErrorNotice, Panel } from "@/shared/ui/kit";
 
 import type { KindLabel } from "../model/catalog";
 import { SECTION_SORT_PREFIX, afterDrop } from "../model/drag";
@@ -164,7 +163,7 @@ export function Editor({ loaded, kinds, renderWidget, renderSettings, builds, on
 
   return (
     <div className="grid gap-6">
-      <div className="glass-panel sticky top-3 z-20 flex flex-wrap items-center gap-3 rounded-xl px-4 py-3">
+      <Panel as="div" padding="none" className="sticky top-3 z-20 flex flex-wrap items-center gap-3 rounded-xl px-4 py-3">
         <p className="text-sm text-muted-foreground" role="status">
           {dirty ? t("unsaved") : null}
         </p>
@@ -195,7 +194,7 @@ export function Editor({ loaded, kinds, renderWidget, renderSettings, builds, on
             {save.isPending ? t("saving") : t("save")}
           </Button>
         </div>
-      </div>
+      </Panel>
       {conflict ? <ConflictNotice pending={save.isPending} onReload={onReload} onOverwrite={() => void overwrite()} /> : null}
       {errors ? <ErrorNotice title={t("invalid")} description={errors.other.join("\n") || undefined} /> : null}
       <DndContext

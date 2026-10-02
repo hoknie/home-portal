@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { EnvironmentPicker, useEnvironment } from "@/entities/environment";
 import { cn } from "@/shared/lib/cn";
-import { Label, Switch } from "@/shared/ui/primitives";
+import { Heading, Label, Switch } from "@/shared/ui/kit";
 
 export type AccessValue = { environments: string[] | null; public: boolean };
 
@@ -19,9 +19,9 @@ export function AccessTab({ value, environments, custom, onChange }: { value: Ac
     <div className="grid gap-6">
       <section className="grid gap-3" aria-labelledby="access-environments">
         <div className="grid gap-1">
-          <h3 id="access-environments" className="text-sm font-medium">
+          <Heading level="group" as="h3" id="access-environments" className="text-sm font-medium">
             {t("environments")}
-          </h3>
+          </Heading>
           <p className="text-xs text-muted-foreground">{t("environmentsHint")}</p>
         </div>
         <EnvironmentPicker label={t("environments")} environments={environments} value={value.environments} current={current} onChange={(next) => onChange({ ...value, environments: next })} />

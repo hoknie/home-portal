@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { KIND_GROUPS, type Kind, type Target } from "@/entities/workflow";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
+import { BareButton, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Heading, Input } from "@/shared/ui/kit";
 
 import { kindPlaceable, slotContext } from "../../model/checks/placing";
 import { useEditor } from "../../model/editor-context";
@@ -57,14 +57,13 @@ export function Palette({ target, onChoose, onClose }: PaletteProps) {
         </div>
         {quick.length > 0 ? (
           <section className="grid gap-2" aria-label={t("quick.title")}>
-            <h3 className="text-sm font-semibold">{t("quick.title")}</h3>
+            <Heading level="group" as="h3" className="text-sm font-semibold">{t("quick.title")}</Heading>
             <div className="flex flex-wrap gap-2">
               {quick.map((entry) => {
                 const Icon = KIND_ICONS[entry.kind.name] ?? FALLBACK_ICON;
                 return (
-                  <button
+                  <BareButton
                     key={entry.key}
-                    type="button"
                     className="flex items-center gap-2 rounded-full border border-glass-edge bg-glass-tint px-3 py-1.5 text-sm transition-colors hover:border-primary hover:bg-accent"
                     onClick={() => {
                       setQuery("");
@@ -75,7 +74,7 @@ export function Palette({ target, onChoose, onClose }: PaletteProps) {
                   >
                     <Icon className="size-4" aria-hidden />
                     {t(`quick.${entry.key}`)}
-                  </button>
+                  </BareButton>
                 );
               })}
             </div>
@@ -90,16 +89,15 @@ export function Palette({ target, onChoose, onClose }: PaletteProps) {
           return (
             <section key={group} className="grid gap-2" aria-label={text(`groups.${group}.name`)}>
               <div>
-                <h3 className="text-sm font-semibold">{text(`groups.${group}.name`)}</h3>
+                <Heading level="group" as="h3" className="text-sm font-semibold">{text(`groups.${group}.name`)}</Heading>
                 <p className="text-xs text-muted-foreground">{text(`groups.${group}.description`)}</p>
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 {kinds.map((kind) => {
                   const Icon = KIND_ICONS[kind.name] ?? FALLBACK_ICON;
                   return (
-                    <button
+                    <BareButton
                       key={kind.name}
-                      type="button"
                       className="group grid grid-cols-[auto_1fr] items-start gap-x-3 gap-y-1 rounded-xl border border-glass-edge bg-glass-tint p-3 text-start transition-colors hover:border-primary hover:bg-accent"
                       onClick={() => {
                         setQuery("");
@@ -113,8 +111,8 @@ export function Palette({ target, onChoose, onClose }: PaletteProps) {
                       </span>
                       <span className="text-sm font-medium">{text(`kinds.${kind.name}.name`) || kind.name}</span>
                       <span className="text-xs text-muted-foreground">{text(`kinds.${kind.name}.description`)}</span>
-                      <span className="truncate font-mono text-[11px] text-muted-foreground/80">{text(`kinds.${kind.name}.example`)}</span>
-                    </button>
+                      <span className="truncate font-mono text-xs text-muted-foreground">{text(`kinds.${kind.name}.example`)}</span>
+                    </BareButton>
                   );
                 })}
               </div>

@@ -54,7 +54,7 @@ export function WeatherWidget({ data }: WeatherProps) {
       <div className="flex items-center gap-4">
         {iconOf(data.current.condition)}
         <div className="min-w-0">
-          <p className="text-3xl font-semibold tabular-nums">
+          <p className="text-2xl font-semibold tabular-nums">
             {Math.round(data.current.temperature)}
             {degree}
           </p>

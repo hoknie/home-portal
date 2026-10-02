@@ -3,9 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { slugOf, uniqueId } from "@/shared/lib/slug";
-import { FormField } from "@/shared/ui/form-field";
-import { Input, Label, Switch } from "@/shared/ui/primitives";
-import { TagInput } from "@/shared/ui/tag-input";
+import { FormField, Input, Label, Switch, TagInput } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
 import { RESERVED_IDS } from "../../model/checks/validation";

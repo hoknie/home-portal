@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import type { Service } from "@/entities/service";
-import { Badge } from "@/shared/ui/primitives";
+import { Badge } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 export type AddressesCardProps = { service: Service; environment: string | null };

@@ -9,8 +9,7 @@ import { type Rules, useChangeRules } from "@/entities/notification";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { Button, Label, Switch } from "@/shared/ui/primitives";
+import { Button, Checkbox, ErrorNotice, Label, Switch } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 export const ANNOUNCED_STATES = ["down", "unreadable", "degraded", "up"] as const;
@@ -64,12 +63,7 @@ export function RulesForm({ rules, revision }: { rules: Rules; revision: string 
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {ANNOUNCED_STATES.map((state) => (
               <label key={state} className="inline-flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="size-4 accent-primary"
-                  checked={draft.states.includes(state)}
-                  onChange={(event) => toggle(state, event.target.checked)}
-                />
+                <Checkbox checked={draft.states.includes(state)} onCheckedChange={(checked) => toggle(state, checked === true)} />
                 {t(`status.${state}`)}
               </label>
             ))}

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { type KeyboardEvent, type PointerEvent, useState } from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { BareButton } from "@/shared/ui/kit";
 
 import { OUTLINE_ATTRIBUTE, SLOT_ATTRIBUTE, textOf } from "../../model/block-drop";
 import { BLOCK_ICONS } from "../../model/block-icons";
@@ -48,9 +49,9 @@ export function Outline({ blocks, selected, flagged, onSelect, onDragStart, onKe
               className={cn("flex items-center gap-0.5 rounded-lg pr-1 transition-colors", chosen ? "bg-primary/10 text-foreground ring-1 ring-primary/40" : "hover:bg-muted/60", flagged.includes(key) && !chosen && "ring-1 ring-status-degraded/60")}
             >
               {group ? (
-                <button type="button" className="flex size-6 items-center justify-center rounded text-muted-foreground hover:text-foreground" aria-label={t(open ? "widgetBuilder.outline.collapse" : "widgetBuilder.outline.expand", { name })} onClick={() => toggle(key)}>
+                <BareButton className="flex size-6 items-center justify-center rounded text-muted-foreground hover:text-foreground" aria-label={t(open ? "widgetBuilder.outline.collapse" : "widgetBuilder.outline.expand", { name })} onClick={() => toggle(key)}>
                   <ChevronDown className={cn("size-3.5 transition-transform", !open && "-rotate-90")} aria-hidden />
-                </button>
+                </BareButton>
               ) : (
                 <span className="size-6" aria-hidden />
               )}
@@ -62,11 +63,11 @@ export function Outline({ blocks, selected, flagged, onSelect, onDragStart, onKe
               >
                 <GripVertical className="size-3.5" aria-hidden />
               </span>
-              <button type="button" data-outline-select={key} className="flex min-w-0 flex-1 items-center gap-1.5 py-1 text-left text-sm outline-none focus-visible:underline" onClick={() => onSelect(path)} onKeyDown={onKey}>
-                <Icon className={cn("size-3.5 shrink-0", empty ? "text-muted-foreground/50" : "text-primary")} aria-hidden />
+              <BareButton data-outline-select={key} className="flex min-w-0 flex-1 items-center gap-1.5 py-1 text-left text-sm outline-none focus-visible:underline" onClick={() => onSelect(path)} onKeyDown={onKey}>
+                <Icon className={cn("size-3.5 shrink-0", empty ? "text-muted-foreground" : "text-primary")} aria-hidden />
                 <span className={empty ? "text-muted-foreground italic" : "font-medium"}>{name}</span>
                 <span className="truncate text-xs text-muted-foreground">{summaryOf(block)}</span>
-              </button>
+              </BareButton>
             </div>
             {open ? rows(childrenOf(block), path) : null}
           </li>

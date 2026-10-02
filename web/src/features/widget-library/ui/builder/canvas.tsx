@@ -4,7 +4,8 @@ import { useTranslations } from "next-intl";
 import { type MouseEvent, type PointerEvent, type ReactNode, useState } from "react";
 
 import type { WidgetHeight } from "@/shared/api";
-import { Input } from "@/shared/ui/primitives";
+import { cn } from "@/shared/lib/cn";
+import { CANVAS, Input } from "@/shared/ui/kit";
 
 import { CANVAS_ATTRIBUTE, CANVAS_ROOT, pathOf } from "../../model/block-drop";
 import type { BlockPath } from "../../model/block-tree";
@@ -81,7 +82,7 @@ export function Canvas({ size, empty, dragging, onSelect, onDragStart, children 
   return (
     <div className="grid gap-3" data-canvas="">
       <p className="text-xs text-muted-foreground">{t("hint")}</p>
-      <div className="rounded-xl bg-[radial-gradient(circle,var(--color-border)_1px,transparent_1px)] bg-[length:16px_16px] p-6">
+      <div className={cn("rounded-xl p-6", CANVAS.dotGrid)}>
         <div
           {...{ [CANVAS_ROOT]: "" }}
           data-canvas-widget=""

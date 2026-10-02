@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { absoluteAddress, curlExample } from "@/entities/webhook";
 import { CopyLine } from "@/shared/ui/copy-line";
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/kit";
 
 export type TokenDialogProps = { token: string | null; address: string; variables: string[]; onClose: () => void };
 

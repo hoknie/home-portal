@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { type Coverage, type MatrixRow, type Rights, columnState, matrixState, rowState, withAction, withColumn, withEverything, withRow } from "@/entities/user";
 import { ACTIONS, AREAS, type Area } from "@/entities/session";
-import { Button } from "@/shared/ui/primitives";
+import { Button, Checkbox, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/kit";
 
 export type MatrixEditorProps = { matrix: MatrixRow[]; rights: Rights; readOnly?: boolean; onChange?: (rights: Rights) => void };
 
@@ -12,18 +12,10 @@ type BulkBoxProps = { label: string; coverage: Coverage; onChange: (on: boolean)
 
 function BulkBox({ label, coverage, onChange }: BulkBoxProps) {
   return (
-    <input
-      type="checkbox"
-      className="size-4 accent-primary"
+    <Checkbox
       aria-label={label}
-      aria-checked={coverage === "some" ? "mixed" : coverage === "all"}
-      checked={coverage === "all"}
-      ref={(box) => {
-        if (box) {
-          box.indeterminate = coverage === "some";
-        }
-      }}
-      onChange={(event) => onChange(event.target.checked)}
+      checked={coverage === "all" ? true : coverage === "some" ? "indeterminate" : false}
+      onCheckedChange={(checked) => onChange(checked === true)}
     />
   );
 }
@@ -46,13 +38,12 @@ export function MatrixEditor({ matrix, rights, readOnly = false, onChange }: Mat
           </Button>
         </div>
       ) : null}
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[32rem] text-sm">
-          <thead>
-            <tr className="text-left text-xs text-muted-foreground">
-              <th className="py-2 pr-3 font-medium">{t("area")}</th>
+      <Table className="min-w-[32rem]">
+          <TableHeader>
+            <TableRow className="text-left text-xs text-muted-foreground hover:bg-transparent">
+              <TableHead className="h-auto px-0 py-2 pr-3 text-xs text-muted-foreground">{t("area")}</TableHead>
               {ACTIONS.map((action) => (
-                <th key={action} className="px-2 py-2 text-center font-medium">
+                <TableHead key={action} className="h-auto px-2 py-2 text-center text-xs text-muted-foreground">
                   <span className="grid justify-items-center gap-1">
                     {t(`actions.${action}`)}
                     {bulk && offered(action) ? (
@@ -63,14 +54,14 @@ export function MatrixEditor({ matrix, rights, readOnly = false, onChange }: Mat
                       />
                     ) : null}
                   </span>
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {matrix.map((row) => (
-              <tr key={row.area} className="border-t">
-                <th scope="row" className="py-2 pr-3 text-left font-medium">
+              <TableRow key={row.area} className="hover:bg-transparent">
+                <TableHead scope="row" className="h-auto px-0 py-2 pr-3 text-left">
                   <span className="flex items-center gap-2">
                     {bulk && row.actions.length > 0 ? (
                       <BulkBox
@@ -81,26 +72,23 @@ export function MatrixEditor({ matrix, rights, readOnly = false, onChange }: Mat
                     ) : null}
                     {label(row.area)}
                   </span>
-                </th>
+                </TableHead>
                 {ACTIONS.map((action) => (
-                  <td key={action} className="px-2 py-2 text-center">
+                  <TableCell key={action} className="px-2 py-2 text-center">
                     {row.actions.includes(action) ? (
-                      <input
-                        type="checkbox"
-                        className="size-4 accent-primary"
+                      <Checkbox
                         aria-label={t("cell", { area: label(row.area), action: t(`actions.${action}`) })}
                         checked={rights[row.area]?.includes(action) ?? false}
                         disabled={readOnly}
-                        onChange={(event) => onChange?.(withAction(rights, row.area, action, event.target.checked, matrix))}
+                        onCheckedChange={(checked) => onChange?.(withAction(rights, row.area, action, checked === true, matrix))}
                       />
                     ) : null}
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+      </Table>
     </div>
   );
 }

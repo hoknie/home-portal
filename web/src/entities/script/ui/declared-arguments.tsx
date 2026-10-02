@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-import { Label, Switch } from "@/shared/ui/primitives";
+import { BareButton, Label, Switch } from "@/shared/ui/kit";
 
 import type { ArgumentValues } from "../model/arguments";
 import type { HeaderProblem, ScriptArgument } from "../model/schema";
@@ -57,15 +57,14 @@ export function DeclaredArguments({ idPrefix, declared, values, onChange, render
                 {argument.choices.length > 0 ? (
                   <div role="group" aria-label={t("choices")} className="flex flex-wrap gap-1.5">
                     {argument.choices.map((choice) => (
-                      <button
+                      <BareButton
                         key={choice}
-                        type="button"
                         aria-pressed={current === choice}
                         onClick={() => set(argument.name, choice)}
                         className="rounded-full border border-glass-edge bg-glass-tint px-2.5 py-0.5 font-mono text-xs hover:bg-accent aria-pressed:border-primary aria-pressed:text-primary"
                       >
                         {choice}
-                      </button>
+                      </BareButton>
                     ))}
                   </div>
                 ) : null}
@@ -116,9 +115,9 @@ export function ArgumentMode({ asList, fits, onChange }: ArgumentModeProps) {
         </p>
       ) : null}
       {fits ? (
-        <button type="button" className="text-primary underline-offset-2 hover:underline" onClick={() => onChange(!asList)}>
+        <BareButton className="text-primary underline-offset-2 hover:underline" onClick={() => onChange(!asList)}>
           {asList ? t("editAsFields") : t("editAsList")}
-        </button>
+        </BareButton>
       ) : null}
     </div>
   );

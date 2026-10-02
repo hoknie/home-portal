@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { type Service, diagnosisMessage } from "@/entities/service";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
+import { KvList, KvRow } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
 

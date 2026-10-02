@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/shared/ui/primitives";
+} from "@/shared/ui/kit";
 
 export function AccountMenu({ name }: { name: string }) {
   const t = useTranslations("nav");

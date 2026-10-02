@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import type { KindGroup } from "@/entities/workflow";
+import { CANVAS } from "@/shared/ui/kit";
 
 export const KIND_ICONS: Record<string, LucideIcon> = {
   if: GitBranch,
@@ -47,19 +48,12 @@ export const KIND_ICONS: Record<string, LucideIcon> = {
 export const FALLBACK_ICON = SquareFunction;
 
 export const GROUP_TONE: Record<KindGroup, { badge: string }> = {
-  flow: { badge: "bg-violet-500/12 text-violet-600 dark:text-violet-300" },
-  data: { badge: "bg-amber-500/12 text-amber-700 dark:text-amber-300" },
-  actions: { badge: "bg-sky-500/12 text-sky-700 dark:text-sky-300" },
+  flow: { badge: "bg-palette-violet/12 text-palette-violet" },
+  data: { badge: "bg-palette-amber/12 text-palette-amber" },
+  actions: { badge: "bg-palette-blue/12 text-palette-blue" },
 };
 
-export const OUTCOME_TINT: Record<string, string> = {
-  running: "bg-[color-mix(in_oklch,var(--color-status-degraded)_8%,var(--glass-overlay-solid))]",
-  succeeded: "bg-[color-mix(in_oklch,var(--color-status-up)_7%,var(--glass-overlay-solid))]",
-  failed: "bg-[color-mix(in_oklch,var(--color-status-down)_9%,var(--glass-overlay-solid))]",
-  "timed-out": "bg-[color-mix(in_oklch,var(--color-status-down)_9%,var(--glass-overlay-solid))]",
-  stopped: "",
-  skipped: "",
-};
+export const OUTCOME_TINT: Record<string, string> = CANVAS.outcome;
 
 export const OUTCOME_DOT: Record<string, string> = {
   running: "bg-status-degraded animate-pulse",

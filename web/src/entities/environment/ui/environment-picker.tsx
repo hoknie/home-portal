@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { BareButton } from "@/shared/ui/kit";
 
 import { iconFor } from "./environment-badge";
 
@@ -18,8 +19,7 @@ export type EnvironmentPickerProps = {
 
 function Tile({ chosen, icon, title, note, onClick }: { chosen: boolean; icon: ReactNode; title: string; note: string | null; onClick: () => void }) {
   return (
-    <button
-      type="button"
+    <BareButton
       role="checkbox"
       aria-checked={chosen}
       onClick={onClick}
@@ -36,7 +36,7 @@ function Tile({ chosen, icon, title, note, onClick }: { chosen: boolean; icon: R
       <span aria-hidden className={cn("grid size-5 shrink-0 place-items-center rounded-full border", chosen ? "border-primary bg-primary text-primary-foreground" : "border-glass-edge")}>
         {chosen ? <Check className="size-3" /> : null}
       </span>
-    </button>
+    </BareButton>
   );
 }
 

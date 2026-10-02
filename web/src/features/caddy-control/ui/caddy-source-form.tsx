@@ -9,9 +9,7 @@ import { toast } from "sonner";
 import { useCan } from "@/entities/session";
 import { type CaddySourceForm as CaddySourceFormValues, type Proxy, caddySourceFormOf, caddySourceFormSchema, useSaveCaddySource } from "@/entities/proxy";
 import { ConflictError, ValidationError } from "@/shared/api";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, ErrorNotice, FormField, Input } from "@/shared/ui/kit";
 
 const FIELDS: Record<string, Path<CaddySourceFormValues>> = {
   "proxy.caddy.source": "source",

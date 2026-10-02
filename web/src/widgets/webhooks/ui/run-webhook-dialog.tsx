@@ -6,11 +6,8 @@ import { useState } from "react";
 
 import { type Webhook, useRunWebhook } from "@/entities/webhook";
 import { RequestError, ValidationError } from "@/shared/api";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, FormField, Input, Textarea } from "@/shared/ui/kit";
 
-const TEXTAREA =
-  "min-h-28 w-full rounded-md border border-input bg-glass-tint px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export type RunWebhookDialogProps = { webhook: Webhook };
 
@@ -75,9 +72,8 @@ export function RunWebhookDialog({ webhook }: RunWebhookDialogProps) {
             </FormField>
           ))}
           <FormField id={`run-${webhook.id}-body`} label={t("body")} hint={t("bodyHint")} optional error={body.invalid ? t("bodyInvalid") : undefined}>
-            <textarea
+            <Textarea
               id={`run-${webhook.id}-body`}
-              className={TEXTAREA}
               spellCheck={false}
               value={bodyText}
               onChange={(event) => setBodyText(event.target.value)}

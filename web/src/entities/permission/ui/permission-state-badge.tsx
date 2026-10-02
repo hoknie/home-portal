@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { Badge } from "@/shared/ui/primitives";
+import { Badge } from "@/shared/ui/kit";
 
 import type { PermissionState } from "../model/schema";
 

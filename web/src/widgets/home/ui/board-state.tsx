@@ -1,21 +1,14 @@
-"use client";
+import { SkeletonWidget } from "@/shared/ui/kit";
 
-import { useTranslations } from "next-intl";
-
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { Skeleton } from "@/shared/ui/primitives";
-
-export type BoardStateProps = { error: Error | null; onRetry: () => void };
-
-export function BoardState({ error, onRetry }: BoardStateProps) {
-  const t = useTranslations("errors");
-  if (error) {
-    return <ErrorNotice title={t("loadFailed")} description={error.message} onRetry={onRetry} />;
-  }
+export function BoardSkeleton() {
   return (
-    <div className="grid gap-4" aria-busy="true">
-      <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-48 w-full" />
+    <div className="grid gap-4" data-skeleton="board" aria-busy="true">
+      <SkeletonWidget rows={1} />
+      <div className="grid gap-4 md:grid-cols-3">
+        <SkeletonWidget rows={2} />
+        <SkeletonWidget rows={2} />
+        <SkeletonWidget rows={2} />
+      </div>
     </div>
   );
 }

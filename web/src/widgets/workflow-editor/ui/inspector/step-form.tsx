@@ -4,8 +4,7 @@ import { Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { type Condition, type KindField, type Path, type Step, emptyRow, filledTimeout, hiddenFields, idFor, idsOf, pathText, variableProblem } from "@/entities/workflow";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
+import { Button, FormField, Input, Label, NativeSelect, Switch } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
 import { ConditionBuilder } from "./condition-builder";
@@ -13,7 +12,6 @@ import { ExclusiveChoice } from "./data/exclusive-choice";
 import { ListField } from "./list-field";
 import { ScriptArgumentsField } from "./script-arguments-field";
 import { SampleField } from "./sample-field";
-import { SELECT } from "./select-class";
 import { TableField } from "./table-field";
 import { StepTemplateInput, TemplateField, fieldId } from "./template-field";
 import { TransformChain } from "./transform/transform-chain";
@@ -125,14 +123,14 @@ function Field({ path, step, field }: { path: Path; step: Step; field: KindField
       const current = typeof value === "string" && value !== "" ? value : (field.default ?? UNSET);
       return (
         <FormField id={id} label={text.label} hint={hint} error={error} optional={!field.required}>
-          <select id={id} className={SELECT} value={current} onChange={(change) => set(change.target.value === UNSET ? undefined : change.target.value)}>
+          <NativeSelect id={id} value={current} onChange={(change) => set(change.target.value === UNSET ? undefined : change.target.value)}>
             {current === UNSET ? <option value={UNSET}>{t("choose")}</option> : null}
             {field.choices.map((option) => (
               <option key={option} value={option}>
                 {t.has(`choices.${option}` as "choices.succeeded") ? t(`choices.${option}` as "choices.succeeded") : option}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </FormField>
       );
     }

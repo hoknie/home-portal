@@ -9,7 +9,7 @@ import { DeleteWorkflowButton, START_ID, type Workflow, type WorkflowCatalogue, 
 import { ConflictError, ThrottledError } from "@/shared/api";
 import { routes } from "@/shared/config";
 import { pushAddress } from "@/shared/lib/navigation";
-import { Skeleton } from "@/shared/ui/primitives";
+import { Skeleton } from "@/shared/ui/kit";
 
 import { EditorContext, type Sources } from "../model/editor-context";
 import { useEditorState } from "../model/use-editor-state";
@@ -116,7 +116,7 @@ export function WorkflowViewer({ workflow, view, run, revision, workflows, catal
               missing={editor.runMissing}
               historyHref={routes.workflowHistory(workflow.id)}
               closeHref={routes.workflow(workflow.id)}
-              empty={<Skeleton className="h-24" aria-busy="true" />}
+              empty={<Skeleton data-skeleton="runs" className="h-24" aria-busy="true" />}
             />
           ) : null}
         </PanelRow>

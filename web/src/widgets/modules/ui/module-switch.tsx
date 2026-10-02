@@ -9,7 +9,7 @@ import { Allowed } from "@/entities/session";
 import { type Module, type ModuleName, type Modules, switchLock, useSwitchModule } from "@/entities/module";
 import { RequestError, ValidationError } from "@/shared/api";
 import { MODULE_PAGES } from "@/shared/config";
-import { Switch } from "@/shared/ui/primitives";
+import { Switch } from "@/shared/ui/kit";
 
 export type ModuleSwitchProps = { module: Module; modules: Modules; revision: string | null };
 

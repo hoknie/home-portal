@@ -4,8 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { quotedCommand } from "@/shared/lib/shell-quote";
 import { CopyLine } from "@/shared/ui/copy-line";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
-import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, KvList, KvRow } from "@/shared/ui/kit";
 
 import type { TraceEntry } from "../../model/schema";
 import { exitCodeOf, scriptLogOf } from "../../model/script-log";

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { type User, type Users, deletable, lastAdmin, useDeleteUser } from "@/entities/user";
 import { RequestError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export type DeleteUserButtonProps = { user: User; users: Users; revision: string | null };
 

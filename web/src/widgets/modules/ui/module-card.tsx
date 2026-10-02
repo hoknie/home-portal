@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { CATEGORY_OF, type Module, type ModuleName, type Modules } from "@/entities/module";
 import { MODULE_PAGES } from "@/shared/config";
-import { Badge, Button } from "@/shared/ui/primitives";
+import { Badge, Button } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import { ModuleSwitch } from "./module-switch";

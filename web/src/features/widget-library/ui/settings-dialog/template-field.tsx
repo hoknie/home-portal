@@ -2,8 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-import { FormField } from "@/shared/ui/form-field";
-import { TemplateInput, type TemplateSuggestion } from "@/shared/ui/template-input";
+import { FormField, TemplateInput, type TemplateSuggestion } from "@/shared/ui/kit";
 
 export type Suggesting = {
   names: (items: string | null) => TemplateSuggestion[];

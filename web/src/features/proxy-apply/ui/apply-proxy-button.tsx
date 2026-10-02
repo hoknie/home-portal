@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useCan } from "@/entities/session";
 import { useApplyProxy } from "@/entities/proxy";
 import { RequestError } from "@/shared/api";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export type ApplyProxyButtonProps = { disabled?: boolean };
 

@@ -10,8 +10,8 @@ import type { CanvasNode } from "./node-data";
 const LOOK = {
   succeeded: { icon: CircleCheck, tone: "border-status-up/50 text-status-up" },
   failed: { icon: CircleX, tone: "border-status-down/50 text-status-down" },
-  break: { icon: LogOut, tone: "border-violet-500/50 text-violet-600 dark:text-violet-300" },
-  continue: { icon: SkipForward, tone: "border-violet-500/50 text-violet-600 dark:text-violet-300" },
+  break: { icon: LogOut, tone: "border-palette-violet/50 text-palette-violet" },
+  continue: { icon: SkipForward, tone: "border-palette-violet/50 text-palette-violet" },
 } as const;
 
 export function MarkerNode({ data }: NodeProps<CanvasNode>) {

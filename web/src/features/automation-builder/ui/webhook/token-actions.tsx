@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { type Webhook, useIssueToken, useRemoveToken } from "@/entities/webhook";
 import { ConflictError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Badge, Button } from "@/shared/ui/primitives";
+import { Badge, Button } from "@/shared/ui/kit";
 
 import { TokenDialog } from "./token-dialog";
 

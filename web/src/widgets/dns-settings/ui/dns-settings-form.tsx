@@ -11,10 +11,7 @@ import { type Dns, type DnsForm, dnsFormOf, dnsFormSchema, useSaveDns } from "@/
 import { ConflictError, ValidationError } from "@/shared/api";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
-import { TagInput } from "@/shared/ui/tag-input";
+import { Button, ErrorNotice, FormField, Input, Label, Switch, TagInput } from "@/shared/ui/kit";
 
 const FIELDS: Record<string, Path<DnsForm>> = {
   "dns.address": "address",

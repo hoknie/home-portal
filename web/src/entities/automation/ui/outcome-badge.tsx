@@ -4,7 +4,7 @@ import { LoaderCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { Outcome } from "../model/schema";
-import { Badge } from "@/shared/ui/primitives";
+import { Badge } from "@/shared/ui/kit";
 
 const VARIANT: Record<Outcome, "default" | "secondary" | "destructive" | "outline"> = {
   queued: "outline",

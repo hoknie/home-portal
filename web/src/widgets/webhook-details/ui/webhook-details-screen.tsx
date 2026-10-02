@@ -13,13 +13,10 @@ import { RunPager, RunTable, useAutomations, useRunPages, useRuns } from "@/enti
 import { absoluteAddress, useWebhooks } from "@/entities/webhook";
 import { useWorkflows } from "@/entities/workflow";
 import { routes } from "@/shared/config";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
+import { Appear, Badge, Button, EmptyState, ErrorNotice, KvList, KvRow, SkeletonPage, SkeletonTable } from "@/shared/ui/kit";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { Breadcrumbs } from "@/shared/ui/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Badge, Button, Skeleton } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
 import { CopyLine } from "@/shared/ui/copy-line";
@@ -47,7 +44,7 @@ export function WebhookDetailsScreen() {
         {webhooks.error ? (
           <ErrorNotice title={t("errors.loadFailed")} description={webhooks.error.message} onRetry={() => void webhooks.refetch()} />
         ) : (
-          <Skeleton className="h-96 w-full" aria-busy="true" />
+          <SkeletonPage sections={3} />
         )}
       </div>
     );
@@ -88,92 +85,94 @@ export function WebhookDetailsScreen() {
   return (
     <div className="grid gap-8">
       <PageHeader breadcrumbs={crumbs} title={webhook.title} description={t("webhooks.detailsDescription")} actions={edit} />
-      <div className="grid items-start gap-6 lg:grid-cols-2">
-        <SectionCard title={t("webhooks.identity")}>
-          <KvList>
-            <KvRow label={t("webhooks.address")}>
-              <CopyLine text={url} />
-            </KvRow>
-            <KvRow label={t("tags.label")}>
-              {webhook.tags.length > 0 ? <TagList tags={webhook.tags} /> : <span className="text-muted-foreground">{t("tags.none")}</span>}
-            </KvRow>
-            <KvRow label={t("webhooks.enabledLabel")}>{t(webhook.enabled ? "automations.enabled" : "automations.disabled")}</KvRow>
-            <KvRow label={t("webhooks.variables")}>
-              {webhook.variables.length === 0 ? (
-                <span className="text-muted-foreground">{t("webhooks.noVariables")}</span>
-              ) : (
-                <span className="flex flex-wrap gap-1">
-                  {webhook.variables.map((variable) => (
-                    <Badge key={variable} variant="outline" className="font-mono">
-                      {variable}
-                    </Badge>
-                  ))}
-                </span>
-              )}
-            </KvRow>
-            <KvRow label={t("webhooks.columns.lastReceived")}>
-              {webhook.last_received ? (
-                <span className="flex gap-2">
-                  <RelativeTime moment={webhook.last_received.at} />
-                  <span className="text-muted-foreground">{webhook.last_received.status}</span>
-                </span>
-              ) : (
-                t("webhooks.neverReceived")
-              )}
-            </KvRow>
-          </KvList>
-          <div className="mt-4">
-            <Allowed area="webhooks" action="update">
-              <TokenActions webhook={webhook} revision={webhooks.data.revision} />
-            </Allowed>
-          </div>
-        </SectionCard>
-        <SectionCard title={t("webhooks.action")}>
-          <div className="grid gap-3 text-sm">
-            <p className="font-medium">{t(`webhooks.actions.${webhook.workflow ? "workflow" : webhook.action}`)}</p>
-            {webhook.workflow ? (
-              <div className="grid gap-2">
-                <Link href={routes.workflow(webhook.workflow.id)} className="w-fit hover:underline">
-                  {workflows.find((workflow) => workflow.id === webhook.workflow?.id)?.title ?? webhook.workflow.id}
-                </Link>
-                {Object.keys(webhook.workflow.inputs).length > 0 ? (
-                  <KvList>
-                    {Object.entries(webhook.workflow.inputs).map(([name, value]) => (
-                      <KvRow key={name} label={name}>
-                        <span className="font-mono text-xs break-all">{typeof value === "string" ? value : JSON.stringify(value)}</span>
-                      </KvRow>
+      <Appear className="grid gap-8">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <SectionCard title={t("webhooks.identity")}>
+            <KvList>
+              <KvRow label={t("webhooks.address")}>
+                <CopyLine text={url} />
+              </KvRow>
+              <KvRow label={t("tags.label")}>
+                {webhook.tags.length > 0 ? <TagList tags={webhook.tags} /> : <span className="text-muted-foreground">{t("tags.none")}</span>}
+              </KvRow>
+              <KvRow label={t("webhooks.enabledLabel")}>{t(webhook.enabled ? "automations.enabled" : "automations.disabled")}</KvRow>
+              <KvRow label={t("webhooks.variables")}>
+                {webhook.variables.length === 0 ? (
+                  <span className="text-muted-foreground">{t("webhooks.noVariables")}</span>
+                ) : (
+                  <span className="flex flex-wrap gap-1">
+                    {webhook.variables.map((variable) => (
+                      <Badge key={variable} variant="outline" className="font-mono">
+                        {variable}
+                      </Badge>
                     ))}
-                  </KvList>
-                ) : null}
-              </div>
-            ) : webhook.run ? (
-              <pre className="overflow-x-auto rounded-md border border-glass-edge bg-glass-tint p-3 font-mono text-xs whitespace-pre-wrap break-all">
-                {[webhook.run.script, ...webhook.run.args].join(" ")}
-              </pre>
-            ) : listeners.length === 0 ? (
-              <p className="text-muted-foreground">{t("webhooks.noListeners")}</p>
-            ) : (
-              <ul className="grid gap-1">
-                {listeners.map((automation) => (
-                  <li key={automation.id}>
-                    <Link href={routes.editAutomation(automation.id)} className="hover:underline">
-                      {automation.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                  </span>
+                )}
+              </KvRow>
+              <KvRow label={t("webhooks.columns.lastReceived")}>
+                {webhook.last_received ? (
+                  <span className="flex gap-2">
+                    <RelativeTime moment={webhook.last_received.at} />
+                    <span className="text-muted-foreground">{webhook.last_received.status}</span>
+                  </span>
+                ) : (
+                  t("webhooks.neverReceived")
+                )}
+              </KvRow>
+            </KvList>
+            <div className="mt-4">
+              <Allowed area="webhooks" action="update">
+                <TokenActions webhook={webhook} revision={webhooks.data.revision} />
+              </Allowed>
+            </div>
+          </SectionCard>
+          <SectionCard title={t("webhooks.action")}>
+            <div className="grid gap-3 text-sm">
+              <p className="font-medium">{t(`webhooks.actions.${webhook.workflow ? "workflow" : webhook.action}`)}</p>
+              {webhook.workflow ? (
+                <div className="grid gap-2">
+                  <Link href={routes.workflow(webhook.workflow.id)} className="w-fit hover:underline">
+                    {workflows.find((workflow) => workflow.id === webhook.workflow?.id)?.title ?? webhook.workflow.id}
+                  </Link>
+                  {Object.keys(webhook.workflow.inputs).length > 0 ? (
+                    <KvList>
+                      {Object.entries(webhook.workflow.inputs).map(([name, value]) => (
+                        <KvRow key={name} label={name}>
+                          <span className="font-mono text-xs break-all">{typeof value === "string" ? value : JSON.stringify(value)}</span>
+                        </KvRow>
+                      ))}
+                    </KvList>
+                  ) : null}
+                </div>
+              ) : webhook.run ? (
+                <pre className="overflow-x-auto rounded-md border border-glass-edge bg-glass-tint p-3 font-mono text-xs whitespace-pre-wrap break-all">
+                  {[webhook.run.script, ...webhook.run.args].join(" ")}
+                </pre>
+              ) : listeners.length === 0 ? (
+                <p className="text-muted-foreground">{t("webhooks.noListeners")}</p>
+              ) : (
+                <ul className="grid gap-1">
+                  {listeners.map((automation) => (
+                    <li key={automation.id}>
+                      <Link href={routes.editAutomation(automation.id)} className="hover:underline">
+                        {automation.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </SectionCard>
+        </div>
+        <SectionCard title={t("webhooks.lastRuns", { count: LAST_RUNS })} flush>
+          {runs.data ? (
+            <>
+              <RunTable runs={runs.data.runs} sourceOf={(run) => <RunSource run={run} references={references} />} actionsOf={(run) => <StopRunButton run={run} title={titleOf(run.automation)} />} />
+              <RunPager pages={pages} nextBefore={runs.data.next_before} />
+            </>
+          ) : <SkeletonTable columns={5} rows={3} surface={false} />}
         </SectionCard>
-      </div>
-      <SectionCard title={t("webhooks.lastRuns", { count: LAST_RUNS })} flush>
-        {runs.data ? (
-          <>
-            <RunTable runs={runs.data.runs} sourceOf={(run) => <RunSource run={run} references={references} />} actionsOf={(run) => <StopRunButton run={run} title={titleOf(run.automation)} />} />
-            <RunPager pages={pages} nextBefore={runs.data.next_before} />
-          </>
-        ) : <Skeleton className="m-4 h-32" aria-busy="true" />}
-      </SectionCard>
+      </Appear>
     </div>
   );
 }

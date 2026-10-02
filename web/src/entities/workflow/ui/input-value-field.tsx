@@ -3,7 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button, Input, Switch } from "@/shared/ui/primitives";
+import { Button, Input, Switch } from "@/shared/ui/kit";
 
 import type { InputType } from "../model/schema";
 

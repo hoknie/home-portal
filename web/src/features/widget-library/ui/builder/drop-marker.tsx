@@ -6,6 +6,8 @@ import type { Drop } from "../../model/block-drop";
 import { BLOCK_ICONS } from "../../model/block-icons";
 import type { BlockKind } from "../../model/blocks";
 import type { Ghost } from "../../model/use-block-drag";
+import { cn } from "@/shared/lib/cn";
+import { CANVAS, Panel } from "@/shared/ui/kit";
 
 export function DropMarker({ drop, ghost }: { drop: Drop | null; ghost: Ghost | null }) {
   const t = useTranslations("layoutEditor.blocks.kinds");
@@ -26,20 +28,20 @@ export function DropMarker({ drop, ghost }: { drop: Drop | null; ghost: Ghost | 
         <div
           aria-hidden
           data-drop-marker={drop.mode}
-          className={drop.mode === "box" ? "pointer-events-none fixed z-50 rounded-lg border-2 border-dashed border-primary/70 bg-primary/10" : "pointer-events-none fixed z-50 rounded-full bg-primary shadow-[0_0_0_3px] shadow-primary/20"}
+          className={drop.mode === "box" ? "pointer-events-none fixed z-50 rounded-lg border-2 border-dashed border-primary/70 bg-primary/10" : cn("pointer-events-none fixed z-50 rounded-full bg-primary", CANVAS.dropDot)}
           style={style}
         />
       ) : null}
       {ghost && kind && Icon ? (
-        <div
+        <Panel as="div" padding="none"
           aria-hidden
           data-drag-ghost=""
-          className="glass-panel pointer-events-none fixed z-50 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium"
+          className="pointer-events-none fixed z-50 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium"
           style={{ top: ghost.y + 12, left: ghost.x + 12 }}
         >
           <Icon className="size-3.5 text-primary" aria-hidden />
           {t(kind)}
-        </div>
+        </Panel>
       ) : null}
     </>
   );

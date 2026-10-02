@@ -6,7 +6,7 @@ import { type ReactNode, useState } from "react";
 
 import { createQueryClient } from "@/shared/api";
 import { ViewerTimeZone } from "@/shared/i18n";
-import { Toaster, TooltipProvider } from "@/shared/ui/primitives";
+import { Toaster, TooltipProvider } from "@/shared/ui/kit";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(createQueryClient);

@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { enabledModules, useModules } from "@/entities/module";
 import { cn } from "@/shared/lib/cn";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
+import { BareButton, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Heading, Input } from "@/shared/ui/kit";
 
 import { CUSTOM, type WidgetKind } from "../../model/catalog";
 import { CUSTOM_TEMPLATES, type TemplateText } from "../../model/templates";
@@ -21,8 +21,7 @@ function Tile({ entry, onChoose }: { entry: Entry; onChoose: (choice: GalleryCho
   const Icon = entry.icon;
   return (
     <li>
-      <button
-        type="button"
+      <BareButton
         disabled={entry.off !== null}
         title={entry.off ?? undefined}
         onClick={() => onChoose(entry.choice)}
@@ -37,7 +36,7 @@ function Tile({ entry, onChoose }: { entry: Entry; onChoose: (choice: GalleryCho
           <span className="text-sm font-medium">{entry.name}</span>
           <span className="text-xs text-muted-foreground">{entry.off ?? entry.description}</span>
         </span>
-      </button>
+      </BareButton>
     </li>
   );
 }
@@ -75,7 +74,7 @@ export function GalleryDialog({ open, kinds, onChoose, onClose }: GalleryDialogP
         <Input type="search" aria-label={t("search")} placeholder={t("search")} value={query} onChange={(event) => setQuery(event.target.value)} autoFocus />
         {shownTypes.length > 0 ? (
           <section className="grid gap-2" aria-label={t("types")}>
-            <h3 className="text-sm font-medium">{t("types")}</h3>
+            <Heading level="group" as="h3" className="text-sm font-medium">{t("types")}</Heading>
             <ul className="grid gap-2 sm:grid-cols-2">
               {shownTypes.map((entry) => (
                 <Tile key={entry.key} entry={entry} onChoose={onChoose} />
@@ -85,7 +84,7 @@ export function GalleryDialog({ open, kinds, onChoose, onClose }: GalleryDialogP
         ) : null}
         {shownTemplates.length > 0 ? (
           <section className="grid gap-2" aria-label={t("templates")}>
-            <h3 className="text-sm font-medium">{t("templates")}</h3>
+            <Heading level="group" as="h3" className="text-sm font-medium">{t("templates")}</Heading>
             <ul className="grid gap-2 sm:grid-cols-2">
               {shownTemplates.map((entry) => (
                 <Tile key={entry.key} entry={entry} onChoose={onChoose} />

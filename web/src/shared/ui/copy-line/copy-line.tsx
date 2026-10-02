@@ -4,7 +4,7 @@ import { Copy } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export type CopyLineProps = { label?: string; text: string };
 

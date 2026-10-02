@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { ArgumentMode, DeclaredArguments, HeaderProblems, fromArgs, toArgs } from "@/entities/script";
 import type { Path } from "@/entities/workflow";
-import { Label } from "@/shared/ui/primitives";
+import { Label } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
 import { ListField } from "./list-field";

@@ -352,7 +352,8 @@ Rules for every integration:
 | Widget kinds | `web/src/features/widget-board/model/registry.test.ts` | ✅ |
 | Example configurations | `bin/home-portal/tests/examples.rs`, `configuration.rs` | ✅ |
 | Frontend layers | `steiger` (FSD) | ✅ |
-| Frontend source rules | `web/src/shared/lib/architecture.test.ts`: comments, sizes, a test beside every `shared/ui` file | ✅ |
+| Frontend source rules | `web/src/shared/lib/architecture.test.ts`: comments, sizes, a test beside every `shared/ui` file, blur only in `kit/overlays/` | ✅ |
+| The kit | `web/src/shared/lib/kit-rules/` and ESLint: elements and classes only from `shared/ui/kit/`; `web/src/app/routes.test.tsx`: a skeleton on every page | ✅ |
 | Interface text | `react/jsx-no-literals`, typed message keys | ✅ |
 | No abbreviations, one error type, timeouts | review | ✅ |
 
@@ -400,10 +401,13 @@ Designs: `docs/designs/2026-09-22-DESIGN-web-interface.md` and the later ones in
 
 ### 12.2. The kit
 
-- `shared/ui/primitives/` holds the owned shadcn primitives; `shared/ui/<component>/` the
-  application kit, each with a test. Screens compose the kit and never restyle it.
-- Colours, radii and the status palette are CSS variables in `app/globals.css`, in both themes.
-  Glass surfaces come only from the `glass-panel` and `glass-overlay` utilities.
+- **`shared/ui/kit/` is the only source of elements** (`@/shared/ui/kit`), each with a test.
+  Outside it there are no raw controls, tables or headings, no Radix, and no class off the scale
+  (arbitrary sizes, colours, shadows or radii; glass, surface or blur classes; faded tones).
+  `shared/ui/<component>/` composes the kit. **Checked:** `shared/lib/kit-rules/`, ESLint.
+- Tokens live in `app/globals.css`, in both themes. Only `kit/overlays/` blurs, one layer at a time.
+- Loading goes through `Loaded` and a skeleton preset; content fades in. Motion is `<ViewTransition>`
+  and tw-animate inside the kit, 150–250 ms, off under reduced motion. **Checked:** `app/routes.test.tsx`.
 
 ### 12.3. Data, forms and text
 

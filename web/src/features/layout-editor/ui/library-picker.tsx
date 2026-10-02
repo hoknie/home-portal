@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import { type LibraryWidget, useLibrary } from "@/entities/dashboard";
 import { routes } from "@/shared/config";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
+import { BareButton, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Input } from "@/shared/ui/kit";
 
 import type { KindLabel } from "../model/catalog";
 
@@ -35,8 +35,7 @@ export function LibraryPicker({ open, kinds, onChoose, onClose }: LibraryPickerP
             const Icon = kindOf(widget.type)?.icon ?? Puzzle;
             return (
               <li key={widget.id}>
-                <button
-                  type="button"
+                <BareButton
                   onClick={() => onChoose(widget)}
                   className="flex h-full w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors outline-none hover:border-primary hover:bg-primary/5 focus-visible:ring-[3px] focus-visible:ring-ring/50"
                   data-library-choice={widget.id}
@@ -46,7 +45,7 @@ export function LibraryPicker({ open, kinds, onChoose, onClose }: LibraryPickerP
                     <span className="text-sm font-medium">{nameOf(widget)}</span>
                     <span className="text-xs text-muted-foreground">{t("meta", { type: kindOf(widget.type)?.title ?? widget.type, placed: widget.placed })}</span>
                   </span>
-                </button>
+                </BareButton>
               </li>
             );
           })}

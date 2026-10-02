@@ -6,6 +6,7 @@ import { CircleAlert, TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { operatorName, parsePath } from "@/entities/workflow";
+import { CANVAS } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
 import { summaryOf } from "../../model/summary";
@@ -56,7 +57,8 @@ export function StepNode({ id, data, selected }: NodeProps<CanvasNode>) {
       data-unreachable={data.node.unreachable || undefined}
       data-order={data.path?.order}
       className={cn(
-        "group relative flex size-full rounded-xl border border-border/70 bg-[var(--glass-overlay-solid)] text-card-foreground shadow-[0_1px_2px_rgb(0_0_0/0.06),0_4px_12px_-6px_rgb(0_0_0/0.12)] transition-[box-shadow,opacity] duration-200 hover:shadow-[0_1px_2px_rgb(0_0_0/0.08),0_8px_20px_-8px_rgb(0_0_0/0.2)]",
+        CANVAS.node,
+        "group relative flex size-full",
         selected && "outline-2 outline-offset-2 outline-primary/70",
         run && OUTCOME_TINT[run.running ? "running" : run.outcome],
         (data.path?.dimmed || data.node.unreachable) && "opacity-35",
@@ -65,7 +67,7 @@ export function StepNode({ id, data, selected }: NodeProps<CanvasNode>) {
       {data.path?.order !== undefined ? (
         <span
           className={cn(
-            "absolute -top-2.5 -left-2.5 z-10 grid size-5 place-items-center rounded-full text-[10px] font-semibold text-white ring-2 ring-background",
+            "absolute -top-2.5 -left-2.5 z-10 grid size-5 place-items-center rounded-full text-xs font-semibold text-primary-foreground ring-2 ring-background",
             run?.running ? "bg-status-degraded" : run && (run.outcome === "failed" || run.outcome === "timed-out") ? "bg-status-down" : "bg-status-up",
           )}
           aria-label={t("run.order", { number: data.path.order })}
@@ -82,7 +84,7 @@ export function StepNode({ id, data, selected }: NodeProps<CanvasNode>) {
           </span>
           <div className="grid min-w-0">
             <span className="truncate text-sm leading-tight font-semibold">{step.label ?? step.id}</span>
-            <span className="truncate text-[11px] tracking-wide text-muted-foreground uppercase">{kindName}</span>
+            <span className="truncate text-xs tracking-wide text-muted-foreground uppercase">{kindName}</span>
           </div>
           <span className="ms-auto flex shrink-0 items-center gap-0.5">
             {errors > 0 ? (
@@ -105,7 +107,7 @@ export function StepNode({ id, data, selected }: NodeProps<CanvasNode>) {
           {running ? (
             <LiveBadge entry={running} receivedAt={editor.runReceivedAt} />
           ) : run ? (
-            <span className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-1.5 text-[11px] tabular-nums text-muted-foreground">
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-1.5 text-xs tabular-nums text-muted-foreground">
               <span className={cn("size-1.5 rounded-full", OUTCOME_DOT[run.running ? "running" : run.outcome])} aria-hidden />
               {run.passes > 1 ? t("run.passes", { count: run.passes, milliseconds: run.durationMilliseconds }) : t("run.duration", { milliseconds: run.durationMilliseconds })}
             </span>

@@ -9,11 +9,9 @@ import { AutomationBuilder } from "@/features/automation-builder";
 import { RunAutomationButton } from "@/features/runs/run-automation";
 import { useAutomations, useCatalogue, useScripts } from "@/entities/automation";
 import { routes } from "@/shared/config";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, Button, EmptyState, ErrorNotice, SkeletonForm } from "@/shared/ui/kit";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Button, Skeleton } from "@/shared/ui/primitives";
 
 export const ID_PARAMETER = "id";
 
@@ -48,7 +46,7 @@ export function AutomationEditorScreen({ mode }: AutomationEditorScreenProps) {
             }}
           />
         ) : (
-          <Skeleton className="h-96 w-full" aria-busy="true" />
+          <SkeletonForm fields={6} />
         )}
       </div>
     );
@@ -73,16 +71,18 @@ export function AutomationEditorScreen({ mode }: AutomationEditorScreenProps) {
   return (
     <div className="grid gap-8">
       {header}
-      <AutomationBuilder
-        key={automation?.id ?? "new"}
-        automation={automation}
-        revision={automations.data.revision}
-        taken={all.map((candidate) => candidate.id).filter((candidate) => candidate !== automation?.id)}
-        catalogue={catalogue.data}
-        scripts={scripts.data}
-        onSaved={() => router.push(routes.adminAutomations)}
-        onConflict={() => void automations.refetch()}
-      />
+      <Appear>
+        <AutomationBuilder
+          key={automation?.id ?? "new"}
+          automation={automation}
+          revision={automations.data.revision}
+          taken={all.map((candidate) => candidate.id).filter((candidate) => candidate !== automation?.id)}
+          catalogue={catalogue.data}
+          scripts={scripts.data}
+          onSaved={() => router.push(routes.adminAutomations)}
+          onConflict={() => void automations.refetch()}
+        />
+      </Appear>
     </div>
   );
 }

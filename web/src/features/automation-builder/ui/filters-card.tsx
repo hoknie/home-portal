@@ -4,8 +4,7 @@ import { useTranslations } from "next-intl";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
 import type { Catalogue } from "@/entities/automation";
-import { FormField } from "@/shared/ui/form-field";
-import { Input, Label, Switch } from "@/shared/ui/primitives";
+import { FormField, Input, Label, Switch } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import { eventOf } from "../model/events";

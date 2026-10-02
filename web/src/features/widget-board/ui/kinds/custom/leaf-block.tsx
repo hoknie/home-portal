@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 
 import type { RenderedLeaf } from "@/entities/widget";
 import { cn } from "@/shared/lib/cn";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/kit";
 
 import { TONE_BADGE, TONE_FILL, TONE_TEXT, percentOf } from "../../../model/tones";
 import { BlockIcon } from "./block-icon";
@@ -102,28 +103,28 @@ export function LeafBlock({ block, align = "start", widget, scope }: LeafProps) 
         <p className="text-sm text-muted-foreground">{block.empty ?? t("empty")}</p>
       ) : (
         <div className="w-full overflow-x-auto" data-block="table">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-xs text-muted-foreground">
+          <Table>
+            <TableHeader>
+              <TableRow className="text-xs text-muted-foreground hover:bg-transparent">
                 {block.headers.map((header, index) => (
-                  <th key={index} scope="col" className="py-1.5 pr-3 font-medium">
+                  <TableHead key={index} scope="col" className="h-auto px-0 py-1.5 pr-3 text-xs text-muted-foreground">
                     {header}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {block.rows.map((row, index) => (
-                <tr key={index} className="border-b border-border/50 last:border-0">
+                <TableRow key={index} className="hover:bg-transparent">
                   {row.map((cell, column) => (
-                    <td key={column} className="py-1.5 pr-3">
+                    <TableCell key={column} className="px-0 py-1.5 pr-3">
                       {cell}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           {block.more > 0 ? <p className="mt-1 text-xs text-muted-foreground">{t("more", { count: block.more })}</p> : null}
         </div>
       );

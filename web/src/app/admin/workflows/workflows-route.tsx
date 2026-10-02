@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 
 import { TEMPLATE_PARAMETER, workflowAddressOf } from "@/entities/workflow";
 import { useAddress } from "@/shared/lib/navigation";
-import { Skeleton } from "@/shared/ui/primitives";
+import { SkeletonPage } from "@/shared/ui/kit";
 import { WorkflowEditorScreen, WorkflowPage } from "@/widgets/workflow-editor";
 import { WorkflowsScreen } from "@/widgets/workflows";
 
@@ -17,7 +17,7 @@ export function WorkflowsRoute() {
     setShown((current) => (current?.workflow === workflow && current.run === run ? current : { workflow, run }));
   }, []);
   if (path === null) {
-    return <Skeleton className="h-96 w-full" aria-busy="true" />;
+    return <SkeletonPage sections={2} />;
   }
   const address = workflowAddressOf(path);
   switch (address.kind) {

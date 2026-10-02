@@ -6,9 +6,7 @@ import { useState } from "react";
 import type { Scripts } from "@/entities/automation";
 import { ArgumentMode, DeclaredArguments, HeaderProblems, fromArgs, toArgs } from "@/entities/script";
 import { type Workflow, InputValueField } from "@/entities/workflow";
-import { FormField } from "@/shared/ui/form-field";
-import { Input } from "@/shared/ui/primitives";
-import { TagInput } from "@/shared/ui/tag-input";
+import { FormField, Input, TagInput } from "@/shared/ui/kit";
 
 type ScriptEntry = Scripts["scripts"][number];
 

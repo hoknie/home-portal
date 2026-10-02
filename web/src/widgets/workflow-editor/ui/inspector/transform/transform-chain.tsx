@@ -21,10 +21,9 @@ import {
   settled,
   typeOfValue,
 } from "@/entities/workflow";
-import { Button } from "@/shared/ui/primitives";
+import { Button, Heading, NativeSelect } from "@/shared/ui/kit";
 
 import { useEditor } from "../../../model/editor-context";
-import { SELECT } from "../select-class";
 import { OperationCard } from "./operation-card";
 
 export const FILTER_GROUPS = ["list", "text", "number", "object", "any"] as const;
@@ -138,7 +137,7 @@ export function OperationsList({ path, field, operations, input, depth, onChange
       </DndContext>
       <div className="flex flex-wrap items-center gap-2">
         {now ? <p className="w-full text-xs text-muted-foreground">{t("valueNow", { type: t(`types.${now}`) })}</p> : null}
-        <select aria-label={t("choose")} className={`${SELECT} w-auto min-w-48 flex-1`} value={choice} onChange={(event) => setChoice(event.target.value)}>
+        <NativeSelect aria-label={t("choose")} className="w-auto min-w-48 flex-1" value={choice} onChange={(event) => setChoice(event.target.value)}>
           {fitting.length > 0 ? (
             <optgroup label={t("groups.fitting", { type: t(`types.${now ?? "any"}`) })}>
               {fitting.map((option) => (
@@ -166,7 +165,7 @@ export function OperationsList({ path, field, operations, input, depth, onChange
                 ))}
             </optgroup>
           ))}
-        </select>
+        </NativeSelect>
         <Button type="button" variant="outline" size="sm" disabled={operations.length >= MOST_OPERATIONS} onClick={() => onChange([...operations, fresh(choice)])}>
           <Plus aria-hidden />
           {t("add")}
@@ -183,7 +182,7 @@ export function TransformChain({ path, step, label, hint }: { path: Path; step: 
   return (
     <section className="grid gap-3" aria-label={label}>
       <div>
-        <h3 className="text-sm font-medium">{label}</h3>
+        <Heading level="group" as="h3" className="text-sm font-medium">{label}</Heading>
         {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
       </div>
       <OperationsList

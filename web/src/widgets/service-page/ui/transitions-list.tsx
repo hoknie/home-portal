@@ -5,6 +5,7 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import type { Transition } from "@/entities/service";
 import { StatusBadge } from "@/shared/ui/status-badge";
+import { Heading } from "@/shared/ui/kit";
 
 import { durationParts } from "../model/history";
 
@@ -16,7 +17,9 @@ export function TransitionsList({ transitions, now }: TransitionsListProps) {
   const newest = [...transitions].reverse();
   return (
     <div className="grid gap-2">
-      <h3 className="text-sm font-medium">{t("transitions.title")}</h3>
+      <Heading level="group" className="font-medium">
+        {t("transitions.title")}
+      </Heading>
       {newest.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("transitions.empty")}</p>
       ) : (

@@ -7,8 +7,7 @@ import { toast } from "sonner";
 import { Allowed, useSession } from "@/entities/session";
 import { CADDY_LATEST, type Caddy, type Proxy, useDownloadCaddy, useStartCaddy, useStopCaddy } from "@/entities/proxy";
 import { RequestError } from "@/shared/api";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
-import { Button } from "@/shared/ui/primitives";
+import { Button, KvList, KvRow } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import { CaddySourceForm } from "./caddy-source-form";

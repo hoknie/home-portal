@@ -10,12 +10,10 @@ import { ProxySettingsForm } from "@/features/proxy-settings-form";
 import { type Proxy, type ProxyRoute, useProxy, usesInternal } from "@/entities/proxy";
 import { api, routes } from "@/shared/config";
 import { DataTable } from "@/shared/ui/data-table";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
+import { Appear, Button, ErrorNotice, KvList, KvRow, SkeletonForm } from "@/shared/ui/kit";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Button, Skeleton } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
 import { StatusDot } from "@/shared/ui/status-badge";
@@ -142,11 +140,13 @@ export function ProxyScreen() {
       ) : null}
       {data && !data.enabled ? <CaddyControl proxy={data} revision={proxy.data?.revision ?? null} /> : null}
       {data ? (
-        <SectionCard title={t("proxy.settings.title")} description={t("proxy.settings.description")}>
-          <ProxySettingsForm proxy={data} revision={proxy.data?.revision ?? null} />
-        </SectionCard>
+        <Appear>
+          <SectionCard title={t("proxy.settings.title")} description={t("proxy.settings.description")}>
+            <ProxySettingsForm proxy={data} revision={proxy.data?.revision ?? null} />
+          </SectionCard>
+        </Appear>
       ) : null}
-      {!data && !proxy.error ? <Skeleton className="h-96 w-full" aria-busy="true" /> : null}
+      {!data && !proxy.error ? <SkeletonForm fields={6} /> : null}
     </div>
   );
 }

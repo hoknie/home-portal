@@ -4,8 +4,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { SECTION_SURFACES, type Section, TITLE_VISIBILITIES } from "@/shared/api";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, FormField, Input } from "@/shared/ui/kit";
 
 import { ChoiceGroup } from "@/shared/ui/choice-group";
 

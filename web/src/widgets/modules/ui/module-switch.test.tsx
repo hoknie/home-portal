@@ -5,7 +5,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { type Modules, modulesSchema } from "@/entities/module";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
-import { Toaster } from "@/shared/ui/primitives";
+import { Toaster } from "@/shared/ui/kit";
 
 import { ModuleSwitch } from "./module-switch";
 

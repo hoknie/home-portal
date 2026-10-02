@@ -9,11 +9,9 @@ import { WebhookForm } from "@/features/automation-builder";
 import { useCatalogue, useScripts } from "@/entities/automation";
 import { useWebhooks } from "@/entities/webhook";
 import { routes } from "@/shared/config";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, Button, EmptyState, ErrorNotice, SkeletonForm } from "@/shared/ui/kit";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Button, Skeleton } from "@/shared/ui/primitives";
 
 export const ID_PARAMETER = "id";
 
@@ -49,7 +47,7 @@ export function WebhookEditorScreen({ mode }: WebhookEditorScreenProps) {
             }}
           />
         ) : (
-          <Skeleton className="h-96 w-full" aria-busy="true" />
+          <SkeletonForm fields={6} />
         )}
       </div>
     );
@@ -75,15 +73,17 @@ export function WebhookEditorScreen({ mode }: WebhookEditorScreenProps) {
   return (
     <div className="grid gap-8">
       {header}
-      <WebhookForm
-        key={webhook?.id ?? "new"}
-        webhook={webhook}
-        revision={webhooks.data.revision}
-        catalogue={catalogue.data}
-        scripts={scripts.data}
-        onSaved={() => router.push(routes.adminWebhooks)}
-        onConflict={() => void webhooks.refetch()}
-      />
+      <Appear>
+        <WebhookForm
+          key={webhook?.id ?? "new"}
+          webhook={webhook}
+          revision={webhooks.data.revision}
+          catalogue={catalogue.data}
+          scripts={scripts.data}
+          onSaved={() => router.push(routes.adminWebhooks)}
+          onConflict={() => void webhooks.refetch()}
+        />
+      </Appear>
     </div>
   );
 }

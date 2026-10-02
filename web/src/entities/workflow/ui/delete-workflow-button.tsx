@@ -9,7 +9,7 @@ import { useDeleteWorkflow } from "../model/queries";
 import type { Workflow } from "../model/schema";
 import { ConflictError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export type DeleteWorkflowButtonProps = { workflow: Workflow; revision: string | null; labelled?: boolean; onDeleted?: () => void };
 

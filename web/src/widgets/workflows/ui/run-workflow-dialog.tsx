@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { InputsForm, type Workflow, initialValues, runValues, useRunWorkflow } from "@/entities/workflow";
 import { ConflictError, ThrottledError } from "@/shared/api";
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/kit";
 
 export type RunWorkflowDialogProps = { workflow: Workflow; moduleOff: boolean; onQueued: (runId: string) => void };
 

@@ -7,11 +7,9 @@ import { Allowed } from "@/entities/session";
 import { NetworkForm } from "@/features/network-form";
 import { RestartPortalButton } from "@/features/restart-portal";
 import { useNetwork } from "@/entities/network";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
+import { Appear, ErrorNotice, KvList, KvRow, SkeletonCard, SkeletonForm } from "@/shared/ui/kit";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 
 export function NetworkScreen() {
@@ -26,7 +24,7 @@ export function NetworkScreen() {
         <ErrorNotice title={t("errors.loadFailed")} description={network.error.message} onRetry={() => void network.refetch()} />
       ) : null}
       {data ? (
-        <div className="grid gap-6">
+        <Appear className="grid gap-6">
           {data.restart_required ? (
             <div role="status" className="flex flex-wrap items-start gap-3 rounded-xl border border-status-degraded/40 bg-status-degraded/10 p-4 text-sm">
               <RotateCcw className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -61,9 +59,12 @@ export function NetworkScreen() {
               ))}
             </KvList>
           </SectionCard>
-        </div>
+        </Appear>
       ) : network.error ? null : (
-        <Skeleton className="h-96 w-full" aria-busy="true" />
+        <div className="grid gap-6" data-skeleton="network" aria-busy="true">
+          <SkeletonForm fields={3} />
+          <SkeletonCard lines={3} />
+        </div>
       )}
     </div>
   );

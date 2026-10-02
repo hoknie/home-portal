@@ -6,7 +6,7 @@ import { useState } from "react";
 import { HISTORY_RANGES, type HistoryRange, useServiceHistory } from "@/entities/service";
 import { STATUS_REFRESH_MILLISECONDS } from "@/shared/config";
 import { HistoryChart } from "@/shared/ui/history-chart";
-import { Button, Skeleton } from "@/shared/ui/primitives";
+import { Button, Skeleton } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 import { StatTile } from "@/shared/ui/stat-tile";
 
@@ -34,7 +34,7 @@ export function HistoryCard({ id }: { id: string }) {
   if (!history.data) {
     return (
       <SectionCard title={t("history.title")} actions={switcher}>
-        <Skeleton className="h-48 w-full" aria-busy="true" />
+        <Skeleton data-skeleton="chart" className="h-48 w-full" aria-busy="true" />
       </SectionCard>
     );
   }

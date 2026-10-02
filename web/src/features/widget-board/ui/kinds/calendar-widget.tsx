@@ -4,7 +4,7 @@ import { CalendarDays, MapPin, Repeat } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import type { Calendar } from "@/entities/widget";
-import { EmptyState } from "@/shared/ui/empty-state";
+import { EmptyState } from "@/shared/ui/kit";
 
 export type CalendarProps = { data: Calendar };
 

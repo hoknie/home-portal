@@ -4,7 +4,7 @@ import { cn } from "cn";
 import { CircleAlert, CircleHelp, Redo2, TriangleAlert, Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/shared/ui/primitives";
+import { Button, Panel } from "@/shared/ui/kit";
 
 export type EditToolbarProps = {
   canUndo: boolean;
@@ -25,7 +25,7 @@ export function EditToolbar({ canUndo, canRedo, errors, warnings, problemsOpen, 
   const t = useTranslations("workflowEditor.toolbar");
   const common = useTranslations("common");
   return (
-    <div className="glass-panel flex flex-wrap items-center gap-1 rounded-xl p-1.5" role="toolbar" aria-label={t("label")}>
+    <Panel as="div" padding="none" className="flex flex-wrap items-center gap-1 rounded-xl p-1.5" role="toolbar" aria-label={t("label")}>
       <Button type="button" variant="ghost" size="icon" aria-label={t("undo")} title={t("undoKeys")} disabled={!canUndo} onClick={onUndo}>
         <Undo2 aria-hidden />
       </Button>
@@ -50,6 +50,6 @@ export function EditToolbar({ canUndo, canRedo, errors, warnings, problemsOpen, 
           </Button>
         ) : null}
       </span>
-    </div>
+    </Panel>
   );
 }

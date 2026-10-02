@@ -9,7 +9,7 @@ import { useCan } from "@/entities/session";
 import { type Run, isActive, useStopRun } from "@/entities/automation";
 import { ConflictError, RequestError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export const NOT_FOUND = 404;
 

@@ -4,7 +4,7 @@ import { RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { Network } from "@/entities/network";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 import { useRestartFlow } from "./use-restart-flow";
 

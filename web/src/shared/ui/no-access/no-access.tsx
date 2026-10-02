@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { routes } from "@/shared/config";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { Button } from "@/shared/ui/primitives";
+import { Button, EmptyState } from "@/shared/ui/kit";
 
 export function NoAccess() {
   const t = useTranslations("access");

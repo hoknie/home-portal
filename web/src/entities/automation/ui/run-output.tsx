@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useLayoutEffect, useRef } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 import type { Run } from "../model/schema";
 import { terminalText } from "../model/terminal-text";

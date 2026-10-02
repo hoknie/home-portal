@@ -9,10 +9,9 @@ import { toast } from "sonner";
 import { fixOf, problemOf } from "@/entities/automation";
 import { type ScriptEntry, type ScriptText, fetchScriptText, parseHeader, scriptKey, useSaveScript, useScriptText } from "@/entities/script";
 import { ConflictError } from "@/shared/api";
-import { CodeArea } from "@/shared/ui/code-area";
+import { Badge, Button, CodeArea, Skeleton } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
-import { Badge, Button, Skeleton } from "@/shared/ui/primitives";
 
 import { DeclaredSummary } from "./declared-summary";
 import { HeaderHelp, withExampleHeader } from "./header-help";
@@ -193,5 +192,5 @@ export function ScriptEditor(props: ScriptEditorProps) {
       </SectionCard>
     );
   }
-  return loaded.data ? <TextEditor {...props} loaded={loaded.data} /> : <Skeleton className="h-96 w-full rounded-xl" aria-busy="true" />;
+  return loaded.data ? <TextEditor {...props} loaded={loaded.data} /> : <Skeleton data-skeleton="editor" className="h-96 w-full rounded-xl" aria-busy="true" />;
 }

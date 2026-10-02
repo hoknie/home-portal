@@ -6,21 +6,7 @@ import { type ReactNode, useState } from "react";
 import type { LibraryEntry } from "@/entities/dashboard";
 import type { CustomWidgetData } from "@/entities/widget";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { FormField } from "@/shared/ui/form-field";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, FormField, Heading, Input, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/kit";
 
 import type { WidgetKind } from "../../model/catalog";
 import { AccessTab } from "./access-tab";
@@ -116,7 +102,7 @@ function Opened({
           aria-label={t("dialog.preview")}
           className="order-first grid content-start gap-2 lg:order-last"
         >
-          <h3 className="text-sm font-medium">{t("dialog.preview")}</h3>
+          <Heading level="group" as="h3" className="text-sm font-medium">{t("dialog.preview")}</Heading>
           <p className="text-xs text-muted-foreground">
             {t("dialog.previewHint")}
           </p>

@@ -9,9 +9,7 @@ import { useForm } from "react-hook-form";
 
 import { type Credentials, credentialsSchema, sessionKey, signIn } from "@/entities/session";
 import { ThrottledError, UnauthorizedError } from "@/shared/api";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, ErrorNotice, FormField, Input } from "@/shared/ui/kit";
 
 export type SignInFormProps = { onSignedIn: () => void };
 

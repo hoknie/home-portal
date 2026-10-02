@@ -9,9 +9,7 @@ import { toast } from "sonner";
 import { useCan } from "@/entities/session";
 import { type NetworkForm as NetworkFormValues, type NetworkSettings, networkFormOf, networkFormSchema, useSaveNetwork } from "@/entities/network";
 import { ConflictError, ValidationError } from "@/shared/api";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, ErrorNotice, FormField, Input, Textarea } from "@/shared/ui/kit";
 
 import { byField } from "../model/server-errors";
 
@@ -74,7 +72,7 @@ export function NetworkForm({ configured, revision }: NetworkFormProps) {
           optional
           error={errors.trusted_proxies?.message}
         >
-          <textarea
+          <Textarea
             id="network-trusted-proxies"
             rows={3}
             spellCheck={false}

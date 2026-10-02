@@ -12,8 +12,7 @@ import { LibraryPreview, useWidgetKinds } from "@/features/widget-board";
 import { CUSTOM, type CanvasSize, WidgetBuilder, useTemplateSettings } from "@/features/widget-library";
 import { DEFAULT_APPEARANCE } from "@/shared/api";
 import { routes } from "@/shared/config";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { Skeleton } from "@/shared/ui/primitives";
+import { Appear, ErrorNotice, SkeletonForm, SkeletonWidget } from "@/shared/ui/kit";
 
 import { INTERNET } from "./widget-library-screen";
 
@@ -43,7 +42,12 @@ export function WidgetBuilderScreen({ mode }: { mode: "new" | "edit" }) {
   const fresh: LibraryEntry = { id: null, type: CUSTOM, title: null, settings: templateSettings, environments: null, public: false, appearance: DEFAULT_APPEARANCE };
   const entry = mode === "new" ? fresh : found ? entryOf(found) : null;
   if (!library.data || (mode === "edit" && !layout.data && !layout.error)) {
-    return library.error ? <ErrorNotice title={t("errors.loadFailed")} description={library.error.message} onRetry={() => void library.refetch()} /> : <Skeleton className="h-96 w-full" aria-busy="true" />;
+    return library.error ? <ErrorNotice title={t("errors.loadFailed")} description={library.error.message} onRetry={() => void library.refetch()} /> : (
+      <div className="grid gap-4 lg:grid-cols-[1fr_22rem]" data-skeleton="widget-builder" aria-busy="true">
+        <SkeletonWidget rows={4} />
+        <SkeletonForm fields={5} />
+      </div>
+    );
   }
   if (entry === null) {
     return <ErrorNotice title={t("errors.loadFailed")} description={id ?? ""} />;
@@ -62,29 +66,31 @@ export function WidgetBuilderScreen({ mode }: { mode: "new" | "edit" }) {
     return saved.revision;
   };
   return (
-    <WidgetBuilder
-      key={`${mode}-${id ?? "new"}-${reloads}`}
-      entry={entry}
-      revision={library.data.revision}
-      isNew={mode === "new"}
-      kind={kinds.find((kind) => kind.type === entry.type) ?? null}
-      environments={environments}
-      initialSize={size}
-      renderCanvas={(edited, custom, marking) => <LibraryPreview widget={edited} custom={custom} marking={marking} />}
-      onSaved={async (saved, _revision, wanted) => {
-        const revision = await keepSize(wanted);
-        if (mode === "new") {
-          router.replace(routes.editWidget(saved, back), { scroll: false });
-        }
-        return revision;
-      }}
-      onReload={() => void library.refetch().then(() => setReloads((count) => count + 1))}
-      onBack={() => {
-        if (back === "layout") {
-          client.removeQueries({ queryKey: layoutKey });
-        }
-        router.push(backTo);
-      }}
-    />
+    <Appear>
+      <WidgetBuilder
+        key={`${mode}-${id ?? "new"}-${reloads}`}
+        entry={entry}
+        revision={library.data.revision}
+        isNew={mode === "new"}
+        kind={kinds.find((kind) => kind.type === entry.type) ?? null}
+        environments={environments}
+        initialSize={size}
+        renderCanvas={(edited, custom, marking) => <LibraryPreview widget={edited} custom={custom} marking={marking} />}
+        onSaved={async (saved, _revision, wanted) => {
+          const revision = await keepSize(wanted);
+          if (mode === "new") {
+            router.replace(routes.editWidget(saved, back), { scroll: false });
+          }
+          return revision;
+        }}
+        onReload={() => void library.refetch().then(() => setReloads((count) => count + 1))}
+        onBack={() => {
+          if (back === "layout") {
+            client.removeQueries({ queryKey: layoutKey });
+          }
+          router.push(backTo);
+        }}
+      />
+    </Appear>
   );
 }

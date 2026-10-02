@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { cn } from "@/shared/lib/cn";
 import { AddressLink } from "@/shared/ui/address-link";
+import { BareButton } from "@/shared/ui/kit";
 
 export type Crumb = { label: string; href?: string; local?: boolean };
 
@@ -41,15 +42,14 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
                 </Link>
               )}
               {index === 0 && folds ? (
-                <button
-                  type="button"
+                <BareButton
                   className="ms-1 rounded-sm px-1 hover:bg-accent sm:hidden"
                   aria-label={t("more")}
                   aria-expanded={false}
                   onClick={() => setOpen(true)}
                 >
                   {t("ellipsis")}
-                </button>
+                </BareButton>
               ) : null}
             </li>
           );

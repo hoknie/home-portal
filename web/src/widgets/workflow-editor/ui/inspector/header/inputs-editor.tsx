@@ -4,9 +4,8 @@ import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { INPUT_TYPES, type InputDeclaration, type InputType, InputValueField, emptyValue, plainInput } from "@/entities/workflow";
-import { Button, Input, Label } from "@/shared/ui/primitives";
+import { Button, Input, Label, NativeSelect } from "@/shared/ui/kit";
 
-import { SELECT } from "../select-class";
 
 export type InputsEditorProps = { inputs: InputDeclaration[]; problemAt: (at: string) => string | undefined; onChange: (key: string, inputs: InputDeclaration[]) => void };
 
@@ -43,9 +42,9 @@ export function InputsEditor({ inputs, problemAt, onChange }: InputsEditorProps)
                 value={input.name}
                 onChange={(event) => change(index, "name", { name: event.target.value })}
               />
-              <select
+              <NativeSelect
                 aria-label={t("workflowInputs.type", { number: index + 1 })}
-                className={`${SELECT} w-28`}
+                className="w-28"
                 value={input.type}
                 onChange={(event) => change(index, "type", { type: event.target.value as InputType, default: null })}
               >
@@ -54,7 +53,7 @@ export function InputsEditor({ inputs, problemAt, onChange }: InputsEditorProps)
                     {t(`workflowInputs.types.${type}`)}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
               <Button
                 type="button"
                 variant="ghost"

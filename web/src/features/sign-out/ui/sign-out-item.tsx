@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { signOut } from "@/entities/session";
 import { routes } from "@/shared/config";
-import { DropdownMenuItem } from "@/shared/ui/primitives";
+import { DropdownMenuItem } from "@/shared/ui/kit";
 
 export function SignOutItem() {
   const t = useTranslations("nav");

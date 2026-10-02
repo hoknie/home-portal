@@ -7,10 +7,9 @@ import { useState } from "react";
 import { CATEGORY_OF, CATEGORY_PARAMETER, MODULE_CATEGORIES, type ModuleCategory, categoryParameter, useModules } from "@/entities/module";
 import { routes } from "@/shared/config";
 import { replaceAddress } from "@/shared/lib/navigation";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, Button, ErrorNotice, ListTransition, SkeletonCard } from "@/shared/ui/kit";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Button, Skeleton } from "@/shared/ui/primitives";
 
 import { ModuleCard } from "./module-card";
 
@@ -44,13 +43,18 @@ export function ModulesScreen() {
         ))}
       </div>
       {data ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {shown.map((module) => (
-            <ModuleCard key={module.name} module={module} modules={data} revision={modules.data?.revision ?? null} />
-          ))}
-        </div>
+        <Appear className="grid gap-6 lg:grid-cols-2">
+          <ListTransition items={shown} keyOf={(module) => module.name}>
+            {(module) => <ModuleCard module={module} modules={data} revision={modules.data?.revision ?? null} />}
+          </ListTransition>
+        </Appear>
       ) : modules.error ? null : (
-        <Skeleton className="h-96 w-full" aria-busy="true" />
+        <div className="grid gap-6 lg:grid-cols-2" data-skeleton="modules" aria-busy="true">
+          <SkeletonCard lines={3} />
+          <SkeletonCard lines={3} />
+          <SkeletonCard lines={3} />
+          <SkeletonCard lines={3} />
+        </div>
       )}
     </div>
   );

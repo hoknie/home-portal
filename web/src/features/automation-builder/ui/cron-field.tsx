@@ -6,12 +6,10 @@ import type { UseFormReturn } from "react-hook-form";
 
 import { useSchedule } from "@/entities/automation";
 import { ValidationError } from "@/shared/api";
-import { FormField } from "@/shared/ui/form-field";
-import { Input } from "@/shared/ui/primitives";
+import { FormField, Input, NativeSelect } from "@/shared/ui/kit";
 
 import { CRON_PRESETS, type CronPreset, WEEKDAYS, presetCron } from "../model/cron";
 import type { AutomationForm } from "../model/form";
-import { SELECT } from "./select";
 
 export const CRON_DEBOUNCE_MILLISECONDS = 400;
 
@@ -44,14 +42,14 @@ export function CronField({ form }: { form: UseFormReturn<AutomationForm> }) {
     <div className="grid gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <FormField id="automation-preset" label={t("preset")}>
-          <select id="automation-preset" className={SELECT} value={preset} onChange={(event) => apply(event.target.value as CronPreset | "custom")}>
+          <NativeSelect id="automation-preset" value={preset} onChange={(event) => apply(event.target.value as CronPreset | "custom")}>
             <option value="custom">{t("presets.custom")}</option>
             {CRON_PRESETS.map((name) => (
               <option key={name} value={name}>
                 {t(`presets.${name}`)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </FormField>
         {preset === "daily" || preset === "weekly" || preset === "monthly" ? (
           <FormField id="automation-time" label={t("time")}>
@@ -68,9 +66,8 @@ export function CronField({ form }: { form: UseFormReturn<AutomationForm> }) {
         ) : null}
         {preset === "weekly" ? (
           <FormField id="automation-weekday" label={t("weekday")}>
-            <select
+            <NativeSelect
               id="automation-weekday"
-              className={SELECT}
               value={weekday}
               onChange={(event) => {
                 const day = Number(event.target.value);
@@ -83,7 +80,7 @@ export function CronField({ form }: { form: UseFormReturn<AutomationForm> }) {
                   {t(`weekdays.${day}`)}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </FormField>
         ) : null}
       </div>

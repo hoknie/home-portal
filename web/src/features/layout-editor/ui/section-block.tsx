@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 
 import type { Section } from "@/shared/api";
 import { cn } from "@/shared/lib/cn";
-import { Button, Input } from "@/shared/ui/primitives";
+import { BareButton, Button, Input } from "@/shared/ui/kit";
 
 import { SECTION_GRID } from "@/shared/lib/widget-grid";
 
@@ -45,15 +45,14 @@ export function SectionBlock(props: SectionBlockProps) {
       data-section-block=""
     >
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
+        <BareButton
           className="flex size-8 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-glass-tint focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           aria-label={t("moveSection", { title })}
           {...attributes}
           {...listeners}
         >
           <GripVertical className="size-4" aria-hidden />
-        </button>
+        </BareButton>
         <Input
           aria-label={t("sectionTitle")}
           placeholder={t("untitled")}

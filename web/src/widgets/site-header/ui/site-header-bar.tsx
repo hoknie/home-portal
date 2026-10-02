@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { EnvironmentSwitch, type EnvironmentSwitchProps } from "@/features/environment-switch";
 import { LanguageSwitch } from "@/features/language-switch";
 import { routes } from "@/shared/config";
-import { Button } from "@/shared/ui/primitives";
+import { Button, Panel } from "@/shared/ui/kit";
 
 import { AccountMenu } from "./account-menu";
 
@@ -16,7 +16,7 @@ export type SiteHeaderBarProps = { environment: EnvironmentSwitchProps; user: st
 export function SiteHeaderBar({ environment, user }: SiteHeaderBarProps) {
   const t = useTranslations();
   return (
-    <header className="glass-panel flex flex-wrap items-center gap-3 rounded-xl px-4 py-3">
+    <Panel as="header" padding="none" className="flex flex-wrap items-center gap-3 rounded-xl px-4 py-3">
       <Link href={routes.home} className="flex items-center gap-2.5">
         <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <House className="size-4" aria-hidden />
@@ -45,6 +45,6 @@ export function SiteHeaderBar({ environment, user }: SiteHeaderBarProps) {
           </Button>
         )}
       </div>
-    </header>
+    </Panel>
   );
 }

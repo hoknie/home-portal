@@ -10,7 +10,7 @@ import { type Automation, useRunAutomation } from "@/entities/automation";
 import { enabledModules, useModules } from "@/entities/module";
 import { ConflictError, ThrottledError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export type RunAutomationButtonProps = { automation: Automation; labelled?: boolean; onQueued?: (runId: string) => void };
 

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { useCan } from "@/entities/session";
 import type { ScriptEntry, ScriptTree } from "@/entities/script";
-import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/primitives";
+import { Badge, BareButton, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 export type ScriptTreePaneProps = {
@@ -32,22 +32,21 @@ function FileRow({
   const can = useCan();
   return (
     <li className="flex items-center gap-1">
-      <button
-        type="button"
+      <BareButton
         aria-current={selected === entry.path ? "true" : undefined}
         onClick={() => onSelect(entry.path)}
         className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent aria-[current=true]:bg-accent aria-[current=true]:font-medium"
       >
-        <FileCode className="size-4 shrink-0 text-sky-600 dark:text-sky-300" aria-hidden />
+        <FileCode className="size-4 shrink-0 text-palette-blue" aria-hidden />
         <span className="min-w-0 truncate font-mono">{entry.name}</span>
         {entry.runnable ? (
           <span className="ml-auto size-1.5 shrink-0 rounded-full bg-status-up" title={t("runnable")} aria-hidden />
         ) : (
-          <Badge variant="outline" className="ml-auto shrink-0 border-status-degraded/50 text-[10px] text-status-degraded">
+          <Badge variant="outline" className="ml-auto shrink-0 border-status-degraded/50 text-xs text-status-degraded">
             {t("notRunnable")}
           </Badge>
         )}
-      </button>
+      </BareButton>
       {readOnly || !(can("scripts", "update") || can("scripts", "delete")) ? null : (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -101,7 +100,7 @@ export function ScriptTreePane(props: ScriptTreePaneProps) {
                 <li key={folder}>
                   <details open className="group">
                     <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent">
-                      <Folder className="size-4 text-amber-600 dark:text-amber-300" aria-hidden />
+                      <Folder className="size-4 text-palette-amber" aria-hidden />
                       <span className="font-mono font-medium">{folder}</span>
                       <span className="text-xs text-muted-foreground">{inside.length}</span>
                       {!readOnly && can("scripts", "delete") && inside.length === 0 ? (
@@ -131,7 +130,7 @@ export function ScriptTreePane(props: ScriptTreePaneProps) {
             ))}
           </ul>
           {tree.left_out > 0 ? <p className="text-xs text-muted-foreground">{t("leftOut", { count: tree.left_out })}</p> : null}
-          <p className="truncate font-mono text-[11px] text-muted-foreground/80" title={tree.directory}>
+          <p className="truncate font-mono text-xs text-muted-foreground" title={tree.directory}>
             {tree.directory}
           </p>
         </div>

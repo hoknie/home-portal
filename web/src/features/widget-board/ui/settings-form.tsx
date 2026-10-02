@@ -2,9 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { FormField } from "@/shared/ui/form-field";
-import { Input } from "@/shared/ui/primitives";
-import { TagInput } from "@/shared/ui/tag-input";
+import { FormField, Input, NativeSelect, TagInput } from "@/shared/ui/kit";
 
 import { SETTINGS, type SettingsField, settingsErrors } from "../model/settings-fields";
 
@@ -15,8 +13,6 @@ export type SettingsFormProps = {
   groups?: string[];
 };
 
-const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 function shown(field: SettingsField, value: unknown) {
   if (field.kind === "list") {
@@ -73,14 +69,14 @@ export function SettingsForm({ type, value, onChange, groups = [] }: SettingsFor
                 createLabel={(item) => t("tagInput.create", { value: item })}
               />
             ) : field.kind === "select" ? (
-              <select id={id} className={SELECT} value={shown(field, value[field.key])} onChange={(event) => set(field, event.target.value)}>
+              <NativeSelect id={id} value={shown(field, value[field.key])} onChange={(event) => set(field, event.target.value)}>
                 <option value="">{t("widgetSettings.default")}</option>
                 {(field.options ?? []).map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             ) : (
               <Input
                 id={id}

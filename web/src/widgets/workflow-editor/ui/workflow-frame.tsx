@@ -7,10 +7,8 @@ import type { ReactNode } from "react";
 import { routes } from "@/shared/config";
 import type { TrailItem } from "@/shared/lib/breadcrumbs";
 import { AddressLink } from "@/shared/ui/address-link";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, buttonVariants, EmptyState, ErrorNotice, Skeleton, SkeletonCard } from "@/shared/ui/kit";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Skeleton, buttonVariants } from "@/shared/ui/primitives";
 
 export type WorkflowFrameProps = {
   crumbs: TrailItem[];
@@ -28,7 +26,12 @@ export function WorkflowFrame({ crumbs, title, description, data, missing, child
     return (
       <div className="grid gap-6">
         {header}
-        {data.failure ? <ErrorNotice title={t("errors.loadFailed")} description={data.failure.message} onRetry={data.retry} /> : <Skeleton className="h-96 w-full" aria-busy="true" />}
+        {data.failure ? <ErrorNotice title={t("errors.loadFailed")} description={data.failure.message} onRetry={data.retry} /> : (
+          <div className="grid gap-4 lg:grid-cols-[1fr_20rem]" data-skeleton="workflow-editor" aria-busy="true">
+            <Skeleton className="h-[60svh] w-full rounded-2xl" />
+            <SkeletonCard lines={6} />
+          </div>
+        )}
       </div>
     );
   }
@@ -52,7 +55,7 @@ export function WorkflowFrame({ crumbs, title, description, data, missing, child
   return (
     <div className="grid gap-4">
       {header}
-      {children}
+      <Appear className="grid gap-4">{children}</Appear>
     </div>
   );
 }

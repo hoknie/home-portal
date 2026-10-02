@@ -10,11 +10,14 @@ import type { ServiceView } from "../model/schema";
 import { ServiceIcon } from "./service-icon";
 import { STATUS_REFRESH_MILLISECONDS, routes } from "@/shared/config";
 import { StatusBadge } from "@/shared/ui/status-badge";
+import { SURFACE } from "@/shared/ui/kit";
 
 export type ServiceCardProps = { service: ServiceView; scope?: "private" | "public" };
 
-const CARD =
-  "glass-panel group relative flex flex-col gap-3 rounded-xl p-4 transition hover:-translate-y-0.5 hover:border-primary/40 focus-within:ring-2 focus-within:ring-ring";
+const CARD_LAYOUT =
+  "group relative flex flex-col gap-3 rounded-xl p-4 transition hover:-translate-y-0.5 hover:border-primary/40 focus-within:ring-2 focus-within:ring-ring";
+
+const CARD = `${SURFACE.panel} ${CARD_LAYOUT}`;
 
 export function ServiceCard({ service, scope = "private" }: ServiceCardProps) {
   const t = useTranslations();

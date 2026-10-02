@@ -6,8 +6,7 @@ import type { UseFormReturn } from "react-hook-form";
 
 import { type CatalogueEvent, ScriptProblems, type Scripts } from "@/entities/automation";
 import { HeaderProblems } from "@/entities/script";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, FormField, Input, NativeSelect } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import type { Workflow } from "@/entities/workflow";
@@ -15,7 +14,6 @@ import type { Workflow } from "@/entities/workflow";
 import { ACTIONS, type RunFields } from "../model/run-fields";
 import type { WorkflowCallFields } from "../model/workflow-call";
 import { ArgumentList } from "./argument-list";
-import { SELECT } from "./select";
 import { WorkflowCall } from "./workflow-call/workflow-call";
 
 export type RunCardProps = { form: UseFormReturn<RunFields>; event: CatalogueEvent; scripts: Scripts; workflows?: Workflow[]; offerWorkflow?: boolean; idPrefix?: string; showChoice?: boolean };
@@ -67,7 +65,7 @@ export function RunCard({ form, event, scripts, workflows, offerWorkflow = false
         ) : null}
         <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
           <FormField id="automation-script" label={t("script")} hint={t("scriptHint", { directory: scripts.directory })} error={errors.script?.message}>
-            <select id="automation-script" className={SELECT} {...form.register("script")}>
+            <NativeSelect id="automation-script" {...form.register("script")}>
               <option value="">{t("chooseScript")}</option>
               {chosen !== "" && !known ? <option value={chosen}>{chosen}</option> : null}
               {scripts.scripts.map((script) => (
@@ -75,7 +73,7 @@ export function RunCard({ form, event, scripts, workflows, offerWorkflow = false
                   {script.runnable ? script.path : t("scriptUnrunnable", { path: script.path, problem: script.problem ?? "" })}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </FormField>
           <FormField id="automation-timeout" label={t("timeout")} hint={t("timeoutHint")} error={errors.timeout_seconds?.message}>
             <Input id="automation-timeout" type="number" min={1} max={3600} inputMode="numeric" {...form.register("timeout_seconds", { valueAsNumber: true })} />

@@ -4,7 +4,7 @@ import { cn } from "cn";
 import { useTranslations } from "next-intl";
 
 import { OutcomeBadge, RunPager, useRunPages, useRuns } from "@/entities/automation";
-import { Skeleton } from "@/shared/ui/primitives";
+import { BareButton, Skeleton } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 
 import { useEditor } from "../../model/editor-context";
@@ -36,8 +36,7 @@ export function RunsPanel({ onChoose }: { onChoose: (id: string) => void }) {
       <ul className="grid gap-1 p-2" aria-label={t("title")}>
         {runs.data.runs.map((run) => (
           <li key={run.id}>
-            <button
-              type="button"
+            <BareButton
               onClick={() => onChoose(run.id)}
               className={cn("grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-3 rounded-lg p-2 text-start text-sm hover:bg-accent", editor.run?.id === run.id && "bg-accent")}
             >
@@ -49,7 +48,7 @@ export function RunsPanel({ onChoose }: { onChoose: (id: string) => void }) {
                 </span>
               </span>
               <span className="text-xs text-muted-foreground tabular-nums">{t("duration", { milliseconds: run.outcome.duration_milliseconds })}</span>
-            </button>
+            </BareButton>
           </li>
         ))}
       </ul>

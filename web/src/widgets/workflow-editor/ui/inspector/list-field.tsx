@@ -4,7 +4,7 @@ import { ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { Path } from "@/entities/workflow";
-import { Button, Label } from "@/shared/ui/primitives";
+import { Button, Label } from "@/shared/ui/kit";
 
 import { StepTemplateInput } from "./template-field";
 

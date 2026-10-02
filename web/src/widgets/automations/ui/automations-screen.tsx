@@ -11,12 +11,10 @@ import { useAutomations, useCatalogue } from "@/entities/automation";
 import { enabledModules, useModules } from "@/entities/module";
 import { routes } from "@/shared/config";
 import { DataTable } from "@/shared/ui/data-table";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, Button, EmptyState, ErrorNotice, SkeletonTable } from "@/shared/ui/kit";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Button, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 import { TagFilter, distinctTags, stillChosen, tagsMatch } from "@/shared/ui/tag-filter";
 
@@ -53,22 +51,24 @@ export function AutomationsScreen() {
         <ErrorNotice title={t("errors.loadFailed")} description={automations.error.message} onRetry={() => void automations.refetch()} />
       ) : null}
       {automations.data ? (
-        <SectionCard flush actions={<TagFilter label={t("tags.filter")} tags={tags} selected={chosen} onChange={setChosen} />}>
-          <DataTable
-            columns={columns}
-            rows={shown}
-            rowKey={(automation) => automation.id}
-            empty={
-              chosen.length > 0 ? (
-                <EmptyState icon={Workflow} title={t("tags.noMatches")} description={t("tags.noMatchesHint")} />
-              ) : (
-                <EmptyState icon={Workflow} title={t("automations.empty")} description={t("automations.emptyHint")} action={add} />
-              )
-            }
-          />
-        </SectionCard>
+        <Appear>
+          <SectionCard flush actions={<TagFilter label={t("tags.filter")} tags={tags} selected={chosen} onChange={setChosen} />}>
+            <DataTable
+              columns={columns}
+              rows={shown}
+              rowKey={(automation) => automation.id}
+              empty={
+                chosen.length > 0 ? (
+                  <EmptyState icon={Workflow} title={t("tags.noMatches")} description={t("tags.noMatchesHint")} />
+                ) : (
+                  <EmptyState icon={Workflow} title={t("automations.empty")} description={t("automations.emptyHint")} action={add} />
+                )
+              }
+            />
+          </SectionCard>
+        </Appear>
       ) : automations.error ? null : (
-        <Skeleton className="h-64 w-full" aria-busy="true" />
+        <SkeletonTable columns={4} rows={6} />
       )}
     </div>
   );

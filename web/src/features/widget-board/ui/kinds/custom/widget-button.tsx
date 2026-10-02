@@ -12,7 +12,7 @@ import { type RenderedLeaf, pressWidgetAction, widgetKey } from "@/entities/widg
 import { RequestError, ThrottledError } from "@/shared/api";
 import { routes } from "@/shared/config";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 import { BlockIcon } from "./block-icon";
 

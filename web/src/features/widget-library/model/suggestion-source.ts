@@ -1,4 +1,4 @@
-import type { TemplateSuggestion } from "@/shared/ui/template-input";
+import type { TemplateSuggestion } from "@/shared/ui/kit";
 
 import { DEEPEST_PATH, MOST_PATHS, firstItemOf } from "./data-paths";
 

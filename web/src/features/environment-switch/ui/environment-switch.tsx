@@ -6,15 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { EnvironmentBadge, clearChoice, iconFor, writeChoice } from "@/entities/environment";
 import { cn } from "@/shared/lib/cn";
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/shared/ui/primitives";
+import { BareButton, Button, DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/shared/ui/kit";
 
 export type EnvironmentSwitchProps = {
   environment: string | null;
@@ -45,8 +37,7 @@ export function EnvironmentSwitch({ environment, detected, switchable, environme
     <div className="flex flex-wrap items-center gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
-            type="button"
+          <BareButton
             data-environment={environment}
             title={t("explains")}
             aria-label={t("choose", { environment })}
@@ -58,7 +49,7 @@ export function EnvironmentSwitch({ environment, detected, switchable, environme
             {iconFor(environment)}
             {environment}
             <ChevronDown className="size-3 opacity-60" aria-hidden />
-          </button>
+          </BareButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <DropdownMenuLabel className="font-normal text-muted-foreground">{t("lookFrom")}</DropdownMenuLabel>

@@ -13,12 +13,10 @@ import { type Webhook, absoluteAddress, shortAddress, useWebhooks } from "@/enti
 import { routes } from "@/shared/config";
 import { type Column, DataTable } from "@/shared/ui/data-table";
 import { ItemReference } from "@/shared/ui/item-reference";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, Badge, Button, EmptyState, ErrorNotice, SkeletonTable, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/kit";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Badge, Button, Skeleton, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/primitives";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
 import { TagFilter, distinctTags, stillChosen, tagsMatch } from "@/shared/ui/tag-filter";
@@ -134,22 +132,24 @@ export function WebhooksScreen() {
         <ErrorNotice title={t("errors.loadFailed")} description={webhooks.error.message} onRetry={() => void webhooks.refetch()} />
       ) : null}
       {webhooks.data ? (
-        <SectionCard flush actions={<TagFilter label={t("tags.filter")} tags={tags} selected={chosen} onChange={setChosen} />}>
-          <DataTable
-            columns={columns}
-            rows={list.filter((webhook) => tagsMatch(webhook.tags, chosen))}
-            rowKey={(webhook) => webhook.id}
-            empty={
-              chosen.length > 0 ? (
-                <EmptyState icon={WebhookIcon} title={t("tags.noMatches")} description={t("tags.noMatchesHint")} />
-              ) : (
-                <EmptyState icon={WebhookIcon} title={t("webhooks.empty")} description={t("webhooks.emptyHint")} action={add} />
-              )
-            }
-          />
-        </SectionCard>
+        <Appear>
+          <SectionCard flush actions={<TagFilter label={t("tags.filter")} tags={tags} selected={chosen} onChange={setChosen} />}>
+            <DataTable
+              columns={columns}
+              rows={list.filter((webhook) => tagsMatch(webhook.tags, chosen))}
+              rowKey={(webhook) => webhook.id}
+              empty={
+                chosen.length > 0 ? (
+                  <EmptyState icon={WebhookIcon} title={t("tags.noMatches")} description={t("tags.noMatchesHint")} />
+                ) : (
+                  <EmptyState icon={WebhookIcon} title={t("webhooks.empty")} description={t("webhooks.emptyHint")} action={add} />
+                )
+              }
+            />
+          </SectionCard>
+        </Appear>
       ) : webhooks.error ? null : (
-        <Skeleton className="h-64 w-full" aria-busy="true" />
+        <SkeletonTable columns={4} rows={6} />
       )}
     </div>
   );

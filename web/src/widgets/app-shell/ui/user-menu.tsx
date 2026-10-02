@@ -14,7 +14,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/shared/ui/primitives";
+} from "@/shared/ui/kit";
 
 export type UserMenuProps = { name: string; compact?: boolean };
 

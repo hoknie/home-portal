@@ -11,8 +11,7 @@ import { useSession } from "@/entities/session";
 import { NEXT_PARAMETER } from "@/shared/api";
 import { routes } from "@/shared/config";
 import { RETURN_PARAMETER, cameBackFrom, destinationOf, hostOf, leaveTo } from "@/shared/lib/navigation";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@/shared/ui/primitives";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, ErrorNotice, SkeletonForm } from "@/shared/ui/kit";
 
 export function LoginScreen() {
   const t = useTranslations();
@@ -53,10 +52,10 @@ export function LoginScreen() {
       </div>
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
-          <span className="mx-auto mb-2 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow">
+          <span className="mx-auto mb-2 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <House className="size-5" aria-hidden />
           </span>
-          <CardTitle className="text-xl">{t("login.title")}</CardTitle>
+          <CardTitle className="text-lg">{t("login.title")}</CardTitle>
           <CardDescription>{t("login.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -76,7 +75,7 @@ export function LoginScreen() {
               }
             />
           ) : session.isPending || signedIn ? (
-            <Skeleton className="h-48 w-full" aria-busy="true" />
+            <SkeletonForm fields={2} surface={false} className="p-0 sm:p-0" />
           ) : (
             <SignInForm onSignedIn={go} />
           )}

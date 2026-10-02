@@ -3,8 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Controller, type Control, type FieldValues, type Path } from "react-hook-form";
 
-import { FormField } from "@/shared/ui/form-field";
-import { TagInput } from "@/shared/ui/tag-input";
+import { FormField, TagInput } from "@/shared/ui/kit";
 
 export type TagsFieldProps<Form extends FieldValues> = {
   id: string;

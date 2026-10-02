@@ -5,6 +5,10 @@
 
 :root {
   --radius: 1rem;
+  --motion-fast: 150ms;
+  --motion-base: 200ms;
+  --motion-slow: 250ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
   --backdrop: oklch(0.95 0.025 262);
   --backdrop-glow-1: oklch(0.83 0.1 262);
   --backdrop-glow-2: oklch(0.85 0.09 305);
@@ -178,6 +182,14 @@
   --color-tone-warning: var(--status-degraded);
   --color-tone-danger: var(--status-down);
   --color-widget-accent: var(--widget-accent);
+  --color-palette-neutral: var(--palette-neutral);
+  --color-palette-blue: var(--palette-blue);
+  --color-palette-green: var(--palette-green);
+  --color-palette-amber: var(--palette-amber);
+  --color-palette-red: var(--palette-red);
+  --color-palette-violet: var(--palette-violet);
+  --color-palette-pink: var(--palette-pink);
+  --color-palette-teal: var(--palette-teal);
 }
 
 @utility glass-panel {
@@ -191,6 +203,35 @@
   box-shadow: var(--glass-shadow);
   -webkit-backdrop-filter: blur(var(--glass-blur-overlay)) saturate(var(--glass-saturation));
   backdrop-filter: blur(var(--glass-blur-overlay)) saturate(var(--glass-saturation));
+}
+
+@utility surface-panel {
+  background-color: var(--glass-panel);
+  border: 1px solid var(--glass-edge);
+}
+
+@utility surface-raised {
+  background-color: var(--glass-overlay);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur-overlay)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur-overlay)) saturate(var(--glass-saturation));
+}
+
+@utility surface-solid {
+  background-color: var(--glass-overlay-solid);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+}
+
+@utility surface-inset {
+  background-color: color-mix(in oklch, var(--glass-overlay-solid) 70%, transparent);
+  border: 1px solid var(--input);
+}
+
+@utility surface-tint {
+  background-color: var(--glass-tint);
+  border: 1px solid var(--glass-edge);
 }
 
 @layer base {
@@ -250,4 +291,68 @@
 @utility widget-tint {
   background-color: color-mix(in oklch, var(--widget-accent) 12%, var(--glass-panel));
   border: 1px solid color-mix(in oklch, var(--widget-accent) 28%, transparent);
+}
+
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(*) {
+  animation-duration: var(--motion-base);
+  animation-timing-function: var(--motion-ease);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(.page-fade) {
+  animation: none;
+}
+
+::view-transition-old(.page-fade) {
+  animation: var(--motion-fast) var(--motion-ease) both kit-fade reverse;
+}
+
+::view-transition-new(.page-fade) {
+  animation: var(--motion-base) var(--motion-ease) var(--motion-fast) both kit-fade;
+}
+
+::view-transition-old(.list-exit) {
+  animation: var(--motion-fast) var(--motion-ease) both kit-fade reverse;
+}
+
+::view-transition-new(.list-enter) {
+  animation: var(--motion-base) var(--motion-ease) both kit-fade;
+}
+
+
+@keyframes kit-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  .animate-in,
+  .animate-out {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }

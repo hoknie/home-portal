@@ -52,7 +52,7 @@ it("draws each surface from the theme, and a plain one without a card", () => {
       </TestIntl>,
     );
     const frame = container.querySelector("section") as HTMLElement;
-    const drawn = [frame.getAttribute("data-surface"), frame.className.includes("glass-panel"), frame.className.includes("widget-tint"), frame.className.includes("border")];
+    const drawn = [frame.getAttribute("data-surface"), frame.className.includes("surface-panel"), frame.className.includes("widget-tint"), frame.className.includes("border")];
     unmount();
     return drawn;
   });
@@ -88,7 +88,7 @@ it("a panel inside a card adds no second card, and draws one on a plain surface"
       </TestIntl>,
     );
     const panel = container.querySelector("section .grid") as HTMLElement;
-    const card = panel.className.includes("glass-panel");
+    const card = panel.className.includes("surface-panel");
     unmount();
     return card;
   };

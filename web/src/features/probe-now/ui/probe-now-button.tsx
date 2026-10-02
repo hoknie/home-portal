@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { useCan } from "@/entities/session";
 import type { Service } from "@/entities/service";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 import { useProbeNow } from "../model/use-probe-now";
 

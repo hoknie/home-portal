@@ -5,7 +5,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { type Proxy, proxySchema } from "@/entities/proxy";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
-import { Toaster } from "@/shared/ui/primitives";
+import { Toaster } from "@/shared/ui/kit";
 
 import { CaddyControl } from "./caddy-control";
 

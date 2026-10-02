@@ -5,8 +5,7 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 
 import { DataTable } from "@/shared/ui/data-table";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { Button } from "@/shared/ui/primitives";
+import { Button, EmptyState } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 
 import { type Run, isActive, messageKeyOf } from "../model/schema";

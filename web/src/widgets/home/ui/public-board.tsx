@@ -5,10 +5,10 @@ import { useTranslations } from "next-intl";
 
 import { usePortal } from "@/entities/portal";
 import { BoardGrid } from "@/features/widget-board";
-import { EmptyState } from "@/shared/ui/empty-state";
+import { EmptyState, Loaded } from "@/shared/ui/kit";
 
 import { publicGrid } from "../model/board";
-import { BoardState } from "./board-state";
+import { BoardSkeleton } from "./board-state";
 import { DEFAULT_APPEARANCE, DEFAULT_SECTION_APPEARANCE, GRID_COLUMNS } from "@/shared/api";
 
 export function PublicBoard() {
@@ -20,9 +20,9 @@ export function PublicBoard() {
   const extra = data && !listed && data.services.length > 0;
   const sections = data ? (data.sections.length > 0 ? data.sections : [{ id: "main", title: null, appearance: DEFAULT_SECTION_APPEARANCE }]) : [];
   return (
-    <>
-      {data ? (
-        widgets.length > 0 || data.services.length > 0 ? (
+    <Loaded query={portal} skeleton={<BoardSkeleton />}>
+      {() =>
+        data && (widgets.length > 0 || data.services.length > 0) ? (
           <BoardGrid
             sections={extra ? [...sections, { id: "public-services", title: null, appearance: DEFAULT_SECTION_APPEARANCE }] : sections}
             widgets={
@@ -39,9 +39,7 @@ export function PublicBoard() {
         ) : (
           <EmptyState icon={House} title={t("empty")} description={t("emptyHint")} />
         )
-      ) : (
-        <BoardState error={portal.error} onRetry={() => void portal.refetch()} />
-      )}
-    </>
+      }
+    </Loaded>
   );
 }

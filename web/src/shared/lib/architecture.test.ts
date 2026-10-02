@@ -8,8 +8,8 @@ const SOURCE_ROOT = join(process.cwd(), "src");
 const FILE_LINES = 400;
 const FUNCTION_LINES = 300;
 const KIT = "shared/ui/";
-const FLOATING = ["dialog", "sheet", "dropdown-menu", "select", "tooltip", "sonner"].map((name) => `shared/ui/primitives/${name}.tsx`);
-const BLUR = /(?<![\w-])(backdrop-blur[\w-]*|backdrop-filter|glass-overlay)(?![\w-])/g;
+const FLOATING = "shared/ui/kit/overlays/";
+const BLUR = /(?<![\w-])(backdrop-blur[\w-]*|backdrop-filter|glass-overlay|surface-raised)(?![\w-])/g;
 
 type Source = { path: string; text: string };
 
@@ -87,7 +87,7 @@ function untestedKit(paths: string[]): string[] {
 
 function blurViolations(files: Source[]): string[] {
   return files
-    .filter((file) => !FLOATING.includes(file.path) && !/\.test\.tsx?$/.test(file.path))
+    .filter((file) => !file.path.startsWith(FLOATING) && !/\.test\.tsx?$/.test(file.path))
     .flatMap((file) =>
       file.text.split("\n").flatMap((line, index) =>
         [...line.matchAll(BLUR)].map((match) => `${file.path}:${index + 1} uses ${match[1]}, which only floating surfaces may`),
@@ -151,7 +151,7 @@ describe("the guards themselves", () => {
       path: "widgets/x/ui/panel.tsx",
       text: 'export const a = "glass-panel backdrop-blur-md";\nexport const b = "glass-overlay rounded-xl";\nexport const c = "bg-[var(--glass-overlay-solid)]";\n',
     };
-    const dialog: Source = { path: "shared/ui/primitives/dialog.tsx", text: 'export const d = "glass-overlay";\n' };
+    const dialog: Source = { path: "shared/ui/kit/overlays/dialog.tsx", text: 'export const d = "glass-overlay";\n' };
     expect(blurViolations([widget, dialog])).toEqual([
       "widgets/x/ui/panel.tsx:1 uses backdrop-blur-md, which only floating surfaces may",
       "widgets/x/ui/panel.tsx:2 uses glass-overlay, which only floating surfaces may",

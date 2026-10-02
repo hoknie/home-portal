@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import { useSession } from "@/entities/session";
-import { Skeleton } from "@/shared/ui/primitives";
+import { PageTransition, Skeleton } from "@/shared/ui/kit";
 
 import { AppShell } from "./app-shell";
 
@@ -18,7 +18,7 @@ export function SiteFrame({ guest, children }: SiteFrameProps) {
     return (
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-6 sm:px-6 lg:py-10">
         {guest}
-        {children}
+        <PageTransition>{children}</PageTransition>
       </div>
     );
   }

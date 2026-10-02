@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { useRequestPermissions } from "@/entities/permission";
 import { ConflictError, RequestError } from "@/shared/api";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export const FORBIDDEN_STATUS = 403;
 

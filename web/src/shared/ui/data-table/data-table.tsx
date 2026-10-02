@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/lib/cn";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/primitives";
+import { ListTransition, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/kit";
 
 export type Column<Row> = {
   key: string;
@@ -40,15 +40,17 @@ export function DataTable<Row>({ columns, rows, rowKey, empty }: DataTableProps<
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((row) => (
-          <TableRow key={rowKey(row)}>
-            {columns.map((column) => (
-              <TableCell key={column.key} className={cn("px-4", columnClass(column))}>
-                {column.cell(row)}
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
+        <ListTransition items={rows} keyOf={rowKey}>
+          {(row) => (
+            <TableRow>
+              {columns.map((column) => (
+                <TableCell key={column.key} className={cn("px-4", columnClass(column))}>
+                  {column.cell(row)}
+                </TableCell>
+              ))}
+            </TableRow>
+          )}
+        </ListTransition>
       </TableBody>
     </Table>
   );

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { Splitter } from "@/shared/ui/splitter";
+import { BareButton, Panel } from "@/shared/ui/kit";
 
 export type SideColumnProps = {
   side: "left" | "right";
@@ -23,12 +24,12 @@ export function SideColumn({ side, title, collapsed, width, min, max, onToggle, 
   const Open = side === "left" ? PanelLeftOpen : PanelRightOpen;
   if (collapsed) {
     return (
-      <div className="glass-panel flex w-11 shrink-0 flex-col items-center gap-3 rounded-2xl py-2" data-side-column={side} data-collapsed="">
-        <button type="button" onClick={onToggle} aria-label={t("expand", { title })} title={t("expand", { title })} className="grid size-8 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+      <Panel as="div" padding="none" className="flex w-11 shrink-0 flex-col items-center gap-3 rounded-2xl py-2" data-side-column={side} data-collapsed="">
+        <BareButton onClick={onToggle} aria-label={t("expand", { title })} title={t("expand", { title })} className="grid size-8 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
           <Open className="size-4" aria-hidden />
-        </button>
+        </BareButton>
         <span className="text-xs font-medium text-muted-foreground [writing-mode:vertical-rl]">{title}</span>
-      </div>
+      </Panel>
     );
   }
   const splitter = <Splitter label={t("resize", { title })} orientation="vertical" value={width} min={min} max={max} direction={side === "left" ? 1 : -1} onChange={onWidth} className="-mx-1.5" />;
@@ -47,8 +48,8 @@ export function CollapseButton({ side, title, onToggle }: { side: "left" | "righ
   const t = useTranslations("widgetBuilder.columns");
   const Close = side === "left" ? PanelLeftClose : PanelRightClose;
   return (
-    <button type="button" onClick={onToggle} aria-label={t("collapse", { title })} title={t("collapse", { title })} className="grid size-7 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+    <BareButton onClick={onToggle} aria-label={t("collapse", { title })} title={t("collapse", { title })} className="grid size-7 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
       <Close className="size-4" aria-hidden />
-    </button>
+    </BareButton>
   );
 }

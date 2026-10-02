@@ -10,8 +10,7 @@ import { useSession } from "@/entities/session";
 import { RequestError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { type Column, DataTable } from "@/shared/ui/data-table";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { Badge, Button, Skeleton } from "@/shared/ui/primitives";
+import { Appear, Badge, BareButton, Button, ErrorNotice, SkeletonCard, SkeletonTable } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import { GroupDialog } from "./group-dialog";
@@ -44,10 +43,10 @@ export function GroupsTab({ editable }: GroupsTabProps) {
       key: "name",
       header: t("name"),
       cell: (group) => (
-        <button type="button" className="inline-flex items-center gap-2 font-medium hover:underline" onClick={() => setShown(group.name)}>
+        <BareButton className="inline-flex items-center gap-2 font-medium hover:underline" onClick={() => setShown(group.name)}>
           {group.name === ADMIN_GROUP ? t("admin") : group.name}
           {group.builtin ? <Badge variant="outline">{t("builtin")}</Badge> : null}
-        </button>
+        </BareButton>
       ),
     },
     {
@@ -85,11 +84,16 @@ export function GroupsTab({ editable }: GroupsTabProps) {
     return <ErrorNotice title={t("loadFailed")} description={groups.error.message} onRetry={() => void groups.refetch()} />;
   }
   if (!data) {
-    return <Skeleton className="h-64 w-full" aria-busy="true" />;
+    return (
+      <div className="grid gap-6 lg:grid-cols-[16rem_1fr]" data-skeleton="groups" aria-busy="true">
+        <SkeletonCard lines={4} />
+        <SkeletonTable columns={6} rows={8} />
+      </div>
+    );
   }
   const selected = data.groups.find((group) => group.name === shown) ?? data.groups[0];
   return (
-    <div className="grid gap-6">
+    <Appear className="grid gap-6">
       {writable ? (
         <div>
           <Button type="button" onClick={() => setEditing(null)}>
@@ -125,6 +129,6 @@ export function GroupsTab({ editable }: GroupsTabProps) {
         pending={remove.isPending}
         onConfirm={() => (removing ? void confirm(removing) : undefined)}
       />
-    </div>
+    </Appear>
   );
 }

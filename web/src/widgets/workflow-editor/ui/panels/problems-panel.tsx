@@ -9,6 +9,7 @@ import { parsePath, pathText } from "@/entities/workflow";
 import { useEditor } from "../../model/editor-context";
 import { nodeLabel } from "../../model/localize";
 import type { Problem } from "../../model/checks/problems";
+import { BareButton } from "@/shared/ui/kit";
 
 export type ProblemsPanelProps = { onChoose: (problem: Problem) => void };
 
@@ -33,8 +34,7 @@ export function ProblemsPanel({ onChoose }: ProblemsPanelProps) {
         const Icon = problem.severity === "error" ? CircleAlert : TriangleAlert;
         return (
           <li key={`${problem.at}-${index}`}>
-            <button
-              type="button"
+            <BareButton
               onClick={() => onChoose(problem)}
               className="grid w-full grid-cols-[auto_1fr] gap-x-2 rounded-lg p-2 text-start text-sm hover:bg-accent"
             >
@@ -46,7 +46,7 @@ export function ProblemsPanel({ onChoose }: ProblemsPanelProps) {
                 </span>
                 <span className="text-xs text-muted-foreground">{message}</span>
               </span>
-            </button>
+            </BareButton>
           </li>
         );
       })}

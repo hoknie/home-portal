@@ -1,4 +1,4 @@
-import { Badge } from "@/shared/ui/primitives";
+import { Badge } from "@/shared/ui/kit";
 
 export function TagList({ tags }: { tags: string[] }) {
   if (tags.length === 0) {
@@ -7,7 +7,7 @@ export function TagList({ tags }: { tags: string[] }) {
   return (
     <span className="flex flex-wrap gap-1">
       {tags.map((tag) => (
-        <Badge key={tag} variant="outline" className="text-[11px]">
+        <Badge key={tag} variant="outline" className="text-xs">
           {tag}
         </Badge>
       ))}

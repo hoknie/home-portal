@@ -35,7 +35,7 @@ export function ValuePreview({ preview, from, label }: ValuePreviewProps) {
     <figure className="grid gap-1" aria-label={label}>
       <figcaption className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>{label}</span>
-        <span className="rounded-sm bg-primary/12 px-1.5 font-mono text-[11px] text-primary">{t(`types.${typeOfValue(preview.value)}`)}</span>
+        <span className="rounded-sm bg-primary/12 px-1.5 font-mono text-xs text-primary">{t(`types.${typeOfValue(preview.value)}`)}</span>
         {from ? <span>{t(from === "sample" ? "fromSample" : "fromRun")}</span> : null}
       </figcaption>
       <pre className="max-h-32 overflow-auto rounded-md bg-glass-tint px-2 py-1 font-mono text-xs break-all whitespace-pre-wrap">{previewText(preview.value)}</pre>

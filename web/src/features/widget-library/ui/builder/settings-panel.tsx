@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { BareButton, Panel } from "@/shared/ui/kit";
 
 export type PanelTab = "block" | "data" | "look" | "access";
 
@@ -26,16 +27,15 @@ export type SettingsPanelProps = {
 export function SettingsPanel({ tab, failing, onTab, collapse, children }: SettingsPanelProps) {
   const t = useTranslations("widgetBuilder");
   return (
-    <section className="glass-panel flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl" aria-label={t("panel.title")} data-settings-panel="">
+    <Panel padding="none" className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl" aria-label={t("panel.title")} data-settings-panel="">
       <div className="flex items-center gap-1 border-b border-glass-edge p-2">
         <div role="tablist" aria-label={t("panel.title")} className="grid flex-1 grid-cols-4 gap-1 rounded-xl bg-muted/50 p-1">
           {PANEL_TABS.map(({ tab: name, icon: Icon }) => {
             const chosen = name === tab;
             const bad = failing.has(name);
             return (
-              <button
+              <BareButton
                 key={name}
-                type="button"
                 role="tab"
                 id={`builder-tab-${name}`}
                 aria-selected={chosen}
@@ -50,7 +50,7 @@ export function SettingsPanel({ tab, failing, onTab, collapse, children }: Setti
                 <Icon className="size-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{t(`tabs.${name}`)}</span>
                 {bad ? <span aria-hidden className="absolute top-1 right-1 size-1.5 rounded-full bg-status-degraded" /> : null}
-              </button>
+              </BareButton>
             );
           })}
         </div>
@@ -59,6 +59,6 @@ export function SettingsPanel({ tab, failing, onTab, collapse, children }: Setti
       <div id="builder-tab-body" role="tabpanel" aria-labelledby={`builder-tab-${tab}`} className="min-h-0 flex-1 overflow-y-auto p-4">
         {children}
       </div>
-    </section>
+    </Panel>
   );
 }

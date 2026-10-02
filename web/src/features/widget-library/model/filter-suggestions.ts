@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { useWorkflowCatalogue } from "@/entities/workflow";
-import type { TemplateSuggestion } from "@/shared/ui/template-input";
+import type { TemplateSuggestion } from "@/shared/ui/kit";
 
 export function useFilterSuggestions(): (subject: string, chain: string) => TemplateSuggestion[] {
   const filters = useWorkflowCatalogue().data?.filters ?? [];

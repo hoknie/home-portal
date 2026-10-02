@@ -3,7 +3,7 @@
 import { ArrowDown, Braces, LayoutGrid, Play, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/shared/ui/primitives";
+import { Button, Heading, Panel } from "@/shared/ui/kit";
 
 export const LEGEND_KEY = "home-portal.workflow-editor.legend-dismissed";
 
@@ -38,8 +38,8 @@ const ITEMS = [
 export function Legend({ onDismiss }: { onDismiss: () => void }) {
   const t = useTranslations("workflowHelp.legend");
   return (
-    <section aria-label={t("title")} className="glass-panel grid w-80 max-w-[calc(100vw-2rem)] gap-3 rounded-2xl p-4">
-      <h2 className="text-sm font-semibold">{t("title")}</h2>
+    <Panel padding="none" aria-label={t("title")} className="grid w-80 max-w-[calc(100vw-2rem)] gap-3 rounded-2xl p-4">
+      <Heading level="group" as="h2" className="text-sm font-semibold">{t("title")}</Heading>
       <ul className="grid gap-2">
         {ITEMS.map(({ key, icon: Icon }) => (
           <li key={key} className="flex gap-2 text-xs text-muted-foreground">
@@ -51,6 +51,6 @@ export function Legend({ onDismiss }: { onDismiss: () => void }) {
       <Button type="button" size="sm" className="w-fit" onClick={onDismiss}>
         {t("dismiss")}
       </Button>
-    </section>
+    </Panel>
   );
 }

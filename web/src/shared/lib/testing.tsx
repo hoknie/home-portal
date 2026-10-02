@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import type { ReactElement } from "react";
+import { vi } from "vitest";
 
 import { type Locale, TestIntl } from "@/shared/i18n";
 
@@ -55,3 +56,24 @@ export const TRACE_ENTRY_BLANKS = {
   level: null,
   wait_seconds: null,
 } as const;
+
+export async function renderWhileLoading(element: ReactElement) {
+  const fetch = vi.fn(() => new Promise<Response>(() => undefined));
+  vi.stubGlobal("fetch", fetch);
+  const result = renderWithProviders(element);
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  });
+  return { ...result, fetched: fetch.mock.calls.length > 0 };
+}
+
+export function loadingProblems(container: HTMLElement, fetched: boolean): string[] {
+  const problems: string[] = [];
+  if (container.childElementCount === 0) {
+    problems.push("renders nothing while its data loads");
+  }
+  if (fetched && container.querySelector("[data-skeleton]") === null) {
+    problems.push("waits for data without a skeleton");
+  }
+  return problems;
+}

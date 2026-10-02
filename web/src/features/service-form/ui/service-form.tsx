@@ -13,11 +13,8 @@ import { ConflictError, type FieldError, ValidationError } from "@/shared/api";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, ErrorNotice, FormField, Input, Panel, TagInput } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
-import { TagInput } from "@/shared/ui/tag-input";
 
 import { byField } from "../model/server-errors";
 import { slugOf, uniqueId } from "@/shared/lib/slug";
@@ -154,7 +151,7 @@ export function ServiceForm({ service, environments, cancelHref, revision, taken
         <SectionCard title={t("serviceForm.details")}>
           <DetailsFields form={form} />
         </SectionCard>
-        <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
+        <Panel as="div" padding="none" className="sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
           <Button asChild variant="outline">
             <Link href={cancelHref}>{t("common.cancel")}</Link>
           </Button>
@@ -163,7 +160,7 @@ export function ServiceForm({ service, environments, cancelHref, revision, taken
               {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
             </Button>
           ) : null}
-        </div>
+        </Panel>
       </fieldset>
     </form>
   );

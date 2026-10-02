@@ -8,12 +8,10 @@ import { Allowed } from "@/entities/session";
 import { enabledModules, useModules } from "@/entities/module";
 import { TemplatesGallery, useWorkflows } from "@/entities/workflow";
 import { DataTable } from "@/shared/ui/data-table";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, EmptyState, ErrorNotice, SkeletonTable } from "@/shared/ui/kit";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 import { TagFilter, distinctTags, stillChosen, tagsMatch } from "@/shared/ui/tag-filter";
 
@@ -47,26 +45,28 @@ export function WorkflowsScreen() {
         <ErrorNotice title={t("errors.loadFailed")} description={workflows.error.message} onRetry={() => void workflows.refetch()} />
       ) : null}
       {workflows.data ? (
-        <SectionCard flush actions={<TagFilter label={t("tags.filter")} tags={tags} selected={chosen} onChange={setChosen} />}>
-          <DataTable
-            columns={columns}
-            rows={list.filter((workflow) => tagsMatch(workflow.tags, chosen))}
-            rowKey={(workflow) => workflow.id}
-            empty={
-              chosen.length > 0 ? (
-                <EmptyState icon={Route} title={t("tags.noMatches")} description={t("tags.noMatchesHint")} />
-              ) : (
-                <div className="grid gap-4 p-4">
-                  <EmptyState icon={Route} title={t("workflows.empty")} description={t("workflows.emptyHint")} />
-                  <p className="mx-auto max-w-2xl text-center text-sm text-muted-foreground">{t("workflows.explained")}</p>
-                  <TemplatesGallery />
-                </div>
-              )
-            }
-          />
-        </SectionCard>
+        <Appear>
+          <SectionCard flush actions={<TagFilter label={t("tags.filter")} tags={tags} selected={chosen} onChange={setChosen} />}>
+            <DataTable
+              columns={columns}
+              rows={list.filter((workflow) => tagsMatch(workflow.tags, chosen))}
+              rowKey={(workflow) => workflow.id}
+              empty={
+                chosen.length > 0 ? (
+                  <EmptyState icon={Route} title={t("tags.noMatches")} description={t("tags.noMatchesHint")} />
+                ) : (
+                  <div className="grid gap-4 p-4">
+                    <EmptyState icon={Route} title={t("workflows.empty")} description={t("workflows.emptyHint")} />
+                    <p className="mx-auto max-w-2xl text-center text-sm text-muted-foreground">{t("workflows.explained")}</p>
+                    <TemplatesGallery />
+                  </div>
+                )
+              }
+            />
+          </SectionCard>
+        </Appear>
       ) : workflows.error ? null : (
-        <Skeleton className="h-64 w-full" aria-busy="true" />
+        <SkeletonTable columns={4} rows={6} />
       )}
       <Dialog open={gallery} onOpenChange={setGallery}>
         <DialogContent closeLabel={t("common.close")} className="max-h-[85dvh] overflow-y-auto sm:max-w-3xl">

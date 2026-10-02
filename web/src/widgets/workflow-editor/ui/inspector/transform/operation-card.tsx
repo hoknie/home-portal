@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 
 import type { Operation, Path, Preview } from "@/entities/workflow";
 import { cn } from "@/shared/lib/cn";
-import { Button } from "@/shared/ui/primitives";
+import { BareButton, Button, CANVAS, Heading } from "@/shared/ui/kit";
 
 import { OperationForm } from "./operation-form";
 import type { NestedChain } from "./transform-chain";
@@ -48,23 +48,22 @@ export function OperationCard(props: OperationCardProps) {
       className={cn(
         "grid gap-3 rounded-xl border bg-glass-tint p-3",
         failed ? "border-destructive/60" : "border-glass-edge",
-        isDragging && "z-20 opacity-70 shadow-lg",
+        isDragging && cn("z-20 opacity-70", CANVAS.lifted),
       )}
     >
       <div className="flex items-center gap-1">
-        <button
-          type="button"
+        <BareButton
           className="flex size-7 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           aria-label={t("drag", { number: index + 1 })}
           {...attributes}
           {...listeners}
         >
           <GripVertical className="size-4" aria-hidden />
-        </button>
-        <h4 className="min-w-0 flex-1 truncate text-sm font-medium">
+        </BareButton>
+        <Heading level="group" as="h4" className="min-w-0 flex-1 truncate text-sm font-medium">
           {title}
           {name !== operation.op ? <code className="ml-2 font-mono text-xs text-muted-foreground">{operation.op}</code> : null}
-        </h4>
+        </Heading>
         <Button type="button" variant="ghost" size="icon" className="size-7" aria-label={t("moveUp")} disabled={index === 0} onClick={() => props.onMove(-1)}>
           <ArrowUp aria-hidden />
         </Button>

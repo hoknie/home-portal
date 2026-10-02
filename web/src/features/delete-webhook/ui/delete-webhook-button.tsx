@@ -9,7 +9,7 @@ import { useCan } from "@/entities/session";
 import { type Webhook, useDeleteWebhook } from "@/entities/webhook";
 import { ConflictError } from "@/shared/api";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export type DeleteWebhookButtonProps = { webhook: Webhook; revision: string | null };
 

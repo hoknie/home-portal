@@ -6,7 +6,7 @@ import { sessionKey } from "@/entities/session";
 import { type Users, groupsKey, groupsSchema, usersKey, usersSchema } from "@/entities/user";
 import { apiSamples } from "@/shared/api";
 import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
-import { Toaster } from "@/shared/ui/primitives";
+import { Toaster } from "@/shared/ui/kit";
 
 import { UsersScreen } from "./users-screen";
 
@@ -59,7 +59,7 @@ it("adding a user sends the name and password with the loaded revision and lists
   expect((init.headers as Record<string, string>)["If-Match"]).toBe('"r1"');
   expect(JSON.parse(String(init.body))).toEqual({ name: "bob", password: "correct horse", group: null });
   expect(await screen.findByText("bob can now sign in")).toBeInTheDocument();
-  expect(screen.getByRole("cell", { name: "bob" })).toBeInTheDocument();
+  expect(await screen.findByRole("cell", { name: "bob" })).toBeInTheDocument();
 });
 
 it("passwords that do not match are shown beside the second field and nothing is sent", async () => {
@@ -171,7 +171,7 @@ it("an admin sees admin with every right and cannot edit it", async () => {
   expect(screen.getByRole("button", { name: "Add group" })).toBeInTheDocument();
   const boxes = screen.getAllByRole("checkbox");
   expect(boxes.length).toBeGreaterThan(0);
-  expect(boxes.every((box) => (box as HTMLInputElement).checked && (box as HTMLInputElement).disabled)).toBe(true);
+  expect(boxes.every((box) => box.getAttribute("aria-checked") === "true" && box.hasAttribute("disabled"))).toBe(true);
 });
 
 it("changing one's own password asks for the current one and sends it", async () => {

@@ -11,7 +11,7 @@ export function TimeAxis({ from, to, format, className }: TimeAxisProps) {
   const [ref, width] = useElementWidth<HTMLDivElement>();
   const ticks = timeTicks(from, to, width);
   return (
-    <div ref={ref} aria-hidden className={cn("relative h-5 text-[11px] leading-5 text-muted-foreground tabular-nums", className)}>
+    <div ref={ref} aria-hidden className={cn("relative h-5 text-xs leading-5 text-muted-foreground tabular-nums", className)}>
       {ticks.map((tick) => (
         <span
           key={tick.at}

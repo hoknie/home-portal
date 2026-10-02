@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { api } from "@/shared/config";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 
 export const POLL_MILLISECONDS = 1_000;
 export const GIVE_UP_MILLISECONDS = 60_000;

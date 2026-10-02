@@ -4,7 +4,7 @@ import { Server } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { ServiceCard, type ServiceView } from "@/entities/service";
-import { EmptyState } from "@/shared/ui/empty-state";
+import { EmptyState, Heading } from "@/shared/ui/kit";
 
 import { groupServices } from "../../model/grouping";
 import type { ServicesSettings } from "../../model/registry";
@@ -29,7 +29,9 @@ export function ServicesWidget({
       {groups.map((group) => (
         <section key={group.name ?? ""} className="grid gap-3">
           {showHeadings ? (
-            <h3 className="text-sm font-medium text-muted-foreground">{group.name ?? t("ungrouped")}</h3>
+            <Heading level="group" className="font-medium text-muted-foreground">
+              {group.name ?? t("ungrouped")}
+            </Heading>
           ) : null}
           <div className="grid gap-3 @lg:grid-cols-2 @4xl:grid-cols-3">
             {group.services.map((service) => (

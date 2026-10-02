@@ -3,7 +3,7 @@
 import { RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { DropdownMenuItem } from "@/shared/ui/primitives";
+import { DropdownMenuItem } from "@/shared/ui/kit";
 
 import { useRestartFlow } from "./use-restart-flow";
 

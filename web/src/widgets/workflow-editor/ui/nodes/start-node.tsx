@@ -6,6 +6,7 @@ import { History, Play } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { inputNames } from "@/entities/workflow";
+import { BareButton, CANVAS } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
 import type { CanvasNode } from "./node-data";
@@ -21,7 +22,8 @@ export function StartNode({ selected }: NodeProps<CanvasNode>) {
       role="group"
       aria-label={t("startNode")}
       className={cn(
-        "flex size-full flex-col gap-1.5 rounded-2xl border border-border/70 bg-[color-mix(in_oklch,var(--color-primary)_7%,var(--glass-overlay-solid))] p-3 shadow-[0_1px_2px_rgb(0_0_0/0.06),0_4px_12px_-6px_rgb(0_0_0/0.12)]",
+        CANVAS.startNode,
+        "flex size-full flex-col gap-1.5 p-3",
         selected && "outline-2 outline-offset-2 outline-primary/70",
       )}
     >
@@ -32,8 +34,7 @@ export function StartNode({ selected }: NodeProps<CanvasNode>) {
         <span className="min-w-0 truncate text-sm font-semibold">{editor.draft.title || t("untitled")}</span>
         {headerProblems > 0 ? <span className="size-2 shrink-0 rounded-full bg-destructive" title={t("problemCount", { count: headerProblems })} /> : null}
         {editor.lastRunId && editor.openRun ? (
-          <button
-            type="button"
+          <BareButton
             className="nodrag ms-auto rounded-md p-1 text-muted-foreground hover:bg-glass-tint hover:text-foreground"
             aria-label={t("run.showLast")}
             title={t("run.showLast")}
@@ -43,7 +44,7 @@ export function StartNode({ selected }: NodeProps<CanvasNode>) {
             }}
           >
             <History className="size-4" aria-hidden />
-          </button>
+          </BareButton>
         ) : null}
       </div>
       <p className="truncate text-xs text-muted-foreground">
@@ -52,7 +53,7 @@ export function StartNode({ selected }: NodeProps<CanvasNode>) {
       <div className="flex min-w-0 flex-wrap gap-1 overflow-hidden">
         {inputs.length === 0 ? <span className="text-xs text-muted-foreground">{t("noWorkflowInputs")}</span> : null}
         {inputs.map((input) => (
-          <span key={input} className="rounded-full bg-background/70 px-2 py-0.5 font-mono text-[11px]">
+          <span key={input} className="rounded-full bg-background/70 px-2 py-0.5 font-mono text-xs">
             {input}
           </span>
         ))}

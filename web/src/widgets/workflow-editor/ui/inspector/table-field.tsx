@@ -4,8 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { Path } from "@/entities/workflow";
-import { Button, Label } from "@/shared/ui/primitives";
-import { TemplateInput, type TemplateSuggestion } from "@/shared/ui/template-input";
+import { Button, Label, TemplateInput, type TemplateSuggestion } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
 import { StepTemplateInput, useGroupLabel, useTemplateProblems, useTranslatedSuggestions } from "./template-field";

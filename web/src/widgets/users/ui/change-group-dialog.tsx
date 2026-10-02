@@ -9,8 +9,7 @@ import { type User, useChangeUserGroup } from "@/entities/user";
 import { ConflictError, RequestError, ValidationError } from "@/shared/api";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, FormField } from "@/shared/ui/kit";
 
 import { GroupSelect, NO_GROUP, groupOf } from "./group-select";
 

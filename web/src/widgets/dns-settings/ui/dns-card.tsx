@@ -5,8 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { type Dns, type DnsTransport, answerIn, useDns } from "@/entities/dns-server";
 import { CopyLine } from "@/shared/ui/copy-line";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
+import { Appear, ErrorNotice, KvList, KvRow, SkeletonForm, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 import { StatusDot } from "@/shared/ui/status-badge";
 
@@ -34,35 +33,33 @@ function Answers({ dns }: { dns: Dns }) {
     return <p className="text-sm text-muted-foreground">{t("noNames")}</p>;
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-muted-foreground">
-            <th className="py-1 pr-4 font-medium">{t("name")}</th>
+    <Table>
+        <TableHeader>
+          <TableRow className="text-left text-muted-foreground hover:bg-transparent">
+            <TableHead className="h-auto px-0 py-1 pr-4 font-medium whitespace-normal text-muted-foreground">{t("name")}</TableHead>
             {dns.environments.map((environment) => (
-              <th key={environment} className="py-1 pr-4 font-medium">
+              <TableHead key={environment} className="h-auto px-0 py-1 pr-4 font-medium whitespace-normal text-muted-foreground">
                 {environment}
-              </th>
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {dns.names.map((entry) => (
-            <tr key={entry.name} className="border-t border-glass-edge">
-              <td className="py-1 pr-4 font-mono text-xs break-all">{entry.name}</td>
+            <TableRow key={entry.name} className="border-t border-glass-edge hover:bg-transparent">
+              <TableCell className="px-0 py-1 pr-4 font-mono text-xs break-all whitespace-normal">{entry.name}</TableCell>
               {dns.environments.map((environment) => {
                 const records = answerIn(dns, entry.name, environment);
                 return (
-                  <td key={environment} className="py-1 pr-4 font-mono text-xs">
+                  <TableCell key={environment} className="px-0 py-1 pr-4 font-mono text-xs whitespace-normal">
                     {records.length === 0 ? <span className="text-muted-foreground">{t("noAnswer")}</span> : records.map((record) => <div key={`${record.type}-${record.value}`}>{record.value}</div>)}
-                  </td>
+                  </TableCell>
                 );
               })}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+    </Table>
   );
 }
 
@@ -72,33 +69,35 @@ export function DnsCard() {
   const dns = useDns();
   const data = dns.data?.data;
   if (!data) {
-    return dns.error ? <ErrorNotice title={common("errors.loadFailed")} description={dns.error.message} onRetry={() => void dns.refetch()} /> : null;
+    return dns.error ? <ErrorNotice title={common("errors.loadFailed")} description={dns.error.message} onRetry={() => void dns.refetch()} /> : <SkeletonForm fields={5} />;
   }
   return (
-    <SectionCard>
-      <div className="grid gap-6">
-        <KvList>
-          {TRANSPORTS.map((name) => (
-            <TransportRow key={name} name={name} transport={data[name]} />
+    <Appear>
+      <SectionCard>
+        <div className="grid gap-6">
+          <KvList>
+            {TRANSPORTS.map((name) => (
+              <TransportRow key={name} name={name} transport={data[name]} />
+            ))}
+            <KvRow label={t("zones")}>{data.zones.length === 0 ? t("noZones") : data.zones.map((zone) => zone.apex).join(", ")}</KvRow>
+          </KvList>
+          {data.last_error ? <ErrorNotice title={t("lastError")} description={data.last_error} /> : null}
+          {data.unaddressed.map((environment) => (
+            <p key={environment} role="alert" className="flex items-start gap-2 text-sm">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-status-degraded" aria-hidden />
+              {t("unaddressed", { environment })}
+            </p>
           ))}
-          <KvRow label={t("zones")}>{data.zones.length === 0 ? t("noZones") : data.zones.map((zone) => zone.apex).join(", ")}</KvRow>
-        </KvList>
-        {data.last_error ? <ErrorNotice title={t("lastError")} description={data.last_error} /> : null}
-        {data.unaddressed.map((environment) => (
-          <p key={environment} role="alert" className="flex items-start gap-2 text-sm">
-            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-status-degraded" aria-hidden />
-            {t("unaddressed", { environment })}
-          </p>
-        ))}
-        <Answers dns={data} />
-        {data.tls_host ? <CopyLine label={t("tlsHost")} text={data.tls_host} /> : null}
-        {data.doh_url ? <CopyLine label={t("dohUrl")} text={data.doh_url} /> : null}
-        <details className="text-sm">
-          <summary className="cursor-pointer font-medium">{t("forwardingTitle")}</summary>
-          <p className="mt-2 text-muted-foreground">{t("forwarding")}</p>
-        </details>
-        <DnsSettingsForm dns={data} revision={dns.data?.revision ?? null} />
-      </div>
-    </SectionCard>
+          <Answers dns={data} />
+          {data.tls_host ? <CopyLine label={t("tlsHost")} text={data.tls_host} /> : null}
+          {data.doh_url ? <CopyLine label={t("dohUrl")} text={data.doh_url} /> : null}
+          <details className="text-sm">
+            <summary className="cursor-pointer font-medium">{t("forwardingTitle")}</summary>
+            <p className="mt-2 text-muted-foreground">{t("forwarding")}</p>
+          </details>
+          <DnsSettingsForm dns={data} revision={dns.data?.revision ?? null} />
+        </div>
+      </SectionCard>
+    </Appear>
   );
 }

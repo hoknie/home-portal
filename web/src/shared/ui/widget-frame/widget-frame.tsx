@@ -6,7 +6,7 @@ import { type ReactNode, createContext, useContext, useId } from "react";
 
 import { type Appearance, DEFAULT_APPEARANCE } from "@/shared/api";
 import { cn } from "@/shared/lib/cn";
-import { Skeleton } from "@/shared/ui/primitives";
+import { Heading, SkeletonLines, SURFACE } from "@/shared/ui/kit";
 
 export type WidgetFrameProps = {
   title: string;
@@ -19,7 +19,7 @@ export type WidgetFrameProps = {
 };
 
 const SURFACES: Record<Appearance["surface"], string> = {
-  card: "glass-panel rounded-2xl",
+  card: `${SURFACE.panel} rounded-2xl`,
   plain: "",
   tinted: "widget-tint rounded-2xl",
   outline: "rounded-2xl border",
@@ -64,9 +64,9 @@ export function WidgetFrame({ title, stale = false, problem = null, loading = fa
     >
       <div className={cn("flex items-center gap-2", !shown && "sr-only")}>
         {appearance.accent !== "neutral" ? <span aria-hidden data-mark className="size-2 shrink-0 rounded-full bg-widget-accent" /> : null}
-        <h2 id={heading} className="text-base font-semibold">
+        <Heading level="section" as="h2" id={heading} className="text-base">
           {title}
-        </h2>
+        </Heading>
         {stale ? (
           <span
             data-stale="true"
@@ -80,7 +80,7 @@ export function WidgetFrame({ title, stale = false, problem = null, loading = fa
       </div>
       <FrameSurface.Provider value={appearance.surface}>
         <FrameAlign.Provider value={appearance.align}>
-          <div className={cn("w-full", fill && "min-h-0 flex-1 overflow-auto")}>{loading ? <Skeleton className="h-24 w-full" aria-busy="true" /> : children}</div>
+          <div className={cn("w-full", fill && "min-h-0 flex-1 overflow-auto")}>{loading ? <SkeletonLines lines={3} /> : children}</div>
         </FrameAlign.Provider>
       </FrameSurface.Provider>
     </section>
@@ -89,7 +89,7 @@ export function WidgetFrame({ title, stale = false, problem = null, loading = fa
 
 export function WidgetPanel({ className, children }: { className?: string; children: ReactNode }) {
   const surface = useFrameSurface();
-  return <div className={cn(surface === "plain" && "glass-panel rounded-xl p-4", className)}>{children}</div>;
+  return <div className={cn(surface === "plain" && cn(SURFACE.panel, "rounded-xl p-4"), className)}>{children}</div>;
 }
 
 export function WidgetProblem({ message }: { message: string }) {

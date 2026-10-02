@@ -7,8 +7,7 @@ import { Controller, type UseFormReturn, useFieldArray } from "react-hook-form";
 
 import { type CatalogueEvent, messageKeyOf } from "@/entities/automation";
 import { type ArgumentValues, ArgumentMode, DeclaredArguments, type ScriptArgument, fromArgs, toArgs } from "@/entities/script";
-import { Button, Label } from "@/shared/ui/primitives";
-import { TemplateInput } from "@/shared/ui/template-input";
+import { BareButton, Button, Label, TemplateInput } from "@/shared/ui/kit";
 
 import type { RunFields } from "../model/run-fields";
 import { insertAt, tokenOf, unknownPlaceholders, unknownRanges } from "../model/placeholders";
@@ -168,16 +167,15 @@ export function ArgumentList({ form, event, declared = [] }: ArgumentListProps) 
         <p className="text-xs font-medium text-muted-foreground">{t("automationBuilder.fields")}</p>
         <div className="flex flex-wrap gap-1.5">
           {event.fields.map((field) => (
-            <button
+            <BareButton
               key={field.name}
-              type="button"
               title={label(field.name)}
               onMouseDown={(press) => press.preventDefault()}
               onClick={() => insert(field.name)}
               className="rounded-full border border-glass-edge bg-glass-tint px-2.5 py-1 font-mono text-xs hover:bg-accent"
             >
               {field.name}
-            </button>
+            </BareButton>
           ))}
         </div>
       </div>

@@ -4,8 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { END_OF_WORKFLOW, type WorkflowOutput } from "@/entities/workflow";
-import { Button, Input, Label } from "@/shared/ui/primitives";
-import { TemplateInput } from "@/shared/ui/template-input";
+import { Button, Input, Label, TemplateInput } from "@/shared/ui/kit";
 
 import { useEditor } from "../../../model/editor-context";
 import { useFilterSuggestions, useGroupLabel, useTranslatedSuggestions } from "../template-field";

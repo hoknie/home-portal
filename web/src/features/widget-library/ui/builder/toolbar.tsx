@@ -3,7 +3,7 @@
 import { ArrowLeft, Redo2, Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, Input, Panel } from "@/shared/ui/kit";
 
 export type ToolbarProps = {
   title: string;
@@ -23,7 +23,7 @@ export type ToolbarProps = {
 export function Toolbar(props: ToolbarProps) {
   const t = useTranslations("widgetBuilder");
   return (
-    <div className="glass-panel flex flex-wrap items-center gap-3 rounded-xl px-4 py-3" data-builder-toolbar="">
+    <Panel as="div" padding="none" className="flex flex-wrap items-center gap-3 rounded-xl px-4 py-3" data-builder-toolbar="">
       <Button type="button" variant="ghost" size="icon" onClick={props.onBack} aria-label={t("back")} title={t("back")}>
         <ArrowLeft aria-hidden />
       </Button>
@@ -42,6 +42,6 @@ export function Toolbar(props: ToolbarProps) {
           {props.saving ? t("saving") : t("save")}
         </Button>
       </div>
-    </div>
+    </Panel>
   );
 }

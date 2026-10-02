@@ -15,10 +15,9 @@ import { DEFAULT_APPEARANCE } from "@/shared/api";
 import { routes } from "@/shared/config";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { EmptyState } from "@/shared/ui/empty-state";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { cn } from "@/shared/lib/cn";
+import { Badge, Button, EmptyState, ErrorNotice, ListTransition, SkeletonWidget, SURFACE } from "@/shared/ui/kit";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Badge, Button, Skeleton } from "@/shared/ui/primitives";
 
 import { copyId } from "../model/copies";
 
@@ -90,45 +89,53 @@ export function WidgetLibraryScreen() {
         }
       />
       {library.error && !library.data ? <ErrorNotice title={t("title")} description={library.error.message} onRetry={() => void library.refetch()} /> : null}
-      {!library.data && !library.error ? <Skeleton className="h-64 w-full" aria-busy="true" /> : null}
+      {!library.data && !library.error ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" data-skeleton="library" aria-busy="true">
+          <SkeletonWidget rows={3} />
+          <SkeletonWidget rows={3} />
+          <SkeletonWidget rows={3} />
+        </div>
+      ) : null}
       {library.data && widgets.length === 0 ? <EmptyState icon={Puzzle} title={t("empty")} description={t("emptyHint")} action={add} /> : null}
       <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label={t("title")}>
-        {widgets.map((widget) => (
-          <li key={widget.id} className="glass-panel grid content-start gap-3 rounded-2xl p-3 transition-colors hover:border-primary/40" data-library-widget={widget.id}>
-            <div className="flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{nameOf(widget)}</p>
-                <p className="truncate font-mono text-xs text-muted-foreground">
-                  {t("meta", { id: widget.id, type: kindOf(widget.type)?.title ?? widget.type })}
-                </p>
+        <ListTransition items={widgets} keyOf={(widget) => widget.id}>
+          {(widget) => (
+            <li className={cn(SURFACE.panel, "grid content-start gap-3 rounded-2xl p-3 transition-colors hover:border-primary/40")} data-library-widget={widget.id}>
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{nameOf(widget)}</p>
+                  <p className="truncate font-mono text-xs text-muted-foreground">
+                    {t("meta", { id: widget.id, type: kindOf(widget.type)?.title ?? widget.type })}
+                  </p>
+                </div>
+                <Badge variant="outline">{t("placed", { placed: widget.placed })}</Badge>
               </div>
-              <Badge variant="outline">{t("placed", { placed: widget.placed })}</Badge>
-            </div>
-            <div inert className="pointer-events-none max-h-80 overflow-hidden rounded-xl bg-muted/40 p-3" data-library-stage="">
-              <LibraryPreview widget={widget} />
-            </div>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={() => open(widget)} aria-label={`${t("edit")}: ${nameOf(widget)}`}>
-                <Settings2 aria-hidden />
-                {t("edit")}
-              </Button>
-              <Button variant="ghost" size="icon" aria-label={`${t("duplicate")}: ${nameOf(widget)}`} title={t("duplicate")} onClick={() => void duplicate(widget)}>
-                <Copy aria-hidden />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-auto"
-                aria-label={`${t("delete")}: ${nameOf(widget)}`}
-                title={widget.placed > 0 ? t("usedHint") : t("delete")}
-                disabled={widget.placed > 0}
-                onClick={() => setDeleting(widget)}
-              >
-                <Trash2 aria-hidden />
-              </Button>
-            </div>
-          </li>
-        ))}
+              <div inert className="pointer-events-none max-h-80 overflow-hidden rounded-xl bg-muted/40 p-3" data-library-stage="">
+                <LibraryPreview widget={widget} />
+              </div>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" onClick={() => open(widget)} aria-label={`${t("edit")}: ${nameOf(widget)}`}>
+                  <Settings2 aria-hidden />
+                  {t("edit")}
+                </Button>
+                <Button variant="ghost" size="icon" aria-label={`${t("duplicate")}: ${nameOf(widget)}`} title={t("duplicate")} onClick={() => void duplicate(widget)}>
+                  <Copy aria-hidden />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto"
+                  aria-label={`${t("delete")}: ${nameOf(widget)}`}
+                  title={widget.placed > 0 ? t("usedHint") : t("delete")}
+                  disabled={widget.placed > 0}
+                  onClick={() => setDeleting(widget)}
+                >
+                  <Trash2 aria-hidden />
+                </Button>
+              </div>
+            </li>
+          )}
+        </ListTransition>
       </ul>
       <GalleryDialog
         open={adding}

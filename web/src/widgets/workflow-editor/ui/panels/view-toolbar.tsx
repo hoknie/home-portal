@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { Allowed } from "@/entities/session";
 import { routes } from "@/shared/config";
 import { AddressLink } from "@/shared/ui/address-link";
-import { Button, buttonVariants } from "@/shared/ui/primitives";
+import { Button, buttonVariants, Panel } from "@/shared/ui/kit";
 
 export type ViewToolbarProps = {
   workflowId: string;
@@ -24,7 +24,7 @@ export type ViewToolbarProps = {
 export function ViewToolbar({ workflowId, historyOpen, running, runDisabled, onRun, onLegend, onHistory, remove }: ViewToolbarProps) {
   const t = useTranslations("workflowEditor.toolbar");
   return (
-    <div className="glass-panel flex flex-wrap items-center gap-1 rounded-xl p-1.5" role="toolbar" aria-label={t("pageLabel")}>
+    <Panel as="div" padding="none" className="flex flex-wrap items-center gap-1 rounded-xl p-1.5" role="toolbar" aria-label={t("pageLabel")}>
       <Allowed area="workflows" action="execute">
         <Button type="button" size="sm" disabled={running || runDisabled} onClick={onRun}>
           <Play aria-hidden />
@@ -54,6 +54,6 @@ export function ViewToolbar({ workflowId, historyOpen, running, runDisabled, onR
           {remove}
         </Allowed>
       </span>
-    </div>
+    </Panel>
   );
 }

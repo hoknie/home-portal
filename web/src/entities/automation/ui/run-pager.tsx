@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/shared/ui/primitives";
+import { BareButton, Button } from "@/shared/ui/kit";
 
 import type { RunPages } from "../model/run-pages";
 
@@ -18,9 +18,9 @@ export function RunPager({ pages, nextBefore }: { pages: RunPages; nextBefore: s
         {pages.page > 1 ? (
           <>
             {t("frozen", { page: pages.page })}{" "}
-            <button type="button" className="underline" onClick={pages.newest}>
+            <BareButton className="underline" onClick={pages.newest}>
               {t("newest")}
-            </button>
+            </BareButton>
           </>
         ) : (
           t("page", { page: pages.page })

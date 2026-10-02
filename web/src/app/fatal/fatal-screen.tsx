@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { LanguageSwitch } from "@/features/language-switch";
 import { useFailure } from "@/entities/portal";
 import { routes } from "@/shared/config";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@/shared/ui/primitives";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, SkeletonLines } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 
 import { ProblemList } from "./problem-list";
@@ -36,7 +36,7 @@ export function FatalScreen() {
           <span className="mb-2 flex size-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
             <TriangleAlert className="size-5" aria-hidden />
           </span>
-          <CardTitle className="text-xl">{t("title")}</CardTitle>
+          <CardTitle className="text-lg">{t("title")}</CardTitle>
           <CardDescription>{report?.details ? t("detailsLead") : t("hiddenLead")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -50,7 +50,7 @@ export function FatalScreen() {
               {t("running")}
             </p>
           ) : null}
-          {!report && !running && !failure.isError ? <Skeleton className="h-32 w-full" aria-busy="true" /> : null}
+          {!report && !running && !failure.isError ? <SkeletonLines lines={4} /> : null}
           {report?.details ? (
             <>
               <ProblemList problems={report.problems ?? []} />

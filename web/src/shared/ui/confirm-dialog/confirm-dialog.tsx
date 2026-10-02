@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/shared/ui/primitives";
+} from "@/shared/ui/kit";
 
 export type ConfirmDialogProps = {
   open: boolean;

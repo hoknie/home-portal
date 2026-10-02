@@ -31,8 +31,8 @@ function marks(context: Context, path: string) {
     className: cn(
       MARKS,
       "cursor-pointer",
-      flagged && !selected && "bg-status-degraded/8 shadow-[inset_0_0_0_1px_var(--color-status-degraded)]",
-      selected && "bg-primary/8 shadow-[inset_0_0_0_2px_var(--color-primary)] hover:bg-primary/8",
+      flagged && !selected && "bg-status-degraded/8 ring-1 ring-status-degraded ring-inset",
+      selected && "bg-primary/8 ring-2 ring-primary ring-inset hover:bg-primary/8",
     ),
   };
 }

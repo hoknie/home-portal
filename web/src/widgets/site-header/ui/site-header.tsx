@@ -3,7 +3,7 @@
 import { useEnvironment } from "@/entities/environment";
 import { usePortal } from "@/entities/portal";
 import { useSession } from "@/entities/session";
-import { Skeleton } from "@/shared/ui/primitives";
+import { Skeleton } from "@/shared/ui/kit";
 
 import { SiteHeaderBar } from "./site-header-bar";
 

@@ -37,7 +37,7 @@ export function cellsIn(section: string): Record<string, Cell> {
       column: Math.round((box.left - rect.left) / column) + 1,
       row: Math.round((box.top - rect.top) / row) + 1,
       width: Math.max(1, Math.round((box.width + GAP_PIXELS) / column)),
-      rows: Math.max(1, Math.round((box.height + GAP_PIXELS) / row)),
+      rows: Math.max(1, Math.round(box.height / row)),
     };
   }
   return cells;

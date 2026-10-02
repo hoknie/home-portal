@@ -3,11 +3,9 @@
 import { useTranslations } from "next-intl";
 
 import { type Condition, type Operation, type Path, emptyRow, jsonKeys } from "@/entities/workflow";
-import { FormField } from "@/shared/ui/form-field";
-import { TemplateInput } from "@/shared/ui/template-input";
+import { FormField, NativeSelect, TemplateInput } from "@/shared/ui/kit";
 
 import { ConditionBuilder } from "../condition-builder";
-import { SELECT } from "../select-class";
 import type { NestedChain } from "./transform-chain";
 import { useEditor } from "../../../model/editor-context";
 import { StepTemplateInput, fieldId, useGroupLabel, useTemplateProblems, useTranslatedSuggestions } from "../template-field";
@@ -92,10 +90,10 @@ export function OperationForm({ path, field, depth, operation, item, from, neste
         <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
           <KeyField path={path} field={`${field}.key`} id={`${id}-key`} label={t("key")} value={operation.key ?? ""} keys={keys} onChange={(key) => onChange({ ...operation, key })} />
           <FormField id={`${id}-order`} label={t("order")}>
-            <select id={`${id}-order`} className={SELECT} value={operation.order ?? "asc"} onChange={(event) => onChange({ ...operation, order: event.target.value })}>
+            <NativeSelect id={`${id}-order`} value={operation.order ?? "asc"} onChange={(event) => onChange({ ...operation, order: event.target.value })}>
               <option value="asc">{t("orders.asc")}</option>
               <option value="desc">{t("orders.desc")}</option>
-            </select>
+            </NativeSelect>
           </FormField>
         </div>
       );

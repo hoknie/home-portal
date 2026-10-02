@@ -7,12 +7,10 @@ import { Controller, type UseFormReturn, useFieldArray } from "react-hook-form";
 import { useProxy } from "@/entities/proxy";
 import { type ServiceForm, row } from "@/entities/service";
 import { MultiSelect } from "@/shared/ui/multi-select";
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, Checkbox, Input, NativeSelect } from "@/shared/ui/kit";
 
 import { ProxySettings } from "./proxy-settings";
 
-const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50";
 const COLUMNS = "md:grid-cols-[minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,2.4fr)_max-content_2.25rem]";
 const SPAN = "md:col-span-full md:grid-cols-subgrid";
 
@@ -91,16 +89,15 @@ export function AddressRows({ form }: Props) {
                     control={form.control}
                     name={`rows.${index}.sign_in`}
                     render={({ field: signIn }) => (
-                      <select
+                      <NativeSelect
                         id={`row-${index}-sign-in`}
-                        className={SELECT}
                         disabled={current.locked}
                         value={signIn.value ? "portal" : "none"}
                         onChange={(event) => signIn.onChange(event.target.value === "portal")}
                       >
                         <option value="none">{t("signInNone")}</option>
                         <option value="portal">{t("signInPortal")}</option>
-                      </select>
+                      </NativeSelect>
                     )}
                   />
                   <Message text={rowErrors?.sign_in?.message} />
@@ -134,13 +131,11 @@ export function AddressRows({ form }: Props) {
                       control={form.control}
                       name={`rows.${index}.proxied`}
                       render={({ field: through }) => (
-                        <input
-                          type="checkbox"
-                          className="size-4 accent-primary"
+                        <Checkbox
                           aria-describedby={index === 0 ? "row-main-proxy-hint" : undefined}
                           disabled={index === 0 || current.locked || (!through.value && proxied)}
                           checked={through.value}
-                          onChange={(event) => through.onChange(event.target.checked)}
+                          onCheckedChange={(checked) => through.onChange(checked === true)}
                         />
                       )}
                     />

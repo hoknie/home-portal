@@ -10,7 +10,7 @@ import { routes } from "@/shared/config";
 import { pushAddress } from "@/shared/lib/navigation";
 import { AddressLink } from "@/shared/ui/address-link";
 import type { Column } from "@/shared/ui/data-table";
-import { Badge, buttonVariants } from "@/shared/ui/primitives";
+import { Badge, buttonVariants } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { TagList } from "@/shared/ui/tag-list";
 

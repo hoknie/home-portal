@@ -6,9 +6,10 @@ import { ACCENTS, ALIGNS, type Appearance, PADDINGS, SURFACES, TITLE_VISIBILITIE
 import { cn } from "@/shared/lib/cn";
 
 import { ChoiceGroup } from "@/shared/ui/choice-group";
+import { SURFACE } from "@/shared/ui/kit";
 
 const SURFACE_SWATCH: Record<Appearance["surface"], string> = {
-  card: "glass-panel",
+  card: SURFACE.panel,
   plain: "border border-dashed border-transparent",
   tinted: "widget-tint",
   outline: "border",

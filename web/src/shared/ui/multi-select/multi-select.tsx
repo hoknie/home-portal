@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../primitives";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../kit";
 
 export type MultiSelectOption = { value: string; label: string; disabled?: boolean };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/shared/lib/cn";
+import { BareButton } from "@/shared/ui/kit";
 
 export type TagFilterProps = {
   label: string;
@@ -40,9 +41,8 @@ export function TagFilter({ label, tags, selected, onChange }: TagFilterProps) {
       {tags.map((tag) => {
         const on = chosen.includes(tag.toLowerCase());
         return (
-          <button
+          <BareButton
             key={tag}
-            type="button"
             aria-pressed={on}
             onClick={() => onChange(on ? selected.filter((picked) => picked.toLowerCase() !== tag.toLowerCase()) : [...selected, tag])}
             className={cn(
@@ -51,7 +51,7 @@ export function TagFilter({ label, tags, selected, onChange }: TagFilterProps) {
             )}
           >
             {tag}
-          </button>
+          </BareButton>
         );
       })}
     </div>

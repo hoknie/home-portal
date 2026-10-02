@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { GAP_Y } from "@/entities/workflow";
+import { BareButton, CANVAS } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
 import { slotKey } from "../../model/edits/drop";
@@ -76,7 +77,8 @@ export function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePositio
           {text ? (
             <span
               className={cn(
-                "rounded-full border border-glass-edge bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground shadow-xs",
+                CANVAS.edgeLabel,
+                "px-2 py-0.5 text-xs font-medium text-muted-foreground",
                 data?.taken && "border-primary text-primary",
               )}
             >
@@ -84,18 +86,18 @@ export function FlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePositio
             </span>
           ) : null}
           {slot && !editor.readOnly ? (
-            <button
-              type="button"
+            <BareButton
               aria-label={t("insertHere")}
               data-slot={slotKey(slot)}
               onClick={() => editor.openPalette(slot)}
               className={cn(
-                "grid place-items-center rounded-full border border-glass-edge bg-background text-muted-foreground shadow-xs transition-all hover:scale-110 hover:border-primary hover:text-primary",
+                CANVAS.edgeLabel,
+                "grid place-items-center text-muted-foreground transition-all hover:scale-110 hover:border-primary hover:text-primary",
                 data?.dragging ? "size-10 border-2 border-dashed border-primary text-primary" : "size-8 opacity-70 hover:opacity-100",
               )}
             >
               <Plus className="size-4" aria-hidden />
-            </button>
+            </BareButton>
           ) : null}
         </div>
       </EdgeLabelRenderer>
@@ -110,11 +112,11 @@ export function LoopEdge({ id, sourceX, sourceY, targetX, targetY, data, markerE
   const text = labelText(data?.label);
   return (
     <>
-      <BaseEdge id={id} path={path} markerEnd={markerEnd} className="!stroke-violet-500/60 [stroke-dasharray:6_4]" />
+      <BaseEdge id={id} path={path} markerEnd={markerEnd} className="!stroke-palette-violet/60 [stroke-dasharray:6_4]" />
       {text ? (
         <EdgeLabelRenderer>
           <span
-            className="absolute rounded-full border border-violet-500/40 bg-background px-2 py-0.5 text-[11px] text-violet-600 dark:text-violet-300"
+            className="absolute rounded-full border border-palette-violet/40 bg-background px-2 py-0.5 text-xs text-palette-violet"
             style={{ transform: `translate(-50%, -50%) translate(${right}px, ${(sourceY + targetY) / 2}px)` }}
           >
             {text}

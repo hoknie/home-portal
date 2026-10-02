@@ -14,7 +14,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/shared/ui/primitives";
+} from "@/shared/ui/kit";
 
 import { type Destination, destinationsFor } from "../../model/edits/destinations";
 import { useEditor } from "../../model/editor-context";

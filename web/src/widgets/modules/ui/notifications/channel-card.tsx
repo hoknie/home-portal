@@ -6,8 +6,7 @@ import { useState } from "react";
 import { Allowed } from "@/entities/session";
 import { type NotificationChannel, useSendTest } from "@/entities/notification";
 import { ConflictError } from "@/shared/api";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
-import { Badge, Button } from "@/shared/ui/primitives";
+import { Badge, Button, KvList, KvRow } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { SectionCard } from "@/shared/ui/section-card";
 

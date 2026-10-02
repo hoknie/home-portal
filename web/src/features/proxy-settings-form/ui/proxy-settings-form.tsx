@@ -18,12 +18,8 @@ import { useCan } from "@/entities/session";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { ErrorNotice } from "@/shared/ui/error-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, ErrorNotice, FormField, Input, NativeSelect } from "@/shared/ui/kit";
 
-const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 const FIELDS: Record<string, Path<ProxySettingsFormValues>> = {
   "proxy.http_port": "http_port",
@@ -121,13 +117,13 @@ export function ProxySettingsForm({ proxy, revision }: ProxySettingsFormProps) {
           </FormField>
         </div>
         <FormField id="proxy-tls" label={t("proxy.settings.tls")} hint={t(`serviceForm.publicationTlsHints.${mode}`)}>
-          <select id="proxy-tls" className={SELECT} {...form.register("mode")}>
+          <NativeSelect id="proxy-tls" {...form.register("mode")}>
             {PROXY_TLS_MODES.map((value) => (
               <option key={value} value={value}>
                 {t(`proxy.tlsModes.${value}`)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </FormField>
         {mode === "acme" ? (
           <FormField id="proxy-email" label={t("serviceForm.publicationEmail")} optional error={errors.email?.message}>

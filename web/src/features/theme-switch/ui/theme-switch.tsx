@@ -9,7 +9,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-} from "@/shared/ui/primitives";
+} from "@/shared/ui/kit";
 
 const THEMES = [
   { value: "light", icon: Sun },

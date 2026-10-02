@@ -9,7 +9,7 @@ import { useScripts } from "@/entities/automation";
 import { MODULE_NAMES, type ModuleCategory, enabledModules, useModules } from "@/entities/module";
 import { mayOpen, useSession } from "@/entities/session";
 import { cn } from "@/shared/lib/cn";
-import { Separator, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/primitives";
+import { BareButton, Separator, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/kit";
 
 import { toggleCategory, useCollapsedCategories } from "../model/category-state";
 import { type CategoryLinks, activeIn, categoryLinks, isActive, managementLinks, subLinksOf } from "../model/navigation";
@@ -29,7 +29,7 @@ function NavItem({ href, label, icon: Icon, pathname, onNavigate, compact = fals
       className={cn(
         "flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-[color,background-color] duration-150",
         compact ? "justify-center px-2" : nested ? "ml-5 px-3 py-1.5 text-xs" : "px-3",
-        active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent",
+        active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent",
       )}
     >
       <Icon className="size-4 shrink-0" aria-hidden />
@@ -56,20 +56,19 @@ function Category({ group, collapsed, pathname, onNavigate }: CategoryProps) {
   const holdsActive = group.links.some((link) => isActive(pathname, link.href));
   return (
     <div className="grid gap-1" data-category={group.category}>
-      <button
-        type="button"
+      <BareButton
         aria-expanded={!collapsed}
         aria-controls={listId}
         data-active={collapsed && holdsActive ? "" : undefined}
         onClick={() => toggleCategory(group.category)}
         className={cn(
-          "flex items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium text-sidebar-foreground/70 transition-[color,background-color] duration-150 hover:bg-sidebar-accent",
+          "flex items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium text-muted-foreground transition-[color,background-color] duration-150 hover:bg-sidebar-accent",
           collapsed && holdsActive && "bg-sidebar-accent text-sidebar-accent-foreground",
         )}
       >
         <ChevronDown className={cn("size-3.5 shrink-0 transition-transform", collapsed && "-rotate-90")} aria-hidden />
         {names(group.category)}
-      </button>
+      </BareButton>
       <div id={listId} role="group" aria-label={names(group.category)} hidden={collapsed} className="grid gap-1">
         {group.links.map(({ href, label, icon }) => (
           <NavItem key={href} href={href} label={t(label)} icon={icon} pathname={pathname} onNavigate={onNavigate} />
@@ -102,7 +101,7 @@ export function NavLinks({ onNavigate, compact = false }: NavLinksProps) {
       ))}
       {groups.length > 0 ? (
         <div role="group" aria-labelledby="nav-modules" className="mt-4 grid gap-1">
-          <p id="nav-modules" className={cn("px-3 pb-1 text-xs font-medium tracking-wide text-sidebar-foreground/60 uppercase", compact && "sr-only")}>
+          <p id="nav-modules" className={cn("px-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase", compact && "sr-only")}>
             {t("modulesSection")}
           </p>
           {compact

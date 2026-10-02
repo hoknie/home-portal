@@ -29,7 +29,7 @@ it("draws each section under its title with its widgets at their widths and heig
   expect(media.querySelector(":scope > h2")).toBeNull();
 });
 
-it("places widgets in order on a grid of 80 px rows, a fixed height spanning its rows", () => {
+it("places widgets in order on a grid of 8 px steps, a fixed height spanning twelve steps per 80 px row", () => {
   const sized = [
     { width: 3, height: 2 },
     { width: 3, height: 2 },
@@ -38,14 +38,14 @@ it("places widgets in order on a grid of 80 px rows, a fixed height spanning its
   ].map((size, index) => ({ ...dashboard.widgets[0], key: `w${index}`, title: `Box ${index}`, section: "now", ...size }));
   const { container } = renderWithProviders(<BoardGrid sections={dashboard.sections} widgets={sized} services={services} />);
   const grid = container.querySelector('[data-section="now"] > div') as HTMLElement;
-  expect(grid.className).toContain("auto-rows-[80px]");
+  expect(grid.className).toContain("auto-rows-[8px]");
   expect(grid.className).not.toContain("grid-flow-dense");
   const cells = [...grid.children] as HTMLElement[];
   expect(cells.map((cell) => [cell.style.getPropertyValue("--span"), cell.style.getPropertyValue("--rows")])).toEqual([
-    ["3", "2"],
-    ["3", "2"],
-    ["6", "4"],
-    ["6", "2"],
+    ["3", "24"],
+    ["3", "24"],
+    ["6", "48"],
+    ["6", "24"],
   ]);
 });
 

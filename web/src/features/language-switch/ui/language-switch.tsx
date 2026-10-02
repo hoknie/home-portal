@@ -4,14 +4,7 @@ import { ChevronDown, Languages } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { isLocale, locales } from "@/shared/i18n";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/shared/ui/primitives";
+import { BareButton, DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/shared/ui/kit";
 
 import { chooseLanguage } from "../model/choose";
 
@@ -26,15 +19,14 @@ export function LanguageSwitch() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          type="button"
+        <BareButton
           aria-label={t("choose", { name: t(`names.${current}`) })}
           className="inline-flex items-center gap-1.5 rounded-full border border-glass-edge bg-glass-tint px-2.5 py-1 text-xs text-muted-foreground uppercase outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Languages className="size-3.5" aria-hidden />
           {current}
           <ChevronDown className="size-3 opacity-60" aria-hidden />
-        </button>
+        </BareButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuLabel className="font-normal text-muted-foreground">{t("label")}</DropdownMenuLabel>

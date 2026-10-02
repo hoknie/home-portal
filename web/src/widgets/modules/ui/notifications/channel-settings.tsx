@@ -10,13 +10,10 @@ import { useSecretNames } from "@/entities/workflow";
 import { ConflictError, ValidationError } from "@/shared/api";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
+import { Button, FormField, Input, Label, NativeSelect, Switch } from "@/shared/ui/kit";
 
 export const SECRET_SETTING = "secret";
 
-const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export function ChannelSettings({ channel, revision }: { channel: NotificationChannel; revision: string | null }) {
   const t = useTranslations();
@@ -83,14 +80,14 @@ export function ChannelSettings({ channel, revision }: { channel: NotificationCh
           return (
             <FormField key={key} id={id} label={label(key)} error={errors[key]}>
               {key === SECRET_SETTING ? (
-                <select id={id} className={SELECT} value={typeof value === "string" ? value : ""} onChange={(event) => set(key, event.target.value)}>
+                <NativeSelect id={id} value={typeof value === "string" ? value : ""} onChange={(event) => set(key, event.target.value)}>
                   <option value="">{t("notifications.settings.noSecret")}</option>
                   {secretNames.map((name) => (
                     <option key={name} value={name}>
                       {name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               ) : (
                 <Input id={id} spellCheck={false} autoComplete="off" value={value === null || value === undefined ? "" : String(value)} onChange={(event) => set(key, event.target.value)} />
               )}

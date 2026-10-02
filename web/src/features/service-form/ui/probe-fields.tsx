@@ -4,11 +4,8 @@ import { useTranslations } from "next-intl";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
 import { PROBE_KINDS, type ServiceForm } from "@/entities/service";
-import { FormField } from "@/shared/ui/form-field";
-import { Input, Label, Switch } from "@/shared/ui/primitives";
+import { FormField, Input, Label, NativeSelect, Switch } from "@/shared/ui/kit";
 
-const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export function ProbeFields({ form }: { form: UseFormReturn<ServiceForm> }) {
   const t = useTranslations();
@@ -27,13 +24,13 @@ export function ProbeFields({ form }: { form: UseFormReturn<ServiceForm> }) {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField id="probe-kind" label={t("serviceForm.probeKind")} hint={t(`serviceForm.probeKindHints.${kind}`)}>
-          <select id="probe-kind" className={SELECT} {...form.register("probe.kind")}>
+          <NativeSelect id="probe-kind" {...form.register("probe.kind")}>
             {PROBE_KINDS.map((value) => (
               <option key={value} value={value}>
                 {t(`servicePage.probe.kinds.${value}`)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </FormField>
         {kind === "http" ? (
           <FormField id="probe-path" label={t("serviceForm.probePath")} error={errors?.path?.message}>

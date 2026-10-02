@@ -7,7 +7,7 @@ import { modulesKey, modulesSchema } from "@/entities/module";
 import { sessionKey } from "@/entities/session";
 import { apiSamples } from "@/shared/api";
 import { renderWithProviders, testQueryClient } from "@/shared/lib/testing";
-import { TooltipProvider } from "@/shared/ui/primitives";
+import { TooltipProvider } from "@/shared/ui/kit";
 
 import { CATEGORIES_KEY, rereadCollapsedCategories } from "../model/category-state";
 import { NavLinks } from "./nav-links";

@@ -3,7 +3,7 @@
 import { Play } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/shared/ui/primitives";
+import { BareButton, Button, Heading } from "@/shared/ui/kit";
 
 import type { KnownPath } from "../../model/suggestion-source";
 
@@ -14,9 +14,9 @@ export function DataTree({ known, running, canRun, onRun, onInsert }: DataTreePr
   return (
     <section aria-labelledby="builder-data-tree" className="grid gap-2 rounded-xl border border-glass-edge bg-muted/30 p-3" data-data-tree="">
       <div className="flex items-center gap-2">
-        <h3 id="builder-data-tree" className="mr-auto text-sm font-medium">
+        <Heading level="group" as="h3" id="builder-data-tree" className="mr-auto text-sm font-medium">
           {t("title")}
-        </h3>
+        </Heading>
         {canRun ? (
           <Button type="button" variant="outline" size="sm" onClick={onRun} disabled={running}>
             <Play aria-hidden />
@@ -28,8 +28,7 @@ export function DataTree({ known, running, canRun, onRun, onInsert }: DataTreePr
       <ul className="grid max-h-56 gap-0.5 overflow-auto">
         {known.map((path) => (
           <li key={path.path}>
-            <button
-              type="button"
+            <BareButton
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => onInsert(path.path)}
               aria-label={t("insert", { path: path.path })}
@@ -39,7 +38,7 @@ export function DataTree({ known, running, canRun, onRun, onInsert }: DataTreePr
               <span className="text-muted-foreground">{t(`kinds.${path.kind}` as "kinds.value")}</span>
               {path.sample !== null ? <span className="ml-auto truncate text-muted-foreground">{path.sample}</span> : null}
               {path.description !== null ? <span className="basis-full text-muted-foreground">{path.description}</span> : null}
-            </button>
+            </BareButton>
           </li>
         ))}
       </ul>

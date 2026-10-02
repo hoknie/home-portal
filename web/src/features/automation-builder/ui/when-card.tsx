@@ -4,13 +4,12 @@ import { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 
 import { type Catalogue, type FilterName, messageKeyOf } from "@/entities/automation";
-import { FormField } from "@/shared/ui/form-field";
+import { FormField, NativeSelect } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import { EVENT_GROUPS, eventOf, groupOf } from "../model/events";
 import { CLEARED, type AutomationForm, foreignFilters } from "../model/form";
 import { CronField } from "./cron-field";
-import { SELECT } from "./select";
 
 export type WhenCardProps = { form: UseFormReturn<AutomationForm>; catalogue: Catalogue };
 
@@ -29,7 +28,7 @@ export function WhenCard({ form, catalogue }: WhenCardProps) {
     <SectionCard title={t("automationBuilder.when")} description={t("automationBuilder.whenDescription")}>
       <div className="grid gap-4">
         <FormField id="automation-event" label={t("automationBuilder.event")} hint={t(`automationEvents.${key}.description` as Parameters<typeof t>[0])}>
-          <select id="automation-event" className={SELECT} value={event} onChange={(change_) => change(change_.target.value as AutomationForm["event"])}>
+          <NativeSelect id="automation-event" value={event} onChange={(change_) => change(change_.target.value as AutomationForm["event"])}>
             {EVENT_GROUPS.map((group) => (
               <optgroup key={group} label={t(`automationBuilder.groups.${group}`)}>
                 {catalogue.events
@@ -41,7 +40,7 @@ export function WhenCard({ form, catalogue }: WhenCardProps) {
                   ))}
               </optgroup>
             ))}
-          </select>
+          </NativeSelect>
         </FormField>
         {event === "schedule" ? <CronField form={form} /> : null}
       </div>

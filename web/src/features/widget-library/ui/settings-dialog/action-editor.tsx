@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { useAutomations } from "@/entities/automation";
 import { useWorkflows } from "@/entities/workflow";
 
-import { NATIVE_SELECT as SELECT } from "../../model/select-style";
 import { TemplateField } from "./template-field";
+import { NativeSelect } from "@/shared/ui/kit";
 
 type Action = { id?: string; automation?: string; fields?: Record<string, string>; workflow?: string; inputs?: Record<string, unknown>; refresh?: boolean; link?: string };
 
@@ -37,35 +37,35 @@ export function ActionEditor({ id, action, errors, onChange }: { id: string; act
   return (
     <fieldset className="grid gap-2 rounded-lg border border-dashed p-3">
       <legend className="px-1 text-xs font-medium">{t("label")}</legend>
-      <select aria-label={t("label")} className={SELECT} value={kind} onChange={(event) => choose(event.target.value as Kind)}>
+      <NativeSelect aria-label={t("label")} value={kind} onChange={(event) => choose(event.target.value as Kind)}>
         {(["automation", "workflow", "refresh", "link"] as const).map((value) => (
           <option key={value} value={value}>
             {t(`kinds.${value}`)}
           </option>
         ))}
-      </select>
+      </NativeSelect>
       {errors[""] ? <p role="alert" className="text-xs text-destructive">{errors[""]}</p> : null}
       {kind === "automation" ? (
         <>
-          <select aria-label={t("automation")} className={SELECT} value={action.automation} onChange={(event) => onChange({ ...keep, automation: event.target.value })}>
+          <NativeSelect aria-label={t("automation")} value={action.automation} onChange={(event) => onChange({ ...keep, automation: event.target.value })}>
             {automations.map((automation) => (
               <option key={automation.id} value={automation.id}>
                 {automation.title}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {errors.automation ? <p role="alert" className="text-xs text-destructive">{errors.automation}</p> : null}
         </>
       ) : null}
       {kind === "workflow" ? (
         <>
-          <select aria-label={t("workflow")} className={SELECT} value={action.workflow} onChange={(event) => onChange({ ...keep, workflow: event.target.value, inputs: {} })}>
+          <NativeSelect aria-label={t("workflow")} value={action.workflow} onChange={(event) => onChange({ ...keep, workflow: event.target.value, inputs: {} })}>
             {workflows.map((workflow) => (
               <option key={workflow.id} value={workflow.id}>
                 {workflow.title}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {(chosenWorkflow?.inputs ?? []).map((input) => (
             <TemplateField
               key={input.name}

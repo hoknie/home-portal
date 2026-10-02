@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { FormField } from "@/shared/ui/form-field";
+import { FormField } from "@/shared/ui/kit";
 
 import { namedInputs } from "../model/inputs";
 import type { InputDeclaration } from "../model/schema";

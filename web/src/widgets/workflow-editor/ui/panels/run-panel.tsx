@@ -9,7 +9,7 @@ import { StopRunButton } from "@/features/runs/stop-run";
 import { OutcomeBadge, type Run, type TraceEntry, TraceEntryView, depthOf, isActive, passRows, rowHeading } from "@/entities/automation";
 import { START_ID, at, parsePath } from "@/entities/workflow";
 import { AddressLink } from "@/shared/ui/address-link";
-import { buttonVariants } from "@/shared/ui/primitives";
+import { BareButton, buttonVariants, CANVAS, Heading, Panel } from "@/shared/ui/kit";
 
 import { PANEL_WIDTH_CLASS } from "../resizing/panel-row";
 import { useEditor } from "../../model/editor-context";
@@ -65,7 +65,7 @@ function RunSteps({ entries, current, onChoose }: { entries: TraceEntry[]; curre
       {rows.map((row, position) => {
         if (row.type !== "entry") {
           return (
-            <li key={`${row.type}-${position}`} className="px-2 pt-1 text-[11px] font-medium text-muted-foreground" style={{ paddingInlineStart: `${row.depth * INDENT_REM + 0.5}rem` }}>
+            <li key={`${row.type}-${position}`} className="px-2 pt-1 text-xs font-medium text-muted-foreground" style={{ paddingInlineStart: `${row.depth * INDENT_REM + 0.5}rem` }}>
               {rowHeading(row, trace)}
             </li>
           );
@@ -73,8 +73,7 @@ function RunSteps({ entries, current, onChoose }: { entries: TraceEntry[]; curre
         const { entry, index } = row;
         return (
           <li key={`${index}-${entry.path}`}>
-            <button
-              type="button"
+            <BareButton
               onClick={() => onChoose(index)}
               data-outcome={entry.outcome}
               aria-current={index === current ? "step" : undefined}
@@ -85,21 +84,20 @@ function RunSteps({ entries, current, onChoose }: { entries: TraceEntry[]; curre
               <span className={cn("size-2 rounded-full", DOT[entry.outcome] ?? "bg-muted-foreground/50")} aria-hidden />
               <span className="truncate">{entry.label}</span>
               <span className="text-muted-foreground tabular-nums">{t("duration", { milliseconds: entry.duration_milliseconds })}</span>
-            </button>
+            </BareButton>
           </li>
         );
       })}
     </ol>
       {more ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-10 items-end justify-center bg-gradient-to-t from-[var(--glass-overlay-solid)] to-transparent">
-          <button
-            type="button"
-            className="pointer-events-auto mb-0.5 flex items-center gap-1 rounded-full border border-glass-edge bg-background px-2 py-0.5 text-[11px] text-muted-foreground shadow-sm hover:text-foreground"
+        <div className={cn("pointer-events-none absolute inset-x-0 bottom-0 flex h-10 items-end justify-center", CANVAS.fadeBottom)}>
+          <BareButton
+            className={cn(CANVAS.floatingChip, "pointer-events-auto mb-0.5 flex items-center gap-1 px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground")}
             onClick={() => list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" })}
           >
             <ChevronDown className="size-3" aria-hidden />
             {t("moreBelow")}
-          </button>
+          </BareButton>
         </div>
       ) : null}
     </div>
@@ -120,9 +118,8 @@ function StepDetails({ entries, current, selected, onChoose }: { entries: TraceE
       {passes.length > 1 ? (
         <div role="group" aria-label={t("passes")} className="flex flex-wrap gap-1">
           {passes.map(({ entry, index }, number) => (
-            <button
+            <BareButton
               key={index}
-              type="button"
               aria-pressed={index === current}
               onClick={() => onChoose(index)}
               className={cn(
@@ -132,7 +129,7 @@ function StepDetails({ entries, current, selected, onChoose }: { entries: TraceE
             >
               <span className={cn("size-1.5 rounded-full", DOT[entry.outcome] ?? "bg-muted-foreground/50")} aria-hidden />
               {number + 1}
-            </button>
+            </BareButton>
           ))}
         </div>
       ) : null}
@@ -175,10 +172,10 @@ export function RunPanel({ run, title, stale, missing, historyHref, closeHref, e
     editor.reveal(entries[index].path);
   };
   return (
-    <aside aria-label={t("title")} className={cn("glass-panel flex max-h-[45%] min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl md:max-h-full", PANEL_WIDTH_CLASS)}>
+    <Panel as="aside" padding="none" aria-label={t("title")} className={cn("flex max-h-[45%] min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl md:max-h-full", PANEL_WIDTH_CLASS)}>
       <header className="grid gap-2 border-b border-glass-edge p-4">
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <h2 className="text-base font-semibold">{t("title")}</h2>
+          <Heading level="group" as="h2" className="text-base font-semibold">{t("title")}</Heading>
           {run ? <OutcomeBadge outcome={run.outcome.result} /> : null}
           {run && !isActive(run) ? <span className="text-xs text-muted-foreground tabular-nums">{t("duration", { milliseconds: run.outcome.duration_milliseconds })}</span> : null}
           <span className="ms-auto flex items-center gap-1">
@@ -199,20 +196,20 @@ export function RunPanel({ run, title, stale, missing, historyHref, closeHref, e
       ) : (
         <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden">
           <section className="grid gap-1 p-2">
-            <h3 className="px-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{t("stepsCount", { count: entries.length })}</h3>
+            <Heading level="group" as="h3" className="px-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{t("stepsCount", { count: entries.length })}</Heading>
             <RunSteps entries={entries} current={current} onChoose={choose} />
           </section>
           <section aria-label={t("stepDetails")} className="flex min-h-0 flex-col border-t-2 border-glass-edge bg-glass-tint/60">
-            <h3 className="flex min-w-0 items-center gap-1 border-b border-glass-edge px-4 py-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+            <Heading level="group" as="h3" className="flex min-w-0 items-center gap-1 border-b border-glass-edge px-4 py-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               {t("stepDetails")}
               {current !== null ? <span className="truncate font-normal tracking-normal normal-case text-foreground before:me-1 before:text-muted-foreground before:content-['·']">{entries[current].label}</span> : null}
-            </h3>
+            </Heading>
             <div className="min-h-0 flex-1 overflow-y-auto p-4">
               <StepDetails entries={entries} current={current} selected={selected} onChoose={choose} />
             </div>
           </section>
         </div>
       )}
-    </aside>
+    </Panel>
   );
 }

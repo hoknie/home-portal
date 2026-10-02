@@ -3,11 +3,10 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input, Label } from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input, Label, NativeSelect } from "@/shared/ui/kit";
 
 import { joined } from "../../model/script-usage";
 
-const SELECT = "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm";
 
 export type PlaceDialogProps = {
   open: boolean;
@@ -51,14 +50,14 @@ function PlaceForm({
       {withFolder ? (
         <div className="grid gap-1.5">
           <Label htmlFor="script-place-folder">{t("folder")}</Label>
-          <select id="script-place-folder" className={SELECT} value={chosen} onChange={(change) => setChosen(change.target.value)}>
+          <NativeSelect id="script-place-folder" value={chosen} onChange={(change) => setChosen(change.target.value)}>
             <option value="">{t("topLevel")}</option>
             {folders.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       ) : null}
       <div className="grid gap-1.5">

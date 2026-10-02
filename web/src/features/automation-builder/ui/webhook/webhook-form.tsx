@@ -17,10 +17,8 @@ import { routes } from "@/shared/config";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Input, Label, Switch, Button } from "@/shared/ui/primitives";
+import { Button, FormField, Input, Label, Panel, Radio, Switch, TagInput } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
-import { TagInput } from "@/shared/ui/tag-input";
 
 import type { RunFields } from "../../model/run-fields";
 import { type Problem, flatProblems, hiddenProblems } from "../../model/problems";
@@ -138,7 +136,7 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
               </Label>
               {actions.map((action) => (
                 <label key={action} className="flex items-start gap-2 text-sm">
-                  <input type="radio" className="mt-1 accent-primary" value={action} {...form.register("action")} />
+                  <Radio className="mt-1" value={action} {...form.register("action")} />
                   <span className="grid gap-0.5">
                     <span className="font-medium">{t(`webhooks.actions.${action}`)}</span>
                     <span className="text-xs text-muted-foreground">{t(`webhooks.actionHints.${action}`)}</span>
@@ -169,7 +167,7 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
           </>
         ) : null}
         <FormProblems problems={leftover} />
-        <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
+        <Panel as="div" padding="none" className="sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
           <Button asChild variant="outline">
             <Link href={routes.adminWebhooks}>{t("common.cancel")}</Link>
           </Button>
@@ -178,7 +176,7 @@ export function WebhookForm({ webhook, revision, catalogue, scripts, onSaved, on
               {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
             </Button>
           ) : null}
-        </div>
+        </Panel>
         <TokenDialog
           token={issued?.token ?? null}
           address={issued?.address ?? webhook?.address ?? ""}

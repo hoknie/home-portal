@@ -3,6 +3,7 @@
 import { type KeyboardEvent, type PointerEvent, useId, useState } from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { SURFACE } from "@/shared/ui/kit";
 
 import { KNOWN_STATES, type KnownState, STATE_DOT } from "../status-badge";
 import { AXIS_GUTTER, TimeAxis, valueTicks } from "../time-axis";
@@ -70,7 +71,7 @@ export function HistoryChart({ points, step, from, to, title, summary, empty, le
   };
   return (
     <div className={AXIS_GUTTER}>
-      <div aria-hidden className="relative my-2 h-32 text-right text-[11px] text-muted-foreground tabular-nums">
+      <div aria-hidden className="relative my-2 h-32 text-right text-xs text-muted-foreground tabular-nums">
         {ticks.map((tick) => (
           <span key={tick} data-value-tick={tick} className="absolute right-0 -translate-y-1/2 whitespace-nowrap" style={{ top: `${((1 - tick / top) * 100).toFixed(3)}%` }}>
             {formatValue(tick)}
@@ -115,7 +116,7 @@ export function HistoryChart({ points, step, from, to, title, summary, empty, le
         </svg>
         {hint ? (
           <div
-            className="pointer-events-none absolute top-0 z-10 grid w-max max-w-56 -translate-x-1/2 gap-0.5 rounded-md border border-glass-edge bg-popover px-2.5 py-1.5 text-xs shadow-md"
+            className={cn(SURFACE.solid, "pointer-events-none absolute top-0 z-10 grid w-max max-w-56 -translate-x-1/2 gap-0.5 rounded-md px-2.5 py-1.5 text-xs")}
             style={{ left: `${Math.min(90, Math.max(10, position * 100)).toFixed(2)}%` }}
             data-hint=""
           >

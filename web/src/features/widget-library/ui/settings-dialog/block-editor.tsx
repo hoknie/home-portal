@@ -3,10 +3,9 @@
 import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Button, Input } from "@/shared/ui/primitives";
+import { Button, Checkbox, Input, NativeSelect } from "@/shared/ui/kit";
 
 import { type RawBlock, TONED, replaced, without } from "../../model/blocks";
-import { NATIVE_SELECT as SELECT } from "../../model/select-style";
 import { ActionEditor } from "./action-editor";
 import { TemplateField } from "./template-field";
 import { ToneEditor } from "./tone-editor";
@@ -39,13 +38,13 @@ export function BlockEditor({ id, block, errors, onChange }: BlockEditorProps) {
   const choose = (key: string, values: readonly string[], fallback: string, labels: (value: string) => string) => (
     <label className="grid gap-1 text-sm">
       {t(`fields.${key}` as "fields.size")}
-      <select className={SELECT} value={string(key) || fallback} onChange={(event) => set(key, event.target.value)}>
+      <NativeSelect value={string(key) || fallback} onChange={(event) => set(key, event.target.value)}>
         {values.map((value) => (
           <option key={value} value={value}>
             {labels(value)}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </label>
   );
   const limit = (
@@ -107,7 +106,7 @@ export function BlockEditor({ id, block, errors, onChange }: BlockEditorProps) {
             {choose("size", ["small", "normal", "large"], "normal", (value) => t(`sizes.${value as "small"}`))}
             {choose("weight", ["normal", "strong"], "normal", (value) => t(`weights.${value as "normal"}`))}
             <label className="flex items-center gap-2 self-end text-sm">
-              <input type="checkbox" checked={block.muted === true} onChange={(event) => set("muted", event.target.checked || "")} />
+              <Checkbox checked={block.muted === true} onCheckedChange={(checked) => set("muted", checked === true || "")} />
               {t("fields.muted")}
             </label>
           </div>

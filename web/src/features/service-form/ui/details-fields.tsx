@@ -5,11 +5,8 @@ import { useTranslations } from "next-intl";
 import { type UseFormReturn, useFieldArray } from "react-hook-form";
 
 import type { ServiceForm } from "@/entities/service";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input, Label } from "@/shared/ui/primitives";
+import { Button, FormField, Input, Label, Textarea } from "@/shared/ui/kit";
 
-const TEXTAREA =
-  "min-h-28 w-full rounded-md border border-input bg-glass-tint px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 const ROW = "grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_2.25rem] items-start gap-2";
 
@@ -69,7 +66,7 @@ export function DetailsFields({ form }: { form: UseFormReturn<ServiceForm> }) {
         </Button>
       </fieldset>
       <FormField id="service-notes" label={t("serviceForm.notes")} hint={t("serviceForm.notesHint")} optional error={errors.notes?.message}>
-        <textarea id="service-notes" className={TEXTAREA} {...form.register("notes")} />
+        <Textarea id="service-notes" {...form.register("notes")} />
       </FormField>
     </div>
   );

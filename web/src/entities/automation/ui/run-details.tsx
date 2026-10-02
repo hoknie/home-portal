@@ -5,8 +5,7 @@ import type { ReactNode } from "react";
 
 import { useRun } from "../model/queries";
 import { type Run, messageKeyOf } from "../model/schema";
-import { KvList, KvRow } from "@/shared/ui/kv-list";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Skeleton } from "@/shared/ui/primitives";
+import { KvList, KvRow, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, Skeleton } from "@/shared/ui/kit";
 
 import { OutcomeBadge } from "./outcome-badge";
 import { RunOutput } from "./run-output";

@@ -10,7 +10,7 @@ import { type Service, ServiceIcon, iconOf } from "@/entities/service";
 import { DeleteServiceButton } from "@/features/delete-service";
 import { ProbeNowButton } from "@/features/probe-now";
 import { routes } from "@/shared/config";
-import { Button } from "@/shared/ui/primitives";
+import { Button, Heading, Panel } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { StatusBadge } from "@/shared/ui/status-badge";
 
@@ -18,14 +18,16 @@ export function ServiceSummary({ service, revision }: { service: Service; revisi
   const t = useTranslations("servicePage");
   const router = useRouter();
   return (
-    <header className="glass-panel grid gap-4 rounded-xl p-5 sm:grid-cols-[1fr_auto] sm:items-start">
+    <Panel as="header" padding="none" className="grid gap-4 rounded-xl p-5 sm:grid-cols-[1fr_auto] sm:items-start">
       <div className="flex min-w-0 items-start gap-4">
         <span className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-glass-edge bg-glass-tint">
           <ServiceIcon {...iconOf(service)} />
         </span>
         <div className="grid min-w-0 gap-1.5">
           {service.group ? <p className="text-xs tracking-wide text-muted-foreground uppercase">{service.group}</p> : null}
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{service.name}</h1>
+          <Heading level="page" className="truncate">
+            {service.name}
+          </Heading>
           {service.description ? <p className="text-sm text-muted-foreground">{service.description}</p> : null}
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <StatusBadge state={service.status.state} />
@@ -52,6 +54,6 @@ export function ServiceSummary({ service, revision }: { service: Service; revisi
         </Allowed>
         <DeleteServiceButton service={service} revision={revision} labelled onDeleted={() => router.push(routes.adminServices)} />
       </div>
-    </header>
+    </Panel>
   );
 }

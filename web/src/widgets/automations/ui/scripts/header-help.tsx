@@ -3,8 +3,7 @@
 import { BookOpen, ChevronDown, WandSparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { TOKEN_CLASSES, highlight } from "@/shared/ui/code-area";
-import { Button } from "@/shared/ui/primitives";
+import { Button, highlight, TOKEN_CLASSES } from "@/shared/ui/kit";
 
 export const HELP_ROWS = [
   ["description", "# @description Restart a service's container"],

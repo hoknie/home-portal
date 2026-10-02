@@ -2,13 +2,13 @@
 
 import { Fragment } from "react";
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/primitives";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/kit";
 
 import type { Part } from "../../model/values-on-nodes";
 
 export function NodeSummary({ parts }: { parts: Part[] }) {
   return (
-    <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground">
+    <span className="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">
       {parts.map((part, index) =>
         "template" in part ? (
           <TooltipProvider key={index}>

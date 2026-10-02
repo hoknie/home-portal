@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useRef, useState } from "react";
 
 import { cn } from "@/shared/lib/cn";
-import { cellClasses, cellStyle, positionOf, useAutoRows } from "@/shared/lib/widget-grid";
+import { GAP_PIXELS, cellClasses, cellStyle, positionOf, useAutoRows } from "@/shared/lib/widget-grid";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import { Badge, Button } from "@/shared/ui/primitives";
+import { Badge, Button } from "@/shared/ui/kit";
 
 import type { DraftWidget } from "../model/draft";
 import type { Target } from "../model/measure";
@@ -44,7 +44,7 @@ export function WidgetTile({ widget, title, type, known, errors, content, onResi
   const position = positionOf(widget);
   const measure = () => ({
     gridWidth: element.current?.parentElement?.getBoundingClientRect().width ?? 0,
-    startPixels: element.current?.getBoundingClientRect().height ?? 0,
+    startPixels: Math.max(0, (element.current?.getBoundingClientRect().height ?? GAP_PIXELS) - GAP_PIXELS),
   });
   return (
     <div

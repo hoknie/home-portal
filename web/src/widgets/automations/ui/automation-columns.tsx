@@ -13,7 +13,7 @@ import { type Automation, type Catalogue, OutcomeBadge } from "@/entities/automa
 import { routes } from "@/shared/config";
 import type { Column } from "@/shared/ui/data-table";
 import { ItemReference } from "@/shared/ui/item-reference";
-import { Badge, Button } from "@/shared/ui/primitives";
+import { Badge, Button } from "@/shared/ui/kit";
 import { RelativeTime } from "@/shared/ui/relative-time";
 import { TagList } from "@/shared/ui/tag-list";
 

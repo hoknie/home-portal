@@ -9,7 +9,7 @@ import { DeleteServiceButton } from "@/features/delete-service";
 import { type Service, ServiceIcon, diagnosisMessage, iconOf } from "@/entities/service";
 import { routes } from "@/shared/config";
 import type { Column } from "@/shared/ui/data-table";
-import { Button } from "@/shared/ui/primitives";
+import { Button } from "@/shared/ui/kit";
 import { StatusBadge } from "@/shared/ui/status-badge";
 
 export function useServiceColumns(revision: string | null): Column<Service>[] {

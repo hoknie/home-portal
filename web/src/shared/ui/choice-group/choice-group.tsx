@@ -3,6 +3,7 @@
 import type { KeyboardEvent, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { BareButton } from "@/shared/ui/kit";
 
 export type Choice<Value extends string> = { value: Value; label: string; swatch?: ReactNode };
 
@@ -33,9 +34,8 @@ export function ChoiceGroup<Value extends string>({ label, value, choices, onCha
         {choices.map((choice) => {
           const chosen = choice.value === value;
           return (
-            <button
+            <BareButton
               key={choice.value}
-              type="button"
               role="radio"
               aria-checked={chosen}
               tabIndex={chosen ? 0 : -1}
@@ -47,7 +47,7 @@ export function ChoiceGroup<Value extends string>({ label, value, choices, onCha
             >
               {choice.swatch}
               {choice.label}
-            </button>
+            </BareButton>
           );
         })}
       </div>

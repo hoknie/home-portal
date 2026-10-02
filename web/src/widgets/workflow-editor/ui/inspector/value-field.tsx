@@ -14,8 +14,7 @@ import {
   variableValues,
   workflowValues,
 } from "@/entities/workflow";
-import { FormField } from "@/shared/ui/form-field";
-import { TemplateInput, type TemplateSuggestion } from "@/shared/ui/template-input";
+import { FormField, TemplateInput, type TemplateSuggestion } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
 import { fieldId, useFilterSuggestions, useGroupLabel, useTemplateProblems, useTranslatedSuggestions } from "./template-field";

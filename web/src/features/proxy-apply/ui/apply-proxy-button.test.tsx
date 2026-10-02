@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { renderWithProviders } from "@/shared/lib/testing";
-import { Toaster } from "@/shared/ui/primitives";
+import { Toaster } from "@/shared/ui/kit";
 
 import { ApplyProxyButton } from "./apply-proxy-button";
 

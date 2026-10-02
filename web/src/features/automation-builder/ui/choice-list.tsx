@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { Label } from "@/shared/ui/primitives";
+import { Checkbox, Label } from "@/shared/ui/kit";
 
 export type ChoiceListProps = {
   id: string;
@@ -25,11 +25,9 @@ export function ChoiceList({ id, legend, hint, choices, values, onChange, error 
       <div className="flex flex-wrap gap-x-4">
         {choices.map((choice) => (
           <label key={choice.value} className="flex min-h-9 items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="size-4 accent-primary"
+            <Checkbox
               checked={values.includes(choice.value)}
-              onChange={(event) => onChange(event.target.checked ? [...values, choice.value] : values.filter((value) => value !== choice.value))}
+              onCheckedChange={(checked) => onChange(checked === true ? [...values, choice.value] : values.filter((value) => value !== choice.value))}
             />
             {choice.label}
           </label>

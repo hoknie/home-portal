@@ -4,11 +4,8 @@ import { useTranslations } from "next-intl";
 import { Controller, type UseFormReturn } from "react-hook-form";
 
 import { PUBLICATION_TLS, type ServiceForm, mainAddressOf } from "@/entities/service";
-import { FormField } from "@/shared/ui/form-field";
-import { Input, Label, Switch } from "@/shared/ui/primitives";
+import { FormField, Input, Label, NativeSelect, Switch } from "@/shared/ui/kit";
 
-const SELECT =
-  "h-9 w-full rounded-md border border-input bg-glass-tint px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
 export function ProxySettings({ form }: { form: UseFormReturn<ServiceForm> }) {
   const t = useTranslations();
@@ -22,13 +19,13 @@ export function ProxySettings({ form }: { form: UseFormReturn<ServiceForm> }) {
       <div className="mt-4 grid gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField id="proxy-tls" label={t("serviceForm.publicationTls")} hint={t(`serviceForm.publicationTlsHints.${tls}`)}>
-            <select id="proxy-tls" className={SELECT} {...form.register("proxy.tls")}>
+            <NativeSelect id="proxy-tls" {...form.register("proxy.tls")}>
               {PUBLICATION_TLS.map((mode) => (
                 <option key={mode} value={mode}>
                   {t(`serviceForm.publicationTlsModes.${mode}`)}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </FormField>
           {tls === "acme" ? (
             <FormField id="proxy-email" label={t("serviceForm.publicationEmail")} optional error={message(errors?.email?.message)}>

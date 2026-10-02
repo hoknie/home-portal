@@ -6,10 +6,10 @@ import { HeaderProblems, type ScriptArgument, type ScriptHeader } from "@/entiti
 import { cn } from "@/shared/lib/cn";
 
 export const TYPE_CHIPS: Record<ScriptArgument["type"], string> = {
-  text: "bg-sky-500/12 text-sky-700 dark:text-sky-300",
-  number: "bg-amber-500/12 text-amber-700 dark:text-amber-300",
-  flag: "bg-violet-500/12 text-violet-600 dark:text-violet-300",
-  choice: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
+  text: "bg-palette-blue/12 text-palette-blue",
+  number: "bg-palette-amber/12 text-palette-amber",
+  flag: "bg-palette-violet/12 text-palette-violet",
+  choice: "bg-palette-green/12 text-palette-green",
 };
 
 export function usageOf(name: string, declared: ScriptArgument[]) {
@@ -30,10 +30,10 @@ function ArgumentCard({ argument }: { argument: ScriptArgument }) {
     <li className="grid gap-2 rounded-lg border border-glass-edge bg-glass-tint p-3">
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="font-mono text-sm font-semibold">{argument.name}</span>
-        <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", TYPE_CHIPS[argument.type])}>{t(`types.${argument.type}`)}</span>
+        <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", TYPE_CHIPS[argument.type])}>{t(`types.${argument.type}`)}</span>
         <span
           className={cn(
-            "rounded-full border px-2 py-0.5 text-[11px]",
+            "rounded-full border px-2 py-0.5 text-xs",
             argument.required ? "border-primary/40 text-primary" : "border-glass-edge text-muted-foreground",
           )}
         >

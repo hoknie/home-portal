@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-import { Skeleton } from "@/shared/ui/primitives";
+import { Skeleton } from "@/shared/ui/kit";
 
 export const CanvasLoader = dynamic(() => import("./flow-canvas"), {
   ssr: false,

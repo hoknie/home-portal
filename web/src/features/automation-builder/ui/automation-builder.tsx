@@ -17,8 +17,7 @@ import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { useLeaveGuard } from "@/shared/lib/leave-guard";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
 import { slugOf, uniqueId } from "@/shared/lib/slug";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Input, Label, Switch } from "@/shared/ui/primitives";
+import { Button, FormField, Input, Label, Panel, Switch } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import { fieldsOf, withVariables } from "../model/events";
@@ -167,7 +166,7 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
           <CommandPreview event={event} script={values.script} args={values.args.map((argument) => argument.value)} chosen={chosen} />
         )}
         <FormProblems problems={leftover} />
-        <div className="glass-panel sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
+        <Panel as="div" padding="none" className="sticky bottom-3 z-20 flex justify-end gap-2 rounded-xl px-4 py-3">
           <Button asChild variant="outline">
             <Link href={routes.adminAutomations}>{t("common.cancel")}</Link>
           </Button>
@@ -176,7 +175,7 @@ export function AutomationBuilder({ automation, revision, taken, catalogue, scri
               {form.formState.isSubmitting ? t("common.saving") : t("common.save")}
             </Button>
           ) : null}
-        </div>
+        </Panel>
       </fieldset>
     </form>
   );

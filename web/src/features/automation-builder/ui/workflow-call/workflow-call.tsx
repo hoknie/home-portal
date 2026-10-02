@@ -6,11 +6,10 @@ import type { UseFormReturn } from "react-hook-form";
 
 import type { CatalogueEvent } from "@/entities/automation";
 import type { Workflow } from "@/entities/workflow";
-import { FormField } from "@/shared/ui/form-field";
+import { BareButton, FormField, NativeSelect } from "@/shared/ui/kit";
 
 import { insertAt, tokenOf } from "../../model/placeholders";
 import { EMPTY_ENTRY, type WorkflowCallFields, emptyEntry, kept, textOf } from "../../model/workflow-call";
-import { SELECT } from "../select";
 import { InputField } from "./input-field";
 
 export type WorkflowCallProps = { form: UseFormReturn<WorkflowCallFields>; event: CatalogueEvent; workflows: Workflow[]; idPrefix: string };
@@ -42,7 +41,7 @@ export function WorkflowCall({ form, event, workflows, idPrefix }: WorkflowCallP
   return (
     <div className="grid gap-4">
       <FormField id={`${idPrefix}-workflow`} label={t("automationBuilder.workflow")} hint={t("automationBuilder.workflowHint")} error={errors.workflow?.message}>
-        <select id={`${idPrefix}-workflow`} className={SELECT} value={chosen} onChange={(change) => pick(change.target.value)}>
+        <NativeSelect id={`${idPrefix}-workflow`} value={chosen} onChange={(change) => pick(change.target.value)}>
           <option value="">{t("automationBuilder.chooseWorkflow")}</option>
           {chosen !== "" && !workflow ? <option value={chosen}>{chosen}</option> : null}
           {workflows.map((candidate) => (
@@ -50,7 +49,7 @@ export function WorkflowCall({ form, event, workflows, idPrefix }: WorkflowCallP
               {candidate.title}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </FormField>
       {workflow?.description ? <p className="-mt-2 text-sm text-muted-foreground">{workflow.description}</p> : null}
       {workflow && workflow.inputs.length === 0 ? <p className="text-sm text-muted-foreground">{t("automationBuilder.noWorkflowInputs")}</p> : null}
@@ -73,15 +72,14 @@ export function WorkflowCall({ form, event, workflows, idPrefix }: WorkflowCallP
           <p className="text-xs font-medium text-muted-foreground">{t("automationBuilder.fields")}</p>
           <div className="flex flex-wrap gap-1.5">
             {event.fields.map((field) => (
-              <button
+              <BareButton
                 key={field.name}
-                type="button"
                 onMouseDown={(press) => press.preventDefault()}
                 onClick={() => insert(field.name)}
                 className="rounded-full border border-glass-edge bg-glass-tint px-2.5 py-1 font-mono text-xs hover:bg-accent"
               >
                 {field.name}
-              </button>
+              </BareButton>
             ))}
           </div>
         </div>

@@ -4,10 +4,9 @@ import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { type Condition, DEEPEST_CONDITION, type Join, JOINS, type Path, emptyRow, joinOf, joined, knownValues, operatorName, rowsOf, takesRight } from "@/entities/workflow";
-import { Button } from "@/shared/ui/primitives";
+import { BareButton, Button, NativeSelect } from "@/shared/ui/kit";
 
 import { useEditor } from "../../model/editor-context";
-import { SELECT } from "./select-class";
 import { StepTemplateInput } from "./template-field";
 
 export type ConditionBuilderProps = { path: Path; field: string; label: string; condition: Condition; onChange: (condition: Condition) => void; depth?: number };
@@ -20,9 +19,9 @@ function Row({ path, field, row, onChange }: { path: Path; field: string; row: C
   return (
     <div className="grid min-w-0 gap-1.5">
       <StepTemplateInput path={path} field={`${field}.left`} label={t("left")} value={row.left ?? ""} onChange={(left) => onChange({ ...row, left })} />
-      <select
+      <NativeSelect
         aria-label={t("operator")}
-        className={`${SELECT} font-mono text-xs`}
+        className="font-mono text-xs"
         value={row.op ?? "=="}
         onChange={(change) => {
           const op = change.target.value;
@@ -34,20 +33,19 @@ function Row({ path, field, row, onChange }: { path: Path; field: string; row: C
             {t.has(`operators.${operatorName(operator.name)}` as "operators.equals") ? t(`operators.${operatorName(operator.name)}` as "operators.equals") : operator.name}
           </option>
         ))}
-      </select>
+      </NativeSelect>
       {right ? <StepTemplateInput path={path} field={`${field}.right`} label={t("right")} value={row.right ?? ""} onChange={(value) => onChange({ ...row, right: value })} /> : null}
       {known.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1" role="group" aria-label={t("knownValues")}>
           <span className="text-xs text-muted-foreground">{t("knownValues")}</span>
           {known.map((value) => (
-            <button
+            <BareButton
               key={value.value}
-              type="button"
-              className="rounded-full border border-glass-edge bg-glass-tint px-2 py-0.5 font-mono text-[11px] hover:bg-accent"
+              className="rounded-full border border-glass-edge bg-glass-tint px-2 py-0.5 font-mono text-xs hover:bg-accent"
               onClick={() => onChange({ ...row, right: value.value })}
             >
               {value.label}
-            </button>
+            </BareButton>
           ))}
         </div>
       ) : null}
@@ -68,13 +66,13 @@ export function ConditionBuilder({ path, field, label, condition, onChange, dept
       <legend className="px-1 text-sm font-medium">{label}</legend>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span>{t("match")}</span>
-        <select aria-label={t("join")} className={`${SELECT} w-40`} value={join} onChange={(change) => onChange(combine(change.target.value as Join, rows))}>
+        <NativeSelect aria-label={t("join")} className="w-40" value={join} onChange={(change) => onChange(combine(change.target.value as Join, rows))}>
           {JOINS.map((name) => (
             <option key={name} value={name}>
               {t(`joins.${name}`)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
       {rows.map((row, index) => {
         const at = grouped ? `${field}.${join}[${index}]` : field;

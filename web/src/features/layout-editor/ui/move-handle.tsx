@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { type KeyboardEvent, type PointerEvent, useEffect, useRef } from "react";
 
 import { type Target, cellAt, grabOf, sectionAt } from "../model/measure";
+import { BareButton } from "@/shared/ui/kit";
 
 export type Step = { columns: number; rows: number; sections: number };
 
@@ -94,8 +95,7 @@ export function MoveHandle({ title, section, tile, onPreview, onMove, onStep }: 
   };
 
   return (
-    <button
-      type="button"
+    <BareButton
       aria-label={t("move", { title })}
       aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown PageUp PageDown"
       data-move-handle=""
@@ -108,6 +108,6 @@ export function MoveHandle({ title, section, tile, onPreview, onMove, onStep }: 
       onKeyDown={key}
     >
       <span className="h-8 w-1 rounded-full bg-border transition-colors group-hover/move:bg-primary group-focus-visible/move:bg-primary" />
-    </button>
+    </BareButton>
   );
 }

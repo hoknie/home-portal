@@ -9,7 +9,7 @@ import { StopRunButton } from "@/features/runs/stop-run";
 import { type Automation, RunPager, RunTable, useRunPages, useRuns } from "@/entities/automation";
 import { useWebhooks } from "@/entities/webhook";
 import { useWorkflows } from "@/entities/workflow";
-import { Button, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, Skeleton, Switch } from "@/shared/ui/primitives";
+import { Button, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, SkeletonTable, Switch } from "@/shared/ui/kit";
 import { SectionCard } from "@/shared/ui/section-card";
 
 export const EVERYTHING = "all";
@@ -135,7 +135,7 @@ export function RunJournal({ automations, onOpen }: { automations: Automation[];
           />
           <RunPager pages={pages} nextBefore={runs.data.next_before} />
         </>
-      ) : <Skeleton className="m-4 h-32" aria-busy="true" />}
+      ) : <SkeletonTable columns={5} rows={4} surface={false} />}
     </SectionCard>
   );
 }

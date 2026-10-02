@@ -6,11 +6,10 @@ import { useState } from "react";
 import { useCan, useSession } from "@/entities/session";
 import { ADMIN_GROUP, type User, type Users, useUsers } from "@/entities/user";
 import { type Column, DataTable } from "@/shared/ui/data-table";
-import { ErrorNotice } from "@/shared/ui/error-notice";
+import { Appear, Badge, Button, ErrorNotice, SkeletonTable } from "@/shared/ui/kit";
 import { ModuleOffNotice } from "@/shared/ui/module-off-notice";
 import { useTrail } from "@/shared/lib/breadcrumbs";
 import { PageHeader } from "@/shared/ui/page-header";
-import { Badge, Button, Skeleton } from "@/shared/ui/primitives";
 import { SectionCard } from "@/shared/ui/section-card";
 
 import { AddUserDialog } from "./add-user-dialog";
@@ -100,11 +99,13 @@ export function UsersScreen() {
             <ErrorNotice title={t("errors.loadFailed")} description={users.error.message} onRetry={() => void users.refetch()} />
           ) : null}
           {data ? (
-            <SectionCard flush>
-              <DataTable columns={columns} rows={data.users} rowKey={(user) => user.name} />
-            </SectionCard>
+            <Appear>
+              <SectionCard flush>
+                <DataTable columns={columns} rows={data.users} rowKey={(user) => user.name} />
+              </SectionCard>
+            </Appear>
           ) : users.error ? null : (
-            <Skeleton className="h-64 w-full" aria-busy="true" />
+            <SkeletonTable columns={4} rows={5} />
           )}
         </>
       )}

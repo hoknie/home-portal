@@ -8,8 +8,7 @@ import { type Group, type MatrixRow, type Rights, useChangeGroup, useCreateGroup
 import { ConflictError, RequestError, ValidationError } from "@/shared/api";
 import { useEditorRevision } from "@/shared/lib/editor-revision";
 import { ConflictNotice } from "@/shared/ui/conflict-notice";
-import { FormField } from "@/shared/ui/form-field";
-import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from "@/shared/ui/primitives";
+import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, FormField, Input } from "@/shared/ui/kit";
 
 import { MatrixEditor } from "./matrix-editor";
 
