@@ -189,7 +189,7 @@ fn decode_group(
     }
     let path = format!("{here}.{BLOCKS}");
     let blocks = decode_blocks(&children, &path, depth + 1, errors);
-    let (fewest, most) = if row { (2, 4) } else { (1, 12) };
+    let (fewest, most) = if row { (1, 4) } else { (1, 12) };
     if !(fewest..=most).contains(&blocks.len()) {
         errors.push(FieldError::new(
             &path,

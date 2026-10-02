@@ -102,7 +102,7 @@ fn bad_settings_are_named_by_their_place_in_the_widget() {
 }
 
 #[test]
-fn a_widget_holds_at_most_forty_blocks_with_the_nested_ones_and_a_row_two_to_four() {
+fn a_widget_holds_at_most_forty_blocks_with_the_nested_ones_and_a_row_one_to_four() {
     let many: Vec<Value> = (0..30).map(|_| json!({ "kind": "divider" })).collect();
     let mut blocks = vec![json!({ "kind": "row", "blocks": many })];
     blocks.extend((0..15).map(|_| json!({ "kind": "divider" })));
@@ -116,7 +116,7 @@ fn a_widget_holds_at_most_forty_blocks_with_the_nested_ones_and_a_row_two_to_fou
     assert!(
         errors
             .iter()
-            .any(|error| error.starts_with("blocks[0].blocks:") && error.contains("from 2 to 4")),
+            .any(|error| error.starts_with("blocks[0].blocks:") && error.contains("from 1 to 4")),
         "{errors:?}"
     );
     let two = || json!([{ "kind": "divider" }, { "kind": "divider" }]);
@@ -150,4 +150,19 @@ fn a_widget_holds_at_most_forty_blocks_with_the_nested_ones_and_a_row_two_to_fou
             "{field} {wrong:?}"
         );
     }
+}
+
+#[test]
+fn a_row_of_one_block_is_as_fine_as_a_column_of_one_and_neither_may_be_empty() {
+    let one = checked(
+        json!({ "blocks": [{ "kind": "row", "blocks": [{ "kind": "text", "text": "x" }] }, { "kind": "column", "blocks": [{ "kind": "text", "text": "y" }] }] }),
+    );
+    assert!(one.is_empty(), "{one:?}");
+    let empty = checked(json!({ "blocks": [{ "kind": "row", "blocks": [] }] }));
+    assert!(
+        empty
+            .iter()
+            .any(|error| error.starts_with("blocks[0].blocks:") && error.contains("from 1 to 4")),
+        "{empty:?}"
+    );
 }

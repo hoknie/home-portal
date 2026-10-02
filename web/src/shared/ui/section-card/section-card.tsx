@@ -9,13 +9,14 @@ export type SectionCardProps = {
   badge?: ReactNode;
   actions?: ReactNode;
   flush?: boolean;
+  hoverable?: boolean;
   children: ReactNode;
 };
 
-export function SectionCard({ title, description, badge, actions, flush = false, children }: SectionCardProps) {
+export function SectionCard({ title, description, badge, actions, flush = false, hoverable = false, children }: SectionCardProps) {
   const hasHeader = Boolean(title || description || badge || actions);
   return (
-    <Card className={cn("gap-4", flush && "overflow-hidden pb-0", flush && !hasHeader && "gap-0 py-0")}>
+    <Card className={cn("gap-4", flush && "overflow-hidden pb-0", flush && !hasHeader && "gap-0 py-0", hoverable && "transition-colors hover:border-primary/40")}>
       {hasHeader ? (
         <CardHeader>
           <div className="flex items-center gap-2">

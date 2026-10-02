@@ -51,10 +51,10 @@ it("keyboard steps move up, down, out of a group and into the group beside", () 
 });
 
 it("names the empty fields a block needs and maps server fields to paths", () => {
-  const blocks: RawBlock[] = [{ kind: "progress", value: "" }, row(text("ok"))];
+  const blocks: RawBlock[] = [{ kind: "progress", value: "" }, row(text("ok")), row(emptyPlace())];
   expect(missingIn(blocks)).toEqual([
     { path: [0], field: "value" },
-    { path: [1], field: "blocks" },
+    { path: [2], field: "blocks" },
   ]);
   expect(pathOfField("blocks[1].blocks[0].text")).toEqual([[1, 0], "text"]);
   expect(pathOfField("blocks[2]")).toEqual([[2], ""]);
@@ -63,10 +63,7 @@ it("names the empty fields a block needs and maps server fields to paths", () =>
 
 it("an empty place in a group is no missing text, is left out when saved, and a group counts only real blocks", () => {
   const blocks: RawBlock[] = [row({ kind: "stat", label: "Free", value: "1" }, emptyPlace()), column(emptyPlace(), text(""))];
-  expect(missingIn(blocks)).toEqual([
-    { path: [0], field: "blocks" },
-    { path: [1, 1], field: "text" },
-  ]);
+  expect(missingIn(blocks)).toEqual([{ path: [1, 1], field: "text" }]);
   expect(withoutSlots(blocks)).toEqual([row({ kind: "stat", label: "Free", value: "1" }), column(text(""))]);
   expect(slotPaths(blocks)).toEqual(["0.1", "1.0"]);
   expect(unmarked(blocks)[0].blocks).toEqual([{ kind: "stat", label: "Free", value: "1" }, text("")]);

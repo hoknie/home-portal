@@ -29,6 +29,7 @@ export function ModuleCard({ module, modules, revision }: ModuleCardProps) {
   const listed = (names: ModuleName[]) => names.map((name) => t(`names.${name}`)).join(", ");
   return (
     <SectionCard
+      hoverable
       title={t(`names.${module.name}`)}
       description={t(`descriptions.${module.name}`)}
       badge={

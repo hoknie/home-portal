@@ -2960,7 +2960,7 @@
       "widths": "Reparto de la fila",
       "part": "Partes del bloque {number}",
       "needs": "Falta {field}",
-      "rowNeeds": "Una fila necesita al menos dos bloques",
+      "rowNeeds": "Una fila necesita al menos un bloque",
       "columnNeeds": "Una columna necesita al menos un bloque",
       "valign": "Posición vertical en la fila",
       "columnValign": "Los bloques de la columna se colocan"

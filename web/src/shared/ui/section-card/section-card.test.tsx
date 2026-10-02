@@ -35,3 +35,19 @@ it("a titled flush card keeps its header inset", () => {
   expect(card).not.toHaveClass("py-0");
   expect(card).toHaveClass("pb-0", "gap-4");
 });
+
+it("a hoverable card lights its border on hover, a plain one does not", () => {
+  const { container } = render(
+    <>
+      <SectionCard title="Proxy" hoverable>
+        <p>body</p>
+      </SectionCard>
+      <SectionCard title="DNS">
+        <p>body</p>
+      </SectionCard>
+    </>,
+  );
+  const [hoverable, plain] = container.querySelectorAll("[data-slot=card]");
+  expect(hoverable).toHaveClass("hover:border-primary/40");
+  expect(plain).not.toHaveClass("hover:border-primary/40");
+});

@@ -14,7 +14,7 @@ export const DEEPEST_GROUPS = 3;
 
 export const MOST_IN = { row: 4, column: 12 } as const;
 
-export const FEWEST_IN = { row: 2, column: 1 } as const;
+export const FEWEST_IN = { row: 1, column: 1 } as const;
 
 export function isGroup(block: RawBlock | undefined): boolean {
   return block !== undefined && GROUP_KINDS.includes(block.kind);

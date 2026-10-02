@@ -2960,7 +2960,7 @@
       "widths": "Share of the row",
       "part": "Parts of block {number}",
       "needs": "Needs {field}",
-      "rowNeeds": "A row needs at least two blocks",
+      "rowNeeds": "A row needs at least one block",
       "columnNeeds": "A column needs at least one block",
       "valign": "Vertical position in the row",
       "columnValign": "Blocks in the column sit"
