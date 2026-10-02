@@ -8,6 +8,7 @@ pub struct HttpStep {
     pub body: Option<String>,
     pub timeout_seconds: NumberSetting,
     pub fail_on_error: bool,
+    pub response_sample: Option<String>,
 }
 
 impl HttpStep {

@@ -231,6 +231,7 @@ fn every_step_kind_has_a_catalogue_entry_and_every_entry_a_kind() {
             body: None,
             timeout_seconds: crate::types::NumberSetting::Fixed(1),
             fail_on_error: true,
+            response_sample: None,
         }),
         StepKind::Script {
             run: RunSettings {

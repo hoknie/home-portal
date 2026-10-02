@@ -1,0 +1,170 @@
+{
+  "$defs": {
+    "Accent": {
+      "enum": [
+        "neutral",
+        "blue",
+        "green",
+        "amber",
+        "red",
+        "violet",
+        "pink",
+        "teal"
+      ],
+      "type": "string",
+      "x-open": "neutral"
+    },
+    "Align": {
+      "enum": [
+        "start",
+        "center",
+        "end"
+      ],
+      "type": "string",
+      "x-open": "start"
+    },
+    "LibraryWidgetView": {
+      "properties": {
+        "appearance": {
+          "$ref": "#/$defs/ResolvedAppearance"
+        },
+        "environments": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "height": {
+          "$ref": "#/$defs/WidgetHeight"
+        },
+        "id": {
+          "type": "string"
+        },
+        "placed": {
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "public": {
+          "type": "boolean"
+        },
+        "settings": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": "string"
+        },
+        "width": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "title",
+        "settings",
+        "environments",
+        "public",
+        "appearance",
+        "width",
+        "height",
+        "placed"
+      ],
+      "type": "object"
+    },
+    "Padding": {
+      "enum": [
+        "normal",
+        "compact",
+        "none"
+      ],
+      "type": "string",
+      "x-open": "normal"
+    },
+    "ResolvedAppearance": {
+      "properties": {
+        "accent": {
+          "$ref": "#/$defs/Accent"
+        },
+        "align": {
+          "$ref": "#/$defs/Align"
+        },
+        "padding": {
+          "$ref": "#/$defs/Padding"
+        },
+        "surface": {
+          "$ref": "#/$defs/Surface"
+        },
+        "title": {
+          "$ref": "#/$defs/TitleVisibility"
+        }
+      },
+      "required": [
+        "surface",
+        "accent",
+        "title",
+        "padding",
+        "align"
+      ],
+      "type": "object"
+    },
+    "Surface": {
+      "enum": [
+        "card",
+        "plain",
+        "tinted",
+        "outline"
+      ],
+      "type": "string",
+      "x-open": "card"
+    },
+    "TitleVisibility": {
+      "enum": [
+        "shown",
+        "hidden"
+      ],
+      "type": "string",
+      "x-open": "shown"
+    },
+    "WidgetHeight": {
+      "anyOf": [
+        {
+          "const": "auto",
+          "type": "string"
+        },
+        {
+          "maximum": 8,
+          "minimum": 1,
+          "type": "integer"
+        }
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "widgets": {
+      "items": {
+        "$ref": "#/$defs/LibraryWidgetView"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "widgets"
+  ],
+  "title": "LibraryResponse",
+  "type": "object"
+}

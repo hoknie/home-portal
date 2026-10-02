@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import type { Weather } from "@/entities/widget";
 import { StatTile } from "@/shared/ui/stat-tile";
+import { WidgetPanel } from "@/shared/ui/widget-frame";
 
 export type WeatherProps = { data: Weather };
 
@@ -49,7 +50,7 @@ export function WeatherWidget({ data }: WeatherProps) {
       ? conditions(condition as Parameters<typeof conditions>[0])
       : condition;
   return (
-    <div className="grid gap-4 rounded-xl border bg-card p-4">
+    <WidgetPanel className="grid gap-4">
       <div className="flex items-center gap-4">
         {iconOf(data.current.condition)}
         <div className="min-w-0">
@@ -75,6 +76,6 @@ export function WeatherWidget({ data }: WeatherProps) {
           />
         ))}
       </div>
-    </div>
+    </WidgetPanel>
   );
 }

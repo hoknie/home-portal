@@ -16,7 +16,7 @@ export const traceEntryResponseSchema = z.object({ "budget_reached": z.boolean()
 
 export type TraceEntryResponse = z.infer<typeof traceEntryResponseSchema>;
 
-export const traceResponseSchema = z.object({ "dropped": z.number(), "entries": z.array(traceEntryResponseSchema) });
+export const traceResponseSchema = z.object({ "dropped": z.number(), "entries": z.array(traceEntryResponseSchema), "outputs": z.record(z.string(), z.unknown()).nullable().default(null) });
 
 export type TraceResponse = z.infer<typeof traceResponseSchema>;
 
@@ -28,11 +28,15 @@ export const inputResponseSchema = z.object({ "default": z.unknown(), "descripti
 
 export type InputResponse = z.infer<typeof inputResponseSchema>;
 
+export const workflowOutputResponseSchema = z.object({ "description": z.string().nullable(), "name": z.string(), "value": z.string() });
+
+export type WorkflowOutputResponse = z.infer<typeof workflowOutputResponseSchema>;
+
 export const workflowUsageResponseSchema = z.object({ "id": z.string(), "kind": z.string(), "title": z.string(), "variables": z.array(z.string()) });
 
 export type WorkflowUsageResponse = z.infer<typeof workflowUsageResponseSchema>;
 
-export const workflowResponseSchema = z.object({ "active_run": runResponseSchema.nullable(), "description": z.string().nullable(), "enabled": z.boolean(), "id": z.string(), "inputs": z.array(inputResponseSchema), "last_run": runResponseSchema.nullable(), "steps": z.unknown(), "steps_version": z.string(), "tags": z.array(z.string()), "timeout_seconds": z.number(), "title": z.string(), "used_by": z.array(workflowUsageResponseSchema) });
+export const workflowResponseSchema = z.object({ "active_run": runResponseSchema.nullable(), "description": z.string().nullable(), "enabled": z.boolean(), "id": z.string(), "inputs": z.array(inputResponseSchema), "last_run": runResponseSchema.nullable(), "outputs": z.array(workflowOutputResponseSchema), "steps": z.unknown(), "steps_version": z.string(), "tags": z.array(z.string()), "timeout_seconds": z.number(), "title": z.string(), "used_by": z.array(workflowUsageResponseSchema) });
 
 export type WorkflowResponse = z.infer<typeof workflowResponseSchema>;
 

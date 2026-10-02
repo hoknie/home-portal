@@ -1,5 +1,28 @@
 {
   "$defs": {
+    "Accent": {
+      "enum": [
+        "neutral",
+        "blue",
+        "green",
+        "amber",
+        "red",
+        "violet",
+        "pink",
+        "teal"
+      ],
+      "type": "string",
+      "x-open": "neutral"
+    },
+    "Align": {
+      "enum": [
+        "start",
+        "center",
+        "end"
+      ],
+      "type": "string",
+      "x-open": "start"
+    },
     "Diagnosis": {
       "enum": [
         "local-network-denied",
@@ -19,8 +42,20 @@
     "Environment": {
       "type": "string"
     },
+    "Padding": {
+      "enum": [
+        "normal",
+        "compact",
+        "none"
+      ],
+      "type": "string",
+      "x-open": "normal"
+    },
     "PublicSection": {
       "properties": {
+        "appearance": {
+          "$ref": "#/$defs/ResolvedSectionAppearance"
+        },
         "id": {
           "type": "string"
         },
@@ -33,7 +68,8 @@
       },
       "required": [
         "id",
-        "title"
+        "title",
+        "appearance"
       ],
       "type": "object"
     },
@@ -90,9 +126,32 @@
     },
     "PublicWidget": {
       "properties": {
+        "appearance": {
+          "$ref": "#/$defs/ResolvedAppearance"
+        },
+        "column": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "height": {
+          "$ref": "#/$defs/WidgetHeight"
+        },
         "id": {
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
             "null"
           ]
         },
@@ -106,9 +165,6 @@
           "additionalProperties": true,
           "type": "object"
         },
-        "size": {
-          "$ref": "#/$defs/WidgetSize"
-        },
         "title": {
           "type": [
             "string",
@@ -117,6 +173,12 @@
         },
         "type": {
           "type": "string"
+        },
+        "width": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
         }
       },
       "required": [
@@ -125,9 +187,63 @@
         "title",
         "settings",
         "section",
-        "size"
+        "column",
+        "row",
+        "width",
+        "height",
+        "appearance"
       ],
       "type": "object"
+    },
+    "ResolvedAppearance": {
+      "properties": {
+        "accent": {
+          "$ref": "#/$defs/Accent"
+        },
+        "align": {
+          "$ref": "#/$defs/Align"
+        },
+        "padding": {
+          "$ref": "#/$defs/Padding"
+        },
+        "surface": {
+          "$ref": "#/$defs/Surface"
+        },
+        "title": {
+          "$ref": "#/$defs/TitleVisibility"
+        }
+      },
+      "required": [
+        "surface",
+        "accent",
+        "title",
+        "padding",
+        "align"
+      ],
+      "type": "object"
+    },
+    "ResolvedSectionAppearance": {
+      "properties": {
+        "surface": {
+          "$ref": "#/$defs/SectionSurface"
+        },
+        "title": {
+          "$ref": "#/$defs/TitleVisibility"
+        }
+      },
+      "required": [
+        "title",
+        "surface"
+      ],
+      "type": "object"
+    },
+    "SectionSurface": {
+      "enum": [
+        "none",
+        "card"
+      ],
+      "type": "string",
+      "x-open": "none"
     },
     "ServiceState": {
       "enum": [
@@ -197,16 +313,36 @@
       ],
       "type": "object"
     },
-    "WidgetSize": {
+    "Surface": {
       "enum": [
-        "quarter",
-        "third",
-        "half",
-        "two-thirds",
-        "full"
+        "card",
+        "plain",
+        "tinted",
+        "outline"
       ],
       "type": "string",
-      "x-open": "full"
+      "x-open": "card"
+    },
+    "TitleVisibility": {
+      "enum": [
+        "shown",
+        "hidden"
+      ],
+      "type": "string",
+      "x-open": "shown"
+    },
+    "WidgetHeight": {
+      "anyOf": [
+        {
+          "const": "auto",
+          "type": "string"
+        },
+        {
+          "maximum": 8,
+          "minimum": 1,
+          "type": "integer"
+        }
+      ]
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema",

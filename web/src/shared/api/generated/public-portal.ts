@@ -4,7 +4,19 @@ export const environmentSchema = z.string();
 
 export type Environment = z.infer<typeof environmentSchema>;
 
-export const publicSectionSchema = z.object({ "id": z.string(), "title": z.string().nullable() });
+export const sectionSurfaceSchema = z.enum(["none", "card"]).catch("none");
+
+export type SectionSurface = z.infer<typeof sectionSurfaceSchema>;
+
+export const titleVisibilitySchema = z.enum(["shown", "hidden"]).catch("shown");
+
+export type TitleVisibility = z.infer<typeof titleVisibilitySchema>;
+
+export const resolvedSectionAppearanceSchema = z.object({ "surface": sectionSurfaceSchema, "title": titleVisibilitySchema });
+
+export type ResolvedSectionAppearance = z.infer<typeof resolvedSectionAppearanceSchema>;
+
+export const publicSectionSchema = z.object({ "appearance": resolvedSectionAppearanceSchema, "id": z.string(), "title": z.string().nullable() });
 
 export type PublicSection = z.infer<typeof publicSectionSchema>;
 
@@ -24,11 +36,31 @@ export const publicServiceSchema = z.object({ "address": z.string(), "descriptio
 
 export type PublicService = z.infer<typeof publicServiceSchema>;
 
-export const widgetSizeSchema = z.enum(["quarter", "third", "half", "two-thirds", "full"]).catch("full");
+export const accentSchema = z.enum(["neutral", "blue", "green", "amber", "red", "violet", "pink", "teal"]).catch("neutral");
 
-export type WidgetSize = z.infer<typeof widgetSizeSchema>;
+export type Accent = z.infer<typeof accentSchema>;
 
-export const publicWidgetSchema = z.object({ "id": z.string().nullable(), "section": z.string().nullable(), "settings": z.record(z.string(), z.unknown()), "size": widgetSizeSchema, "title": z.string().nullable(), "type": z.string() });
+export const alignSchema = z.enum(["start", "center", "end"]).catch("start");
+
+export type Align = z.infer<typeof alignSchema>;
+
+export const paddingSchema = z.enum(["normal", "compact", "none"]).catch("normal");
+
+export type Padding = z.infer<typeof paddingSchema>;
+
+export const surfaceSchema = z.enum(["card", "plain", "tinted", "outline"]).catch("card");
+
+export type Surface = z.infer<typeof surfaceSchema>;
+
+export const resolvedAppearanceSchema = z.object({ "accent": accentSchema, "align": alignSchema, "padding": paddingSchema, "surface": surfaceSchema, "title": titleVisibilitySchema });
+
+export type ResolvedAppearance = z.infer<typeof resolvedAppearanceSchema>;
+
+export const widgetHeightSchema = z.union([z.literal("auto"), z.number()]);
+
+export type WidgetHeight = z.infer<typeof widgetHeightSchema>;
+
+export const publicWidgetSchema = z.object({ "appearance": resolvedAppearanceSchema, "column": z.number().nullable(), "height": widgetHeightSchema, "id": z.string().nullable(), "row": z.number().nullable(), "section": z.string().nullable(), "settings": z.record(z.string(), z.unknown()), "title": z.string().nullable(), "type": z.string(), "width": z.number() });
 
 export type PublicWidget = z.infer<typeof publicWidgetSchema>;
 

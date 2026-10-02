@@ -2,7 +2,7 @@ use portal_automations::validate_automations;
 use portal_automations::{
     InputResponse, OutputResponse, PortalService, PortalState, QueuedResponse, RenderedResponse,
     TraceEntryResponse, TraceResponse, WorkflowCatalogue, WorkflowCatalogueResponse,
-    WorkflowResponse, WorkflowUsageResponse, WorkflowsResponse,
+    WorkflowOutputResponse, WorkflowResponse, WorkflowUsageResponse, WorkflowsResponse,
 };
 use serde_json::{Map, Value, json};
 use toml_edit::{Array, DocumentMut, InlineTable};
@@ -59,6 +59,11 @@ fn revive() -> WorkflowResponse {
                 description: Some("How many restarts to try".into()),
             },
         ],
+        outputs: vec![WorkflowOutputResponse {
+            name: "state".into(),
+            value: "{{steps.probe.state}}".into(),
+            description: Some("The service's state after the retries".into()),
+        }],
         steps: json!([
             {"id": "first_probe", "label": "Probe it now", "kind": "probe", "service": "{{inputs.service}}"},
             {
@@ -116,6 +121,7 @@ fn spare() -> WorkflowResponse {
         tags: Vec::new(),
         timeout_seconds: 300,
         inputs: Vec::new(),
+        outputs: Vec::new(),
         steps: json!([
             {"id": "remember", "kind": "set", "variable": "note", "value": "hello"},
             {"id": "done", "kind": "stop", "outcome": "succeeded", "reason": "{{vars.note}}"}
@@ -318,5 +324,6 @@ pub fn traced(entries: &[Entry]) -> TraceResponse {
             )
             .collect(),
         dropped: 0,
+        outputs: Some([("state".to_string(), json!("up"))].into_iter().collect()),
     }
 }

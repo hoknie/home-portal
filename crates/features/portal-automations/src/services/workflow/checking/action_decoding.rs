@@ -89,6 +89,7 @@ pub fn decode_http(raw: &RawStep, path: &str, errors: &mut Vec<FieldError>) -> O
             body,
             timeout_seconds: timeout,
             fail_on_error: raw.fail_on_error.unwrap_or(true),
+            response_sample: raw.response_sample.clone(),
         })
     })
 }

@@ -6,7 +6,7 @@ use tokio::sync::Notify;
 use toml_edit::DocumentMut;
 
 use super::{decoded, decoded_webhooks, decoded_workflows};
-use crate::types::{Automation, AutomationsSection, Webhook, Workflow};
+use crate::types::{Automation, AutomationsSection, SourceCall, Webhook, Workflow};
 
 pub struct AutomationCache {
     automations: RwLock<Arc<Vec<Automation>>>,
@@ -144,6 +144,9 @@ impl AutomationCache {
         }
         if let Some(workflow) = id.strip_prefix(Workflow::MANUAL_PREFIX) {
             return self.workflow(workflow).is_some();
+        }
+        if id.starts_with(SourceCall::WIDGET_PREFIX) {
+            return true;
         }
         self.find(id).is_some_and(|automation| automation.enabled)
             || (self.webhooks_on()

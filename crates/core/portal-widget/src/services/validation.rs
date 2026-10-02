@@ -1,22 +1,20 @@
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
-use portal_feature::FieldError;
+use portal_feature::{FieldError, WidgetProvider};
 use portal_model::ServiceId;
 
-use crate::types::WidgetInstance;
-use portal_feature::WidgetProvider;
-
-pub const SECTION: &str = "dashboard.widgets";
+use crate::types::Definition;
 
 pub fn check_instances(
-    instances: &[WidgetInstance],
+    definitions: &[Definition],
     providers: &BTreeMap<&'static str, Arc<dyn WidgetProvider>>,
 ) -> Vec<FieldError> {
     let mut errors = Vec::new();
     let mut seen = HashSet::new();
-    for (index, instance) in instances.iter().enumerate() {
-        let field = format!("{SECTION}[{index}]");
+    for definition in definitions {
+        let field = &definition.field;
+        let instance = &definition.instance;
         let Some(provider) = providers.get(instance.kind.as_str()) else {
             continue;
         };
@@ -40,15 +38,11 @@ pub fn check_instances(
                 }
             }
         }
-        let prefix = match &instance.id {
-            Some(id) => format!("{SECTION}.{id}.settings."),
-            None => format!("{field}.settings."),
-        };
         errors.extend(
             provider
                 .check(&instance.settings)
                 .into_iter()
-                .map(|error| error.prefixed(&prefix)),
+                .map(|error| error.prefixed(&definition.settings_field)),
         );
     }
     errors

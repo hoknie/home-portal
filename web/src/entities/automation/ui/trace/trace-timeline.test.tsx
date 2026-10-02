@@ -20,7 +20,7 @@ function entry(path: string, step: string, kind: string, outcome: TraceEntry["ou
 }
 
 function workflowRun(entries: TraceEntry[], result: Run["outcome"]["result"]): Run {
-  return { ...running, workflow: "check", trace: { entries, dropped: 0 }, outcome: { ...running.outcome, result } };
+  return { ...running, workflow: "check", trace: { entries, dropped: 0, outputs: null }, outcome: { ...running.outcome, result } };
 }
 
 it("indents an entry by its nesting", () => {
@@ -30,7 +30,7 @@ it("indents an entry by its nesting", () => {
 });
 
 it("opens an http answer on demand, formatted, and counts steps left out", async () => {
-  renderWithProviders(<TraceTimeline trace={{ entries: [entry("steps[0]", "ping", "http", "succeeded", '{"state":"up"}')], dropped: 3 }} />);
+  renderWithProviders(<TraceTimeline trace={{ entries: [entry("steps[0]", "ping", "http", "succeeded", '{"state":"up"}')], dropped: 3, outputs: null }} />);
   expect(screen.getByRole("list", { name: "Answer" })).not.toBeVisible();
   await userEvent.click(screen.getByText("Answer"));
   expect(screen.getByRole("list", { name: "Answer" })).toHaveTextContent('state: "up"');
@@ -40,7 +40,7 @@ it("opens an http answer on demand, formatted, and counts steps left out", async
 
 it("a long JSON answer is shown from its shape, formatted, folded below the top and marked as shortened", async () => {
   const cut = { ...entry("steps[0]", "list", "http", "succeeded", '{"disks":[{"name":"sd0"},{"na'), shape: '{"disks":[{"name":"sd0"},{"name":"sd1"},{"name":"sd2"}]}' };
-  renderWithProviders(<TraceTimeline trace={{ entries: [cut], dropped: 0 }} />);
+  renderWithProviders(<TraceTimeline trace={{ entries: [cut], dropped: 0, outputs: null }} />);
   await userEvent.click(screen.getByText("Answer"));
   const tree = screen.getByRole("list", { name: "Answer" });
   expect(tree).toHaveTextContent("disks: [3]");
@@ -86,9 +86,16 @@ it("the log from the journal: a script entry opens its log from Details instead 
 
 it("the detail under a step's name stays on one line, with the whole text on hover", () => {
   const long = `restart.sh exited 1: ${"x".repeat(200)}`;
-  renderWithProviders(<TraceTimeline trace={{ entries: [{ ...entry("steps[0].then[0]", "restart", "script", "failed"), detail: long }], dropped: 0 }} indent={false} />);
+  renderWithProviders(<TraceTimeline trace={{ entries: [{ ...entry("steps[0].then[0]", "restart", "script", "failed"), detail: long }], dropped: 0, outputs: null }} indent={false} />);
   const detail = document.querySelector("[data-detail]")!;
   expect(detail.className).toContain("truncate");
   expect(detail).toHaveAttribute("title", long);
   expect(detail.closest("li")).not.toHaveAttribute("style");
+});
+
+it("shows the outputs a run gave after its steps", () => {
+  renderWithProviders(<TraceTimeline trace={{ entries: [], dropped: 0, outputs: { temperature: 20, place: "Riga" } }} />);
+  const outputs = screen.getByRole("region", { name: "Outputs" });
+  expect(outputs).toHaveTextContent("temperature20");
+  expect(outputs).toHaveTextContent("placeRiga");
 });

@@ -17,9 +17,11 @@ pub struct Frame {
     pub loop_item: Option<(Value, usize)>,
     pub transform_item: Option<(Value, usize)>,
     pub portal: Option<Value>,
+    pub widget: Option<Value>,
     pub secrets: Arc<Secrets>,
     pub rendered: Option<Collector>,
     pub entry: Option<usize>,
+    pub outputs: Option<BTreeMap<String, Value>>,
 }
 
 impl Frame {
@@ -36,9 +38,11 @@ impl Frame {
             loop_item: None,
             transform_item: None,
             portal: None,
+            widget: None,
             secrets,
             rendered: None,
             entry: None,
+            outputs: None,
         }
     }
 
@@ -48,6 +52,12 @@ impl Frame {
         let rest: Vec<&str> = parts.collect();
         if namespace == "portal" {
             return Ok(portal_lookup(self.portal.as_ref(), &rest));
+        }
+        if matches!(namespace, "data" | "widget" | "fetched_at") {
+            return Ok(self
+                .widget
+                .as_ref()
+                .map_or(Value::Null, |widget| walk(widget[namespace].clone(), &rest)));
         }
         match (namespace, &self.transform_item) {
             ("item", Some((item, _))) => return Ok(walk(item.clone(), &rest)),

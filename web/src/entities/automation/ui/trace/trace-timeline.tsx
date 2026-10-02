@@ -125,6 +125,19 @@ export function TraceTimeline({ trace, indent = true }: { trace: Trace; indent?:
         {passRows(trace.entries).map((row, index) => (row.type === "entry" ? <TraceEntryView key={`${row.index}-${row.entry.path}`} entry={row.entry} indent={indent} /> : <Heading key={`${row.type}-${"loop" in row ? row.loop : row.parallel}-${row.number}-${index}`} row={row} />))}
       </ol>
       {trace.dropped > 0 ? <p className="text-xs text-muted-foreground">{t("dropped", { count: trace.dropped })}</p> : null}
+      {trace.outputs ? (
+        <section className="mt-2 grid gap-1" aria-label={t("outputs")} data-trace-outputs="">
+          <p className="text-sm font-medium">{t("outputs")}</p>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+            {Object.entries(trace.outputs).map(([name, value]) => (
+              <div key={name} className="contents">
+                <dt className="font-mono text-muted-foreground">{name}</dt>
+                <dd className="min-w-0 font-mono break-all">{typeof value === "string" ? value : JSON.stringify(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
     </div>
   );
 }

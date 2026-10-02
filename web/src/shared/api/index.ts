@@ -11,8 +11,17 @@ export {
 export type { FieldError } from "./errors";
 export { createQueryClient } from "./query-client";
 export {
+  ACCENTS,
+  ALIGNS,
+  DEFAULT_APPEARANCE,
+  DEFAULT_SECTION_APPEARANCE,
   DIAGNOSES,
-  WIDGET_SIZES,
+  GRID_COLUMNS,
+  LARGEST_ROWS,
+  PADDINGS,
+  SECTION_SURFACES,
+  SURFACES,
+  TITLE_VISIBILITIES,
   diagnosisSchema,
   emptySchema,
   fieldErrorSchema,
@@ -20,8 +29,7 @@ export {
   sectionSchema,
   serviceStateSchema,
   serviceStatusSchema,
-  widgetSizeSchema,
 } from "./schemas";
-export type { Diagnosis, Section, ServiceState, ServiceStatus, WidgetSize } from "./schemas";
+export type { Appearance, Diagnosis, Section, SectionAppearance, ServiceState, ServiceStatus, WidgetHeight } from "./schemas";
 export { apiSamples } from "./samples";
 export * as generated from "./generated";

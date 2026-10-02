@@ -2,7 +2,7 @@ use portal_feature::FieldError;
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::types::{RawInput, RawStep, RawWorkflow};
+use crate::types::{RawInput, RawOutput, RawStep, RawWorkflow};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct WorkflowRequest {
@@ -20,6 +20,8 @@ pub struct WorkflowRequest {
     pub timeout_seconds: Option<i64>,
     #[serde(default)]
     pub inputs: Vec<RawInput>,
+    #[serde(default)]
+    pub outputs: Vec<RawOutput>,
     #[serde(default)]
     pub steps: Vec<Value>,
 }
@@ -55,6 +57,7 @@ impl WorkflowRequest {
             tags: self.tags,
             timeout_seconds: self.timeout_seconds,
             inputs: self.inputs,
+            outputs: self.outputs,
             steps,
         })
     }

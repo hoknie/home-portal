@@ -8,4 +8,6 @@ pub struct DashboardTable {
     pub sections: Vec<SectionEntry>,
     #[serde(default)]
     pub widgets: Vec<WidgetInstance>,
+    #[serde(default)]
+    pub library: Vec<WidgetInstance>,
 }

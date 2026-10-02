@@ -1,66 +1,114 @@
 {
   "sections": [
     {
+      "appearance": {
+        "surface": "unknown",
+        "title": "unknown"
+      },
       "id": "now",
       "title": "Now"
     },
     {
+      "appearance": {
+        "surface": "card",
+        "title": "hidden"
+      },
       "id": "media",
       "title": "Media"
     }
   ],
   "widgets": [
     {
+      "appearance": {
+        "accent": "neutral",
+        "align": "start",
+        "padding": "normal",
+        "surface": "plain",
+        "title": "hidden"
+      },
+      "column": null,
       "environments": null,
-      "id": null,
+      "height": "auto",
+      "id": "status-summary",
       "key": "#0",
       "public": false,
+      "row": null,
       "section": "now",
       "settings": {},
-      "size": "two-thirds",
       "title": null,
-      "type": "status-summary"
+      "type": "status-summary",
+      "width": 8
     },
     {
+      "appearance": {
+        "accent": "blue",
+        "align": "start",
+        "padding": "normal",
+        "surface": "tinted",
+        "title": "shown"
+      },
+      "column": 9,
       "environments": null,
+      "height": 3,
       "id": "riga",
-      "key": "riga",
+      "key": "#1",
       "public": true,
+      "row": 1,
       "section": "now",
       "settings": {
         "city": "Riga"
       },
-      "size": "third",
       "title": null,
-      "type": "weather"
+      "type": "weather",
+      "width": 4
     },
     {
+      "appearance": {
+        "accent": "neutral",
+        "align": "start",
+        "padding": "normal",
+        "surface": "card",
+        "title": "shown"
+      },
+      "column": null,
       "environments": [
         "local"
       ],
-      "id": null,
+      "height": "auto",
+      "id": "services",
       "key": "#2",
       "public": false,
+      "row": null,
       "section": "media",
       "settings": {
         "groups": [
           "Media"
         ]
       },
-      "size": "half",
       "title": "Media",
-      "type": "services"
+      "type": "services",
+      "width": 6
     },
     {
+      "appearance": {
+        "accent": "neutral",
+        "align": "start",
+        "padding": "normal",
+        "surface": "card",
+        "title": "shown"
+      },
+      "column": null,
       "environments": null,
-      "id": null,
+      "height": "auto",
+      "id": "services-2",
       "key": "#3",
       "public": false,
+      "row": null,
       "section": "media",
       "settings": {},
-      "size": "half",
       "title": null,
-      "type": "services"
+      "type": "services",
+      "width": 5
     }
   ]
 }

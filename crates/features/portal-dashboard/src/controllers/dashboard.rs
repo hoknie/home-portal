@@ -30,18 +30,11 @@ pub async fn show(
 
 pub async fn update(
     State(state): State<DashboardState>,
-    principal: Option<Extension<Principal>>,
     headers: HeaderMap,
     Json(request): Json<LayoutRequest>,
 ) -> Result<Response, ApiError> {
     let revision = Revision::from_headers(&headers)?;
-    let rights = principal
-        .map(|Extension(principal)| principal.rights)
-        .unwrap_or_default();
-    let changed = state
-        .change
-        .run(&request.into_layout(), (&revision, &rights))
-        .await?;
+    let changed = state.change.run(&request.into_layout(), &revision).await?;
     Ok(respond(changed))
 }
 
@@ -50,7 +43,7 @@ fn respond(view: Revisioned<LayoutView>) -> Response {
     let widgets = layout
         .widgets
         .into_iter()
-        .map(|(index, widget)| WidgetView::of(WidgetView::key_of(index, &widget), widget))
+        .map(|(index, widget)| WidgetView::of(WidgetView::key_of(index), widget))
         .collect();
     let mut response = Json(DashboardResponse {
         sections: layout.sections.into_iter().map(SectionView::of).collect(),

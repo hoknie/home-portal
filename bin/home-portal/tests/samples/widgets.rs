@@ -1,3 +1,9 @@
+use portal_widgets::{
+    CustomWidgetData, DeclaredPathResponse, PreviewErrorResponse, RenderedBlock,
+    WidgetActedResponse, WidgetPreviewResponse,
+};
+use serde_json::json;
+
 use super::*;
 
 fn envelope(data: Value, refresh_seconds: u64) -> Value {
@@ -7,6 +13,7 @@ fn envelope(data: Value, refresh_seconds: u64) -> Value {
         stale: false,
         problem: None,
         refresh_seconds,
+        refreshing: false,
     })
     .unwrap()
 }
@@ -129,5 +136,84 @@ async fn the_widget_kinds_sample_names_every_registered_provider() {
     check(
         "widget-kinds",
         json!({ "kinds": registry.widgets.kinds(), "conditions": conditions }),
+    );
+}
+
+fn blocks() -> Vec<RenderedBlock> {
+    serde_json::from_value(json!([
+        { "kind": "stat", "label": "Free", "value": "120", "unit": "GB", "caption": "of 500 GB", "icon": "hard-drive", "tone": "ok" },
+        { "kind": "progress", "label": "Used", "value": 93.0, "maximum": 100.0, "caption": null, "tone": "danger" },
+        { "kind": "row", "gap": "normal", "align": "center", "valign": null, "widths": [4, 8], "blocks": [
+            { "kind": "badge", "text": "failed", "tone": "danger", "align": "center", "valign": "center" },
+            { "kind": "column", "gap": "small", "align": "end", "valign": null, "blocks": [
+                { "kind": "text", "text": "Backup **3 h** ago", "size": "small", "weight": "normal", "muted": true, "tone": "neutral", "align": "end", "valign": null },
+                { "kind": "row", "gap": "small", "align": "stretch", "widths": null, "blocks": [
+                    { "kind": "badge", "text": "nas", "tone": "ok", "align": "end", "valign": null },
+                    { "kind": "badge", "text": "cloud", "tone": "neutral", "align": "end", "valign": null }
+                ] }
+            ] }
+        ] },
+        { "kind": "list", "items": [{ "text": "phone", "secondary": "10.0.0.2", "tone": "neutral" }], "empty": "Nobody", "more": 13 },
+        { "kind": "table", "headers": ["Name", "Address"], "rows": [["tv", "10.0.0.3"]], "empty": null, "more": 0 },
+        { "kind": "key-values", "pairs": [{ "key": "Uptime", "value": "3 days" }] },
+        { "kind": "markdown", "text": "[Open the NAS](https://nas.home.lan)" },
+        { "kind": "divider" },
+        { "kind": "column", "gap": "small", "align": null, "valign": null, "blocks": [
+            { "kind": "button", "action": "restart", "does": "automation", "label": "Restart", "icon": "rotate-ccw", "style": "primary", "confirm": "Restart Jellyfin?", "link": null },
+            { "kind": "button", "action": "refresh", "does": "refresh", "label": "Refresh", "icon": null, "style": "ghost", "confirm": null, "link": null },
+            { "kind": "button", "action": "link", "does": "link", "label": "Open", "icon": null, "style": "secondary", "confirm": null, "link": "https://nas.home.lan" }
+        ] }
+    ]))
+    .unwrap()
+}
+
+#[test]
+fn the_custom_widget_sample_matches_its_serializer() {
+    let data = CustomWidgetData { blocks: blocks() };
+    typed("custom-widget", &data);
+    let envelope: Value = serde_json::to_value(WidgetData {
+        data: serde_json::to_value(&data).unwrap(),
+        fetched_at: datetime!(2026-09-22 10:00 UTC),
+        stale: false,
+        problem: None,
+        refresh_seconds: 300,
+        refreshing: false,
+    })
+    .unwrap();
+    check("widget-custom", envelope);
+}
+
+#[test]
+fn the_widget_preview_and_action_samples_match_their_serializers() {
+    typed(
+        "widget-preview",
+        &WidgetPreviewResponse {
+            blocks: blocks().into_iter().take(2).collect(),
+            errors: vec![PreviewErrorResponse {
+                field: "blocks[2].text".into(),
+                message: "names {{steps.probe.state}}, which a widget does not know".into(),
+            }],
+            data: json!({ "free": 120, "total": 500, "used_percent": 93 }),
+            ran: true,
+            problem: None,
+            paths: vec![
+                DeclaredPathResponse {
+                    path: "data.free".into(),
+                    description: Some("GB free".into()),
+                    kind: "number".into(),
+                },
+                DeclaredPathResponse {
+                    path: "data.disks".into(),
+                    description: None,
+                    kind: "list".into(),
+                },
+            ],
+        },
+    );
+    typed(
+        "widget-acted",
+        &WidgetActedResponse {
+            run_id: Some("41".into()),
+        },
     );
 }

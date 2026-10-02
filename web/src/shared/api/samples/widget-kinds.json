@@ -23,6 +23,7 @@
   ],
   "kinds": [
     "calendar",
+    "custom",
     "host-metrics",
     "weather"
   ]

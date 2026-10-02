@@ -33,5 +33,6 @@
   "fetched_at": "2026-09-22T10:00:00Z",
   "problem": null,
   "refresh_seconds": 900,
+  "refreshing": false,
   "stale": false
 }

@@ -1,4 +1,4 @@
-use portal_widget::WidgetSize;
+use portal_widget::{ResolvedAppearance, WidgetHeight};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -12,5 +12,9 @@ pub struct PublicWidget {
     #[schemars(with = "serde_json::Map<String, Value>")]
     pub settings: Value,
     pub section: Option<String>,
-    pub size: WidgetSize,
+    pub column: Option<u8>,
+    pub row: Option<u32>,
+    pub width: u8,
+    pub height: WidgetHeight,
+    pub appearance: ResolvedAppearance,
 }

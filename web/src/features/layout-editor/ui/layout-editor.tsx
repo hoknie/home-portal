@@ -3,20 +3,20 @@
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-import { useLayout } from "@/entities/dashboard";
-import type { WidgetSize } from "@/shared/api";
+import { type LibraryWidget, useLayout } from "@/entities/dashboard";
 import { ErrorNotice } from "@/shared/ui/error-notice";
 import { Skeleton } from "@/shared/ui/primitives";
 
-import type { PreviewScope, WidgetKind } from "../model/catalog";
-import type { Draft } from "../model/draft";
+import type { KindLabel } from "../model/catalog";
+import type { DraftWidget } from "../model/draft";
 import { Editor } from "./editor";
 
 export type LayoutEditorProps = {
-  kinds: WidgetKind[];
-  environments: string[];
-  spanOf: (size: WidgetSize) => string;
-  renderPreview: (draft: Draft, scope: PreviewScope) => ReactNode;
+  kinds: KindLabel[];
+  renderWidget: (widget: LibraryWidget, placement: DraftWidget) => ReactNode;
+  renderSettings: (id: string, close: () => void, adopt: (revision: string | null) => void) => ReactNode;
+  builds?: (type: string) => boolean;
+  onBuild?: (id: string, place: string) => void;
 };
 
 export function LayoutEditor(props: LayoutEditorProps) {

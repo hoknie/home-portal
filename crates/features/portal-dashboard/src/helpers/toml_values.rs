@@ -25,28 +25,3 @@ pub fn toml_of(json: &Json) -> Option<Value> {
         }
     }
 }
-
-pub fn unique_id(kind: &str, taken: &[String]) -> String {
-    let base: String = kind
-        .chars()
-        .map(|character| {
-            if character.is_ascii_alphanumeric() {
-                character.to_ascii_lowercase()
-            } else {
-                '-'
-            }
-        })
-        .collect();
-    let base = if base.starts_with(|character: char| character.is_ascii_lowercase()) {
-        base
-    } else {
-        format!("widget-{base}")
-    };
-    if !taken.contains(&base) {
-        return base;
-    }
-    (2..)
-        .map(|number| format!("{base}-{number}"))
-        .find(|candidate| !taken.contains(candidate))
-        .unwrap_or(base)
-}

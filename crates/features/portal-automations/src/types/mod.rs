@@ -14,6 +14,7 @@ mod stored;
 mod transforming;
 mod views;
 mod webhooks;
+mod widget_runs;
 mod wildcards;
 mod workflow;
 
@@ -26,7 +27,7 @@ pub use configuration::{
     Automation, AutomationsSection, CronFilter, Filters, RawAutomation, RawRun, RunSettings,
     StateFilter, Trigger, WorkflowCall,
 };
-pub use inputs::{InputDeclaration, InputType, InputValue, RawInput};
+pub use inputs::{InputDeclaration, InputType, InputValue, OutputDeclaration, RawInput, RawOutput};
 pub use journal::{Outcome, RunFilter, RunRecord, Seen, SkipReason};
 pub use logging::{EntryEnd, LogLevel, Rendered, StepLog, StepLogging};
 pub use portal::{PortalService, PortalState, RawServiceId};
@@ -54,6 +55,7 @@ pub use views::{
     AutomationView, CreatedWebhook, WebhookView, WorkflowCatalogueView, WorkflowUsage, WorkflowView,
 };
 pub use webhooks::{RawMarks, RawWebhook, Reception, Webhook, WebhookAction};
+pub use widget_runs::{SourceCall, WidgetSupport, WidgetTemplates};
 pub use wildcards::Wildcards;
 pub use workflow::{
     Condition, HttpStep, LoopMode, Operator, RawCondition, RawStep, RawWorkflow, SetValue, Step,

@@ -1,4 +1,4 @@
-use portal_widget::{SectionEntry, WidgetInstance};
+use portal_widget::{SectionAppearance, SectionEntry, WidgetInstance};
 use serde::Deserialize;
 
 use super::{SectionRequest, WidgetRequest};
@@ -25,6 +25,7 @@ impl LayoutRequest {
                 .map(|section| SectionEntry {
                     id: section.id.trim().to_string(),
                     title: blank_to_none(section.title),
+                    appearance: without_defaults_of_section(section.appearance),
                 })
                 .collect(),
             widgets: self
@@ -33,17 +34,23 @@ impl LayoutRequest {
                 .map(|widget| EditedWidget {
                     key: widget.key,
                     instance: WidgetInstance {
-                        kind: widget.kind.trim().to_string(),
-                        id: blank_to_none(widget.id),
-                        title: blank_to_none(widget.title),
-                        settings: widget.settings,
-                        environments: widget.environments,
-                        public: widget.public,
+                        widget: blank_to_none(widget.widget),
                         section: blank_to_none(widget.section),
-                        size: widget.size,
+                        column: widget.column,
+                        row: widget.row,
+                        width: Some(widget.width),
+                        height: widget.height,
+                        ..WidgetInstance::of("")
                     },
                 })
                 .collect(),
         }
     }
+}
+
+fn without_defaults_of_section(appearance: SectionAppearance) -> SectionAppearance {
+    if !appearance.problems().is_empty() {
+        return appearance;
+    }
+    SectionAppearance::of(appearance.resolved())
 }

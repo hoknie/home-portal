@@ -7,7 +7,7 @@ import { Button, Input, Switch } from "@/shared/ui/primitives";
 
 import type { InputType } from "../model/schema";
 
-export type InputValueFieldProps = { id: string; label: string; type: InputType; value: unknown; onChange: (value: unknown) => void };
+export type InputValueFieldProps = { id: string; label: string; type: InputType; value: unknown; placeholder?: string; onChange: (value: unknown) => void };
 
 function Rows({ id, label, rows, onChange, keyed }: { id: string; label: string; rows: [string, string][]; onChange: (rows: [string, string][]) => void; keyed: boolean }) {
   const t = useTranslations("workflowInputs");
@@ -45,7 +45,7 @@ function textOfItem(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value ?? "");
 }
 
-export function InputValueField({ id, label, type, value, onChange }: InputValueFieldProps) {
+export function InputValueField({ id, label, type, value, placeholder, onChange }: InputValueFieldProps) {
   switch (type) {
     case "number":
       return (
@@ -53,6 +53,7 @@ export function InputValueField({ id, label, type, value, onChange }: InputValue
           id={id}
           aria-label={label}
           type="number"
+          placeholder={placeholder}
           value={typeof value === "number" ? String(value) : ""}
           onChange={(change) => onChange(change.target.value === "" ? null : Number(change.target.value))}
         />
@@ -82,6 +83,6 @@ export function InputValueField({ id, label, type, value, onChange }: InputValue
       );
     }
     default:
-      return <Input id={id} aria-label={label} value={typeof value === "string" ? value : ""} onChange={(change) => onChange(change.target.value)} />;
+      return <Input id={id} aria-label={label} placeholder={placeholder} value={typeof value === "string" ? value : ""} onChange={(change) => onChange(change.target.value)} />;
   }
 }

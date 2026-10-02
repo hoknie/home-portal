@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { type Metrics } from "@/entities/widget";
 import { MetricBar } from "@/shared/ui/metric-bar";
 import { StatTile } from "@/shared/ui/stat-tile";
+import { WidgetPanel } from "@/shared/ui/widget-frame";
 
 export type HostMetricsProps = { data: Metrics };
 
@@ -22,7 +23,7 @@ export function HostMetricsWidget({ data }: HostMetricsProps) {
   const t = useTranslations("widgets.metrics");
   const memory = (data.memory.used_bytes / Math.max(1, data.memory.total_bytes)) * 100;
   return (
-    <div className="grid gap-4 rounded-xl border bg-card p-4">
+    <WidgetPanel className="grid gap-4">
       <div className="grid gap-2 @md:grid-cols-2">
         <MetricBar label={t("cpu")} value={`${Math.round(data.cpu_percent)}%`} percent={data.cpu_percent} />
         <MetricBar
@@ -49,6 +50,6 @@ export function HostMetricsWidget({ data }: HostMetricsProps) {
         <StatTile label={t("host")} value={data.hostname ?? t("unknownHost")} />
         {data.load_average ? <StatTile label={t("load")} value={data.load_average[0].toFixed(2)} /> : null}
       </div>
-    </div>
+    </WidgetPanel>
   );
 }

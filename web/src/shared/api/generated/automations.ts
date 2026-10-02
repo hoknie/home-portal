@@ -16,7 +16,7 @@ export const traceEntryResponseSchema = z.object({ "budget_reached": z.boolean()
 
 export type TraceEntryResponse = z.infer<typeof traceEntryResponseSchema>;
 
-export const traceResponseSchema = z.object({ "dropped": z.number(), "entries": z.array(traceEntryResponseSchema) });
+export const traceResponseSchema = z.object({ "dropped": z.number(), "entries": z.array(traceEntryResponseSchema), "outputs": z.record(z.string(), z.unknown()).nullable().default(null) });
 
 export type TraceResponse = z.infer<typeof traceResponseSchema>;
 

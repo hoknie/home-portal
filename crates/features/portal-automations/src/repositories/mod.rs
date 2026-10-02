@@ -6,6 +6,8 @@ mod workflows;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod workflow_tests;
 
 pub use automations::{append, origin, position, remove, replace, write_action};
 pub use run_file::RunFile;

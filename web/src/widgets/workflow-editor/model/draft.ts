@@ -12,6 +12,7 @@ export const emptyDraft: Draft = {
   tags: [],
   timeout_seconds: DEFAULT_TIMEOUT,
   inputs: [],
+  outputs: [],
   steps: [],
 };
 
@@ -27,6 +28,7 @@ export function draftOf(workflow: Workflow | null): Draft {
     tags: workflow.tags,
     timeout_seconds: workflow.timeout_seconds,
     inputs: workflow.inputs,
+    outputs: workflow.outputs,
     steps: workflow.steps,
   };
 }
@@ -53,6 +55,7 @@ export function requestOf(draft: Draft): WorkflowRequest {
     ...draft,
     description: draft.description?.trim() ? draft.description.trim() : null,
     inputs: draft.inputs.map((input) => ({ ...input, name: input.name.trim(), description: input.description?.trim() ? input.description.trim() : null })),
+    outputs: draft.outputs.map((output) => ({ ...output, name: output.name.trim(), description: output.description?.trim() ? output.description.trim() : null })),
     steps: draft.steps.map(withoutEmpty),
   };
 }

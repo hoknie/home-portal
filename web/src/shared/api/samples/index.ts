@@ -4,7 +4,9 @@ import automationRuns from "./automation-runs.json";
 import automationSchedule from "./automation-schedule.json";
 import automationScripts from "./automation-scripts.json";
 import automations from "./automations.json";
+import customWidget from "./custom-widget.json";
 import dashboard from "./dashboard.json";
+import dashboardLibrary from "./dashboard-library.json";
 import dns from "./dns.json";
 import environment from "./environment.json";
 import fieldErrors from "./field-errors.json";
@@ -25,17 +27,20 @@ import scriptsTree from "./scripts-tree.json";
 import secrets from "./secrets.json";
 import services from "./services.json";
 import session from "./session.json";
+import stepDefaults from "./step-defaults.json";
+import transformPreview from "./transform-preview.json";
 import users from "./users.json";
-import widgetCalendar from "./widget-calendar.json";
-import widgetHostMetrics from "./widget-host-metrics.json";
-import widgetKinds from "./widget-kinds.json";
 import webhookAccepted from "./webhook-accepted.json";
 import webhookCreated from "./webhook-created.json";
 import webhookToken from "./webhook-token.json";
 import webhooks from "./webhooks.json";
+import widgetActed from "./widget-acted.json";
+import widgetCalendar from "./widget-calendar.json";
+import widgetCustom from "./widget-custom.json";
+import widgetHostMetrics from "./widget-host-metrics.json";
+import widgetKinds from "./widget-kinds.json";
+import widgetPreview from "./widget-preview.json";
 import widgetWeather from "./widget-weather.json";
-import stepDefaults from "./step-defaults.json";
-import transformPreview from "./transform-preview.json";
 import workflowCatalogue from "./workflow-catalogue.json";
 import workflowPortal from "./workflow-portal.json";
 import workflowRun from "./workflow-run.json";
@@ -48,7 +53,9 @@ export const apiSamples = {
   automationSchedule,
   automationScripts,
   automations,
+  customWidget,
   dashboard,
+  dashboardLibrary,
   dns,
   environment,
   fieldErrors,
@@ -69,17 +76,20 @@ export const apiSamples = {
   secrets,
   services,
   session,
+  stepDefaults,
+  transformPreview,
   users,
-  widgetCalendar,
-  widgetHostMetrics,
-  widgetKinds,
   webhookAccepted,
   webhookCreated,
   webhookToken,
   webhooks,
+  widgetActed,
+  widgetCalendar,
+  widgetCustom,
+  widgetHostMetrics,
+  widgetKinds,
+  widgetPreview,
   widgetWeather,
-  stepDefaults,
-  transformPreview,
   workflowCatalogue,
   workflowPortal,
   workflowRun,

@@ -12,14 +12,14 @@ import { cn } from "@/shared/lib/cn";
 import { Separator, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/primitives";
 
 import { toggleCategory, useCollapsedCategories } from "../model/category-state";
-import { type CategoryLinks, categoryLinks, isActive, managementLinks } from "../model/navigation";
+import { type CategoryLinks, activeIn, categoryLinks, isActive, managementLinks, subLinksOf } from "../model/navigation";
 
 export type NavLinksProps = { onNavigate?: () => void; compact?: boolean };
 
-type NavItemProps = { href: string; label: string; icon: LucideIcon; pathname: string; onNavigate?: () => void; compact?: boolean };
+type NavItemProps = { href: string; label: string; icon: LucideIcon; pathname: string; onNavigate?: () => void; compact?: boolean; nested?: boolean };
 
-function NavItem({ href, label, icon: Icon, pathname, onNavigate, compact = false }: NavItemProps) {
-  const active = isActive(pathname, href);
+function NavItem({ href, label, icon: Icon, pathname, onNavigate, compact = false, nested = false }: NavItemProps) {
+  const active = activeIn(pathname, href);
   const link = (
     <Link
       href={href}
@@ -28,7 +28,7 @@ function NavItem({ href, label, icon: Icon, pathname, onNavigate, compact = fals
       aria-label={compact ? label : undefined}
       className={cn(
         "flex items-center gap-3 rounded-lg py-2 text-sm font-medium transition-colors",
-        compact ? "justify-center px-2" : "px-3",
+        compact ? "justify-center px-2" : nested ? "ml-5 px-3 py-1.5 text-xs" : "px-3",
         active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60",
       )}
     >
@@ -93,7 +93,12 @@ export function NavLinks({ onNavigate, compact = false }: NavLinksProps) {
   return (
     <nav className="grid gap-1">
       {managementLinks(may).map(({ href, label, icon }) => (
-        <NavItem key={href} href={href} label={t(label)} icon={icon} pathname={pathname} onNavigate={onNavigate} compact={compact} />
+        <div key={href} className="grid gap-1">
+          <NavItem href={href} label={t(label)} icon={icon} pathname={pathname} onNavigate={onNavigate} compact={compact} />
+          {subLinksOf(href).map((sub) => (
+            <NavItem key={sub.href} href={sub.href} label={t(sub.label)} icon={sub.icon} pathname={pathname} onNavigate={onNavigate} compact={compact} nested />
+          ))}
+        </div>
       ))}
       {groups.length > 0 ? (
         <div role="group" aria-labelledby="nav-modules" className="mt-4 grid gap-1">

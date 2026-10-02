@@ -21,6 +21,7 @@ fn the_public_portal_sample_matches_its_serializer() {
             sections: vec![PublicSection {
                 id: "now".into(),
                 title: Some("Now".into()),
+                appearance: ResolvedSectionAppearance::default(),
             }],
             services: vec![PublicService {
                 id: "media".into(),
@@ -37,7 +38,11 @@ fn the_public_portal_sample_matches_its_serializer() {
                 title: None,
                 settings: json!({ "city": "Riga" }),
                 section: Some("now".into()),
-                size: WidgetSize::Third,
+                width: 4,
+                column: None,
+                row: None,
+                height: WidgetHeight::Auto,
+                appearance: ResolvedAppearance::default(),
             }],
         },
     );

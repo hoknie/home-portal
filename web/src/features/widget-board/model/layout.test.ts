@@ -1,5 +1,7 @@
 import { expect, it } from "vitest";
 
+import { DEFAULT_APPEARANCE, DEFAULT_SECTION_APPEARANCE } from "@/shared/api";
+
 import { type GridWidget, placeWidgets } from "./layout";
 
 const widget = (key: string, section: string | null): GridWidget => ({
@@ -9,13 +11,17 @@ const widget = (key: string, section: string | null): GridWidget => ({
   title: null,
   settings: {},
   section,
-  size: "full",
+  width: 12,
+  height: "auto",
+  column: null,
+  row: null,
+  appearance: DEFAULT_APPEARANCE,
 });
 
 const sections = [
-  { id: "now", title: "Now" },
-  { id: "media", title: "Media" },
-  { id: "empty", title: "Empty" },
+  { id: "now", title: "Now", appearance: DEFAULT_SECTION_APPEARANCE },
+  { id: "media", title: "Media", appearance: DEFAULT_SECTION_APPEARANCE },
+  { id: "empty", title: "Empty", appearance: DEFAULT_SECTION_APPEARANCE },
 ];
 
 it("puts each widget in its section in order and drops sections with nothing to show", () => {
@@ -30,3 +36,4 @@ it("a widget without a section, or with one that is not listed, goes to the firs
   const placed = placeWidgets(sections, [widget("a", null), widget("b", "gone")]);
   expect(placed.map((entry) => [entry.section.id, entry.widgets.map((item) => item.key)])).toEqual([["now", ["a", "b"]]]);
 });
+

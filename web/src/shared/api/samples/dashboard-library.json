@@ -1,0 +1,56 @@
+{
+  "widgets": [
+    {
+      "appearance": {
+        "accent": "blue",
+        "align": "start",
+        "padding": "normal",
+        "surface": "tinted",
+        "title": "shown"
+      },
+      "environments": null,
+      "height": "auto",
+      "id": "riga",
+      "placed": 1,
+      "public": true,
+      "settings": {
+        "latitude": 56.95,
+        "longitude": 24.11
+      },
+      "title": "Riga",
+      "type": "weather",
+      "width": 12
+    },
+    {
+      "appearance": {
+        "accent": "neutral",
+        "align": "start",
+        "padding": "normal",
+        "surface": "card",
+        "title": "shown"
+      },
+      "environments": [
+        "local"
+      ],
+      "height": "auto",
+      "id": "disks",
+      "placed": 0,
+      "public": false,
+      "settings": {
+        "blocks": [
+          {
+            "kind": "stat",
+            "label": "Free",
+            "value": "{{data.free}}"
+          }
+        ],
+        "source": {
+          "workflow": "disks"
+        }
+      },
+      "title": null,
+      "type": "custom",
+      "width": 12
+    }
+  ]
+}

@@ -12,3 +12,13 @@ export function UnknownWidget({ type, invalid }: { type: string; invalid: boolea
     </div>
   );
 }
+
+export function ModuleOffWidget({ type }: { type: string }) {
+  const t = useTranslations("dashboard");
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-dashed p-4 text-sm text-muted-foreground" data-widget-type={type} data-module-off="">
+      <Puzzle className="size-5 shrink-0" aria-hidden />
+      {t("moduleOffWidget")}
+    </div>
+  );
+}

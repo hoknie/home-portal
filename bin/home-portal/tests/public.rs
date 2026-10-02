@@ -194,10 +194,12 @@ async fn a_public_widget_carries_its_section_and_size_and_only_its_section_is_li
     let (_, body) = ask("/api/public/portal", Some("203.0.113.5")).await;
     assert_eq!(
         body["sections"],
-        serde_json::json!([{ "id": "now", "title": "Right now" }])
+        serde_json::json!([{ "id": "now", "title": "Right now", "appearance": { "title": "shown", "surface": "none" } }])
     );
     assert_eq!(body["widgets"][0]["section"], "now");
-    assert_eq!(body["widgets"][0]["size"], "half");
+    assert_eq!(body["widgets"][0]["width"], 6);
+    assert_eq!(body["widgets"][0]["height"], "auto");
+    assert_eq!(body["widgets"][0]["appearance"]["surface"], "card");
 }
 
 #[tokio::test]

@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use portal_feature::ApiError;
 use portal_model::Environment;
-use portal_widget::WidgetData;
+use portal_widget::WidgetAnswer;
 
 use crate::responses::{PublicSection, PublicWidget};
 
@@ -15,5 +15,5 @@ pub trait PublicLayout: Send + Sync {
         &self,
         id: &str,
         environment: &Environment,
-    ) -> Result<WidgetData, ApiError>;
+    ) -> Result<WidgetAnswer, ApiError>;
 }

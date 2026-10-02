@@ -35,6 +35,6 @@ pub use webhooks::{
 pub use when_response::WhenResponse;
 pub use workflow_call_response::WorkflowCallResponse;
 pub use workflows::{
-    InputResponse, WorkflowCatalogueResponse, WorkflowResponse, WorkflowUsageResponse,
-    WorkflowsResponse,
+    InputResponse, WorkflowCatalogueResponse, WorkflowOutputResponse, WorkflowResponse,
+    WorkflowUsageResponse, WorkflowsResponse,
 };

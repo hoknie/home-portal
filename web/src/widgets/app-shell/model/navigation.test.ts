@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 
 import { type Session, mayOpen } from "@/entities/session";
 
-import { MANAGEMENT, MODULE_LINKS, categoryLinks, isActive, managementLinks, moduleLinks, sectionLinks } from "./navigation";
+import { MANAGEMENT, MODULE_LINKS, activeIn, categoryLinks, isActive, managementLinks, moduleLinks, sectionLinks, subLinksOf } from "./navigation";
 
 it("marks a management section on its own page and its subpages only", () => {
   expect(isActive("/", "/")).toBe(true);
@@ -71,4 +71,12 @@ it("the run journal shows while any of automations, webhooks or workflows is on,
   expect(sectionLinks(new Set(["automations", "workflows"]), false, may).map((item) => item.label)).toEqual(["workflows", "runs"]);
   expect(sectionLinks(new Set(["notifications"]), false).map((item) => item.label)).toEqual(["notifications"]);
   expect(sectionLinks(new Set(["automations"]), false, () => false)).toEqual([]);
+});
+
+it("the widget library sits under Layout, and only the deepest matching item is current", () => {
+  expect(subLinksOf("/admin/layout/").map((link) => [link.href, link.label])).toEqual([["/admin/layout/widgets/", "widgetLibrary"]]);
+  expect(subLinksOf("/admin/services/")).toEqual([]);
+  expect(activeIn("/admin/layout/widgets/", "/admin/layout/")).toBe(false);
+  expect(activeIn("/admin/layout/widgets/", "/admin/layout/widgets/")).toBe(true);
+  expect(activeIn("/admin/layout/", "/admin/layout/")).toBe(true);
 });

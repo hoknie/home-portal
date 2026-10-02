@@ -9,6 +9,7 @@ import { EmptyState } from "@/shared/ui/empty-state";
 
 import { publicGrid } from "../model/board";
 import { BoardState } from "./board-state";
+import { DEFAULT_APPEARANCE, DEFAULT_SECTION_APPEARANCE, GRID_COLUMNS } from "@/shared/api";
 
 export function PublicBoard() {
   const t = useTranslations("publicPortal");
@@ -17,18 +18,18 @@ export function PublicBoard() {
   const widgets = data ? publicGrid(data) : [];
   const listed = widgets.some((widget) => widget.type === "services");
   const extra = data && !listed && data.services.length > 0;
-  const sections = data ? (data.sections.length > 0 ? data.sections : [{ id: "main", title: null }]) : [];
+  const sections = data ? (data.sections.length > 0 ? data.sections : [{ id: "main", title: null, appearance: DEFAULT_SECTION_APPEARANCE }]) : [];
   return (
     <>
       {data ? (
         widgets.length > 0 || data.services.length > 0 ? (
           <BoardGrid
-            sections={extra ? [...sections, { id: "public-services", title: null }] : sections}
+            sections={extra ? [...sections, { id: "public-services", title: null, appearance: DEFAULT_SECTION_APPEARANCE }] : sections}
             widgets={
               extra
                 ? [
                     ...widgets,
-                    { key: "public-services", type: "services", id: null, title: null, settings: {}, section: "public-services", size: "full" },
+                    { key: "public-services", type: "services", id: null, title: null, settings: {}, section: "public-services", width: GRID_COLUMNS, height: "auto", column: null, row: null, appearance: DEFAULT_APPEARANCE },
                   ]
                 : widgets
             }

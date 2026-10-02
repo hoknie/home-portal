@@ -1,4 +1,4 @@
-use portal_widget::{WidgetInstance, WidgetSize};
+use portal_widget::{ResolvedAppearance, WidgetHeight, WidgetInstance};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -13,7 +13,11 @@ pub struct WidgetView {
     #[schemars(with = "serde_json::Map<String, Value>")]
     pub settings: Value,
     pub section: Option<String>,
-    pub size: WidgetSize,
+    pub column: Option<u8>,
+    pub row: Option<u32>,
+    pub width: u8,
+    pub height: WidgetHeight,
+    pub appearance: ResolvedAppearance,
     pub environments: Option<Vec<String>>,
     pub public: bool,
 }
@@ -21,14 +25,14 @@ pub struct WidgetView {
 impl WidgetView {
     pub const POSITION_PREFIX: &'static str = "#";
 
-    pub fn key_of(index: usize, instance: &WidgetInstance) -> String {
-        instance
-            .id
-            .clone()
-            .unwrap_or_else(|| format!("{}{index}", Self::POSITION_PREFIX))
+    pub fn key_of(index: usize) -> String {
+        format!("{}{index}", Self::POSITION_PREFIX)
     }
 
     pub fn of(key: String, instance: WidgetInstance) -> WidgetView {
+        let width = instance.columns();
+        let position = instance.position();
+        let appearance = instance.appearance.resolved();
         WidgetView {
             key,
             kind: instance.kind,
@@ -36,7 +40,11 @@ impl WidgetView {
             title: instance.title,
             settings: instance.settings,
             section: instance.section,
-            size: instance.size,
+            column: position.map(|(column, _)| column),
+            row: position.map(|(_, row)| row),
+            width,
+            height: instance.height,
+            appearance,
             environments: instance.environments,
             public: instance.public,
         }

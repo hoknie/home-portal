@@ -1,14 +1,25 @@
 import { z } from "zod";
 
+import { generated } from "@/shared/api";
+
 export const widgetDataSchema = z.object({
   data: z.unknown(),
   fetched_at: z.string(),
   stale: z.boolean(),
   problem: z.string().nullable(),
   refresh_seconds: z.number(),
+  refreshing: z.boolean().default(false),
 });
 
 export type WidgetData = z.infer<typeof widgetDataSchema>;
+
+export const widgetAnswerSchema = z.union([widgetDataSchema, z.object({ refreshing: z.literal(true) })]);
+
+export type WidgetAnswer = WidgetData | { refreshing: true; data?: undefined };
+
+export function isPending(answer: WidgetAnswer | undefined): answer is { refreshing: true } {
+  return answer !== undefined && !("fetched_at" in answer);
+}
 
 export const metricsSchema = z.object({
   hostname: z.string().nullable(),
@@ -70,3 +81,24 @@ export const calendarSchema = z.object({
 });
 
 export type Calendar = z.infer<typeof calendarSchema>;
+
+export const customWidgetSchema = generated.customWidget.customWidgetDataSchema;
+
+export type CustomWidgetData = z.infer<typeof customWidgetSchema>;
+
+export type RenderedBlock = z.infer<typeof generated.customWidget.renderedBlockSchema>;
+
+export type RenderedLeaf = z.infer<typeof generated.customWidget.renderedLeafSchema>;
+
+export type RenderedPart =
+  | RenderedBlock
+  | z.infer<typeof generated.customWidget.renderedNestedSchema>
+  | z.infer<typeof generated.customWidget.renderedGroupSchema>;
+
+export type Tone = z.infer<typeof generated.customWidget.toneSchema>;
+
+export const widgetActedSchema = generated.widgetActed.widgetActedResponseSchema;
+
+export const widgetPreviewSchema = generated.widgetPreview.widgetPreviewResponseSchema;
+
+export type WidgetPreview = z.infer<typeof widgetPreviewSchema>;

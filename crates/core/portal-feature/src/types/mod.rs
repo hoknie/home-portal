@@ -12,7 +12,7 @@ mod status_change;
 mod switching;
 mod validator;
 mod visitor;
-mod widget_problem;
+mod widgets;
 
 #[cfg(test)]
 mod tests;
@@ -31,4 +31,4 @@ pub use status_change::StatusChange;
 pub use switching::{Module, ModuleSwitches};
 pub use validator::Validator;
 pub use visitor::Visitor;
-pub use widget_problem::WidgetProblem;
+pub use widgets::{NeedScope, WidgetLimits, WidgetNeed, WidgetProblem};

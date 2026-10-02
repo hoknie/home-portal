@@ -2,7 +2,8 @@ import { screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { apiSamples } from "@/shared/api";
-import { jsonResponse, renderWithProviders } from "@/shared/lib/testing";
+import { modulesKey, modulesSchema } from "@/entities/module";
+import { jsonResponse, renderWithProviders, testQueryClient } from "@/shared/lib/testing";
 
 import { BoardWidget } from "./board-widget";
 
@@ -60,4 +61,28 @@ it("shows a placeholder for a type it does not know and for settings it cannot r
 it("refuses a data-backed widget the configuration left without an id", () => {
   renderWithProviders(<BoardWidget widget={{ type: "weather", id: null, title: null, settings: {} }} services={[]} />);
   expect(screen.getByText("The settings of the “weather” widget are invalid")).toBeInTheDocument();
+});
+
+it("a widget whose data is still on its way shows its loading state", async () => {
+  const fetch = renderWith(() => jsonResponse({ refreshing: true }, { status: 202 }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  await waitFor(() => expect(document.querySelector("[aria-busy=true]")).not.toBeNull());
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+it("a custom widget says so when the automations module is off, and asks for nothing", () => {
+  const fetch = vi.fn(async () => jsonResponse(apiSamples.widgetCustom));
+  vi.stubGlobal("fetch", fetch);
+  const client = testQueryClient();
+  const modules = modulesSchema.parse(structuredClone(apiSamples.modules));
+  for (const entry of modules.modules) {
+    if (entry.name === "automations") {
+      entry.enabled = false;
+    }
+  }
+  client.setQueryDefaults(modulesKey, { staleTime: Infinity });
+  client.setQueryData(modulesKey, { data: modules, revision: '"m"' });
+  renderWithProviders(<BoardWidget widget={{ type: "custom", id: "disks", title: null, settings: {} }} services={[]} />, client);
+  expect(screen.getByText("This widget needs the automations module, which is off")).toBeInTheDocument();
+  expect(fetch).not.toHaveBeenCalledWith("/api/widgets/disks/data", expect.anything());
 });

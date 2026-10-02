@@ -44,7 +44,8 @@
     "menu": "Menú",
     "scripts": "Scripts",
     "permissions": "Permisos",
-    "runs": "Registro de ejecuciones"
+    "runs": "Registro de ejecuciones",
+    "widgetLibrary": "Biblioteca de widgets"
   },
   "theme": {
     "label": "Tema",
@@ -93,18 +94,21 @@
     "title": "Inicio",
     "subtitle": "El estado de los servicios de tu casa",
     "unknownWidget": "Esta versión de la interfaz no admite el widget «{type}»",
-    "invalidWidget": "Los ajustes del widget «{type}» no son válidos"
+    "invalidWidget": "Los ajustes del widget «{type}» no son válidos",
+    "moduleOffWidget": "Este widget necesita el módulo de automatizaciones, que está apagado"
   },
   "widgets": {
     "statusSummary": {
       "title": "Resumen",
-      "total": "Servicios en total"
+      "total": "Servicios en total",
+      "description": "Cuántos servicios funcionan, van lentos o están caídos"
     },
     "services": {
       "title": "Servicios",
       "empty": "Aún no hay servicios",
       "emptyHint": "Añade el primer servicio en la página «Servicios».",
-      "ungrouped": "Sin grupo"
+      "ungrouped": "Sin grupo",
+      "description": "Tarjetas de los servicios, de todos los grupos o de algunos"
     },
     "stale": "datos desactualizados",
     "failed": "No se pudieron obtener los datos",
@@ -117,14 +121,16 @@
       "hours": "{value} h",
       "host": "Equipo",
       "unknownHost": "desconocido",
-      "load": "Carga media"
+      "load": "Carga media",
+      "description": "Procesador, memoria y discos del equipo del portal"
     },
     "weather": {
       "title": "Tiempo",
       "feelsLike": "sensación de {value}{degree}",
       "wind": "viento {value} km/h",
       "humidity": "humedad {value}%",
-      "night": "por la noche {value}{degree}"
+      "night": "por la noche {value}{degree}",
+      "description": "El tiempo ahora y en los próximos días"
     },
     "calendar": {
       "title": "Calendario",
@@ -132,9 +138,29 @@
       "emptyHint": "El calendario no devolvió eventos para los próximos días.",
       "allDay": "todo el día",
       "repeats": "se repite",
-      "unsupportedRepeat": "Esta regla de repetición no se admite: solo se muestra el próximo evento."
+      "unsupportedRepeat": "Esta regla de repetición no se admite: solo se muestra el próximo evento.",
+      "description": "Los próximos eventos de un calendario"
     },
-    "updated": "actualizado"
+    "updated": "actualizado",
+    "custom": {
+      "title": "Widget propio",
+      "empty": "Nada que mostrar",
+      "more": "{count, plural, one {# elemento más} other {# elementos más}}",
+      "progress": "Progreso",
+      "badLink": "El enlace no es una dirección web",
+      "queued": "«{label}» está en cola",
+      "openRun": "Abrir la ejecución",
+      "refreshing": "El widget se está actualizando",
+      "throttled": "Espera {seconds, plural, one {# segundo} other {# segundos}} antes de volver a pulsar",
+      "forbidden": "No puedes ejecutar esto",
+      "failed": "La acción no empezó",
+      "needsRight": "Necesita el permiso de ejecutar {area}",
+      "confirmHint": "La acción se ejecuta en el portal de inmediato.",
+      "refreshingData": "Reuniendo los datos…",
+      "percent": "{value} %",
+      "description": "Contenido propio con los datos de un flujo o un script",
+      "slot": "Lugar vacío"
+    }
   },
   "services": {
     "title": "Servicios",
@@ -348,7 +374,14 @@
     "lookFrom": "Ver el portal como desde el entorno",
     "detectedItem": "{name} (el tuyo)",
     "viewingAs": "Vista como desde «{environment}»; estás en «{detected}»",
-    "back": "Volver a «{detected}»"
+    "back": "Volver a «{detected}»",
+    "picker": {
+      "everywhere": "En todas partes",
+      "everywhereNote": "En todos los entornos",
+      "here": "Estás aquí",
+      "inside": "Dentro de la red de casa",
+      "outside": "Desde fuera, sin VPN"
+    }
   },
   "publicPortal": {
     "signIn": "Iniciar sesión",
@@ -505,18 +538,11 @@
     "remove": "Quitar",
     "removeTitle": "¿Quitar el widget «{title}»?",
     "removeDescription": "El widget desaparecerá del inicio cuando se guarde la disposición.",
-    "sizes": {
-      "quarter": "un cuarto",
-      "third": "un tercio",
-      "half": "la mitad",
-      "two-thirds": "dos tercios",
-      "full": "todo el ancho"
-    },
     "unknownType": "Esta versión de la interfaz no conoce el tipo «{type}»: se puede mover y quitar, y sus ajustes se quedan como están en el archivo.",
     "widgetTitle": "Título",
     "widgetTitleHint": "Déjalo vacío para usar el título por defecto de este tipo",
     "environments": "Entornos",
-    "environmentsHint": "Sin marcar ninguno, el widget se ve en todos los entornos",
+    "environmentsHint": "Elige dónde se muestra el widget; En todas partes lo deja en todos los entornos",
     "public": "Mostrar sin iniciar sesión",
     "publicHint": "Los invitados del inicio también verán el widget, en los entornos marcados",
     "settings": "Ajustes",
@@ -538,8 +564,310 @@
         "over": "La sección «{title}» está sobre la posición {position}.",
         "end": "La sección «{title}» se ha colocado en la posición {position}.",
         "cancel": "Se ha cancelado el movimiento de la sección «{title}»."
+      },
+      "undone": "Deshecho: {change}.",
+      "redone": "Rehecho: {change}.",
+      "resizedHeight": "Alto del widget «{title}»: {size}.",
+      "resizedBoth": "Tamaño del widget «{title}»: {size}.",
+      "moved": "«{title}» está en la columna {column}, fila {row} de «{section}»."
+    },
+    "columns": "{count, plural, one {# de 12 columnas} other {# de 12 columnas}}",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "steps": {
+      "arranged": "mover",
+      "resized": "cambiar el tamaño de «{title}»",
+      "renamed": "renombrar una sección",
+      "sectionRemoved": "quitar una sección",
+      "sectionAdded": "añadir una sección",
+      "added": "añadir un widget",
+      "removed": "quitar «{title}»",
+      "configured": "los ajustes de «{title}»",
+      "duplicated": "duplicar «{title}»",
+      "sectionChanged": "los ajustes de una sección",
+      "moved": "mover «{title}»"
+    },
+    "resizeHeight": "Alto del widget «{title}»",
+    "resizeBoth": "Tamaño del widget «{title}»",
+    "heightAuto": "tan alto como su contenido",
+    "rows": "{count, plural, one {# fila} other {# filas}}",
+    "auto": "auto",
+    "sizeValue": "{columns} × {rows}",
+    "duplicate": "Duplicar",
+    "dialog": {
+      "tabs": {
+        "general": "General",
+        "data": "Datos",
+        "content": "Contenido",
+        "look": "Aspecto",
+        "access": "Acceso"
+      },
+      "hasErrors": "{tab}, tiene problemas",
+      "preview": "Vista previa",
+      "previewHint": "Como se ve en la página de inicio",
+      "cancel": "Cancelar",
+      "discardTitle": "¿Descartar los cambios de este widget?",
+      "discardDescription": "Se perderán los cambios hechos en esta ventana.",
+      "discard": "Descartar",
+      "publicCustom": "Sin sesión, un widget propio público muestra sus textos pero nunca sus botones.",
+      "settingsInFile": "Este tipo no tiene ajustes que editar aquí; se quedan como en el archivo."
+    },
+    "look": {
+      "surface": "Fondo",
+      "accent": "Color de acento",
+      "title": "Título",
+      "padding": "Márgenes",
+      "align": "Contenido",
+      "surfaces": {
+        "card": "Tarjeta",
+        "plain": "Ninguno",
+        "tinted": "Tintado",
+        "outline": "Borde"
+      },
+      "accents": {
+        "neutral": "Neutro",
+        "blue": "Azul",
+        "green": "Verde",
+        "amber": "Ámbar",
+        "red": "Rojo",
+        "violet": "Violeta",
+        "pink": "Rosa",
+        "teal": "Turquesa"
+      },
+      "titles": {
+        "shown": "Visible",
+        "hidden": "Oculto"
+      },
+      "paddings": {
+        "normal": "Normales",
+        "compact": "Compactos",
+        "none": "Sin márgenes"
+      },
+      "aligns": {
+        "start": "A la izquierda",
+        "center": "Centrado",
+        "end": "Derecha"
       }
-    }
+    },
+    "data": {
+      "source": "De dónde vienen los datos",
+      "kinds": {
+        "none": "De ninguna parte",
+        "workflow": "Un flujo",
+        "script": "Un script"
+      },
+      "workflow": "Flujo",
+      "script": "Script",
+      "timeout": "Tiempo límite, segundos",
+      "args": "Argumentos",
+      "removeArgument": "Quitar {value}",
+      "addArgument": "Añadir {value}",
+      "refresh": "Actualizar cada, segundos",
+      "refreshHint": "De 30 a 86 400; la fuente solo se ejecuta cuando alguien mira el widget",
+      "runNow": "Ejecutar ahora",
+      "running": "Ejecutando…",
+      "runForbidden": "Ejecutar esta fuente necesita el permiso de ejecutarla",
+      "tree": "Los datos que dio",
+      "noData": "Ejecuta la fuente para ver sus datos y las rutas que puedes usar",
+      "inputDefault": "Predeterminado: {value}"
+    },
+    "blocks": {
+      "kinds": {
+        "stat": "Número",
+        "text": "Texto",
+        "markdown": "Markdown",
+        "list": "Lista",
+        "table": "Tabla",
+        "key-values": "Clave y valor",
+        "progress": "Barra de progreso",
+        "badge": "Etiqueta",
+        "button": "Botón",
+        "divider": "Separador",
+        "row": "Fila",
+        "column": "Columna"
+      },
+      "fields": {
+        "label": "Etiqueta",
+        "value": "Valor",
+        "unit": "Unidad",
+        "caption": "Nota",
+        "icon": "Icono",
+        "text": "Texto",
+        "size": "Tamaño",
+        "weight": "Grosor",
+        "muted": "Atenuado",
+        "items": "Elementos (una lista)",
+        "secondary": "Segunda línea",
+        "limit": "Como mucho",
+        "empty": "Si está vacío",
+        "columns": "Columnas",
+        "header": "Cabecera",
+        "pairs": "Pares",
+        "key": "Clave",
+        "maximum": "Máximo",
+        "confirm": "Preguntar antes",
+        "style": "Estilo",
+        "gap": "Espacio"
+      },
+      "sizes": {
+        "small": "Pequeño",
+        "normal": "Normal",
+        "large": "Grande"
+      },
+      "weights": {
+        "normal": "Normal",
+        "strong": "Negrita"
+      },
+      "styles": {
+        "primary": "Principal",
+        "secondary": "Secundario",
+        "ghost": "Discreto"
+      },
+      "gaps": {
+        "small": "Pequeño",
+        "normal": "Normal"
+      },
+      "addColumn": "Añadir una columna",
+      "addPair": "Añadir un par",
+      "removeRow": "Quitar",
+      "tone": {
+        "label": "Color",
+        "modes": {
+          "fixed": "Fijo",
+          "thresholds": "Por número",
+          "tones": "Por valor"
+        },
+        "warning": "Aviso desde",
+        "danger": "Peligro desde",
+        "direction": "Malo cuando es",
+        "directions": {
+          "above": "Mayor",
+          "below": "Menor"
+        },
+        "map": "Valor y color",
+        "addTone": "Añadir un valor",
+        "names": {
+          "neutral": "Neutro",
+          "ok": "Bien",
+          "info": "Información",
+          "warning": "Aviso",
+          "danger": "Peligro"
+        }
+      },
+      "action": {
+        "label": "Qué hace",
+        "kinds": {
+          "automation": "Ejecuta una automatización",
+          "workflow": "Ejecuta un flujo",
+          "refresh": "Actualiza el widget",
+          "link": "Abre un enlace"
+        },
+        "automation": "Automatización",
+        "workflow": "Flujo",
+        "link": "Dirección",
+        "field": "Campo del evento",
+        "input": "Entrada"
+      },
+      "suggestions": {
+        "data": "Datos",
+        "widget": "Widget",
+        "item": "Cada elemento"
+      },
+      "hints": {
+        "label": "Un nombre corto sobre el valor",
+        "value": "Una plantilla; las rutas de datos se sugieren tras '{{'",
+        "unit": "Más pequeño, tras el valor",
+        "caption": "Una línea bajo el valor",
+        "icon": "Un nombre de icono, como hard-drive",
+        "text": "Texto con plantillas; markdown en un bloque markdown",
+        "items": "Una plantilla que nombra una lista de los datos",
+        "secondary": "A la derecha de cada elemento",
+        "empty": "Cuando la lista está vacía",
+        "maximum": "Un número o una plantilla; 100 por defecto",
+        "confirm": "Se pregunta antes de ejecutar la acción"
+      },
+      "examples": {
+        "label": "Espacio libre",
+        "value": "'{{'data.free'}}'",
+        "unit": "GB",
+        "caption": "de '{{'data.total'}}' GB",
+        "text": "Copia '{{'data.status'}}'",
+        "items": "'{{'data.clients'}}'",
+        "secondary": "'{{'item.ip'}}'",
+        "empty": "No hay nadie"
+      },
+      "descriptions": {
+        "stat": "Un número grande con etiqueta",
+        "text": "Una línea de texto",
+        "markdown": "Texto con formato y enlaces",
+        "list": "Cada elemento de una lista, uno por línea",
+        "table": "Una lista en filas y columnas",
+        "key-values": "Pares de nombre y valor",
+        "progress": "Una barra de cero a un máximo",
+        "badge": "Una etiqueta pequeña de color",
+        "button": "Ejecuta una automatización, un flujo o abre un enlace",
+        "divider": "Una línea fina entre bloques",
+        "row": "Bloques uno al lado de otro",
+        "column": "Bloques uno sobre otro"
+      }
+    },
+    "gallery": {
+      "title": "Añadir un widget",
+      "description": "Elige un tipo o empieza con un widget propio listo",
+      "search": "Buscar",
+      "types": "Tipos",
+      "templates": "Widgets propios listos",
+      "moduleOff": "El módulo {module} está apagado",
+      "nothing": "Nada coincide",
+      "templateNames": {
+        "stat": "Un número con una nota",
+        "progress": "Una barra de progreso",
+        "list": "Una lista",
+        "table": "Una tabla",
+        "pairs": "Pares de clave y valor",
+        "buttons": "Botones",
+        "overview": "Un número con su estado"
+      },
+      "templateTexts": {
+        "label": "Etiqueta",
+        "caption": "Nota",
+        "used": "Usado",
+        "name": "Nombre",
+        "value": "Valor",
+        "status": "Estado",
+        "refresh": "Actualizar",
+        "open": "Abrir",
+        "updated": "Actualizado"
+      }
+    },
+    "section": {
+      "settings": "Ajustes de la sección",
+      "title": "Título",
+      "titleShown": "Título",
+      "surface": "Fondo",
+      "surfaces": {
+        "none": "Ninguno",
+        "card": "Tarjeta"
+      },
+      "titles": {
+        "shown": "Visible",
+        "hidden": "Oculto"
+      }
+    },
+    "addWidgetHere": "Añadir widget",
+    "library": "Biblioteca de widgets",
+    "editIn": "Ajustes de «{title}»",
+    "removeFromPage": "El widget sale de esta página y se queda en la biblioteca.",
+    "picker": {
+      "title": "Colocar un widget",
+      "description": "Elige un widget de la biblioteca; los nuevos se crean en la biblioteca.",
+      "search": "Buscar",
+      "empty": "La biblioteca está vacía",
+      "nothing": "Nada coincide",
+      "meta": "{type} · {placed, plural, =0 {—} one {# ubicación} other {# ubicaciones}}",
+      "openLibrary": "Abrir la biblioteca de widgets"
+    },
+    "publicNotOutside": "Los invitados desde internet no lo verán: internet no está entre los entornos elegidos"
   },
   "widgetSettings": {
     "groups": "Grupos",
@@ -1294,7 +1622,8 @@
         "stdout": "Salida estándar",
         "stderr": "Error estándar",
         "output": "Salida"
-      }
+      },
+      "outputs": "Salidas"
     },
     "title": "Flujos",
     "subtitle": "Series de pasos que inician las automatizaciones, los webhooks o usted",
@@ -1683,7 +2012,16 @@
       "label": "Ancho del panel lateral",
       "value": "{width} px",
       "hint": "Arrastra para cambiar el ancho; doble clic para restablecerlo"
-    }
+    },
+    "outputs": "Salidas",
+    "outputsHint": "Lo que el flujo devuelve al terminar bien: un widget sobre él lo recibe como datos",
+    "outputName": "Salida {number}",
+    "outputNamePlaceholder": "nombre",
+    "outputValue": "Valor de la salida {number}",
+    "outputDescription": "Descripción de la salida {number}",
+    "outputDescriptionPlaceholder": "Qué contiene, se muestra como pista",
+    "removeOutput": "Quitar la salida {name}",
+    "addOutput": "Añadir salida"
   },
   "templateInput": {
     "suggestions": "Valores que puede insertar",
@@ -2544,7 +2882,8 @@
     "automation": "Automatización",
     "webhook": "Webhook",
     "workflow": "Flujo",
-    "script": "Script"
+    "script": "Script",
+    "widget": "Widget"
   },
   "runJournal": {
     "title": "Registro de ejecuciones",
@@ -2556,5 +2895,149 @@
     "newest": "Ir a las más recientes",
     "newer": "Más recientes",
     "older": "Más antiguas"
+  },
+  "widgetLibrary": {
+    "title": "Biblioteca de widgets",
+    "subtitle": "Todos los widgets que puede mostrar la página de inicio. Créalos aquí y colócalos en la disposición.",
+    "add": "Añadir widget",
+    "empty": "Aún no hay widgets",
+    "emptyHint": "Añade un widget para colocarlo en la página de inicio.",
+    "placed": "{placed, plural, one {# ubicación} other {# ubicaciones}}",
+    "edit": "Ajustes",
+    "duplicate": "Duplicar",
+    "delete": "Eliminar",
+    "deleteTitle": "¿Eliminar «{title}»?",
+    "deleteDescription": "Se quita de la biblioteca para siempre.",
+    "usedHint": "Quítalo de la disposición antes de eliminarlo",
+    "saved": "El widget está guardado",
+    "deleted": "El widget está eliminado",
+    "layout": "Colocar en la página",
+    "meta": "{id} · {type}"
+  },
+  "widgetBuilder": {
+    "back": "Volver",
+    "titlePlaceholder": "Título del widget",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "saved": "El widget está guardado",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "unsaved": "Hay cambios sin guardar",
+    "leave": "¿Salir del constructor? Los cambios sin guardar se perderán.",
+    "tabs": {
+      "data": "Datos",
+      "look": "Aspecto",
+      "access": "Acceso",
+      "block": "Bloque"
+    },
+    "palette": {
+      "title": "Bloques",
+      "hint": "Arrastra un bloque al widget o al esquema, o púlsalo para añadirlo tras el seleccionado"
+    },
+    "canvas": {
+      "title": "El widget",
+      "width": "Ancho en columnas",
+      "height": "Alto en filas",
+      "auto": "auto",
+      "empty": "Añade un bloque de la paleta para empezar",
+      "hint": "Pulsa un bloque para elegirlo; arrástralo para moverlo",
+      "by": "×",
+      "sizeSaved": "Se guarda con el widget: los lugares nuevos en la página toman este tamaño, y su único lugar también cambia"
+    },
+    "outline": {
+      "title": "Árbol",
+      "hint": "Las filas ponen bloques lado a lado y las columnas los apilan; se anidan hasta tres niveles",
+      "expand": "Desplegar {name}",
+      "collapse": "Plegar {name}",
+      "drag": "Arrastrar {name}",
+      "dropHere": "Suelta aquí"
+    },
+    "inspector": {
+      "title": "Bloque elegido",
+      "nothing": "Elige un bloque en el widget o en el esquema para cambiarlo",
+      "align": "Alineación",
+      "rowAlign": "Los bloques se colocan",
+      "widths": "Reparto de la fila",
+      "part": "Partes del bloque {number}",
+      "needs": "Falta {field}",
+      "rowNeeds": "Una fila necesita al menos dos bloques",
+      "columnNeeds": "Una columna necesita al menos un bloque",
+      "valign": "Posición vertical en la fila",
+      "columnValign": "Los bloques de la columna se colocan"
+    },
+    "aligns": {
+      "inherit": "Como el widget",
+      "start": "Al inicio",
+      "center": "Al centro",
+      "end": "Al final"
+    },
+    "rowAligns": {
+      "start": "Arriba",
+      "center": "En medio",
+      "end": "Abajo",
+      "stretch": "A toda altura"
+    },
+    "actions": {
+      "up": "Subir",
+      "down": "Bajar",
+      "out": "Sacar del grupo",
+      "into": "Meter en el grupo siguiente",
+      "duplicate": "Duplicar",
+      "delete": "Eliminar"
+    },
+    "announce": {
+      "added": "{kind} añadido en {place}.",
+      "moved": "{kind} movido a {place}.",
+      "deleted": "{kind} en {place} eliminado.",
+      "duplicated": "{kind} copiado a {place}.",
+      "undone": "Deshecho: {change}.",
+      "redone": "Rehecho: {change}.",
+      "refused": "{reason}"
+    },
+    "refused": {
+      "tooDeep": "Los grupos se anidan hasta tres niveles",
+      "rowFull": "Una fila tiene como mucho cuatro bloques",
+      "columnFull": "Una columna tiene como mucho doce bloques",
+      "intoItself": "Un grupo no puede ir dentro de sí mismo"
+    },
+    "tree": {
+      "title": "Datos",
+      "empty": "Aún no hay datos: ejecuta la fuente o declara salidas en el flujo",
+      "runNow": "Ejecutar ahora",
+      "insert": "Insertar {path}",
+      "kinds": {
+        "value": "valor",
+        "number": "número",
+        "text": "texto",
+        "boolean": "sí/no",
+        "list": "lista",
+        "object": "objeto"
+      }
+    },
+    "missing": "Rellena primero los campos marcados",
+    "conflict": "La configuración cambió desde que se abrió esta página",
+    "newTitle": "Widget nuevo",
+    "subtitle": "Construye el widget con bloques sobre los datos de un flujo o un script",
+    "slot": {
+      "title": "Lugar vacío",
+      "hint": "Arrastra aquí un bloque de la paleta, o pulsa un bloque de la paleta para ponerlo aquí. Los lugares vacíos no se guardan."
+    },
+    "panel": {
+      "title": "Ajustes",
+      "hasErrors": "{tab}, tiene problemas"
+    },
+    "columns": {
+      "expand": "Mostrar {title}",
+      "collapse": "Ocultar {title}",
+      "resize": "Cambiar tamaño: {title}"
+    },
+    "titleLabel": "Título del widget",
+    "valigns": {
+      "inherit": "Como la fila",
+      "start": "Arriba",
+      "center": "En medio",
+      "end": "Abajo"
+    },
+    "size": "Tamaño del lugar donde se muestra"
   }
 }

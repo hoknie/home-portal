@@ -25,10 +25,10 @@ use crate::loops::{
 use crate::ports::{Clock, Directory, PortalActions, ScriptLibrary};
 use crate::repositories::RunFile;
 use crate::services::{
-    AutomationCache, AutomationSink, Journal, StatusRelay, SystemClock, Views, WebhookBook,
-    WebhookWriter, WorkflowTools, validate_automations,
+    AutomationCache, AutomationSink, Journal, SourceRunner, StatusRelay, SystemClock, Views,
+    WebhookBook, WebhookWriter, WorkflowTools, validate_automations,
 };
-use crate::types::{AutomationsState, WorkflowCases};
+use crate::types::{AutomationsState, WidgetSupport, WorkflowCases};
 use crate::usecases::{
     ChangeAutomation, ChangeWebhook, CreateAutomation, CreateWebhook, DeleteAutomation,
     DeleteWebhook, IssueToken, ListAutomations, ListWebhooks, RemoveToken, RunWebhook,
@@ -37,6 +37,11 @@ use crate::usecases::{
 use crate::usecases::{
     ChangeWorkflow, CreateWorkflow, DeleteWorkflow, ListWorkflows, ReadPortalValues, RunWorkflow,
     WorkflowCatalogue,
+};
+use crate::usecases::{
+    CheckWidgetCall, CheckWidgetScript, CheckWidgetTemplate, OpenWidgetTemplates,
+    ReadDeclaredPaths, ReadEventFields, ReadSourceTimeout, RunWidgetSource, StartWidgetAutomation,
+    StartWidgetWorkflow,
 };
 
 const AUTOMATIONS_READ: &[Right] = &[Right::new(Area::Automations, Action::Read)];
@@ -74,6 +79,7 @@ pub struct AutomationsFeature {
     clock: Arc<dyn Clock>,
     writer: Arc<JournalWriter>,
     tools: WorkflowTools,
+    widget_support: WidgetSupport,
 }
 
 impl AutomationsFeature {
@@ -128,6 +134,22 @@ impl AutomationsFeature {
             portal: ReadPortalValues::new(tools.actions.clone(), sink.clone()),
             transform: TransformValue,
         };
+        let widget_support = WidgetSupport {
+            check_template: CheckWidgetTemplate,
+            open_templates: OpenWidgetTemplates,
+            check_call: CheckWidgetCall { sink: sink.clone() },
+            check_script: CheckWidgetScript {
+                scripts: scripts.clone(),
+            },
+            event_fields: ReadEventFields { sink: sink.clone() },
+            declared_paths: ReadDeclaredPaths { sink: sink.clone() },
+            source_timeout: ReadSourceTimeout { sink: sink.clone() },
+            run_source: RunWidgetSource {
+                runner: SourceRunner::new(sink.clone(), scripts.clone(), tools.clone()),
+            },
+            start_automation: StartWidgetAutomation { sink: sink.clone() },
+            start_workflow: StartWidgetWorkflow { sink: sink.clone() },
+        };
         let webhook_writer = WebhookWriter {
             configuration: configuration.clone(),
             sink: sink.clone(),
@@ -156,11 +178,16 @@ impl AutomationsFeature {
                 webhooks,
                 workflows,
             },
+            widget_support,
             configuration,
             clock: Arc::new(SystemClock),
             writer,
             tools,
         })
+    }
+
+    pub fn widget_support(&self) -> WidgetSupport {
+        self.widget_support.clone()
     }
 
     pub fn events(&self) -> Arc<dyn EventSink> {

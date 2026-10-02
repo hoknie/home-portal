@@ -9,7 +9,7 @@ use super::flow_decoding::{
     check_loop_exits, decode_call, decode_if, decode_loop, decode_parallel, decode_set,
     decode_stop, decode_wait,
 };
-use super::inputs_decoding::decode_inputs;
+use super::inputs_decoding::{decode_inputs, decode_outputs};
 use super::names::{NAME_RULE, between_rule, valid_name, within};
 use super::transform_decoding::decode_transform;
 use crate::helpers::{check_tags, version_of};
@@ -49,6 +49,7 @@ pub fn decode_workflow(raw: &RawWorkflow) -> Result<Workflow, Vec<FieldError>> {
         ));
     }
     let inputs = decode_inputs(&raw.inputs, &mut errors);
+    let outputs = decode_outputs(&raw.outputs, &mut errors);
     if raw.steps.is_empty() {
         errors.push(FieldError::new("steps", "must hold at least one step"));
     }
@@ -77,6 +78,7 @@ pub fn decode_workflow(raw: &RawWorkflow) -> Result<Workflow, Vec<FieldError>> {
         tags: raw.tags.clone(),
         timeout_seconds: timeout as u64,
         inputs,
+        outputs,
         steps,
         version: version_of(&serde_json::to_string(&raw.steps).unwrap_or_default()),
     })

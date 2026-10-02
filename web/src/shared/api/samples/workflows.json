@@ -149,10 +149,20 @@
               "values_dropped": 0,
               "wait_seconds": null
             }
-          ]
+          ],
+          "outputs": {
+            "state": "up"
+          }
         },
         "workflow": "revive"
       },
+      "outputs": [
+        {
+          "description": "The service's state after the retries",
+          "name": "state",
+          "value": "{{steps.probe.state}}"
+        }
+      ],
       "steps": [
         {
           "id": "first_probe",
@@ -247,6 +257,7 @@
       "id": "note",
       "inputs": [],
       "last_run": null,
+      "outputs": [],
       "steps": [
         {
           "id": "remember",

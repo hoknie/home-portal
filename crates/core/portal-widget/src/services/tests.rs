@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 
 use async_trait::async_trait;
-use portal_feature::{ApiError, FieldError, WidgetProvider};
+use portal_feature::{ApiError, FieldError, WidgetLimits, WidgetProvider};
 use portal_model::Environment;
 use serde_json::{Value, json};
 use tempfile::TempDir;
@@ -12,6 +12,7 @@ use super::WidgetRegistry;
 use portal_feature::WidgetProblem;
 
 pub struct Counting {
+    pub limit: Option<Duration>,
     pub calls: AtomicUsize,
     pub failing: AtomicBool,
     pub refresh: Duration,
@@ -21,6 +22,7 @@ pub struct Counting {
 impl Counting {
     pub fn new() -> Arc<Counting> {
         Arc::new(Counting {
+            limit: None,
             calls: AtomicUsize::new(0),
             failing: AtomicBool::new(false),
             refresh: Duration::from_secs(60),
@@ -37,6 +39,16 @@ impl WidgetProvider for Counting {
 
     fn refresh(&self) -> Duration {
         self.refresh
+    }
+
+    fn limits(&self, _settings: &Value) -> WidgetLimits {
+        match self.limit {
+            Some(timeout) => WidgetLimits {
+                refresh: self.refresh,
+                timeout,
+            },
+            None => WidgetLimits::of(self.refresh),
+        }
     }
 
     fn check(&self, settings: &Value) -> Vec<FieldError> {
@@ -71,10 +83,14 @@ async fn data_is_cached_until_the_provider_asks_for_a_refresh() {
     let first = registry
         .data("first", &Environment::internet())
         .await
+        .unwrap()
+        .into_ready()
         .unwrap();
     let second = registry
         .data("first", &Environment::internet())
         .await
+        .unwrap()
+        .into_ready()
         .unwrap();
     assert_eq!(first.data["call"], 1);
     assert_eq!(second.data["call"], 1);
@@ -86,6 +102,7 @@ async fn data_is_cached_until_the_provider_asks_for_a_refresh() {
 #[tokio::test]
 async fn readers_arriving_together_share_one_refresh() {
     let provider = Arc::new(Counting {
+        limit: None,
         calls: AtomicUsize::new(0),
         failing: AtomicBool::new(false),
         refresh: Duration::from_secs(60),
@@ -101,6 +118,8 @@ async fn readers_arriving_together_share_one_refresh() {
                 .data("first", &Environment::internet())
                 .await
                 .unwrap()
+                .into_ready()
+                .unwrap()
         }));
     }
     for reader in readers {
@@ -112,6 +131,7 @@ async fn readers_arriving_together_share_one_refresh() {
 #[tokio::test]
 async fn a_failing_refresh_keeps_the_last_good_value_and_marks_it_stale() {
     let provider = Arc::new(Counting {
+        limit: None,
         calls: AtomicUsize::new(0),
         failing: AtomicBool::new(false),
         refresh: Duration::from_millis(1),
@@ -121,6 +141,8 @@ async fn a_failing_refresh_keeps_the_last_good_value_and_marks_it_stale() {
     let good = registry
         .data("first", &Environment::internet())
         .await
+        .unwrap()
+        .into_ready()
         .unwrap();
     assert_eq!(good.data["call"], 1);
     provider.failing.store(true, Ordering::SeqCst);
@@ -128,6 +150,8 @@ async fn a_failing_refresh_keeps_the_last_good_value_and_marks_it_stale() {
     let stale = registry
         .data("first", &Environment::internet())
         .await
+        .unwrap()
+        .into_ready()
         .unwrap();
     assert_eq!(stale.data["call"], 1);
     assert!(stale.stale);
@@ -137,6 +161,7 @@ async fn a_failing_refresh_keeps_the_last_good_value_and_marks_it_stale() {
 #[tokio::test]
 async fn a_provider_that_never_succeeded_answers_bad_gateway() {
     let provider = Arc::new(Counting {
+        limit: None,
         calls: AtomicUsize::new(0),
         failing: AtomicBool::new(true),
         refresh: Duration::from_secs(60),
@@ -195,6 +220,7 @@ fn registry_document(text: &str) -> toml_edit::DocumentMut {
 #[tokio::test]
 async fn a_provider_that_never_answers_is_cut_off_at_its_limit() {
     let provider = Arc::new(Counting {
+        limit: None,
         calls: AtomicUsize::new(0),
         failing: AtomicBool::new(false),
         refresh: Duration::from_millis(300),
@@ -211,4 +237,120 @@ async fn a_provider_that_never_answers_is_cut_off_at_its_limit() {
         Err(ApiError::BadGateway(problem)) => assert!(problem.contains("took longer"), "{problem}"),
         other => panic!("{other:?}"),
     }
+}
+
+fn slow(delay: Duration, limit: Duration) -> Arc<Counting> {
+    Arc::new(Counting {
+        limit: Some(limit),
+        calls: AtomicUsize::new(0),
+        failing: AtomicBool::new(false),
+        refresh: Duration::from_millis(300),
+        delay,
+    })
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_fetch_longer_than_a_request_answers_refreshing_and_fills_the_cache_when_it_ends() {
+    let provider = slow(Duration::from_secs(40), Duration::from_secs(60));
+    let (_directory, registry) = registry_with(ONE, provider.clone());
+    let first = registry
+        .data("first", &Environment::internet())
+        .await
+        .unwrap();
+    assert_eq!(first, crate::types::WidgetAnswer::Refreshing);
+    tokio::time::sleep(Duration::from_secs(30)).await;
+    let landed = registry
+        .data("first", &Environment::internet())
+        .await
+        .unwrap()
+        .into_ready()
+        .unwrap();
+    assert_eq!(landed.data["call"], 1);
+    assert!(!landed.refreshing);
+    std::thread::sleep(Duration::from_millis(350));
+    let again = registry
+        .data("first", &Environment::internet())
+        .await
+        .unwrap()
+        .into_ready()
+        .unwrap();
+    assert!(
+        again.refreshing,
+        "an older value is answered while the next refresh runs"
+    );
+    assert_eq!(again.data["call"], 1);
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_request_waits_at_most_fifteen_seconds_for_a_fetch() {
+    let provider = slow(Duration::from_secs(200), Duration::from_secs(300));
+    let (_directory, registry) = registry_with(ONE, provider);
+    let started = tokio::time::Instant::now();
+    let answered = registry
+        .data("first", &Environment::internet())
+        .await
+        .unwrap();
+    assert_eq!(answered, crate::types::WidgetAnswer::Refreshing);
+    assert_eq!(started.elapsed(), WidgetLimits::LONGEST_WAIT);
+}
+
+const LIBRARY: &str = "[[dashboard.library]]\nid = \"first\"\ntype = \"counter\"\ntitle = \"First\"\nsettings = { city = \"Riga\" }\npublic = true\n\n[[dashboard.library]]\nid = \"spare\"\ntype = \"counter\"\n\n[[dashboard.widgets]]\nwidget = \"first\"\ncolumn = 9\nrow = 2\nwidth = 4\n\n[[dashboard.widgets]]\nwidget = \"gone\"\n\n[[dashboard.widgets]]\ntype = \"counter\"\nid = \"inline\"\n";
+
+#[test]
+fn a_placement_takes_its_widget_from_the_library_and_keeps_its_own_place() {
+    let (_directory, registry) = registry_with(LIBRARY, Counting::new());
+    let layout = registry.layout().unwrap();
+    let placed: Vec<(&str, Option<&str>)> = layout
+        .widgets
+        .iter()
+        .map(|widget| (widget.kind.as_str(), widget.id.as_deref()))
+        .collect();
+    assert_eq!(
+        placed,
+        vec![("counter", Some("first")), ("counter", Some("inline"))]
+    );
+    assert_eq!(layout.widgets[0].title.as_deref(), Some("First"));
+    assert!(layout.widgets[0].public);
+    assert_eq!(layout.widgets[0].position(), Some((9, 2)));
+    let defined: Vec<Option<String>> = registry
+        .instances()
+        .into_iter()
+        .map(|widget| widget.id)
+        .collect();
+    assert_eq!(
+        defined,
+        vec![
+            Some("first".into()),
+            Some("spare".into()),
+            Some("inline".into())
+        ]
+    );
+}
+
+#[tokio::test]
+async fn a_library_widget_answers_its_data_even_before_it_is_placed() {
+    let (_directory, registry) = registry_with(LIBRARY, Counting::new());
+    let answered = registry
+        .data("spare", &Environment::internet())
+        .await
+        .unwrap();
+    assert!(answered.into_ready().is_some());
+}
+
+#[test]
+fn a_library_entry_is_named_by_its_id_in_errors() {
+    let text = "[[dashboard.library]]\nid = \"first\"\ntype = \"counter\"\nsettings = { city = 5 }\n\n[[dashboard.library]]\ntype = \"counter\"\n";
+    let (_directory, registry) = registry_with(text, Counting::new());
+    let fields: Vec<String> = registry
+        .validate(&registry_document(text))
+        .into_iter()
+        .map(|error| error.field)
+        .collect();
+    assert_eq!(
+        fields,
+        vec![
+            "dashboard.library.first.settings.city",
+            "dashboard.library[1].id"
+        ]
+    );
 }

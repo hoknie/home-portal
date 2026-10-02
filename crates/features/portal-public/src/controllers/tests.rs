@@ -6,7 +6,10 @@ use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
 use portal_feature::{ApiError, Feature};
 use portal_model::{DetectedEnvironment, Environment, ServiceStatus};
-use portal_widget::{WidgetData, WidgetRegistry, WidgetSize};
+use portal_widget::{
+    ResolvedAppearance, ResolvedSectionAppearance, WidgetAnswer, WidgetData, WidgetHeight,
+    WidgetRegistry,
+};
 use serde_json::{Value, json};
 use time::macros::datetime;
 use tower::ServiceExt;
@@ -56,7 +59,11 @@ impl PublicLayout for Layout {
             title: None,
             settings: json!({}),
             section: Some("now".into()),
-            size: WidgetSize::Half,
+            width: 6,
+            column: None,
+            row: None,
+            height: WidgetHeight::Auto,
+            appearance: ResolvedAppearance::default(),
         }]
     }
 
@@ -67,6 +74,7 @@ impl PublicLayout for Layout {
         vec![PublicSection {
             id: "now".into(),
             title: Some("Now".into()),
+            appearance: ResolvedSectionAppearance::default(),
         }]
     }
 
@@ -74,17 +82,18 @@ impl PublicLayout for Layout {
         &self,
         id: &str,
         environment: &Environment,
-    ) -> Result<WidgetData, ApiError> {
+    ) -> Result<WidgetAnswer, ApiError> {
         if environment.is_internet() || id != "riga" {
             return Err(ApiError::NotFound(WidgetRegistry::UNKNOWN_WIDGET));
         }
-        Ok(WidgetData {
+        Ok(WidgetAnswer::Ready(WidgetData {
             data: json!({ "temperature": 12.0 }),
             fetched_at: datetime!(2026-09-22 10:00 UTC),
             stale: false,
             problem: None,
             refresh_seconds: 900,
-        })
+            refreshing: false,
+        }))
     }
 }
 

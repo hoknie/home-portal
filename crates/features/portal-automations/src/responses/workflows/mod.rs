@@ -13,7 +13,7 @@ mod workflows_response;
 pub use argument_response::ArgumentResponse;
 pub use event_fields_response::EventFieldsResponse;
 pub use filter_response::FilterResponse;
-pub use input_response::InputResponse;
+pub use input_response::{InputResponse, WorkflowOutputResponse};
 pub use operator_response::OperatorResponse;
 pub use step_field_response::StepFieldResponse;
 pub use step_kind_response::StepKindResponse;

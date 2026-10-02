@@ -1,10 +1,22 @@
-import { Bell, Blocks, History, FileCode, Globe, House, LayoutDashboard, Network, Route, Server, ShieldCheck, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
+import { Bell, Blocks, Puzzle, History, FileCode, Globe, House, LayoutDashboard, Network, Route, Server, ShieldCheck, Users, Waypoints, Webhook, Workflow, type LucideIcon } from "lucide-react";
 
 import { CATEGORY_OF, MODULE_CATEGORIES, type ModuleCategory, type ModuleName } from "@/entities/module";
 import type { Area } from "@/entities/session";
 import { routes } from "@/shared/config";
 
 export type MayOpen = (area: Area) => boolean;
+
+export const SUB_LINKS = {
+  [routes.adminLayout]: [{ href: routes.adminLibrary, label: "widgetLibrary", icon: Puzzle }],
+} as const satisfies Record<string, ReadonlyArray<{ href: string; label: string; icon: LucideIcon }>>;
+
+export function subLinksOf(href: string): ReadonlyArray<{ href: string; label: "widgetLibrary"; icon: LucideIcon }> {
+  return href in SUB_LINKS ? SUB_LINKS[href as keyof typeof SUB_LINKS] : [];
+}
+
+export function activeIn(pathname: string, href: string) {
+  return isActive(pathname, href) && !subLinksOf(href).some((link) => isActive(pathname, link.href));
+}
 
 export const MANAGEMENT = [
   { href: routes.home, label: "home", icon: House, area: null },

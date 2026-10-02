@@ -1,15 +1,13 @@
-import type { Section, WidgetSize } from "@/shared/api";
+import type { Section, WidgetHeight } from "@/shared/api";
 
 export type LayoutWidgetRequest = {
   key: string | null;
-  type: string;
-  id: string | null;
-  title: string | null;
-  settings: Record<string, unknown>;
-  environments: string[] | null;
-  public: boolean;
+  widget: string;
   section: string;
-  size: WidgetSize;
+  column: number | null;
+  row: number | null;
+  width: number;
+  height: WidgetHeight;
 };
 
 export type LayoutRequest = { sections: Section[]; widgets: LayoutWidgetRequest[] };

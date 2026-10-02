@@ -83,6 +83,10 @@ impl AutomationSink {
         ))
     }
 
+    pub fn next_id(&self) -> u64 {
+        self.next_run.fetch_add(1, Ordering::SeqCst)
+    }
+
     pub fn stopping(&self) -> bool {
         self.phase.stopping.load(Ordering::SeqCst)
     }

@@ -37,7 +37,7 @@ impl Section {
         "files",
     ];
 
-    pub const WORKFLOW_KEYS: [&'static str; 8] = [
+    pub const WORKFLOW_KEYS: [&'static str; 9] = [
         "id",
         "title",
         "enabled",
@@ -45,6 +45,7 @@ impl Section {
         "tags",
         "timeout_seconds",
         "inputs",
+        "outputs",
         "steps",
     ];
 

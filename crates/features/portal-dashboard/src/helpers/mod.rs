@@ -1,3 +1,5 @@
+mod renamed_keys;
 mod toml_values;
 
-pub use toml_values::{toml_of, unique_id};
+pub use renamed_keys::renamed_in_place;
+pub use toml_values::toml_of;

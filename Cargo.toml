@@ -20,6 +20,7 @@ members = [
     "crates/features/portal-dashboard",
     "crates/features/portal-proxy",
     "crates/features/portal-automations",
+    "crates/features/portal-widgets",
     "crates/features/portal-scripts",
     "crates/features/portal-dns",
     "crates/features/portal-modules",
@@ -94,6 +95,8 @@ portal-network = { path = "crates/features/portal-network" }
 portal-dashboard = { path = "crates/features/portal-dashboard" }
 portal-proxy = { path = "crates/features/portal-proxy" }
 portal-automations = { path = "crates/features/portal-automations" }
+
+portal-widgets = { path = "crates/features/portal-widgets" }
 portal-dns = { path = "crates/features/portal-dns" }
 portal-modules = { path = "crates/features/portal-modules" }
 portal-permissions = { path = "crates/features/portal-permissions" }

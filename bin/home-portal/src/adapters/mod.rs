@@ -1,4 +1,5 @@
 mod automation_directory;
+mod automation_widgets;
 mod dns_directory;
 mod network_connection;
 mod portal_actions;
@@ -13,6 +14,7 @@ mod service_publications;
 mod tests;
 
 pub use automation_directory::AutomationDirectory;
+pub use automation_widgets::AutomationWidgets;
 pub use dns_directory::DnsDirectory;
 pub use network_connection::NetworkConnection;
 pub use portal_actions::WorkflowActions;

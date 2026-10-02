@@ -8,6 +8,10 @@
   ],
   "sections": [
     {
+      "appearance": {
+        "surface": "unknown",
+        "title": "unknown"
+      },
       "id": "now",
       "title": "Now"
     }
@@ -34,14 +38,24 @@
   "switchable": true,
   "widgets": [
     {
+      "appearance": {
+        "accent": "unknown",
+        "align": "unknown",
+        "padding": "unknown",
+        "surface": "unknown",
+        "title": "unknown"
+      },
+      "column": null,
+      "height": "auto",
       "id": "riga",
+      "row": null,
       "section": "now",
       "settings": {
         "city": "Riga"
       },
-      "size": "third",
       "title": null,
-      "type": "weather"
+      "type": "weather",
+      "width": 4
     }
   ]
 }

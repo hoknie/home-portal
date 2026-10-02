@@ -1,0 +1,185 @@
+{
+  "data": {
+    "blocks": [
+      {
+        "align": null,
+        "caption": "of 500 GB",
+        "icon": "hard-drive",
+        "kind": "stat",
+        "label": "Free",
+        "tone": "ok",
+        "unit": "GB",
+        "valign": null,
+        "value": "120"
+      },
+      {
+        "align": null,
+        "caption": null,
+        "kind": "progress",
+        "label": "Used",
+        "maximum": 100.0,
+        "tone": "danger",
+        "valign": null,
+        "value": 93.0
+      },
+      {
+        "align": "center",
+        "blocks": [
+          {
+            "align": "center",
+            "kind": "badge",
+            "text": "failed",
+            "tone": "danger",
+            "valign": "center"
+          },
+          {
+            "align": "end",
+            "blocks": [
+              {
+                "align": "end",
+                "kind": "text",
+                "muted": true,
+                "size": "small",
+                "text": "Backup **3 h** ago",
+                "tone": "neutral",
+                "valign": null,
+                "weight": "normal"
+              },
+              {
+                "align": "stretch",
+                "blocks": [
+                  {
+                    "align": "end",
+                    "kind": "badge",
+                    "text": "nas",
+                    "tone": "ok",
+                    "valign": null
+                  },
+                  {
+                    "align": "end",
+                    "kind": "badge",
+                    "text": "cloud",
+                    "tone": "neutral",
+                    "valign": null
+                  }
+                ],
+                "gap": "small",
+                "kind": "row",
+                "widths": null
+              }
+            ],
+            "gap": "small",
+            "kind": "column",
+            "valign": null
+          }
+        ],
+        "gap": "normal",
+        "kind": "row",
+        "widths": [
+          4,
+          8
+        ]
+      },
+      {
+        "align": null,
+        "empty": "Nobody",
+        "items": [
+          {
+            "secondary": "10.0.0.2",
+            "text": "phone",
+            "tone": "neutral"
+          }
+        ],
+        "kind": "list",
+        "more": 13,
+        "valign": null
+      },
+      {
+        "align": null,
+        "empty": null,
+        "headers": [
+          "Name",
+          "Address"
+        ],
+        "kind": "table",
+        "more": 0,
+        "rows": [
+          [
+            "tv",
+            "10.0.0.3"
+          ]
+        ],
+        "valign": null
+      },
+      {
+        "align": null,
+        "kind": "key-values",
+        "pairs": [
+          {
+            "key": "Uptime",
+            "value": "3 days"
+          }
+        ],
+        "valign": null
+      },
+      {
+        "align": null,
+        "kind": "markdown",
+        "text": "[Open the NAS](https://nas.home.lan)",
+        "valign": null
+      },
+      {
+        "kind": "divider"
+      },
+      {
+        "align": null,
+        "blocks": [
+          {
+            "action": "restart",
+            "align": null,
+            "confirm": "Restart Jellyfin?",
+            "does": "automation",
+            "icon": "rotate-ccw",
+            "kind": "button",
+            "label": "Restart",
+            "link": null,
+            "style": "primary",
+            "valign": null
+          },
+          {
+            "action": "refresh",
+            "align": null,
+            "confirm": null,
+            "does": "refresh",
+            "icon": null,
+            "kind": "button",
+            "label": "Refresh",
+            "link": null,
+            "style": "ghost",
+            "valign": null
+          },
+          {
+            "action": "link",
+            "align": null,
+            "confirm": null,
+            "does": "link",
+            "icon": null,
+            "kind": "button",
+            "label": "Open",
+            "link": "https://nas.home.lan",
+            "style": "secondary",
+            "valign": null
+          }
+        ],
+        "gap": "small",
+        "kind": "column",
+        "valign": null
+      }
+    ]
+  },
+  "fetched_at": "2026-09-22T10:00:00Z",
+  "problem": null,
+  "refresh_seconds": 300,
+  "refreshing": false,
+  "stale": false
+}

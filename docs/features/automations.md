@@ -23,6 +23,9 @@ is still going can be followed and stopped from there. The journal shows 50 runs
 and **Newer** move through the rest, and only the newest page refreshes itself. The automations
 table names what each automation does in its **Action** column, linked to the script or workflow.
 
+A button of a custom widget on the home page can run an automation, and a script can be a
+custom widget's source (see [Home page](home-page.md#custom-widgets)).
+
 ## Settings
 
 Automations live in `automations.toml` beside the main configuration file.

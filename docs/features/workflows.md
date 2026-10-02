@@ -37,6 +37,10 @@ Settings can use values from earlier on, in double braces:
 
 Type `{{` in any field to get suggestions.
 
+A workflow can feed a custom widget on the home page: the widget shows its outputs (or, without
+outputs, its variables), and its buttons can run workflows (see
+[Home page](home-page.md#custom-widgets)).
+
 ## Settings
 
 Each workflow is its own file in `workflows/` beside the main configuration file, named after its
@@ -45,6 +49,7 @@ id (`workflows/revive.toml`). The editor writes it for you.
 | Key | What it does | Default |
 |---|---|---|
 | `inputs` | What the workflow is given when it starts | none |
+| `outputs` | What it gives back when it succeeds: `{ name, value, description }`, where `value` is a template read after the last step (`{{steps.weather.json.current}}`); shown in the run's trace and given to a widget as its data | none |
 | `timeout_seconds` | The longest a whole run may take (1–3600 s) | 300 |
 | `enabled` | Switch it off without deleting it | `true` |
 | `fail_on_error` (on an `http` or `script` step) | `false` lets the run go on after an error answer or a failing script | `true` |

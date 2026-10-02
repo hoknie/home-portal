@@ -3,24 +3,46 @@
 import { useTranslations } from "next-intl";
 import { type KeyboardEvent, type PointerEvent, useEffect, useRef } from "react";
 
-import { WIDGET_SIZES, type WidgetSize } from "@/shared/api";
+import { GRID_COLUMNS, LARGEST_ROWS } from "@/shared/api";
+import { cn } from "@/shared/lib/cn";
 
-import { snapSize, stepSize } from "../model/resize";
+import { type Axis, type Size, sameSize, snapSize, steppedSize } from "../model/resize";
 
 export type ResizeHandleProps = {
+  axis: Axis;
   title: string;
-  size: WidgetSize;
-  gridWidth: () => number;
-  onPreview: (size: WidgetSize | null) => void;
-  onResize: (size: WidgetSize) => void;
+  size: Size;
+  measure: () => { gridWidth: number; startPixels: number };
+  onPreview: (size: Size | null) => void;
+  onResize: (size: Size) => void;
 };
 
-type Drag = { pointer: number; startX: number; width: number; preview: WidgetSize };
+type Drag = { pointer: number; startX: number; startY: number; measured: { gridWidth: number; startPixels: number }; preview: Size };
 
-const STEPS: Record<string, number> = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 };
+const PLACES: Record<Axis, string> = {
+  width: "inset-y-3 -right-2 w-4 cursor-ew-resize max-sm:hidden",
+  height: "inset-x-6 -bottom-2 h-4 cursor-ns-resize",
+  both: "-right-2 -bottom-2 size-5 cursor-nwse-resize max-sm:hidden",
+};
 
-export function ResizeHandle({ title, size, gridWidth, onPreview, onResize }: ResizeHandleProps) {
+const MARKS: Record<Axis, string> = {
+  width: "h-8 w-1 rounded-full",
+  height: "h-1 w-8 rounded-full",
+  both: "size-2.5 rounded-sm",
+};
+
+export function useSizeText() {
   const t = useTranslations("layoutEditor");
+  return {
+    width: (size: Size) => t("columns", { count: size.width }),
+    height: (size: Size) => (size.height === "auto" ? t("heightAuto") : t("rows", { count: size.height })),
+    both: (size: Size) => t("sizeValue", { columns: size.width, rows: size.height === "auto" ? t("auto") : size.height }),
+  };
+}
+
+export function ResizeHandle({ axis, title, size, measure, onPreview, onResize }: ResizeHandleProps) {
+  const t = useTranslations("layoutEditor");
+  const text = useSizeText();
   const drag = useRef<Drag | null>(null);
 
   const cancel = () => {
@@ -43,7 +65,7 @@ export function ResizeHandle({ title, size, gridWidth, onPreview, onResize }: Re
     event.stopPropagation();
     event.currentTarget.focus();
     event.currentTarget.setPointerCapture?.(event.pointerId);
-    drag.current = { pointer: event.pointerId, startX: event.clientX, width: gridWidth(), preview: size };
+    drag.current = { pointer: event.pointerId, startX: event.clientX, startY: event.clientY, measured: measure(), preview: size };
     onPreview(size);
   };
 
@@ -52,8 +74,8 @@ export function ResizeHandle({ title, size, gridWidth, onPreview, onResize }: Re
     if (!current || current.pointer !== event.pointerId) {
       return;
     }
-    const preview = snapSize(size, event.clientX - current.startX, current.width);
-    if (preview !== current.preview) {
+    const preview = snapSize(size, axis, { x: event.clientX - current.startX, y: event.clientY - current.startY }, current.measured);
+    if (!sameSize(preview, current.preview)) {
       drag.current = { ...current, preview };
       onPreview(preview);
     }
@@ -66,34 +88,38 @@ export function ResizeHandle({ title, size, gridWidth, onPreview, onResize }: Re
     }
     drag.current = null;
     onPreview(null);
-    if (current.preview !== size) {
+    if (!sameSize(current.preview, size)) {
       onResize(current.preview);
     }
   };
 
   const key = (event: KeyboardEvent<HTMLDivElement>) => {
-    const next = event.key in STEPS ? stepSize(size, STEPS[event.key]) : event.key === "Home" ? WIDGET_SIZES[0] : event.key === "End" ? WIDGET_SIZES.at(-1) : null;
-    if (next === null || next === undefined) {
+    const next = steppedSize(size, axis, event.key);
+    if (next === null) {
       return;
     }
     event.preventDefault();
-    if (next !== size) {
+    if (!sameSize(next, size)) {
       onResize(next);
     }
   };
 
+  const vertical = axis === "height";
   return (
     <div
       role="slider"
       tabIndex={0}
-      aria-label={t("resize", { title })}
-      aria-orientation="horizontal"
-      aria-valuemin={0}
-      aria-valuemax={WIDGET_SIZES.length - 1}
-      aria-valuenow={WIDGET_SIZES.indexOf(size)}
-      aria-valuetext={t(`sizes.${size}`)}
-      data-resize-handle=""
-      className="group/resize absolute inset-y-3 -right-2 z-10 flex w-4 cursor-ew-resize touch-none items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring max-sm:hidden"
+      aria-label={t(axis === "width" ? "resize" : axis === "height" ? "resizeHeight" : "resizeBoth", { title })}
+      aria-valuetext={text[axis](size)}
+      aria-valuemin={vertical ? 0 : 1}
+      aria-valuemax={vertical ? LARGEST_ROWS : GRID_COLUMNS}
+      aria-valuenow={vertical ? (size.height === "auto" ? 0 : size.height) : size.width}
+      aria-orientation={vertical ? "vertical" : "horizontal"}
+      data-resize-handle={axis}
+      className={cn(
+        "group/resize absolute z-10 flex touch-none items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        PLACES[axis],
+      )}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
@@ -101,7 +127,7 @@ export function ResizeHandle({ title, size, gridWidth, onPreview, onResize }: Re
       onLostPointerCapture={() => drag.current && cancel()}
       onKeyDown={key}
     >
-      <span className="h-8 w-1 rounded-full bg-border transition-colors group-hover/resize:bg-primary group-focus-visible/resize:bg-primary" />
+      <span className={cn("bg-border transition-colors group-hover/resize:bg-primary group-focus-visible/resize:bg-primary", MARKS[axis])} />
     </div>
   );
 }

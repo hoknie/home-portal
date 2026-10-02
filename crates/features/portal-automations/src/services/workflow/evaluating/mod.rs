@@ -19,6 +19,7 @@ pub use names_in::placeholders_in;
 pub use rendered::{collected, collector, snapshot};
 pub use secrets::{SecretLookup, Secrets};
 pub use values::{
-    oversized, render_json, render_keys, render_number, render_text, render_value, text_of,
+    oversized, render_json, render_keys, render_number, render_text, render_value,
+    rendered_outputs, text_of,
 };
 pub use walking::{children_of, every_step};

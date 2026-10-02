@@ -1,6 +1,8 @@
 import { expect, it } from "vitest";
 
 import { automationsKey, automationsSchema, runsSchema, scriptsKey, scriptsSchema } from "@/entities/automation";
+import { dashboardKey, dashboardSchema } from "@/entities/dashboard";
+import { sessionKey } from "@/entities/session";
 import { webhooksKey, webhooksSchema } from "@/entities/webhook";
 import { workflowsKey, workflowsSchema } from "@/entities/workflow";
 import { apiSamples } from "@/shared/api";
@@ -49,4 +51,19 @@ it("a script is linked only while the scripts page is available", () => {
   const target = { run: { script: "backup.sh" }, workflow: null };
   expect(referencesWith(false).actionOf(target)).toMatchObject({ kind: "Script", text: "backup.sh", href: null });
   expect(referencesWith(true).actionOf(target)).toMatchObject({ href: "/admin/scripts/?path=backup.sh" });
+});
+
+it("a run a widget started names the widget, linked to its settings in the widget library", () => {
+  const client = testQueryClient();
+  client.setQueryData(dashboardKey, dashboardSchema.parse(apiSamples.dashboard));
+  client.setQueryData(sessionKey, { name: "anna", group: "family", admin: false, rights: { layout: ["update"] } });
+  const seen: { references: ItemReferences | null } = { references: null };
+  function Probe() {
+    seen.references = useItemReferences();
+    return null;
+  }
+  renderWithProviders(<Probe />, client);
+  const references = seen.references as ItemReferences;
+  const run = { ...runs[0], automation: "widget:riga", workflow: null };
+  expect(references.sourceOf(run).reference).toEqual({ kind: "Widget", text: "riga", href: "/admin/layout/widgets/?widget=riga" });
 });

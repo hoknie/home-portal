@@ -10,6 +10,7 @@ import { TagInput } from "@/shared/ui/tag-input";
 import { useEditor } from "../../model/editor-context";
 import { RESERVED_IDS } from "../../model/checks/validation";
 import { InputsEditor } from "./header/inputs-editor";
+import { OutputsEditor } from "./header/outputs-editor";
 
 export function HeaderForm() {
   const t = useTranslations();
@@ -70,6 +71,7 @@ export function HeaderForm() {
         />
       </FormField>
       <InputsEditor inputs={draft.inputs} problemAt={problemAt} onChange={(key, inputs) => set(key, { inputs })} />
+      <OutputsEditor outputs={draft.outputs} problemAt={problemAt} onChange={(key, outputs) => set(key, { outputs })} />
     </div>
   );
 }

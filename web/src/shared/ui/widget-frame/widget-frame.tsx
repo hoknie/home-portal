@@ -2,8 +2,10 @@
 
 import { AlertTriangle, History } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { type ReactNode, createContext, useContext, useId } from "react";
 
+import { type Appearance, DEFAULT_APPEARANCE } from "@/shared/api";
+import { cn } from "@/shared/lib/cn";
 import { Skeleton } from "@/shared/ui/primitives";
 
 export type WidgetFrameProps = {
@@ -11,15 +13,60 @@ export type WidgetFrameProps = {
   stale?: boolean;
   problem?: string | null;
   loading?: boolean;
+  appearance?: Appearance;
+  fill?: boolean;
   children: ReactNode;
 };
 
-export function WidgetFrame({ title, stale = false, problem = null, loading = false, children }: WidgetFrameProps) {
+const SURFACES: Record<Appearance["surface"], string> = {
+  card: "glass-panel rounded-2xl",
+  plain: "",
+  tinted: "widget-tint rounded-2xl",
+  outline: "rounded-2xl border",
+};
+
+const PADDINGS: Record<Appearance["padding"], string> = {
+  normal: "p-4 sm:p-5",
+  compact: "p-3",
+  none: "p-0",
+};
+
+const FrameSurface = createContext<Appearance["surface"]>("plain");
+
+const FrameAlign = createContext<Appearance["align"]>("start");
+
+const ALIGNS: Record<Appearance["align"], string> = {
+  start: "",
+  center: "items-center text-center",
+  end: "items-end text-right",
+};
+
+export function useFrameSurface() {
+  return useContext(FrameSurface);
+}
+
+export function useFrameAlign() {
+  return useContext(FrameAlign);
+}
+
+export function WidgetFrame({ title, stale = false, problem = null, loading = false, appearance = DEFAULT_APPEARANCE, fill = false, children }: WidgetFrameProps) {
   const t = useTranslations("widgets");
+  const heading = useId();
+  const shown = appearance.title === "shown";
+  const padded = appearance.surface === "plain" && appearance.padding === "normal" ? "p-0" : PADDINGS[appearance.padding];
   return (
-    <section className="grid gap-3">
-      <div className="flex items-center gap-2">
-        <h2 className="text-base font-semibold">{title}</h2>
+    <section
+      aria-labelledby={heading}
+      data-surface={appearance.surface}
+      data-accent={appearance.accent}
+      data-align={appearance.align}
+      className={cn("flex flex-col gap-3", SURFACES[appearance.surface], padded, fill && "h-full min-h-0", ALIGNS[appearance.align])}
+    >
+      <div className={cn("flex items-center gap-2", !shown && "sr-only")}>
+        {appearance.accent !== "neutral" ? <span aria-hidden data-mark className="size-2 shrink-0 rounded-full bg-widget-accent" /> : null}
+        <h2 id={heading} className="text-base font-semibold">
+          {title}
+        </h2>
         {stale ? (
           <span
             data-stale="true"
@@ -31,9 +78,18 @@ export function WidgetFrame({ title, stale = false, problem = null, loading = fa
           </span>
         ) : null}
       </div>
-      {loading ? <Skeleton className="h-24 w-full" aria-busy="true" /> : children}
+      <FrameSurface.Provider value={appearance.surface}>
+        <FrameAlign.Provider value={appearance.align}>
+          <div className={cn("w-full", fill && "min-h-0 flex-1 overflow-auto")}>{loading ? <Skeleton className="h-24 w-full" aria-busy="true" /> : children}</div>
+        </FrameAlign.Provider>
+      </FrameSurface.Provider>
     </section>
   );
+}
+
+export function WidgetPanel({ className, children }: { className?: string; children: ReactNode }) {
+  const surface = useFrameSurface();
+  return <div className={cn(surface === "plain" && "glass-panel rounded-xl p-4", className)}>{children}</div>;
 }
 
 export function WidgetProblem({ message }: { message: string }) {

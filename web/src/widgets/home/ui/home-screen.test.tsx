@@ -52,8 +52,8 @@ it("signed in, the same screen shows every section, without the management sideb
     },
     true,
   );
-  const mediaHeadings = await screen.findAllByRole("heading", { level: 2, name: "Media" });
-  expect(mediaHeadings.some((heading) => heading.parentElement?.getAttribute("data-section") === "media")).toBe(true);
+  await screen.findAllByRole("heading", { level: 2, name: "Media" });
+  expect(document.querySelector('section[data-section="media"]')).toHaveAttribute("aria-label", "Media");
   expect(screen.getByRole("heading", { level: 2, name: "Now" })).toBeInTheDocument();
   expect(screen.queryByRole("link", { name: "Back to home" })).not.toBeInTheDocument();
   expect(screen.getAllByRole("link", { name: "Open Media" }).length).toBeGreaterThan(0);
@@ -62,7 +62,7 @@ it("signed in, the same screen shows every section, without the management sideb
 it("signed in with an empty layout, it leads to the layout editor", async () => {
   serve(
     {
-      "/api/dashboard": { sections: [{ id: "main", title: null }], widgets: [] },
+      "/api/dashboard": { sections: [{ id: "main", title: null, appearance: { title: "shown", surface: "none" } }], widgets: [] },
       "/api/services": apiSamples.services,
       "/api/environment": apiSamples.environment,
     },

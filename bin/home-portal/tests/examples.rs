@@ -232,12 +232,23 @@ fn the_split_layout_uses_every_size_and_every_widget_type_the_portal_serves() {
             "no {size} widget"
         );
     }
+    for written in [
+        "width = ",
+        "height = ",
+        "appearance = ",
+        "column = ",
+        "[[dashboard.library]]",
+        "widget = ",
+    ] {
+        assert!(text.contains(written), "no widget with {written}");
+    }
     for kind in [
         "status-summary",
         "services",
         "host-metrics",
         "weather",
         "calendar",
+        "custom",
     ] {
         assert!(
             text.contains(&format!("type = \"{kind}\"")),
@@ -317,4 +328,15 @@ fn the_split_example_loads_as_it_is_and_holds_one_file_per_workflow() {
         .count();
     assert_eq!(workflows, files);
     assert!(files >= 6);
+    let glance = fs::read_to_string(
+        examples()
+            .join("split")
+            .join(WORKFLOWS)
+            .join("home-glance.toml"),
+    )
+    .unwrap();
+    assert!(
+        glance.contains("outputs = ["),
+        "an example declares a workflow's outputs"
+    );
 }

@@ -1,7 +1,92 @@
 {
   "$defs": {
+    "Accent": {
+      "enum": [
+        "neutral",
+        "blue",
+        "green",
+        "amber",
+        "red",
+        "violet",
+        "pink",
+        "teal"
+      ],
+      "type": "string",
+      "x-open": "neutral"
+    },
+    "Align": {
+      "enum": [
+        "start",
+        "center",
+        "end"
+      ],
+      "type": "string",
+      "x-open": "start"
+    },
+    "Padding": {
+      "enum": [
+        "normal",
+        "compact",
+        "none"
+      ],
+      "type": "string",
+      "x-open": "normal"
+    },
+    "ResolvedAppearance": {
+      "properties": {
+        "accent": {
+          "$ref": "#/$defs/Accent"
+        },
+        "align": {
+          "$ref": "#/$defs/Align"
+        },
+        "padding": {
+          "$ref": "#/$defs/Padding"
+        },
+        "surface": {
+          "$ref": "#/$defs/Surface"
+        },
+        "title": {
+          "$ref": "#/$defs/TitleVisibility"
+        }
+      },
+      "required": [
+        "surface",
+        "accent",
+        "title",
+        "padding",
+        "align"
+      ],
+      "type": "object"
+    },
+    "ResolvedSectionAppearance": {
+      "properties": {
+        "surface": {
+          "$ref": "#/$defs/SectionSurface"
+        },
+        "title": {
+          "$ref": "#/$defs/TitleVisibility"
+        }
+      },
+      "required": [
+        "title",
+        "surface"
+      ],
+      "type": "object"
+    },
+    "SectionSurface": {
+      "enum": [
+        "none",
+        "card"
+      ],
+      "type": "string",
+      "x-open": "none"
+    },
     "SectionView": {
       "properties": {
+        "appearance": {
+          "$ref": "#/$defs/ResolvedSectionAppearance"
+        },
         "id": {
           "type": "string"
         },
@@ -14,23 +99,56 @@
       },
       "required": [
         "id",
-        "title"
+        "title",
+        "appearance"
       ],
       "type": "object"
     },
-    "WidgetSize": {
+    "Surface": {
       "enum": [
-        "quarter",
-        "third",
-        "half",
-        "two-thirds",
-        "full"
+        "card",
+        "plain",
+        "tinted",
+        "outline"
       ],
       "type": "string",
-      "x-open": "full"
+      "x-open": "card"
+    },
+    "TitleVisibility": {
+      "enum": [
+        "shown",
+        "hidden"
+      ],
+      "type": "string",
+      "x-open": "shown"
+    },
+    "WidgetHeight": {
+      "anyOf": [
+        {
+          "const": "auto",
+          "type": "string"
+        },
+        {
+          "maximum": 8,
+          "minimum": 1,
+          "type": "integer"
+        }
+      ]
     },
     "WidgetView": {
       "properties": {
+        "appearance": {
+          "$ref": "#/$defs/ResolvedAppearance"
+        },
+        "column": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "environments": {
           "items": {
             "type": "string"
@@ -39,6 +157,9 @@
             "array",
             "null"
           ]
+        },
+        "height": {
+          "$ref": "#/$defs/WidgetHeight"
         },
         "id": {
           "type": [
@@ -52,6 +173,14 @@
         "public": {
           "type": "boolean"
         },
+        "row": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "section": {
           "type": [
             "string",
@@ -62,9 +191,6 @@
           "additionalProperties": true,
           "type": "object"
         },
-        "size": {
-          "$ref": "#/$defs/WidgetSize"
-        },
         "title": {
           "type": [
             "string",
@@ -73,6 +199,12 @@
         },
         "type": {
           "type": "string"
+        },
+        "width": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
         }
       },
       "required": [
@@ -82,7 +214,11 @@
         "title",
         "settings",
         "section",
-        "size",
+        "column",
+        "row",
+        "width",
+        "height",
+        "appearance",
         "environments",
         "public"
       ],

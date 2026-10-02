@@ -47,6 +47,14 @@
   --status-down: oklch(0.55 0.21 27);
   --status-unreadable: oklch(0.52 0.18 305);
   --status-unknown: oklch(0.52 0.02 257);
+  --palette-neutral: oklch(0.52 0.02 257);
+  --palette-blue: oklch(0.55 0.17 258);
+  --palette-green: oklch(0.55 0.14 152);
+  --palette-amber: oklch(0.62 0.14 70);
+  --palette-red: oklch(0.56 0.2 27);
+  --palette-violet: oklch(0.53 0.2 300);
+  --palette-pink: oklch(0.58 0.19 350);
+  --palette-teal: oklch(0.56 0.1 195);
 }
 
 .dark {
@@ -89,6 +97,14 @@
   --status-down: oklch(0.68 0.2 25);
   --status-unreadable: oklch(0.7 0.16 305);
   --status-unknown: oklch(0.66 0.02 257);
+  --palette-neutral: oklch(0.7 0.02 257);
+  --palette-blue: oklch(0.72 0.14 258);
+  --palette-green: oklch(0.74 0.15 152);
+  --palette-amber: oklch(0.8 0.14 75);
+  --palette-red: oklch(0.7 0.18 25);
+  --palette-violet: oklch(0.72 0.16 300);
+  --palette-pink: oklch(0.74 0.15 350);
+  --palette-teal: oklch(0.75 0.1 195);
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -161,6 +177,12 @@
   --color-status-down: var(--status-down);
   --color-status-unreadable: var(--status-unreadable);
   --color-status-unknown: var(--status-unknown);
+  --color-tone-neutral: var(--muted-foreground);
+  --color-tone-ok: var(--status-up);
+  --color-tone-info: var(--palette-blue);
+  --color-tone-warning: var(--status-degraded);
+  --color-tone-danger: var(--status-down);
+  --color-widget-accent: var(--widget-accent);
 }
 
 @utility glass-panel {
@@ -199,4 +221,41 @@
       radial-gradient(46rem 36rem at 58% 104%, var(--backdrop-glow-3), transparent 70%),
       var(--backdrop);
   }
+}
+
+[data-accent] {
+  --widget-accent: var(--palette-neutral);
+}
+
+[data-accent="blue"] {
+  --widget-accent: var(--palette-blue);
+}
+
+[data-accent="green"] {
+  --widget-accent: var(--palette-green);
+}
+
+[data-accent="amber"] {
+  --widget-accent: var(--palette-amber);
+}
+
+[data-accent="red"] {
+  --widget-accent: var(--palette-red);
+}
+
+[data-accent="violet"] {
+  --widget-accent: var(--palette-violet);
+}
+
+[data-accent="pink"] {
+  --widget-accent: var(--palette-pink);
+}
+
+[data-accent="teal"] {
+  --widget-accent: var(--palette-teal);
+}
+
+@utility widget-tint {
+  background-color: color-mix(in oklch, var(--widget-accent) 12%, var(--glass-panel));
+  border: 1px solid color-mix(in oklch, var(--widget-accent) 28%, transparent);
 }

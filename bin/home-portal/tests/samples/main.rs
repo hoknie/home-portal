@@ -27,7 +27,9 @@ use home_portal::registered;
 use http_body_util::BodyExt;
 use portal_auth::SessionResponse;
 use portal_calendar::{CalendarEvent, Repeats};
-use portal_dashboard::{DashboardResponse, SectionView, WidgetView};
+use portal_dashboard::{
+    DashboardResponse, LibraryResponse, LibraryWidgetView, SectionView, WidgetView,
+};
 use portal_feature::{Action, ApiError, Area, FieldError, Principal, Right, Rights};
 use portal_icons::IconState;
 use portal_metrics::{DiskReading, HostReading, Usage};
@@ -44,7 +46,10 @@ use portal_services::{
 use portal_weather::{
     CONDITIONS, CurrentWeather, DailyWeather, UNKNOWN_CONDITION, Units, WeatherReading,
 };
-use portal_widget::{WidgetData, WidgetInstance, WidgetSize};
+use portal_widget::{
+    Accent, ResolvedAppearance, ResolvedSectionAppearance, SectionSurface, Surface,
+    TitleVisibility, WidgetAppearance, WidgetData, WidgetHeight, WidgetInstance,
+};
 use serde_json::{Value, json};
 use time::macros::datetime;
 

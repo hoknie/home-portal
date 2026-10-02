@@ -47,6 +47,7 @@ portal-scripts.workspace = true
 portal-services.workspace = true
 portal-telegram.workspace = true
 portal-weather.workspace = true
+portal-widgets.workspace = true
 portal-web.workspace = true
 portal-widget.workspace = true
 

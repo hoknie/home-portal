@@ -12,7 +12,9 @@ use crate::services::workflow::evaluating::children_of;
 use crate::services::workflow::evaluating::placeholders_in;
 use portal_feature::Module;
 
-use crate::types::{Catalogue, PortalState, Step, StepKind, ValueType, Workflow, result_type};
+use crate::types::{
+    Catalogue, OutputDeclaration, PortalState, Step, StepKind, ValueType, Workflow, result_type,
+};
 
 #[derive(Debug, Clone, Default)]
 pub struct Scope {
@@ -24,6 +26,7 @@ pub struct Scope {
     pub services: Option<BTreeSet<String>>,
     pub loops: usize,
     pub items: usize,
+    pub ending: bool,
 }
 
 impl Scope {
@@ -50,6 +53,7 @@ impl Scope {
         };
         let mut errors = Vec::new();
         scope.check_steps(&workflow.steps, "steps", &mut errors);
+        scope.check_outputs(&workflow.outputs, &mut errors);
         errors
     }
 
@@ -59,7 +63,7 @@ impl Scope {
         let first = parts.next().unwrap_or_default();
         let fine = match namespace {
             "secrets" => true,
-            "event" => name.strip_prefix("event.").is_some_and(Catalogue::knows),
+            "event" => !self.ending && name.strip_prefix("event.").is_some_and(Catalogue::knows),
             "inputs" => self.inputs.contains(first),
             "vars" => self.vars.contains(first),
             "steps" => self.steps.contains(first),
@@ -85,6 +89,9 @@ impl Scope {
             "item" | "index" => format!(
                 "names {{{{{name}}}}}, which exists only inside a transform's filter and map"
             ),
+            "event" if self.ending => format!(
+                "names {{{{{name}}}}}; an output reads inputs, vars, steps, secrets and portal, not the event"
+            ),
             "event" => format!("names {{{{{name}}}}}, which is not a field any event carries"),
             _ => format!("names {{{{{name}}}}}, which is not a value a workflow knows"),
         })
@@ -99,44 +106,7 @@ impl Scope {
                 let own_items = field.starts_with("operations");
                 self.loops += usize::from(own_loop);
                 self.items += usize::from(own_items);
-                for placeholder in placeholders_in(template) {
-                    let named = placeholder.filters.iter().flatten().flat_map(|call| {
-                        call.names
-                            .iter()
-                            .map(move |(_, name)| (call.name.as_str(), name.as_str()))
-                    });
-                    let argument_problem = named.clone().find_map(|(filter, name)| {
-                        self.allows(name).err().map(|problem| {
-                            format!(
-                                "{{{{{}}}}}: the argument of {filter} {problem}",
-                                placeholder.name
-                            )
-                        })
-                    });
-                    let filtered_secret = (placeholder.name.starts_with(SECRETS)
-                        && placeholder
-                            .filters
-                            .as_ref()
-                            .is_ok_and(|calls| !calls.is_empty()))
-                        || named.clone().any(|(_, name)| name.starts_with(SECRETS));
-                    let secret_problem = filtered_secret
-                        .then(|| format!("{{{{{}}}}}: {SECRET_THROUGH_FILTER}", placeholder.name));
-                    let problem = secret_problem
-                        .or(argument_problem)
-                        .or_else(|| self.allows(placeholder.name).err())
-                        .or_else(|| {
-                            match &placeholder.filters {
-                                Ok(filters) => {
-                                    chain_problem(self.type_of(placeholder.name), filters)
-                                }
-                                Err(message) => Some(message.clone()),
-                            }
-                            .map(|problem| format!("{{{{{}}}}}: {problem}", placeholder.name))
-                        });
-                    if let Some(message) = problem {
-                        errors.push(FieldError::new(format!("{here}.{field}"), message));
-                    }
-                }
+                self.check_template(template, &format!("{here}.{field}"), errors);
                 self.loops -= usize::from(own_loop);
                 self.items -= usize::from(own_items);
             }
@@ -155,6 +125,54 @@ impl Scope {
                 self.vars.insert(variable.clone());
             }
         }
+    }
+
+    fn check_template(&self, template: &str, field: &str, errors: &mut Vec<FieldError>) {
+        for placeholder in placeholders_in(template) {
+            let named = placeholder.filters.iter().flatten().flat_map(|call| {
+                call.names
+                    .iter()
+                    .map(move |(_, name)| (call.name.as_str(), name.as_str()))
+            });
+            let argument_problem = named.clone().find_map(|(filter, name)| {
+                self.allows(name).err().map(|problem| {
+                    format!(
+                        "{{{{{}}}}}: the argument of {filter} {problem}",
+                        placeholder.name
+                    )
+                })
+            });
+            let filtered_secret = (placeholder.name.starts_with(SECRETS)
+                && placeholder
+                    .filters
+                    .as_ref()
+                    .is_ok_and(|calls| !calls.is_empty()))
+                || named.clone().any(|(_, name)| name.starts_with(SECRETS));
+            let secret_problem = filtered_secret
+                .then(|| format!("{{{{{}}}}}: {SECRET_THROUGH_FILTER}", placeholder.name));
+            let problem = secret_problem
+                .or(argument_problem)
+                .or_else(|| self.allows(placeholder.name).err())
+                .or_else(|| {
+                    match &placeholder.filters {
+                        Ok(filters) => chain_problem(self.type_of(placeholder.name), filters),
+                        Err(message) => Some(message.clone()),
+                    }
+                    .map(|problem| format!("{{{{{}}}}}: {problem}", placeholder.name))
+                });
+            if let Some(message) = problem {
+                errors.push(FieldError::new(field, message));
+            }
+        }
+    }
+
+    fn check_outputs(&mut self, outputs: &[OutputDeclaration], errors: &mut Vec<FieldError>) {
+        self.ending = true;
+        for (index, output) in outputs.iter().enumerate() {
+            let field = format!("{}[{index}].value", OutputDeclaration::FIELD);
+            self.check_template(&output.value, &field, errors);
+        }
+        self.ending = false;
     }
 
     fn portal_allows(&self, name: &str) -> Result<(), String> {

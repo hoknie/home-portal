@@ -9,7 +9,7 @@ import { problemsOf } from "./validation";
 const catalogue = workflowCatalogueSchema.parse(apiSamples.workflowCatalogue);
 
 function draftWith(id: string): Draft {
-  return { id, title: "Check", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [{ id: "pause", kind: "wait", seconds: 1 }] };
+  return { id, title: "Check", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], outputs: [], steps: [{ id: "pause", kind: "wait", seconds: 1 }] };
 }
 
 it.each(["new", "edit", "catalogue", "runs"])("the id %s names an address of the portal and is reported before saving", (id) => {

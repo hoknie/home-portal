@@ -1,11 +1,12 @@
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use portal_auth::{AuthFeature, UserNames};
 use portal_automations::AutomationsFeature;
 use portal_calendar::CalendarFeature;
-use portal_dashboard::DashboardFeature;
+use portal_dashboard::{DashboardFeature, NeedsOf};
 use portal_dns::DnsFeature;
-use portal_feature::Feature;
+use portal_feature::{Feature, WidgetProvider};
 use portal_health::HealthFeature;
 use portal_icons::IconsFeature;
 use portal_metrics::MetricsFeature;
@@ -22,11 +23,13 @@ use portal_secrets::SecretsFeature;
 use portal_services::{ServiceEntries, ServicesFeature, ServicesPorts};
 use portal_weather::WeatherFeature;
 use portal_widget::WidgetRegistry;
+use portal_widgets::{WidgetPorts, WidgetsFeature};
 
 use super::channels::channels;
 use crate::adapters::{
-    AutomationDirectory, DnsDirectory, NetworkConnection, PortalProcess, ProxyPublishing,
-    ScriptShelf, ServiceCatalogue, ServicePublications, WidgetLayout, WorkflowActions,
+    AutomationDirectory, AutomationWidgets, DnsDirectory, NetworkConnection, PortalProcess,
+    ProxyPublishing, ScriptShelf, ServiceCatalogue, ServicePublications, WidgetLayout,
+    WorkflowActions,
 };
 use crate::types::{BootError, Registry, Restart, Wiring};
 
@@ -60,6 +63,17 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
             message,
         })?,
     );
+    let engine = Arc::new(AutomationWidgets {
+        support: automations.widget_support(),
+    });
+    let widgets = Arc::new(WidgetsFeature::new(
+        configuration.clone(),
+        WidgetPorts {
+            templates: engine.clone(),
+            references: engine.clone(),
+            runs: engine,
+        },
+    ));
     let events = automations.events();
     let auth = Arc::new(AuthFeature::new(
         configuration.clone(),
@@ -137,12 +151,12 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         Arc::new(SecretsFeature::new(configuration.clone())),
         Arc::new(ScriptsFeature::new(configuration.clone(), identity)),
         Arc::new(PermissionsFeature::new(configuration.clone())),
-        Arc::new(DashboardFeature::new(configuration.clone())),
         Arc::new(ModulesFeature::new(
             configuration.clone(),
             vec![Arc::new(PrepareProxy)],
         )),
         automations,
+        widgets,
         Arc::new(DnsFeature::new(
             configuration.clone(),
             Arc::new(DnsDirectory {
@@ -162,10 +176,13 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
             wiring.effective.address,
         )),
     ];
-    let providers = features
+    let providers: Vec<Arc<dyn WidgetProvider>> = features
         .iter()
         .flat_map(|feature| feature.widget_providers())
         .collect();
+    features.push(Arc::new(
+        DashboardFeature::new(configuration_for_widgets.clone()).with_needs(needs_of(&providers)),
+    ));
     let widgets = Arc::new(WidgetRegistry::new(configuration_for_widgets, providers));
     features.push(Arc::new(PublicFeature::new(
         Arc::new(ServiceCatalogue { services, icons }),
@@ -181,5 +198,18 @@ pub fn registered(wiring: &Wiring) -> Result<Registry, BootError> {
         events,
         restart: Restart::default(),
         interface: crate::boot::located(),
+    })
+}
+
+fn needs_of(providers: &[Arc<dyn WidgetProvider>]) -> NeedsOf {
+    let by_kind: BTreeMap<&'static str, Arc<dyn WidgetProvider>> = providers
+        .iter()
+        .map(|provider| (provider.kind(), provider.clone()))
+        .collect();
+    Arc::new(move |kind: &str, settings: &serde_json::Value| {
+        by_kind
+            .get(kind)
+            .map(|provider| provider.needs(settings))
+            .unwrap_or_default()
     })
 }

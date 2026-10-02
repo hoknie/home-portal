@@ -28,7 +28,7 @@ const oshof = [
 ];
 
 it("seeing why a status step failed: the pass, what the template gave and the hint are open", () => {
-  renderWithProviders(<TraceTimeline trace={{ entries: oshof, dropped: 0 }} />);
+  renderWithProviders(<TraceTimeline trace={{ entries: oshof, dropped: 0, outputs: null }} />);
   const steps = screen.getByRole("list", { name: "Steps" });
   expect(within(steps).getByText('Pass 1: "Media"')).toBeInTheDocument();
   const status = within(steps).getByText("status", { selector: "span.font-medium" }).closest("li")!;
@@ -44,14 +44,14 @@ it("seeing why a status step failed: the pass, what the template gave and the hi
 
 it("an old entry without values or a log draws as before, without a log to open", () => {
   const old = traceEntrySchema.parse({ ...TRACE_ENTRY_BLANKS, path: "steps[0]", step: "ping", label: "ping", kind: "http", iteration: null, outcome: "failed", started_at: "", duration_milliseconds: 3, detail: "500", output: null });
-  renderWithProviders(<TraceTimeline trace={{ entries: [old], dropped: 0 }} />);
+  renderWithProviders(<TraceTimeline trace={{ entries: [old], dropped: 0, outputs: null }} />);
   expect(screen.getByText("500")).toBeInTheDocument();
   expect(screen.queryByText("Values and log")).toBeNull();
 });
 
 it("a log step shows its level beside its label and its message in the level's colour", () => {
   const note = entry({ path: "steps[0]", step: "note", kind: "log", level: "warning", detail: "checking nas: down", log: ["[warning] checking nas: down"] });
-  renderWithProviders(<TraceTimeline trace={{ entries: [note], dropped: 0 }} />);
+  renderWithProviders(<TraceTimeline trace={{ entries: [note], dropped: 0, outputs: null }} />);
   expect(screen.getAllByText("warning")[0]).toHaveClass("text-status-degraded");
 });
 

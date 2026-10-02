@@ -155,3 +155,26 @@ pub fn render_number(
         )),
     }
 }
+
+pub fn rendered_outputs(
+    workflow: &Workflow,
+    frame: &Frame,
+) -> Result<std::collections::BTreeMap<String, Value>, String> {
+    let mut outputs = std::collections::BTreeMap::new();
+    for output in &workflow.outputs {
+        let value = render_value(&output.value, frame)
+            .map_err(|problem| format!("output {}: {problem}", output.name))?;
+        if let Some(problem) = oversized(&format!("output {}", output.name), &value) {
+            return Err(problem);
+        }
+        let text = value.to_string();
+        let hidden = frame.secrets.mask(&text);
+        let value = if hidden == text {
+            value
+        } else {
+            serde_json::from_str(&hidden).unwrap_or(Value::Null)
+        };
+        outputs.insert(output.name.clone(), value);
+    }
+    Ok(outputs)
+}

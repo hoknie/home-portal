@@ -3,63 +3,33 @@ import { expect, it } from "vitest";
 import { dashboardSchema } from "@/entities/dashboard";
 import { apiSamples } from "@/shared/api";
 
-import {
-  addSection,
-  addWidget,
-  fromLayout,
-  moveSection,
-  moveWidget,
-  removeSection,
-  removeWidget,
-  renameSection,
-  sameDraft,
-  toRequest,
-  updateWidget,
-  widgetsOf,
-} from "./draft";
+import { addSection, fromLayout, placeWidget, removeSection, removeWidget, renameSection, sameDraft, toRequest, updateWidget, widgetsOf } from "./draft";
 
 const draft = () => fromLayout(dashboardSchema.parse(apiSamples.dashboard));
 
-const keys = (value: ReturnType<typeof draft>, section: string) => widgetsOf(value, section).map((widget) => widget.uid);
-
-it("reads the layout as sections holding their widgets in order", () => {
-  expect(keys(draft(), "now")).toEqual(["#0", "riga"]);
-  expect(keys(draft(), "media")).toEqual(["#2", "#3"]);
+it("reads each place with the library widget it names, its section, position and size", () => {
+  const loaded = draft();
+  expect(loaded.widgets.map((widget) => [widget.key, widget.widget, widget.section])).toEqual([
+    ["#0", "status-summary", "now"],
+    ["#1", "riga", "now"],
+    ["#2", "services", "media"],
+    ["#3", "services-2", "media"],
+  ]);
+  expect(loaded.widgets[1]).toMatchObject({ column: 9, row: 1, width: 4, height: 3 });
+  expect(toRequest(loaded).widgets[1]).toEqual({ key: "#1", widget: "riga", section: "now", column: 9, row: 1, width: 4, height: 3 });
 });
 
-it("moves a widget within a section and into another one", () => {
-  const within = moveWidget(draft(), "riga", "now", 0);
-  expect(keys(within, "now")).toEqual(["riga", "#0"]);
-  const across = moveWidget(draft(), "riga", "media", 1);
-  expect(keys(across, "now")).toEqual(["#0"]);
-  expect(keys(across, "media")).toEqual(["#2", "riga", "#3"]);
-  expect(toRequest(across).widgets.map((widget) => widget.key)).toEqual(["#0", "#2", "riga", "#3"]);
+it("places a library widget at the end of a section without a position, and removes a place", () => {
+  const [placed, uid] = placeWidget(draft(), "riga", "media");
+  expect(widgetsOf(placed, "media").at(-1)).toMatchObject({ uid, key: null, widget: "riga", column: null, row: null, width: 12 });
+  expect(sameDraft(removeWidget(placed, uid), draft())).toBe(true);
 });
 
-it("changes size and section, adds and removes widgets", () => {
-  let edited = updateWidget(draft(), "#0", { size: "half", section: "media" });
-  expect(keys(edited, "media")).toEqual(["#2", "#3", "#0"]);
-  expect(widgetsOf(edited, "media")[2].size).toBe("half");
-  edited = addWidget(edited, "weather", "now");
-  const added = widgetsOf(edited, "now").at(-1);
-  expect(added).toMatchObject({ type: "weather", key: null, id: null, size: "full" });
-  edited = removeWidget(edited, "riga");
-  expect(edited.widgets.some((widget) => widget.uid === "riga")).toBe(false);
-});
-
-it("adds, renames, moves and deletes only empty sections", () => {
-  let edited = addSection(draft(), "Later");
-  expect(edited.sections.map((section) => section.id)).toEqual(["now", "media", "section-3"]);
-  edited = renameSection(edited, "section-3", "  Evening ");
-  expect(edited.sections[2].title).toBe("Evening");
-  edited = moveSection(edited, "section-3", -2);
-  expect(edited.sections.map((section) => section.id)).toEqual(["section-3", "now", "media"]);
-  expect(toRequest(edited).widgets.map((widget) => widget.section)).toEqual(["now", "now", "media", "media"]);
-  expect(removeSection(edited, "now")).toBe(edited);
-  expect(removeSection(edited, "section-3").sections).toHaveLength(2);
-});
-
-it("knows when nothing changed", () => {
-  expect(sameDraft(draft(), draft())).toBe(true);
-  expect(sameDraft(draft(), updateWidget(draft(), "#0", { title: "Summary" }))).toBe(false);
+it("changes a size, and manages sections", () => {
+  const resized = updateWidget(draft(), "#0", { width: 6, height: 2 });
+  expect(resized.widgets[0]).toMatchObject({ width: 6, height: 2 });
+  const sectioned = renameSection(addSection(draft(), null), "section-3", "Later");
+  expect(sectioned.sections.at(-1)).toMatchObject({ id: "section-3", title: "Later" });
+  expect(removeSection(sectioned, "section-3").sections).toHaveLength(2);
+  expect(removeSection(sectioned, "now").sections).toHaveLength(3);
 });

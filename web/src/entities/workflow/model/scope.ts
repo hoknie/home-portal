@@ -50,8 +50,13 @@ function walk(steps: Step[], owner: Path, list: string, target: Path, field: str
   return null;
 }
 
+export const END_OF_WORKFLOW: Path = [{ list: ROOT, index: Number.MAX_SAFE_INTEGER }];
+
 export function scopeAt(steps: Step[], path: Path, inputs: (string | InputDeclaration)[], field = ""): Scope {
-  const found = walk(steps, [], ROOT, path, field, { vars: new Set(), setBy: {}, steps: [], loops: 0 });
+  const state: Walk = { vars: new Set(), setBy: {}, steps: [], loops: 0 };
+  const walked = walk(steps, [], ROOT, path, field, state);
+  const found =
+    walked ?? (samePath(path, END_OF_WORKFLOW) ? { inputs: [], inputTypes: {}, vars: [...state.vars], setBy: { ...state.setBy }, steps: [...state.steps], inLoop: false, inTransform: false } : null);
   const declared = inputs.map((input) => (typeof input === "string" ? { name: input, type: "text" as const } : input)).filter((input) => input.name.trim() !== "");
   return {
     ...(found ?? { vars: [], setBy: {}, steps: [], inLoop: false, inTransform: false }),

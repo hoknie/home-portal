@@ -1,5 +1,5 @@
 import type { Dashboard, LayoutRequest, LayoutWidgetRequest } from "@/entities/dashboard";
-import type { Section } from "@/shared/api";
+import { DEFAULT_SECTION_APPEARANCE, GRID_COLUMNS, type Section, type WidgetHeight } from "@/shared/api";
 
 export type DraftWidget = LayoutWidgetRequest & { uid: string };
 
@@ -8,19 +8,17 @@ export type Draft = { sections: Section[]; widgets: DraftWidget[] };
 export const IMPLICIT_SECTION = "main";
 
 export function fromLayout(layout: Dashboard): Draft {
-  const sections = layout.sections.length > 0 ? layout.sections : [{ id: IMPLICIT_SECTION, title: null }];
+  const sections = layout.sections.length > 0 ? layout.sections : [{ id: IMPLICIT_SECTION, title: null, appearance: DEFAULT_SECTION_APPEARANCE }];
   const known = new Set(sections.map((section) => section.id));
   const widgets = layout.widgets.map((widget, index) => ({
     uid: widget.key || `#${index}`,
     key: widget.key || null,
-    type: widget.type,
-    id: widget.id,
-    title: widget.title,
-    settings: widget.settings,
-    environments: widget.environments,
-    public: widget.public,
+    widget: widget.id ?? "",
     section: widget.section && known.has(widget.section) ? widget.section : sections[0].id,
-    size: widget.size,
+    column: widget.column,
+    row: widget.row,
+    width: widget.width,
+    height: widget.height,
   }));
   return normalized({ sections, widgets });
 }
@@ -30,14 +28,12 @@ export function toRequest(draft: Draft): LayoutRequest {
     sections: draft.sections,
     widgets: normalized(draft).widgets.map((widget) => ({
       key: widget.key,
-      type: widget.type,
-      id: widget.id,
-      title: widget.title,
-      settings: widget.settings,
-      environments: widget.environments,
-      public: widget.public,
+      widget: widget.widget,
       section: widget.section,
-      size: widget.size,
+      column: widget.column,
+      row: widget.row,
+      width: widget.width,
+      height: widget.height,
     })),
   };
 }
@@ -50,45 +46,15 @@ export function widgetsOf(draft: Draft, section: string) {
   return draft.widgets.filter((widget) => widget.section === section);
 }
 
-export function moveWidget(draft: Draft, uid: string, section: string, index: number): Draft {
-  const moving = draft.widgets.find((widget) => widget.uid === uid);
-  if (!moving || !draft.sections.some((candidate) => candidate.id === section)) {
-    return draft;
-  }
-  const rest = draft.widgets.filter((widget) => widget.uid !== uid);
-  const target = rest.filter((widget) => widget.section === section);
-  const clamped = Math.max(0, Math.min(index, target.length));
-  target.splice(clamped, 0, { ...moving, section });
-  const widgets = draft.sections.flatMap((candidate) =>
-    candidate.id === section ? target : rest.filter((widget) => widget.section === candidate.id),
-  );
-  return { ...draft, widgets };
-}
-
 export function updateWidget(draft: Draft, uid: string, patch: Partial<LayoutWidgetRequest>): Draft {
-  if (patch.section && patch.section !== draft.widgets.find((widget) => widget.uid === uid)?.section) {
-    const moved = moveWidget(draft, uid, patch.section, Number.MAX_SAFE_INTEGER);
-    return updateWidget(moved, uid, { ...patch, section: undefined });
-  }
   const clean = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined));
-  return { ...draft, widgets: draft.widgets.map((widget) => (widget.uid === uid ? { ...widget, ...clean } : widget)) };
+  return normalized({ ...draft, widgets: draft.widgets.map((widget) => (widget.uid === uid ? { ...widget, ...clean } : widget)) });
 }
 
-export function addWidget(draft: Draft, type: string, section: string): Draft {
+export function placeWidget(draft: Draft, widget: string, section: string, size: { width: number; height: WidgetHeight } = { width: GRID_COLUMNS, height: "auto" }): [Draft, string] {
   const uid = freshUid(draft);
-  const widget: DraftWidget = {
-    uid,
-    key: null,
-    type,
-    id: null,
-    title: null,
-    settings: {},
-    environments: null,
-    public: false,
-    section,
-    size: "full",
-  };
-  return moveWidget({ ...draft, widgets: [...draft.widgets, widget] }, uid, section, Number.MAX_SAFE_INTEGER);
+  const placed: DraftWidget = { uid, key: null, widget, section, column: null, row: null, width: size.width, height: size.height };
+  return [normalized({ ...draft, widgets: [...draft.widgets, placed] }), uid];
 }
 
 export function removeWidget(draft: Draft, uid: string): Draft {
@@ -101,7 +67,7 @@ export function addSection(draft: Draft, title: string | null): Draft {
   while (taken.has(`section-${number}`)) {
     number += 1;
   }
-  return { ...draft, sections: [...draft.sections, { id: `section-${number}`, title }] };
+  return { ...draft, sections: [...draft.sections, { id: `section-${number}`, title, appearance: DEFAULT_SECTION_APPEARANCE }] };
 }
 
 export function renameSection(draft: Draft, id: string, title: string): Draft {
@@ -110,6 +76,10 @@ export function renameSection(draft: Draft, id: string, title: string): Draft {
     ...draft,
     sections: draft.sections.map((section) => (section.id === id ? { ...section, title: trimmed === "" ? null : trimmed } : section)),
   };
+}
+
+export function updateSection(draft: Draft, id: string, patch: Partial<Omit<Section, "id">>): Draft {
+  return { ...draft, sections: draft.sections.map((section) => (section.id === id ? { ...section, ...patch } : section)) };
 }
 
 export function moveSection(draft: Draft, id: string, delta: number): Draft {

@@ -30,7 +30,7 @@ function entry(path: string, step: string, kind: string, outcome: Entry["outcome
 }
 
 function run(result: Run["outcome"]["result"], entries: Entry[]): Run {
-  return { ...base, id: "7", workflow: "draft", trace: { entries, dropped: 0 }, outcome: { ...base.outcome, result } };
+  return { ...base, id: "7", workflow: "draft", trace: { entries, dropped: 0, outputs: null }, outcome: { ...base.outcome, result } };
 }
 
 const fresh = { last_run: null, active_run: null };

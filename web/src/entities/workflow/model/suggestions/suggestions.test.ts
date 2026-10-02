@@ -88,6 +88,7 @@ describe("workflow suggestions", () => {
         { path: "steps[1]", step: "list", label: "list", kind: "http", iteration: null, outcome: "succeeded" as const, started_at: "", duration_milliseconds: 1, detail: "200", output: '{"state":"up","uptime":42,"disk":{"free":"12G"}}', shape: null, stdout: null, stderr: null, command: null, budget_reached: false, values: [], log: [], values_dropped: 0, log_dropped: 0, item: null, level: null, wait_seconds: null },
       ],
       dropped: 0,
+      outputs: null,
     };
     const found = suggestionsAt(context("steps[4].text", { lastRun })).filter((suggestion) => suggestion.value.startsWith("steps.list.json."));
     expect(found.map((suggestion) => [suggestion.value, suggestion.example])).toEqual([

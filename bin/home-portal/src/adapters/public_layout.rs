@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use portal_feature::ApiError;
 use portal_model::Environment;
 use portal_public::{PublicLayout, PublicSection, PublicWidget};
-use portal_widget::{WidgetData, WidgetRegistry};
+use portal_widget::{WidgetAnswer, WidgetData, WidgetRegistry};
 
 pub const UNAVAILABLE: &str = "the data is unavailable";
 
@@ -22,6 +22,11 @@ impl PublicLayout for WidgetLayout {
             .into_iter()
             .filter(|instance| instance.public_in(environment))
             .map(|instance| PublicWidget {
+                column: instance.position().map(|(column, _)| column),
+                row: instance.position().map(|(_, row)| row),
+                width: instance.columns(),
+                appearance: instance.appearance.resolved(),
+                height: instance.height,
                 settings: self
                     .widgets
                     .public_settings(&instance.kind, &instance.settings),
@@ -29,7 +34,6 @@ impl PublicLayout for WidgetLayout {
                 id: instance.id,
                 title: instance.title,
                 section: instance.section,
-                size: instance.size,
             })
             .collect()
     }
@@ -47,6 +51,7 @@ impl PublicLayout for WidgetLayout {
                 })
             })
             .map(|section| PublicSection {
+                appearance: section.appearance.resolved(),
                 id: section.id,
                 title: section.title,
             })
@@ -57,7 +62,7 @@ impl PublicLayout for WidgetLayout {
         &self,
         id: &str,
         environment: &Environment,
-    ) -> Result<WidgetData, ApiError> {
+    ) -> Result<WidgetAnswer, ApiError> {
         let public =
             self.widgets.instances().into_iter().any(|instance| {
                 instance.id.as_deref() == Some(id) && instance.public_in(environment)
@@ -65,11 +70,11 @@ impl PublicLayout for WidgetLayout {
         if !public {
             return Err(ApiError::NotFound(WidgetRegistry::UNKNOWN_WIDGET));
         }
-        match self.widgets.data(id, environment).await {
-            Ok(data) => Ok(WidgetData {
+        match self.widgets.public_data(id, environment).await {
+            Ok(answer) => Ok(answer.map(|data| WidgetData {
                 problem: data.problem.map(|_| UNAVAILABLE.to_string()),
                 ..data
-            }),
+            })),
             Err(ApiError::BadGateway(_)) => Err(ApiError::BadGateway(UNAVAILABLE.to_string())),
             Err(other) => Err(other),
         }

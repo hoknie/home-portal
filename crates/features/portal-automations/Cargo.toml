@@ -12,6 +12,7 @@ libc.workspace = true
 portal-config.workspace = true
 portal-feature.workspace = true
 portal-model.workspace = true
+portal-widget.workspace = true
 rand.workspace = true
 reqwest.workspace = true
 sha2.workspace = true

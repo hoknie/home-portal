@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use portal_feature::FieldError;
 
 use super::names::{NAME_RULE, valid_name};
-use crate::types::{InputDeclaration, InputType, RawInput};
+use crate::types::{InputDeclaration, InputType, OutputDeclaration, RawInput, RawOutput};
 
 pub const TYPE_RULE: &str = "must be one of text, number, boolean, list and object";
 
@@ -54,4 +54,54 @@ pub fn decode_inputs(raw: &[RawInput], errors: &mut Vec<FieldError>) -> Vec<Inpu
         });
     }
     inputs
+}
+
+pub fn decode_outputs(raw: &[RawOutput], errors: &mut Vec<FieldError>) -> Vec<OutputDeclaration> {
+    if raw.len() > OutputDeclaration::MOST {
+        errors.push(FieldError::new(
+            OutputDeclaration::FIELD,
+            format!("holds at most {} outputs", OutputDeclaration::MOST),
+        ));
+    }
+    let mut names = HashSet::new();
+    let mut outputs = Vec::new();
+    for (index, output) in raw.iter().enumerate() {
+        let path = format!("{}[{index}]", OutputDeclaration::FIELD);
+        if !valid_name(&output.name) {
+            errors.push(FieldError::new(format!("{path}.name"), NAME_RULE));
+        } else if !names.insert(output.name.as_str()) {
+            errors.push(FieldError::new(
+                format!("{path}.name"),
+                "is used by another output of this workflow",
+            ));
+        }
+        if output.value.trim().is_empty() {
+            errors.push(FieldError::new(
+                format!("{path}.value"),
+                "must not be empty",
+            ));
+        }
+        let description = output
+            .description
+            .clone()
+            .filter(|text| !text.trim().is_empty());
+        if description
+            .as_ref()
+            .is_some_and(|text| text.chars().count() > OutputDeclaration::LONGEST_DESCRIPTION)
+        {
+            errors.push(FieldError::new(
+                format!("{path}.description"),
+                format!(
+                    "must be at most {} characters",
+                    OutputDeclaration::LONGEST_DESCRIPTION
+                ),
+            ));
+        }
+        outputs.push(OutputDeclaration {
+            name: output.name.clone(),
+            value: output.value.clone(),
+            description,
+        });
+    }
+    outputs
 }

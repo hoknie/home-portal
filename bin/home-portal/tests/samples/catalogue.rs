@@ -99,26 +99,46 @@ fn the_network_sample_matches_its_serializer() {
 
 #[test]
 fn the_dashboard_sample_matches_its_serializer() {
-    let placed = |kind: &str, section: &str, size: WidgetSize| WidgetInstance {
+    let placed = |kind: &str, section: &str, width: i64| WidgetInstance {
         section: Some(section.into()),
-        size,
+        width: Some(width),
         ..WidgetInstance::of(kind)
     };
     let widgets = vec![
-        placed("status-summary", "now", WidgetSize::TwoThirds),
+        WidgetInstance {
+            appearance: WidgetAppearance {
+                surface: Some(Surface::Plain),
+                title: Some(TitleVisibility::Hidden),
+                ..WidgetAppearance::default()
+            },
+            id: Some("status-summary".into()),
+            ..placed("status-summary", "now", 8)
+        },
         WidgetInstance {
             id: Some("riga".into()),
             settings: json!({ "city": "Riga" }),
             public: true,
-            ..placed("weather", "now", WidgetSize::Third)
+            height: WidgetHeight::Rows(3),
+            appearance: WidgetAppearance {
+                surface: Some(Surface::Tinted),
+                accent: Some(Accent::Blue),
+                ..WidgetAppearance::default()
+            },
+            column: Some(9),
+            row: Some(1),
+            ..placed("weather", "now", 4)
         },
         WidgetInstance {
             title: Some("Media".into()),
             settings: json!({ "groups": ["Media"] }),
+            id: Some("services".into()),
             environments: Some(vec!["local".into()]),
-            ..placed("services", "media", WidgetSize::Half)
+            ..placed("services", "media", 6)
         },
-        placed("services", "media", WidgetSize::Half),
+        WidgetInstance {
+            id: Some("services-2".into()),
+            ..placed("services", "media", 5)
+        },
     ];
     typed(
         "dashboard",
@@ -127,17 +147,53 @@ fn the_dashboard_sample_matches_its_serializer() {
                 SectionView {
                     id: "now".into(),
                     title: Some("Now".into()),
+                    appearance: ResolvedSectionAppearance::default(),
                 },
                 SectionView {
                     id: "media".into(),
                     title: Some("Media".into()),
+                    appearance: ResolvedSectionAppearance {
+                        title: TitleVisibility::Hidden,
+                        surface: SectionSurface::SectionCard,
+                    },
                 },
             ],
             widgets: widgets
                 .into_iter()
                 .enumerate()
-                .map(|(index, widget)| WidgetView::of(WidgetView::key_of(index, &widget), widget))
+                .map(|(index, widget)| WidgetView::of(WidgetView::key_of(index), widget))
                 .collect(),
+        },
+    );
+}
+
+#[test]
+fn the_widget_library_sample_matches_its_serializer() {
+    let weather = WidgetInstance {
+        id: Some("riga".into()),
+        title: Some("Riga".into()),
+        settings: json!({ "latitude": 56.95, "longitude": 24.11 }),
+        public: true,
+        appearance: WidgetAppearance {
+            surface: Some(Surface::Tinted),
+            accent: Some(Accent::Blue),
+            ..WidgetAppearance::default()
+        },
+        ..WidgetInstance::of("weather")
+    };
+    let custom = WidgetInstance {
+        id: Some("disks".into()),
+        settings: json!({ "source": { "workflow": "disks" }, "blocks": [{ "kind": "stat", "label": "Free", "value": "{{data.free}}" }] }),
+        environments: Some(vec!["local".into()]),
+        ..WidgetInstance::of("custom")
+    };
+    typed(
+        "dashboard-library",
+        &LibraryResponse {
+            widgets: vec![
+                LibraryWidgetView::of(weather, 1),
+                LibraryWidgetView::of(custom, 0),
+            ],
         },
     );
 }

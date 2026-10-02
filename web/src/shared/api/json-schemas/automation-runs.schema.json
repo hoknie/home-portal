@@ -313,6 +313,13 @@
             "$ref": "#/$defs/TraceEntryResponse"
           },
           "type": "array"
+        },
+        "outputs": {
+          "additionalProperties": true,
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "required": [

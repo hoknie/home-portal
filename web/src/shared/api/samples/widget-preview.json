@@ -1,0 +1,50 @@
+{
+  "blocks": [
+    {
+      "align": null,
+      "caption": "of 500 GB",
+      "icon": "hard-drive",
+      "kind": "stat",
+      "label": "Free",
+      "tone": "ok",
+      "unit": "GB",
+      "valign": null,
+      "value": "120"
+    },
+    {
+      "align": null,
+      "caption": null,
+      "kind": "progress",
+      "label": "Used",
+      "maximum": 100.0,
+      "tone": "danger",
+      "valign": null,
+      "value": 93.0
+    }
+  ],
+  "data": {
+    "free": 120,
+    "total": 500,
+    "used_percent": 93
+  },
+  "errors": [
+    {
+      "field": "blocks[2].text",
+      "message": "names {{steps.probe.state}}, which a widget does not know"
+    }
+  ],
+  "paths": [
+    {
+      "description": "GB free",
+      "kind": "number",
+      "path": "data.free"
+    },
+    {
+      "description": null,
+      "kind": "list",
+      "path": "data.disks"
+    }
+  ],
+  "problem": null,
+  "ran": true
+}

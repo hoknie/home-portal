@@ -9,6 +9,8 @@ pub struct RunsQuery {
     #[serde(default)]
     pub workflow: Option<String>,
     #[serde(default)]
+    pub widget: Option<String>,
+    #[serde(default)]
     pub text: Option<String>,
     #[serde(default)]
     pub limit: Option<String>,

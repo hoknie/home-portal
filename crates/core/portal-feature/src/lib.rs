@@ -6,6 +6,6 @@ pub use ports::{
 };
 pub use types::{
     Action, ApiError, Area, ChannelReadiness, Check, ClientAddress, EventName, FieldError, Loop,
-    Module, ModuleSwitches, Notification, PortalEvent, Principal, Requirement, Right, Rights, Rule,
-    StatusChange, Validator, Visitor, WidgetProblem,
+    Module, ModuleSwitches, NeedScope, Notification, PortalEvent, Principal, Requirement, Right,
+    Rights, Rule, StatusChange, Validator, Visitor, WidgetLimits, WidgetNeed, WidgetProblem,
 };

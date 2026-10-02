@@ -8,7 +8,7 @@ export type TemplateName = (typeof TEMPLATE_NAMES)[number];
 export type WorkflowTemplate = { name: TemplateName; draft: WorkflowRequest };
 
 function draft(id: string, title: string, inputs: string[], steps: Step[]): WorkflowRequest {
-  return { id, title, enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: inputs.map(plainInput), steps };
+  return { id, title, enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: inputs.map(plainInput), outputs: [], steps };
 }
 
 export const TEMPLATES: WorkflowTemplate[] = [

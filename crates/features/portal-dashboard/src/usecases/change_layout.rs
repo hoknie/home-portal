@@ -3,10 +3,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use portal_config::{ConfigStore, Revision, Revisioned, Section};
-use portal_feature::{ApiError, Rights};
+use portal_feature::ApiError;
 
 use crate::repositories::write_layout;
-use crate::services::{check_edited, layout, layout_view, renamed_for_the_editor, secrets_allowed};
+use crate::services::{check_edited, layout_view, library_ids, renamed_for_the_editor};
 use crate::types::{EditedLayout, LayoutView};
 
 #[derive(Clone)]
@@ -15,10 +15,6 @@ pub struct ChangeLayout {
 }
 
 impl ChangeLayout {
-    pub const WIDGETS: &'static str = "dashboard.widgets";
-    pub const SECTIONS: &'static str = "dashboard.sections";
-    pub const DASHBOARD: &'static str = "dashboard";
-
     pub fn new(configuration: Arc<ConfigStore>) -> ChangeLayout {
         ChangeLayout { configuration }
     }
@@ -26,17 +22,14 @@ impl ChangeLayout {
     pub async fn run(
         &self,
         edited: &EditedLayout,
-        (revision, rights): (&Revision, &Rights),
+        revision: &Revision,
     ) -> Result<Revisioned<LayoutView>, ApiError> {
-        let errors = check_edited(edited);
+        let library = library_ids(&self.configuration.read().document);
+        let errors = check_edited(edited, &library);
         if !errors.is_empty() {
             return Err(ApiError::Invalid(errors));
         }
-        let stored = layout(&self.configuration.read().document)
-            .map(|layout| layout.widgets)
-            .unwrap_or_default();
-        secrets_allowed(edited, &stored, rights)?;
-        let target = self.target_file()?;
+        let target = dashboard_file(&self.configuration)?;
         let written = self
             .configuration
             .update(&target, revision, |document| {
@@ -56,31 +49,36 @@ impl ChangeLayout {
         let view = layout_view(&snapshot.document, None)?;
         Ok(Revisioned::new(view, snapshot.revision))
     }
+}
 
-    fn target_file(&self) -> Result<PathBuf, ApiError> {
-        let snapshot = self.configuration.read();
-        let origins = &snapshot.origins;
-        let files: BTreeSet<PathBuf> = [Self::WIDGETS, Self::SECTIONS]
-            .into_iter()
-            .flat_map(|section| {
-                (0..origins.count(section)).filter_map(move |index| origins.of(section, index))
-            })
-            .map(PathBuf::from)
+pub const WIDGETS: &str = "dashboard.widgets";
+pub const SECTIONS: &str = "dashboard.sections";
+pub const LIBRARY: &str = "dashboard.library";
+pub const DASHBOARD: &str = "dashboard";
+
+pub fn dashboard_file(configuration: &ConfigStore) -> Result<PathBuf, ApiError> {
+    let snapshot = configuration.read();
+    let origins = &snapshot.origins;
+    let files: BTreeSet<PathBuf> = [WIDGETS, SECTIONS, LIBRARY]
+        .into_iter()
+        .flat_map(|section| {
+            (0..origins.count(section)).filter_map(move |index| origins.of(section, index))
+        })
+        .map(PathBuf::from)
+        .collect();
+    if files.len() > 1 {
+        let names: Vec<String> = files
+            .iter()
+            .map(|path| path.display().to_string())
             .collect();
-        if files.len() > 1 {
-            let names: Vec<String> = files
-                .iter()
-                .map(|path| path.display().to_string())
-                .collect();
-            return Err(ApiError::Conflict(format!(
-                "the layout is spread over {}; move every [[dashboard.widgets]] and [[dashboard.sections]] entry into one file to edit it here",
-                names.join(" and ")
-            )));
-        }
-        Ok(files
-            .into_iter()
-            .next()
-            .or_else(|| origins.table(Self::DASHBOARD).map(PathBuf::from))
-            .unwrap_or_else(|| self.configuration.home_of(Section::Dashboard)))
+        return Err(ApiError::Conflict(format!(
+            "the layout is spread over {}; move every [[dashboard.widgets]], [[dashboard.sections]] and [[dashboard.library]] entry into one file to edit it here",
+            names.join(" and ")
+        )));
     }
+    Ok(files
+        .into_iter()
+        .next()
+        .or_else(|| origins.table(DASHBOARD).map(PathBuf::from))
+        .unwrap_or_else(|| configuration.home_of(Section::Dashboard)))
 }

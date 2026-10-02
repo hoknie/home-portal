@@ -36,7 +36,7 @@ describe("every kind from the palette", () => {
       expect(group.filter((field) => (step as Record<string, unknown>)[field] !== undefined)).toEqual([chosenOf(step, group)]);
     }
     const placed = (LOOP_EXITS as readonly string[]).includes(name) ? { id: "wrap", kind: "loop", repeat: 1, body: [step] } : step;
-    const draft = { id: "all", title: "All", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [placed] };
+    const draft = { id: "all", title: "All", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], outputs: [], steps: [placed] };
     const problems = Object.keys(problemsOf(draft, catalogue, [])).filter((at) => at.startsWith("steps[0]"));
     expect(problems).toEqual([]);
   });

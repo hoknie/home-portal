@@ -1,4 +1,7 @@
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use super::StoredTraceEntry;
 use crate::types::Trace;
@@ -8,6 +11,8 @@ pub struct StoredTrace {
     pub entries: Vec<StoredTraceEntry>,
     #[serde(default)]
     pub dropped: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub outputs: Option<BTreeMap<String, Value>>,
 }
 
 impl StoredTrace {
@@ -15,6 +20,7 @@ impl StoredTrace {
         StoredTrace {
             entries: trace.entries.iter().map(StoredTraceEntry::of).collect(),
             dropped: trace.dropped,
+            outputs: trace.outputs.clone(),
         }
     }
 
@@ -28,6 +34,7 @@ impl StoredTrace {
             dropped: self.dropped,
             log_bytes: 0,
             output_bytes: 0,
+            outputs: self.outputs,
         }
     }
 }

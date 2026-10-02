@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::Value;
 
-use super::{InputResponse, WorkflowUsageResponse};
+use super::{InputResponse, WorkflowOutputResponse, WorkflowUsageResponse};
 use crate::responses::RunResponse;
 use crate::types::WorkflowView;
 
@@ -15,6 +15,7 @@ pub struct WorkflowResponse {
     pub tags: Vec<String>,
     pub timeout_seconds: u64,
     pub inputs: Vec<InputResponse>,
+    pub outputs: Vec<WorkflowOutputResponse>,
     pub steps: Value,
     pub steps_version: String,
     pub used_by: Vec<WorkflowUsageResponse>,
@@ -33,6 +34,11 @@ impl WorkflowResponse {
             tags: workflow.tags.clone(),
             timeout_seconds: workflow.timeout_seconds,
             inputs: workflow.inputs.iter().map(InputResponse::of).collect(),
+            outputs: workflow
+                .outputs
+                .iter()
+                .map(WorkflowOutputResponse::of)
+                .collect(),
             steps: serde_json::to_value(&view.raw.steps).unwrap_or(Value::Array(Vec::new())),
             steps_version: workflow.version.clone(),
             used_by: view.used_by.iter().map(WorkflowUsageResponse::of).collect(),

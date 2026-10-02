@@ -1,3 +1,4 @@
+use portal_widget::ResolvedSectionAppearance;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -5,4 +6,5 @@ use serde::{Deserialize, Serialize};
 pub struct PublicSection {
     pub id: String,
     pub title: Option<String>,
+    pub appearance: ResolvedSectionAppearance,
 }

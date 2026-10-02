@@ -1,0 +1,26 @@
+# Gathers what the "At a glance" widget on the home page shows: the state of the NAS and
+# of the router. The outputs are what a widget over this workflow gets as its data, and the
+# widget editor suggests them, with their descriptions, before anything has run.
+id = "home-glance"
+title = "Home at a glance"
+tags = ["home"]
+outputs = [
+  { name = "devices", value = "{{vars.devices}}", description = "Each device with its name and state" },
+  { name = "nas", value = "{{steps.nas_state.state}}", description = "The NAS's state: up, down or degraded" },
+]
+
+[[steps]]
+id = "nas_state"
+kind = "status"
+service = "nas"
+
+[[steps]]
+id = "router_state"
+kind = "status"
+service = "router"
+
+[[steps]]
+id = "keep"
+kind = "set"
+variable = "devices"
+json = '[{"name": "NAS", "state": "{{steps.nas_state.state}}"}, {"name": "Router", "state": "{{steps.router_state.state}}"}]'

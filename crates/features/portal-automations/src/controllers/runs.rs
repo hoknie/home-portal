@@ -68,6 +68,7 @@ pub async fn runs(
         automation: query.automation,
         webhook: query.webhook,
         workflow: query.workflow,
+        widget: query.widget,
         text: query.text,
     };
     let finished = state.sink.journal.matching(&filter);

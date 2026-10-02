@@ -360,7 +360,10 @@
             "values_dropped": 0,
             "wait_seconds": 20
           }
-        ]
+        ],
+        "outputs": {
+          "state": "up"
+        }
       },
       "workflow": "revive"
     }

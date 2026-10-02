@@ -39,7 +39,7 @@ fn latitude_check(document: &DocumentMut) -> Vec<FieldError> {
         .map(|widget| {
             FieldError::new(
                 format!(
-                    "dashboard.widgets.{}.settings.latitude",
+                    "dashboard.library.{}.settings.latitude",
                     widget.id.unwrap_or_default()
                 ),
                 "must be between -90 and 90",
@@ -114,16 +114,15 @@ async fn a_saved_layout_is_written_and_the_rest_of_the_file_is_byte_identical() 
     let (status, etag, saved) = send(&portal, put(Some(&revision), &reversed(&body))).await;
     assert_eq!(status, StatusCode::OK, "{saved}");
     assert_ne!(etag.unwrap(), revision);
-    assert_eq!(saved["widgets"][0]["key"], "riga");
-    assert_eq!(saved["widgets"][1]["key"], "status-summary");
+    assert_eq!(saved["widgets"][0]["id"], "riga");
+    assert_eq!(saved["widgets"][1]["id"], "status-summary");
     assert_eq!(fs::read_to_string(&portal.main).unwrap(), MAIN);
     let text = fs::read_to_string(&portal.path).unwrap();
     assert!(
-        text.ends_with(
-            "# counts\n[[dashboard.widgets]]\ntype = \"status-summary\"\nid = \"status-summary\"\n"
-        ),
+        text.contains("# counts\n[[dashboard.widgets]]\nwidget = \"status-summary\"\n"),
         "{text}"
     );
+    assert!(text.contains("[[dashboard.library]]\nid = \"riga\"\ntype = \"weather\"\nsettings = { latitude = 56.95 }\n"), "{text}");
 }
 
 #[tokio::test]
@@ -149,7 +148,7 @@ async fn invalid_widgets_are_named_by_their_place_in_the_editor() {
     let portal = portal_with(&[("home-portal.toml", MAIN), ("dashboard.toml", FILE)]);
     let (revision, body) = loaded(&portal).await;
     let mut bad = body.clone();
-    bad["widgets"][0]["size"] = json!("wide");
+    bad["widgets"][0]["width"] = json!(13);
     bad["widgets"][0]["section"] = json!("nowhere");
     let (status, _, errors) = send(&portal, put(Some(&revision), &bad)).await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
@@ -159,12 +158,12 @@ async fn invalid_widgets_are_named_by_their_place_in_the_editor() {
         .iter()
         .map(|error| error["field"].as_str().unwrap())
         .collect();
-    assert_eq!(fields, vec!["widgets[0].size", "widgets[0].section"]);
-    let mut far = body.clone();
-    far["widgets"][1]["settings"] = json!({ "latitude": 120.0 });
-    let (status, _, errors) = send(&portal, put(Some(&revision), &far)).await;
+    assert_eq!(fields, vec!["widgets[0].width", "widgets[0].section"]);
+    let mut unknown = body.clone();
+    unknown["widgets"][0]["widget"] = json!("nope");
+    let (status, _, errors) = send(&portal, put(Some(&revision), &unknown)).await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
-    assert_eq!(errors["errors"][0]["field"], "widgets[1].settings.latitude");
+    assert_eq!(errors["errors"][0]["field"], "widgets[0].widget");
     assert_eq!(fs::read_to_string(&portal.path).unwrap(), FILE);
 }
 
@@ -185,5 +184,85 @@ async fn a_layout_spread_over_two_files_is_refused_naming_both_and_nothing_chang
         "{message}"
     );
     assert_eq!(fs::read_to_string(&portal.main).unwrap(), main);
+    assert_eq!(fs::read_to_string(&portal.path).unwrap(), FILE);
+}
+
+fn library(method: &str, path: &str, revision: Option<&str>, body: Option<Value>) -> Request<Body> {
+    let mut request = Request::builder()
+        .method(method)
+        .uri(path)
+        .header(CONTENT_TYPE, "application/json");
+    if let Some(revision) = revision {
+        request = request.header(IF_MATCH, revision);
+    }
+    request
+        .body(body.map_or_else(Body::empty, |body| Body::from(body.to_string())))
+        .unwrap()
+}
+
+#[tokio::test]
+async fn the_library_lists_older_widgets_with_their_places_and_adds_one_with_a_derived_id() {
+    let portal = portal_with(&[("home-portal.toml", MAIN), ("dashboard.toml", FILE)]);
+    let (status, etag, listed) = send(
+        &portal,
+        library("GET", DashboardFeature::LIBRARY, None, None),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let ids: Vec<(&str, u64)> = listed["widgets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|widget| {
+            (
+                widget["id"].as_str().unwrap(),
+                widget["placed"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(ids, vec![("status-summary", 1), ("riga", 1)]);
+    let (status, _, added) = send(
+        &portal,
+        library(
+            "POST",
+            DashboardFeature::LIBRARY,
+            etag.as_deref(),
+            Some(json!({ "type": "weather", "settings": { "latitude": 40.0 } })),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED, "{added}");
+    assert_eq!(added["id"], "weather");
+    assert_eq!(added["placed"], 0);
+    let text = fs::read_to_string(&portal.path).unwrap();
+    assert!(text.contains("[[dashboard.library]]\nid = \"weather\"\ntype = \"weather\"\nsettings = { latitude = 40.0 }\n"), "{text}");
+    assert!(text.contains("widget = \"riga\""), "{text}");
+}
+
+#[tokio::test]
+async fn a_library_widget_with_a_bad_setting_is_named_by_its_field_and_a_placed_one_is_not_deleted()
+{
+    let portal = portal_with(&[("home-portal.toml", MAIN), ("dashboard.toml", FILE)]);
+    let (_, etag, _) = send(
+        &portal,
+        library("GET", DashboardFeature::LIBRARY, None, None),
+    )
+    .await;
+    let path = "/api/dashboard/library/riga";
+    let (status, _, errors) = send(
+        &portal,
+        library(
+            "PUT",
+            path,
+            etag.as_deref(),
+            Some(json!({ "type": "weather", "settings": { "latitude": 120.0 } })),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    assert_eq!(errors["errors"][0]["field"], "settings.latitude");
+    let (status, _, message) = send(&portal, library("DELETE", path, etag.as_deref(), None)).await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert!(message.as_str().unwrap().contains("1 time"), "{message}");
     assert_eq!(fs::read_to_string(&portal.path).unwrap(), FILE);
 }

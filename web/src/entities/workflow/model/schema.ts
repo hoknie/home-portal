@@ -213,6 +213,8 @@ export type WorkflowCatalogue = z.infer<typeof workflowCatalogueSchema>;
 
 export const workflowRunSchema = generated.workflowRun.queuedResponseSchema;
 
+export type WorkflowOutput = { name: string; value: string; description: string | null };
+
 export type WorkflowRequest = {
   id: string;
   title: string;
@@ -221,6 +223,7 @@ export type WorkflowRequest = {
   tags: string[];
   timeout_seconds: number;
   inputs: InputDeclaration[];
+  outputs: WorkflowOutput[];
   steps: Step[];
 };
 
@@ -233,6 +236,7 @@ export function requestOf(workflow: Workflow): WorkflowRequest {
     tags: workflow.tags,
     timeout_seconds: workflow.timeout_seconds,
     inputs: workflow.inputs,
+    outputs: workflow.outputs,
     steps: workflow.steps,
   };
 }

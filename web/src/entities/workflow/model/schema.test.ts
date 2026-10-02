@@ -39,7 +39,8 @@ describe("workflow schema", () => {
   it("a request keeps the entry and drops the users and runs", () => {
     const revive = workflowsSchema.parse(apiSamples.workflows).workflows[0];
     const body = requestOf(revive);
-    expect(Object.keys(body).sort()).toEqual(["description", "enabled", "id", "inputs", "steps", "tags", "timeout_seconds", "title"]);
+    expect(Object.keys(body).sort()).toEqual(["description", "enabled", "id", "inputs", "outputs", "steps", "tags", "timeout_seconds", "title"]);
+    expect(body.outputs).toEqual(revive.outputs);
     expect(body.steps).toBe(revive.steps);
   });
 });

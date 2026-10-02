@@ -125,7 +125,7 @@ it("saving a new workflow leads to its page, and saving it again updates it with
   const fetch = vi.fn(async (_path: string, init?: RequestInit) => jsonResponse(created, { status: init?.method === "POST" ? 201 : 200, headers: { ETag: '"r2"' } }));
   vi.stubGlobal("fetch", fetch);
   const { client, onSaved } = openEditor(null, {
-    initial: { id: "ping-nas", title: "Ping NAS", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [{ id: "pause", kind: "wait", seconds: 1 }] },
+    initial: { id: "ping-nas", title: "Ping NAS", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], outputs: [], steps: [{ id: "pause", kind: "wait", seconds: 1 }] },
   });
   await userEvent.click(screen.getByRole("button", { name: /^Save$/ }));
   await waitFor(() => expect(onSaved).toHaveBeenCalledWith("ping-nas"));
@@ -241,8 +241,28 @@ it("saving fills an empty branch with a step that does nothing, shows it and lea
 it("an empty workflow is still refused and gets no step that does nothing", async () => {
   const fetch = vi.fn();
   vi.stubGlobal("fetch", fetch);
-  openEditor(null, { initial: { id: "empty", title: "Empty", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps: [] } });
+  openEditor(null, { initial: { id: "empty", title: "Empty", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], outputs: [], steps: [] } });
   await userEvent.click(screen.getByRole("button", { name: /^Save/ }));
   expect(await screen.findByText("Add at least one step")).toBeInTheDocument();
   expect(fetch).not.toHaveBeenCalled();
+});
+
+it("an output takes a name, a value suggested from the steps' answers and a description, and saving writes it", async () => {
+  const fetch = vi.fn(async () => jsonResponse(sampleWorkflows[1]));
+  vi.stubGlobal("fetch", fetch);
+  const sample = JSON.stringify({ current: { temperature_2m: 20 } });
+  const { onSaved } = openEditor(withSteps([{ id: "open_meteo", kind: "http", url: "https://api.open-meteo.com", response_sample: sample }]));
+  pressOnCanvas(await node("Start"));
+  await userEvent.click(within(inspector()).getByRole("button", { name: "Add output" }));
+  await userEvent.type(within(inspector()).getByRole("textbox", { name: "Output 1" }), "temperature");
+  const value = within(inspector()).getByRole("combobox", { name: "Value of output 1" });
+  await userEvent.click(value);
+  await userEvent.keyboard("{{{{steps.open_meteo.json.cur");
+  expect((await screen.findAllByRole("option", { name: /steps\.open_meteo\.json\.current/ })).length).toBeGreaterThan(0);
+  await userEvent.keyboard("{Escape}");
+  fireEvent.change(value, { target: { value: "{{steps.open_meteo.json.current.temperature_2m}}" } });
+  await userEvent.type(within(inspector()).getByLabelText("Description of output 1"), "°C now");
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  expect(sentBody(fetch).outputs).toEqual([{ name: "temperature", value: "{{steps.open_meteo.json.current.temperature_2m}}", description: "°C now" }]);
 });

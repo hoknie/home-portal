@@ -1,0 +1,2420 @@
+{
+  "$defs": {
+    "ActionKind": {
+      "enum": [
+        "automation",
+        "workflow",
+        "refresh",
+        "link"
+      ],
+      "type": "string",
+      "x-open": "refresh"
+    },
+    "Align": {
+      "enum": [
+        "start",
+        "center",
+        "end"
+      ],
+      "type": "string",
+      "x-open": "start"
+    },
+    "ButtonStyle": {
+      "enum": [
+        "primary",
+        "secondary",
+        "ghost"
+      ],
+      "type": "string",
+      "x-open": "secondary"
+    },
+    "Gap": {
+      "enum": [
+        "small",
+        "normal"
+      ],
+      "type": "string",
+      "x-open": "normal"
+    },
+    "RenderedBlock": {
+      "oneOf": [
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "icon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "stat",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "label",
+            "value",
+            "unit",
+            "caption",
+            "icon",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "text",
+              "type": "string"
+            },
+            "muted": {
+              "type": "boolean"
+            },
+            "size": {
+              "$ref": "#/$defs/TextSize"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weight": {
+              "$ref": "#/$defs/Weight"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text",
+            "size",
+            "weight",
+            "muted",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "markdown",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/$defs/RenderedItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "list",
+              "type": "string"
+            },
+            "more": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "items",
+            "empty",
+            "more"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "headers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "table",
+              "type": "string"
+            },
+            "more": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "rows": {
+              "items": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "headers",
+            "rows",
+            "empty",
+            "more"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "key-values",
+              "type": "string"
+            },
+            "pairs": {
+              "items": {
+                "$ref": "#/$defs/RenderedPair"
+              },
+              "type": "array"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "pairs"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "progress",
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "maximum": {
+              "format": "double",
+              "type": "number"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "label",
+            "value",
+            "maximum",
+            "caption",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "badge",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "action": {
+              "type": "string"
+            },
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "confirm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "does": {
+              "$ref": "#/$defs/ActionKind"
+            },
+            "icon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "button",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "link": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": {
+              "$ref": "#/$defs/ButtonStyle"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "action",
+            "does",
+            "label",
+            "icon",
+            "style",
+            "confirm",
+            "link"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "divider",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "$ref": "#/$defs/RowAlign"
+            },
+            "blocks": {
+              "items": {
+                "$ref": "#/$defs/RenderedNested"
+              },
+              "type": "array"
+            },
+            "gap": {
+              "$ref": "#/$defs/Gap"
+            },
+            "kind": {
+              "const": "row",
+              "type": "string"
+            },
+            "widths": {
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "blocks",
+            "gap",
+            "align",
+            "widths"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "blocks": {
+              "items": {
+                "$ref": "#/$defs/RenderedNested"
+              },
+              "type": "array"
+            },
+            "gap": {
+              "$ref": "#/$defs/Gap"
+            },
+            "kind": {
+              "const": "column",
+              "type": "string"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "blocks",
+            "gap",
+            "align",
+            "valign"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "RenderedGroup": {
+      "oneOf": [
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "icon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "stat",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "label",
+            "value",
+            "unit",
+            "caption",
+            "icon",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "text",
+              "type": "string"
+            },
+            "muted": {
+              "type": "boolean"
+            },
+            "size": {
+              "$ref": "#/$defs/TextSize"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weight": {
+              "$ref": "#/$defs/Weight"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text",
+            "size",
+            "weight",
+            "muted",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "markdown",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/$defs/RenderedItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "list",
+              "type": "string"
+            },
+            "more": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "items",
+            "empty",
+            "more"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "headers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "table",
+              "type": "string"
+            },
+            "more": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "rows": {
+              "items": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "headers",
+            "rows",
+            "empty",
+            "more"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "key-values",
+              "type": "string"
+            },
+            "pairs": {
+              "items": {
+                "$ref": "#/$defs/RenderedPair"
+              },
+              "type": "array"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "pairs"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "progress",
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "maximum": {
+              "format": "double",
+              "type": "number"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "label",
+            "value",
+            "maximum",
+            "caption",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "badge",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "action": {
+              "type": "string"
+            },
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "confirm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "does": {
+              "$ref": "#/$defs/ActionKind"
+            },
+            "icon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "button",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "link": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": {
+              "$ref": "#/$defs/ButtonStyle"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "action",
+            "does",
+            "label",
+            "icon",
+            "style",
+            "confirm",
+            "link"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "divider",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "$ref": "#/$defs/RowAlign"
+            },
+            "blocks": {
+              "items": {
+                "$ref": "#/$defs/RenderedLeaf"
+              },
+              "type": "array"
+            },
+            "gap": {
+              "$ref": "#/$defs/Gap"
+            },
+            "kind": {
+              "const": "row",
+              "type": "string"
+            },
+            "widths": {
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "blocks",
+            "gap",
+            "align",
+            "widths"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "blocks": {
+              "items": {
+                "$ref": "#/$defs/RenderedLeaf"
+              },
+              "type": "array"
+            },
+            "gap": {
+              "$ref": "#/$defs/Gap"
+            },
+            "kind": {
+              "const": "column",
+              "type": "string"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "blocks",
+            "gap",
+            "align",
+            "valign"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "RenderedItem": {
+      "properties": {
+        "secondary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "tone": {
+          "$ref": "#/$defs/Tone"
+        }
+      },
+      "required": [
+        "text",
+        "secondary",
+        "tone"
+      ],
+      "type": "object"
+    },
+    "RenderedLeaf": {
+      "oneOf": [
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "icon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "stat",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "label",
+            "value",
+            "unit",
+            "caption",
+            "icon",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "text",
+              "type": "string"
+            },
+            "muted": {
+              "type": "boolean"
+            },
+            "size": {
+              "$ref": "#/$defs/TextSize"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weight": {
+              "$ref": "#/$defs/Weight"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text",
+            "size",
+            "weight",
+            "muted",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "markdown",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/$defs/RenderedItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "list",
+              "type": "string"
+            },
+            "more": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "items",
+            "empty",
+            "more"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "headers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "table",
+              "type": "string"
+            },
+            "more": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "rows": {
+              "items": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "headers",
+            "rows",
+            "empty",
+            "more"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "key-values",
+              "type": "string"
+            },
+            "pairs": {
+              "items": {
+                "$ref": "#/$defs/RenderedPair"
+              },
+              "type": "array"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "pairs"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "progress",
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "maximum": {
+              "format": "double",
+              "type": "number"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "label",
+            "value",
+            "maximum",
+            "caption",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "badge",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "action": {
+              "type": "string"
+            },
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "confirm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "does": {
+              "$ref": "#/$defs/ActionKind"
+            },
+            "icon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "button",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "link": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": {
+              "$ref": "#/$defs/ButtonStyle"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "action",
+            "does",
+            "label",
+            "icon",
+            "style",
+            "confirm",
+            "link"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "divider",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "RenderedNested": {
+      "oneOf": [
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "icon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "stat",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "label",
+            "value",
+            "unit",
+            "caption",
+            "icon",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "text",
+              "type": "string"
+            },
+            "muted": {
+              "type": "boolean"
+            },
+            "size": {
+              "$ref": "#/$defs/TextSize"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weight": {
+              "$ref": "#/$defs/Weight"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text",
+            "size",
+            "weight",
+            "muted",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "markdown",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/$defs/RenderedItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "list",
+              "type": "string"
+            },
+            "more": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "items",
+            "empty",
+            "more"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "empty": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "headers": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "table",
+              "type": "string"
+            },
+            "more": {
+              "format": "uint",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "rows": {
+              "items": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "headers",
+            "rows",
+            "empty",
+            "more"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "key-values",
+              "type": "string"
+            },
+            "pairs": {
+              "items": {
+                "$ref": "#/$defs/RenderedPair"
+              },
+              "type": "array"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "pairs"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "caption": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "progress",
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "maximum": {
+              "format": "double",
+              "type": "number"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "label",
+            "value",
+            "maximum",
+            "caption",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "const": "badge",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/$defs/Tone"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "text",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "action": {
+              "type": "string"
+            },
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "confirm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "does": {
+              "$ref": "#/$defs/ActionKind"
+            },
+            "icon": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "button",
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "link": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "style": {
+              "$ref": "#/$defs/ButtonStyle"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "align",
+            "valign",
+            "action",
+            "does",
+            "label",
+            "icon",
+            "style",
+            "confirm",
+            "link"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "divider",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "$ref": "#/$defs/RowAlign"
+            },
+            "blocks": {
+              "items": {
+                "$ref": "#/$defs/RenderedGroup"
+              },
+              "type": "array"
+            },
+            "gap": {
+              "$ref": "#/$defs/Gap"
+            },
+            "kind": {
+              "const": "row",
+              "type": "string"
+            },
+            "widths": {
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "blocks",
+            "gap",
+            "align",
+            "widths"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "align": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "blocks": {
+              "items": {
+                "$ref": "#/$defs/RenderedGroup"
+              },
+              "type": "array"
+            },
+            "gap": {
+              "$ref": "#/$defs/Gap"
+            },
+            "kind": {
+              "const": "column",
+              "type": "string"
+            },
+            "valign": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Align"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "blocks",
+            "gap",
+            "align",
+            "valign"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "RenderedPair": {
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    },
+    "RowAlign": {
+      "enum": [
+        "start",
+        "center",
+        "end",
+        "stretch"
+      ],
+      "type": "string",
+      "x-open": "stretch"
+    },
+    "TextSize": {
+      "enum": [
+        "small",
+        "normal",
+        "large"
+      ],
+      "type": "string",
+      "x-open": "normal"
+    },
+    "Tone": {
+      "enum": [
+        "neutral",
+        "ok",
+        "info",
+        "warning",
+        "danger"
+      ],
+      "type": "string",
+      "x-open": "neutral"
+    },
+    "Weight": {
+      "enum": [
+        "normal",
+        "strong"
+      ],
+      "type": "string",
+      "x-open": "normal"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "blocks": {
+      "items": {
+        "$ref": "#/$defs/RenderedBlock"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "blocks"
+  ],
+  "title": "CustomWidgetData",
+  "type": "object"
+}

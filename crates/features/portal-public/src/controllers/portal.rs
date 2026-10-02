@@ -1,8 +1,9 @@
 use axum::extract::{Path, State};
+use axum::response::Response;
 use axum::{Extension, Json};
 use portal_feature::ApiError;
 use portal_model::{DetectedEnvironment, Environment};
-use portal_widget::WidgetData;
+use portal_widget::answered;
 
 use crate::responses::PortalResponse;
 use crate::types::PublicState;
@@ -27,6 +28,10 @@ pub async fn widget_data(
     State(state): State<PublicState>,
     Extension(environment): Extension<Environment>,
     Path(id): Path<String>,
-) -> Result<Json<WidgetData>, ApiError> {
-    state.layout.public_data(&id, &environment).await.map(Json)
+) -> Result<Response, ApiError> {
+    state
+        .layout
+        .public_data(&id, &environment)
+        .await
+        .map(answered)
 }

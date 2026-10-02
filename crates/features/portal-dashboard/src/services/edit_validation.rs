@@ -2,11 +2,10 @@ use std::collections::HashSet;
 
 use portal_feature::FieldError;
 use portal_model::ServiceId;
-use portal_widget::WidgetSize;
 
 use crate::types::EditedLayout;
 
-pub fn check_edited(edited: &EditedLayout) -> Vec<FieldError> {
+pub fn check_edited(edited: &EditedLayout, library: &[String]) -> Vec<FieldError> {
     let mut errors = Vec::new();
     let mut sections = HashSet::new();
     if edited.sections.is_empty() {
@@ -23,39 +22,30 @@ pub fn check_edited(edited: &EditedLayout) -> Vec<FieldError> {
         if !sections.insert(section.id.as_str()) {
             errors.push(FieldError::new(&field, "is used by another section"));
         }
+        for (key, message) in section.appearance.problems() {
+            errors.push(FieldError::new(
+                format!("sections[{index}].appearance.{key}"),
+                message,
+            ));
+        }
     }
-    let mut ids = HashSet::new();
     for (index, widget) in edited.widgets.iter().enumerate() {
         let prefix = format!("widgets[{index}]");
         let instance = &widget.instance;
-        if instance.kind.is_empty() {
-            errors.push(FieldError::new(
-                format!("{prefix}.type"),
-                "must not be empty",
-            ));
+        match &instance.widget {
+            Some(name) if !library.iter().any(|id| id == name) => errors.push(FieldError::new(
+                format!("{prefix}.widget"),
+                format!("names {name}, which is not in the widget library"),
+            )),
+            Some(_) => {}
+            None if widget.key.is_none() => errors.push(FieldError::new(
+                format!("{prefix}.widget"),
+                "must name a widget of the library",
+            )),
+            None => {}
         }
-        if let Some(id) = &instance.id {
-            if let Err(problem) = ServiceId::parse(id) {
-                errors.push(FieldError::new(format!("{prefix}.id"), problem.to_string()));
-            }
-            if !ids.insert(id.as_str()) {
-                errors.push(FieldError::new(
-                    format!("{prefix}.id"),
-                    "is used by another widget",
-                ));
-            }
-        }
-        if instance.size == WidgetSize::Unknown {
-            errors.push(FieldError::new(
-                format!("{prefix}.size"),
-                format!("must be one of {}", WidgetSize::NAMES),
-            ));
-        }
-        if !instance.settings.is_object() {
-            errors.push(FieldError::new(
-                format!("{prefix}.settings"),
-                "must be a table",
-            ));
+        for (key, message) in instance.layout_problems() {
+            errors.push(FieldError::new(format!("{prefix}.{key}"), message));
         }
         match &instance.section {
             Some(section) if sections.contains(section.as_str()) => {}

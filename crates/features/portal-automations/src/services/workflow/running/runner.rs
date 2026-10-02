@@ -19,7 +19,7 @@ use portal_feature::ModuleSwitches;
 
 use crate::services::workflow::checking::templates_of;
 use crate::services::workflow::evaluating::{
-    Frame, collected, collector, placeholders_in, render_number, snapshot,
+    Frame, collected, collector, placeholders_in, render_number, rendered_outputs, snapshot,
 };
 use crate::types::{
     Ending, EntryEnd, Flow, Place, RunSettings, Step, StepKind, StepLog, StepLogging, StepOutcome,
@@ -44,9 +44,19 @@ pub struct WorkflowRunner {
 
 impl WorkflowRunner {
     pub async fn run(&self, workflow: &Workflow, frame: &mut Frame) -> Ending {
-        match self.run_steps(&workflow.steps, frame, &Place::root()).await {
+        let ending = match self.run_steps(&workflow.steps, frame, &Place::root()).await {
             Flow::Continue | Flow::Break | Flow::NextPass => Ending::Succeeded(None),
             Flow::End(ending) => ending,
+        };
+        if !matches!(ending, Ending::Succeeded(_)) || workflow.outputs.is_empty() {
+            return ending;
+        }
+        match rendered_outputs(workflow, frame) {
+            Ok(outputs) => {
+                frame.outputs = Some(outputs);
+                ending
+            }
+            Err(problem) => Ending::Failed(problem),
         }
     }
 

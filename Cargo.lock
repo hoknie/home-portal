@@ -705,6 +705,7 @@ dependencies = [
  "portal-weather",
  "portal-web",
  "portal-widget",
+ "portal-widgets",
  "proc-macro2",
  "rpassword",
  "schemars",
@@ -1326,6 +1327,7 @@ dependencies = [
  "portal-feature",
  "portal-model",
  "portal-testing",
+ "portal-widget",
  "rand 0.10.3",
  "reqwest",
  "schemars",
@@ -1768,6 +1770,28 @@ dependencies = [
  "toml_edit",
  "tower",
  "tracing",
+]
+
+[[package]]
+name = "portal-widgets"
+version = "0.2.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "http-body-util",
+ "portal-config",
+ "portal-feature",
+ "portal-model",
+ "portal-testing",
+ "portal-widget",
+ "schemars",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "time",
+ "tokio",
+ "toml_edit",
+ "tower",
 ]
 
 [[package]]

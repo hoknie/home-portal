@@ -44,7 +44,8 @@
     "menu": "Menu",
     "scripts": "Scripts",
     "permissions": "Permissions",
-    "runs": "Run journal"
+    "runs": "Run journal",
+    "widgetLibrary": "Widget library"
   },
   "theme": {
     "label": "Theme",
@@ -93,18 +94,21 @@
     "title": "Home",
     "subtitle": "The state of your home services",
     "unknownWidget": "This version of the interface does not support the “{type}” widget",
-    "invalidWidget": "The settings of the “{type}” widget are invalid"
+    "invalidWidget": "The settings of the “{type}” widget are invalid",
+    "moduleOffWidget": "This widget needs the automations module, which is off"
   },
   "widgets": {
     "statusSummary": {
       "title": "Summary",
-      "total": "Services in total"
+      "total": "Services in total",
+      "description": "How many services are up, slow or down"
     },
     "services": {
       "title": "Services",
       "empty": "No services yet",
       "emptyHint": "Add the first service on the “Services” page.",
-      "ungrouped": "No group"
+      "ungrouped": "No group",
+      "description": "Cards of the services, of every group or of some"
     },
     "stale": "data is out of date",
     "failed": "Could not get the data",
@@ -117,14 +121,16 @@
       "hours": "{value} h",
       "host": "Host",
       "unknownHost": "unknown",
-      "load": "Load average"
+      "load": "Load average",
+      "description": "Processor, memory and disks of the portal's host"
     },
     "weather": {
       "title": "Weather",
       "feelsLike": "feels like {value}{degree}",
       "wind": "wind {value} km/h",
       "humidity": "humidity {value}%",
-      "night": "at night {value}{degree}"
+      "night": "at night {value}{degree}",
+      "description": "The weather now and for the next days"
     },
     "calendar": {
       "title": "Calendar",
@@ -132,9 +138,29 @@
       "emptyHint": "The calendar returned no events for the next few days.",
       "allDay": "all day",
       "repeats": "repeats",
-      "unsupportedRepeat": "This repeat rule is not supported: only the next event is shown."
+      "unsupportedRepeat": "This repeat rule is not supported: only the next event is shown.",
+      "description": "The next events of a calendar"
     },
-    "updated": "updated"
+    "updated": "updated",
+    "custom": {
+      "title": "Custom widget",
+      "empty": "Nothing to show",
+      "more": "{count, plural, one {# more item} other {# more items}}",
+      "progress": "Progress",
+      "badLink": "The link is not a web address",
+      "queued": "“{label}” is queued",
+      "openRun": "Open the run",
+      "refreshing": "The widget is refreshing",
+      "throttled": "Wait {seconds, plural, one {# second} other {# seconds}} before pressing again",
+      "forbidden": "You may not run this",
+      "failed": "The action did not start",
+      "needsRight": "Needs the right to run {area}",
+      "confirmHint": "The action runs on the portal right away.",
+      "refreshingData": "Gathering the data…",
+      "percent": "{value} %",
+      "description": "Your own content over the data of a workflow or a script",
+      "slot": "Empty place"
+    }
   },
   "services": {
     "title": "Services",
@@ -348,7 +374,14 @@
     "lookFrom": "View the portal as from the environment",
     "detectedItem": "{name} (yours)",
     "viewingAs": "Viewing as from “{environment}”; you are in “{detected}”",
-    "back": "Back to “{detected}”"
+    "back": "Back to “{detected}”",
+    "picker": {
+      "everywhere": "Everywhere",
+      "everywhereNote": "In every environment",
+      "here": "You are here",
+      "inside": "Inside the home network",
+      "outside": "From outside, without a VPN"
+    }
   },
   "publicPortal": {
     "signIn": "Sign in",
@@ -505,18 +538,11 @@
     "remove": "Remove",
     "removeTitle": "Remove the widget “{title}”?",
     "removeDescription": "The widget disappears from the home page once the layout is saved.",
-    "sizes": {
-      "quarter": "quarter",
-      "third": "third",
-      "half": "half",
-      "two-thirds": "two thirds",
-      "full": "full width"
-    },
     "unknownType": "This version of the interface does not know the type “{type}”: it can be moved and removed, and its settings stay as they are in the file.",
     "widgetTitle": "Title",
     "widgetTitleHint": "Leave empty for this type's default title",
     "environments": "Environments",
-    "environmentsHint": "Nothing ticked: the widget is visible in every environment",
+    "environmentsHint": "Choose where the widget is shown; Everywhere keeps it in every environment",
     "public": "Show without signing in",
     "publicHint": "Guests of the home page will see the widget too, in the ticked environments",
     "settings": "Settings",
@@ -538,8 +564,310 @@
         "over": "The section “{title}” is over position {position}.",
         "end": "The section “{title}” was dropped at position {position}.",
         "cancel": "Moving the section “{title}” was cancelled."
+      },
+      "undone": "Undone: {change}.",
+      "redone": "Redone: {change}.",
+      "resizedHeight": "Height of the widget “{title}”: {size}.",
+      "resizedBoth": "Size of the widget “{title}”: {size}.",
+      "moved": "“{title}” is at column {column}, row {row} of “{section}”."
+    },
+    "columns": "{count, plural, one {# of 12 columns} other {# of 12 columns}}",
+    "undo": "Undo",
+    "redo": "Redo",
+    "steps": {
+      "arranged": "moving",
+      "resized": "resizing “{title}”",
+      "renamed": "renaming a section",
+      "sectionRemoved": "removing a section",
+      "sectionAdded": "adding a section",
+      "added": "adding a widget",
+      "removed": "removing “{title}”",
+      "configured": "the settings of “{title}”",
+      "duplicated": "duplicating “{title}”",
+      "sectionChanged": "the settings of a section",
+      "moved": "moving “{title}”"
+    },
+    "resizeHeight": "Height of the widget “{title}”",
+    "resizeBoth": "Size of the widget “{title}”",
+    "heightAuto": "as tall as its content",
+    "rows": "{count, plural, one {# row} other {# rows}}",
+    "auto": "auto",
+    "sizeValue": "{columns} × {rows}",
+    "duplicate": "Duplicate",
+    "dialog": {
+      "tabs": {
+        "general": "General",
+        "data": "Data",
+        "content": "Content",
+        "look": "Look",
+        "access": "Access"
+      },
+      "hasErrors": "{tab}, has problems",
+      "preview": "Preview",
+      "previewHint": "As it looks on the home page",
+      "cancel": "Cancel",
+      "discardTitle": "Drop the changes to this widget?",
+      "discardDescription": "The changes made in this window will be lost.",
+      "discard": "Drop them",
+      "publicCustom": "Without a session, a public custom widget shows its texts but never its buttons.",
+      "settingsInFile": "This type has no settings to edit here; they stay as they are in the file."
+    },
+    "look": {
+      "surface": "Background",
+      "accent": "Accent colour",
+      "title": "Title",
+      "padding": "Padding",
+      "align": "Content",
+      "surfaces": {
+        "card": "Card",
+        "plain": "None",
+        "tinted": "Tinted",
+        "outline": "Outline"
+      },
+      "accents": {
+        "neutral": "Neutral",
+        "blue": "Blue",
+        "green": "Green",
+        "amber": "Amber",
+        "red": "Red",
+        "violet": "Violet",
+        "pink": "Pink",
+        "teal": "Teal"
+      },
+      "titles": {
+        "shown": "Shown",
+        "hidden": "Hidden"
+      },
+      "paddings": {
+        "normal": "Normal",
+        "compact": "Compact",
+        "none": "None"
+      },
+      "aligns": {
+        "start": "Left",
+        "center": "Centred",
+        "end": "Right"
       }
-    }
+    },
+    "data": {
+      "source": "Where the data comes from",
+      "kinds": {
+        "none": "Nowhere",
+        "workflow": "A workflow",
+        "script": "A script"
+      },
+      "workflow": "Workflow",
+      "script": "Script",
+      "timeout": "Time limit, seconds",
+      "args": "Arguments",
+      "removeArgument": "Remove {value}",
+      "addArgument": "Add {value}",
+      "refresh": "Refresh every, seconds",
+      "refreshHint": "From 30 to 86 400; the source runs only when someone looks at the widget",
+      "runNow": "Run now",
+      "running": "Running…",
+      "runForbidden": "Running this source needs the right to run it",
+      "tree": "The data it gave",
+      "noData": "Run the source to see its data and the paths you can use",
+      "inputDefault": "Default: {value}"
+    },
+    "blocks": {
+      "kinds": {
+        "stat": "Number",
+        "text": "Text",
+        "markdown": "Markdown",
+        "list": "List",
+        "table": "Table",
+        "key-values": "Key and value",
+        "progress": "Progress bar",
+        "badge": "Badge",
+        "button": "Button",
+        "divider": "Divider",
+        "row": "Row",
+        "column": "Column"
+      },
+      "fields": {
+        "label": "Label",
+        "value": "Value",
+        "unit": "Unit",
+        "caption": "Caption",
+        "icon": "Icon",
+        "text": "Text",
+        "size": "Size",
+        "weight": "Weight",
+        "muted": "Muted",
+        "items": "Items (a list)",
+        "secondary": "Second line",
+        "limit": "At most",
+        "empty": "When empty",
+        "columns": "Columns",
+        "header": "Header",
+        "pairs": "Pairs",
+        "key": "Key",
+        "maximum": "Maximum",
+        "confirm": "Ask first",
+        "style": "Style",
+        "gap": "Gap"
+      },
+      "sizes": {
+        "small": "Small",
+        "normal": "Normal",
+        "large": "Large"
+      },
+      "weights": {
+        "normal": "Normal",
+        "strong": "Bold"
+      },
+      "styles": {
+        "primary": "Primary",
+        "secondary": "Secondary",
+        "ghost": "Quiet"
+      },
+      "gaps": {
+        "small": "Small",
+        "normal": "Normal"
+      },
+      "addColumn": "Add a column",
+      "addPair": "Add a pair",
+      "removeRow": "Remove",
+      "tone": {
+        "label": "Colour",
+        "modes": {
+          "fixed": "Fixed",
+          "thresholds": "By number",
+          "tones": "By value"
+        },
+        "warning": "Warning from",
+        "danger": "Danger from",
+        "direction": "Bad when",
+        "directions": {
+          "above": "Higher",
+          "below": "Lower"
+        },
+        "map": "Value and colour",
+        "addTone": "Add a value",
+        "names": {
+          "neutral": "Neutral",
+          "ok": "Good",
+          "info": "Info",
+          "warning": "Warning",
+          "danger": "Danger"
+        }
+      },
+      "action": {
+        "label": "What it does",
+        "kinds": {
+          "automation": "Runs an automation",
+          "workflow": "Runs a workflow",
+          "refresh": "Refreshes the widget",
+          "link": "Opens a link"
+        },
+        "automation": "Automation",
+        "workflow": "Workflow",
+        "link": "Address",
+        "field": "Event field",
+        "input": "Input"
+      },
+      "suggestions": {
+        "data": "Data",
+        "widget": "Widget",
+        "item": "Each item"
+      },
+      "hints": {
+        "label": "A short name above the value",
+        "value": "A template; pick data paths with '{{'",
+        "unit": "Shown smaller after the value",
+        "caption": "A line under the value",
+        "icon": "An icon name, such as hard-drive",
+        "text": "Plain text with templates; markdown in a markdown block",
+        "items": "A template that names a list in the data",
+        "secondary": "Shown at the right of each item",
+        "empty": "Shown when the list is empty",
+        "maximum": "A number or a template; 100 by default",
+        "confirm": "Asked before the action runs"
+      },
+      "examples": {
+        "label": "Free space",
+        "value": "'{{'data.free'}}'",
+        "unit": "GB",
+        "caption": "of '{{'data.total'}}' GB",
+        "text": "Backup '{{'data.status'}}'",
+        "items": "'{{'data.clients'}}'",
+        "secondary": "'{{'item.ip'}}'",
+        "empty": "Nobody is here"
+      },
+      "descriptions": {
+        "stat": "A big number with a label",
+        "text": "A line of text",
+        "markdown": "Formatted text with links",
+        "list": "Each element of a list, one per line",
+        "table": "A list as rows and columns",
+        "key-values": "Pairs of a name and a value",
+        "progress": "A bar from zero to a maximum",
+        "badge": "A small coloured label",
+        "button": "Runs an automation, a workflow or opens a link",
+        "divider": "A thin line between blocks",
+        "row": "Blocks side by side",
+        "column": "Blocks one above the other"
+      }
+    },
+    "gallery": {
+      "title": "Add a widget",
+      "description": "Choose a type, or start from a ready custom widget",
+      "search": "Search",
+      "types": "Types",
+      "templates": "Ready custom widgets",
+      "moduleOff": "The {module} module is off",
+      "nothing": "Nothing matches",
+      "templateNames": {
+        "stat": "A number with a caption",
+        "progress": "A progress bar",
+        "list": "A list",
+        "table": "A table",
+        "pairs": "Key and value pairs",
+        "buttons": "Buttons",
+        "overview": "A number with its state"
+      },
+      "templateTexts": {
+        "label": "Label",
+        "caption": "Caption",
+        "used": "Used",
+        "name": "Name",
+        "value": "Value",
+        "status": "Status",
+        "refresh": "Refresh",
+        "open": "Open",
+        "updated": "Updated"
+      }
+    },
+    "section": {
+      "settings": "Section settings",
+      "title": "Title",
+      "titleShown": "Title",
+      "surface": "Background",
+      "surfaces": {
+        "none": "None",
+        "card": "Card"
+      },
+      "titles": {
+        "shown": "Shown",
+        "hidden": "Hidden"
+      }
+    },
+    "addWidgetHere": "Add widget",
+    "library": "Widget library",
+    "editIn": "Settings of “{title}”",
+    "removeFromPage": "The widget leaves this page and stays in the library.",
+    "picker": {
+      "title": "Place a widget",
+      "description": "Choose a widget from the library; build new ones in the library.",
+      "search": "Search",
+      "empty": "The library is empty",
+      "nothing": "Nothing matches",
+      "meta": "{type} · {placed, plural, =0 {—} one {# placement} other {# placements}}",
+      "openLibrary": "Open the widget library"
+    },
+    "publicNotOutside": "Guests from the internet will not see it: internet is not among the chosen environments"
   },
   "widgetSettings": {
     "groups": "Groups",
@@ -1294,7 +1622,8 @@
         "stdout": "Standard output",
         "stderr": "Standard error",
         "output": "Output"
-      }
+      },
+      "outputs": "Outputs"
     },
     "title": "Workflows",
     "subtitle": "Runs of several steps that automations, webhooks or you start",
@@ -1683,7 +2012,16 @@
       "label": "Width of the side panel",
       "value": "{width} px",
       "hint": "Drag to change the width; double-click to reset it"
-    }
+    },
+    "outputs": "Outputs",
+    "outputsHint": "What the workflow gives back when it succeeds: a widget over it gets them as data",
+    "outputName": "Output {number}",
+    "outputNamePlaceholder": "name",
+    "outputValue": "Value of output {number}",
+    "outputDescription": "Description of output {number}",
+    "outputDescriptionPlaceholder": "What it holds, shown as a hint",
+    "removeOutput": "Remove the output {name}",
+    "addOutput": "Add output"
   },
   "templateInput": {
     "suggestions": "Values you can insert",
@@ -2544,7 +2882,8 @@
     "automation": "Automation",
     "webhook": "Webhook",
     "workflow": "Workflow",
-    "script": "Script"
+    "script": "Script",
+    "widget": "Widget"
   },
   "runJournal": {
     "title": "Run journal",
@@ -2556,5 +2895,149 @@
     "newest": "Go to the newest",
     "newer": "Newer",
     "older": "Older"
+  },
+  "widgetLibrary": {
+    "title": "Widget library",
+    "subtitle": "Every widget the home page can show. Build them here, place them in the layout.",
+    "add": "Add widget",
+    "empty": "No widgets yet",
+    "emptyHint": "Add a widget to place it on the home page.",
+    "placed": "{placed, plural, one {# placement} other {# placements}}",
+    "edit": "Settings",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "deleteTitle": "Delete “{title}”?",
+    "deleteDescription": "It is removed from the library for good.",
+    "usedHint": "Remove it from the layout before deleting it",
+    "saved": "The widget is saved",
+    "deleted": "The widget is deleted",
+    "layout": "Arrange the page",
+    "meta": "{id} · {type}"
+  },
+  "widgetBuilder": {
+    "back": "Back",
+    "titlePlaceholder": "Widget title",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "The widget is saved",
+    "undo": "Undo",
+    "redo": "Redo",
+    "unsaved": "There are unsaved changes",
+    "leave": "Leave the builder? Unsaved changes will be lost.",
+    "tabs": {
+      "data": "Data",
+      "look": "Look",
+      "access": "Access",
+      "block": "Block"
+    },
+    "palette": {
+      "title": "Blocks",
+      "hint": "Drag a block onto the widget or the outline, or press it to add it after the selected block"
+    },
+    "canvas": {
+      "title": "The widget",
+      "width": "Width in columns",
+      "height": "Height in rows",
+      "auto": "auto",
+      "empty": "Add a block from the palette to start",
+      "hint": "Press a block to select it; drag it to move it",
+      "by": "×",
+      "sizeSaved": "Saved with the widget: new places on the page take this size, and its only place is resized too"
+    },
+    "outline": {
+      "title": "Tree",
+      "hint": "Rows place blocks side by side, columns stack them; they nest up to three deep",
+      "expand": "Expand {name}",
+      "collapse": "Collapse {name}",
+      "drag": "Drag {name}",
+      "dropHere": "Drop here"
+    },
+    "inspector": {
+      "title": "Selected block",
+      "nothing": "Select a block on the widget or in the outline to change it",
+      "align": "Alignment",
+      "rowAlign": "Blocks sit",
+      "widths": "Share of the row",
+      "part": "Parts of block {number}",
+      "needs": "Needs {field}",
+      "rowNeeds": "A row needs at least two blocks",
+      "columnNeeds": "A column needs at least one block",
+      "valign": "Vertical position in the row",
+      "columnValign": "Blocks in the column sit"
+    },
+    "aligns": {
+      "inherit": "As the widget",
+      "start": "Start",
+      "center": "Centre",
+      "end": "End"
+    },
+    "rowAligns": {
+      "start": "Top",
+      "center": "Middle",
+      "end": "Bottom",
+      "stretch": "Full height"
+    },
+    "actions": {
+      "up": "Move up",
+      "down": "Move down",
+      "out": "Move out of the group",
+      "into": "Move into the next group",
+      "duplicate": "Duplicate",
+      "delete": "Delete"
+    },
+    "announce": {
+      "added": "{kind} added at {place}.",
+      "moved": "{kind} moved to {place}.",
+      "deleted": "{kind} at {place} deleted.",
+      "duplicated": "{kind} copied to {place}.",
+      "undone": "Undone: {change}.",
+      "redone": "Redone: {change}.",
+      "refused": "{reason}"
+    },
+    "refused": {
+      "tooDeep": "Groups nest at most three deep",
+      "rowFull": "A row holds at most four blocks",
+      "columnFull": "A column holds at most twelve blocks",
+      "intoItself": "A group cannot go inside itself"
+    },
+    "tree": {
+      "title": "Data",
+      "empty": "No data is known yet: run the source or declare outputs in the workflow",
+      "runNow": "Run now",
+      "insert": "Insert {path}",
+      "kinds": {
+        "value": "value",
+        "number": "number",
+        "text": "text",
+        "boolean": "yes/no",
+        "list": "list",
+        "object": "object"
+      }
+    },
+    "missing": "Fill in the marked fields first",
+    "conflict": "The configuration changed since this page opened",
+    "newTitle": "New widget",
+    "subtitle": "Build the widget from blocks over the data of a workflow or a script",
+    "slot": {
+      "title": "Empty place",
+      "hint": "Drag a block here from the palette, or press a block in the palette to put it here. An empty place is left out when you save."
+    },
+    "panel": {
+      "title": "Settings",
+      "hasErrors": "{tab}, has problems"
+    },
+    "columns": {
+      "expand": "Show {title}",
+      "collapse": "Hide {title}",
+      "resize": "Resize {title}"
+    },
+    "titleLabel": "Widget title",
+    "valigns": {
+      "inherit": "As the row",
+      "start": "Top",
+      "center": "Middle",
+      "end": "Bottom"
+    },
+    "size": "Size of the place it is shown in"
   }
 }

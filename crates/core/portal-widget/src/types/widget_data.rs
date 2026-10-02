@@ -10,4 +10,28 @@ pub struct WidgetData {
     pub stale: bool,
     pub problem: Option<String>,
     pub refresh_seconds: u64,
+    #[serde(default)]
+    pub refreshing: bool,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum WidgetAnswer {
+    Ready(WidgetData),
+    Refreshing,
+}
+
+impl WidgetAnswer {
+    pub fn into_ready(self) -> Option<WidgetData> {
+        match self {
+            WidgetAnswer::Ready(data) => Some(data),
+            WidgetAnswer::Refreshing => None,
+        }
+    }
+
+    pub fn map(self, change: impl FnOnce(WidgetData) -> WidgetData) -> WidgetAnswer {
+        match self {
+            WidgetAnswer::Ready(data) => WidgetAnswer::Ready(change(data)),
+            WidgetAnswer::Refreshing => WidgetAnswer::Refreshing,
+        }
+    }
 }

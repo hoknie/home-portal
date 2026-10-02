@@ -29,7 +29,7 @@ export {
   workflowSchema,
   workflowsSchema,
 } from "./model/schema";
-export type { Condition, FieldType, FilterDescription, InputDeclaration, InputType, Kind, KindField, KindGroup, SecretName, Step, Usage, Workflow, WorkflowCatalogue, WorkflowRequest } from "./model/schema";
+export type { Condition, FieldType, FilterDescription, InputDeclaration, InputType, Kind, KindField, KindGroup, SecretName, Step, Usage, Workflow, WorkflowCatalogue, WorkflowOutput, WorkflowRequest } from "./model/schema";
 export {
   ROOT,
   at,
@@ -53,7 +53,7 @@ export {
   withChildList,
 } from "./model/tree";
 export type { Path, Place, Target } from "./model/tree";
-export { chipsOf, scopeAt } from "./model/scope";
+export { END_OF_WORKFLOW, chipsOf, scopeAt } from "./model/scope";
 export { NETWORK_FIELDS, SERVICE_FIELDS, portalProblem, portalSuggestions, portalValue, portalValuesSchema } from "./model/portal";
 export type { PortalSuggestion, PortalValues } from "./model/portal";
 export { chosenOf, hiddenFields, startingValue, withChoice } from "./model/exclusive";

@@ -1,100 +1,101 @@
 "use client";
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Settings2, Trash2 } from "lucide-react";
+import { Settings2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 
-import type { WidgetSize } from "@/shared/api";
 import { cn } from "@/shared/lib/cn";
+import { cellClasses, cellStyle, positionOf, useAutoRows } from "@/shared/lib/widget-grid";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Badge, Button } from "@/shared/ui/primitives";
 
-import { WIDGET_KIND } from "../model/drag";
 import type { DraftWidget } from "../model/draft";
-import { ResizeHandle } from "./resize-handle";
+import type { Target } from "../model/measure";
+import type { Size } from "../model/resize";
+import { MoveHandle, type Step } from "./move-handle";
+import { ResizeHandle, useSizeText } from "./resize-handle";
 
 export type WidgetTileProps = {
   widget: DraftWidget;
   title: string;
+  type: string;
   known: boolean;
-  spanOf: (size: WidgetSize) => string;
   errors: string[];
-  onResize: (size: WidgetSize) => void;
-  onEdit: () => void;
+  content: ReactNode;
+  onResize: (size: Size) => void;
+  onMove: (target: Target) => void;
+  onStep: (step: Step) => void;
+  onPreviewMove: (target: Target | null) => void;
+  onConfigure: () => void;
   onRemove: () => void;
 };
 
-export function WidgetTile({ widget, title, known, spanOf, errors, onResize, onEdit, onRemove }: WidgetTileProps) {
+const TOOL = "flex size-8 items-center justify-center rounded-md bg-background/80 text-muted-foreground shadow-sm backdrop-blur hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none";
+
+export function WidgetTile({ widget, title, type, known, errors, content, onResize, onMove, onStep, onPreviewMove, onConfigure, onRemove }: WidgetTileProps) {
   const t = useTranslations("layoutEditor");
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: widget.uid,
-    data: { kind: WIDGET_KIND, section: widget.section },
-  });
+  const text = useSizeText();
   const [removing, setRemoving] = useState(false);
-  const [preview, setPreview] = useState<WidgetSize | null>(null);
+  const [preview, setPreview] = useState<Size | null>(null);
   const element = useRef<HTMLDivElement | null>(null);
-  const shown = preview ?? widget.size;
+  const size: Size = { width: widget.width, height: widget.height };
+  const shown = preview ?? size;
+  const [body, rows] = useAutoRows<HTMLDivElement>(shown.height === "auto");
+  const position = positionOf(widget);
+  const measure = () => ({
+    gridWidth: element.current?.parentElement?.getBoundingClientRect().width ?? 0,
+    startPixels: element.current?.getBoundingClientRect().height ?? 0,
+  });
   return (
     <div
-      ref={(node) => {
-        element.current = node;
-        setNodeRef(node);
-      }}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cn("relative min-w-0", spanOf(shown), isDragging && "z-10 opacity-70")}
+      ref={element}
+      style={cellStyle(shown.width, shown.height, rows, position)}
+      className={cn("group/tile relative", cellClasses(position))}
       data-widget={widget.uid}
-      data-size={widget.size}
+      data-width={widget.width}
+      data-height={widget.height}
+      data-column={widget.column ?? undefined}
+      data-row={widget.row ?? undefined}
     >
-      <div className={cn("glass-panel grid gap-3 rounded-xl p-3", errors.length > 0 && "border-destructive", preview && "ring-2 ring-primary/60")}>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="flex size-8 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-glass-tint focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-            aria-label={t("move", { title })}
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical className="size-4" aria-hidden />
-          </button>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{title}</p>
-            <p className="truncate font-mono text-xs text-muted-foreground">{widget.id ?? widget.type}</p>
+      <div
+        className={cn(
+          "relative h-full rounded-2xl outline-2 outline-offset-2 outline-transparent transition-[outline-color] group-hover/tile:outline-primary/30 group-focus-within/tile:outline-primary/50",
+          errors.length > 0 && "outline-destructive",
+          preview && "outline-primary",
+        )}
+      >
+        <div ref={body} className={cn(shown.height !== "auto" && "h-full overflow-hidden")}>
+          <div inert className="pointer-events-none h-full select-none" data-tile-content="">
+            {known ? content : <UnknownTile label={t("unknownType", { type })} />}
           </div>
-          {widget.public ? <Badge variant="outline">{t("public")}</Badge> : null}
         </div>
-        {known ? null : <p className="text-xs text-muted-foreground">{t("unknownType", { type: widget.type })}</p>}
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" data-size-label="">
-            {t(`sizes.${shown}`)}
+        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover/tile:opacity-100 group-focus-within/tile:opacity-100 max-sm:opacity-100">
+          <Button type="button" variant="ghost" size="icon" className={TOOL} aria-label={t("editIn", { title })} title={t("editIn", { title })} onClick={onConfigure}>
+            <Settings2 aria-hidden />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className={TOOL} aria-label={t("remove")} title={t("remove")} onClick={() => setRemoving(true)}>
+            <Trash2 aria-hidden />
+          </Button>
+        </div>
+        {preview ? (
+          <Badge className="absolute right-2 bottom-2 tabular-nums" data-size-label="">
+            {text.both(preview)}
           </Badge>
-          <div className="ml-auto flex gap-1">
-            <Button type="button" variant="ghost" size="icon" aria-label={t("edit")} onClick={onEdit}>
-              <Settings2 aria-hidden />
-            </Button>
-            <Button type="button" variant="ghost" size="icon" aria-label={t("remove")} onClick={() => setRemoving(true)}>
-              <Trash2 aria-hidden />
-            </Button>
-          </div>
-        </div>
-        {errors.map((error) => (
-          <p key={error} role="alert" className="text-xs text-destructive">
-            {error}
-          </p>
-        ))}
+        ) : null}
       </div>
-      <ResizeHandle
-        title={title}
-        size={widget.size}
-        gridWidth={() => element.current?.parentElement?.getBoundingClientRect().width ?? 0}
-        onPreview={setPreview}
-        onResize={onResize}
-      />
+      {errors.map((error) => (
+        <p key={error} role="alert" className="mt-1 text-xs text-destructive">
+          {error}
+        </p>
+      ))}
+      <MoveHandle title={title} section={widget.section} tile={() => element.current} onPreview={onPreviewMove} onMove={onMove} onStep={onStep} />
+      {(["width", "height", "both"] as const).map((axis) => (
+        <ResizeHandle key={axis} axis={axis} title={title} size={size} measure={measure} onPreview={setPreview} onResize={onResize} />
+      ))}
       <ConfirmDialog
         open={removing}
         title={t("removeTitle", { title })}
-        description={t("removeDescription")}
+        description={t("removeFromPage")}
         confirmLabel={t("remove")}
         onConfirm={() => {
           setRemoving(false);
@@ -104,4 +105,8 @@ export function WidgetTile({ widget, title, known, spanOf, errors, onResize, onE
       />
     </div>
   );
+}
+
+function UnknownTile({ label }: { label: string }) {
+  return <div className="grid h-full min-h-20 place-items-center rounded-2xl border border-dashed p-4 text-center text-sm text-muted-foreground">{label}</div>;
 }

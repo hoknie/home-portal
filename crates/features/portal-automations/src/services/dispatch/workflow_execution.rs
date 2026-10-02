@@ -100,6 +100,7 @@ pub async fn execute_workflow(
                 logging: StepLogging::On,
             };
             let ending = runner.run(&workflow, &mut frame).await;
+            trace.lock().unwrap_or_else(PoisonError::into_inner).outputs = frame.outputs.take();
             let elapsed = began.elapsed();
             match ending {
                 Ending::Succeeded(reason) => finished_as(

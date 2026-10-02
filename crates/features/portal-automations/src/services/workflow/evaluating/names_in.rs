@@ -2,10 +2,21 @@ use super::chains::parse_chain;
 use crate::helpers::{CLOSE, OPEN};
 use crate::types::Placeholder;
 
-pub const NAMESPACES: [&str; 9] = [
-    "event", "inputs", "vars", "steps", "loop", "secrets", "item", "index", "portal",
+pub const NAMESPACES: [&str; 12] = [
+    "event",
+    "inputs",
+    "vars",
+    "steps",
+    "loop",
+    "secrets",
+    "item",
+    "index",
+    "portal",
+    "data",
+    "widget",
+    "fetched_at",
 ];
-pub const BARE_NAMESPACES: [&str; 2] = ["item", "index"];
+pub const BARE_NAMESPACES: [&str; 4] = ["item", "index", "data", "fetched_at"];
 pub const BAR: char = '|';
 
 pub fn placeholders_in(template: &str) -> Vec<Placeholder<'_>> {

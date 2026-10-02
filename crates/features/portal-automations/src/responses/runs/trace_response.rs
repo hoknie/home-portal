@@ -1,5 +1,8 @@
+use std::collections::BTreeMap;
+
 use schemars::JsonSchema;
 use serde::Serialize;
+use serde_json::Value;
 
 use super::TraceEntryResponse;
 use time::OffsetDateTime;
@@ -10,6 +13,8 @@ use crate::types::Trace;
 pub struct TraceResponse {
     pub entries: Vec<TraceEntryResponse>,
     pub dropped: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub outputs: Option<BTreeMap<String, Value>>,
 }
 
 impl TraceResponse {
@@ -21,6 +26,7 @@ impl TraceResponse {
                 .map(|entry| TraceEntryResponse::of(entry, now))
                 .collect(),
             dropped: trace.dropped,
+            outputs: trace.outputs.clone(),
         }
     }
 }

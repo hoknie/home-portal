@@ -1,43 +1,40 @@
 "use client";
 
-import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Settings2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 
 import type { Section } from "@/shared/api";
 import { cn } from "@/shared/lib/cn";
 import { Button, Input } from "@/shared/ui/primitives";
 
-import type { WidgetKind } from "../model/catalog";
-import { AREA_KIND, SECTION_KIND, SECTION_PREFIX, SECTION_SORT_PREFIX } from "../model/drag";
+import { SECTION_GRID } from "@/shared/lib/widget-grid";
 
-export const SELECT =
-  "h-8 rounded-md border border-input bg-glass-tint px-2 text-xs shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
+import { SECTION_KIND, SECTION_SORT_PREFIX } from "../model/drag";
+import { SECTION_GRID_ATTRIBUTE } from "../model/measure";
 
 export type SectionBlockProps = {
   section: Section;
   count: number;
   widgetIds: string[];
-  kinds: WidgetKind[];
+  ghost: { column: number; row: number; width: number; rows: number } | null;
   errors: string[];
   children: ReactNode;
   onRename: (title: string) => void;
   onRemove: () => void;
-  onAdd: (type: string) => void;
+  onAdd: () => void;
+  onSettings: () => void;
 };
 
 export function SectionBlock(props: SectionBlockProps) {
   const t = useTranslations("layoutEditor");
-  const { section, count, widgetIds, kinds } = props;
-  const { setNodeRef: setAreaRef } = useDroppable({ id: `${SECTION_PREFIX}${section.id}`, data: { kind: AREA_KIND, section: section.id } });
+  const { section, count, widgetIds } = props;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `${SECTION_SORT_PREFIX}${section.id}`,
     data: { kind: SECTION_KIND, section: section.id },
   });
-  const [type, setType] = useState(kinds[0]?.type ?? "");
   const title = section.title ?? t("untitled");
   return (
     <section
@@ -74,15 +71,11 @@ export function SectionBlock(props: SectionBlockProps) {
         >
           <Trash2 aria-hidden />
         </Button>
+        <Button type="button" variant="ghost" size="icon" aria-label={t("section.settings")} title={t("section.settings")} onClick={props.onSettings}>
+          <Settings2 aria-hidden />
+        </Button>
         <div className="ml-auto flex items-center gap-2">
-          <select aria-label={t("chooseType")} className={SELECT} value={type} onChange={(event) => setType(event.target.value)}>
-            {kinds.map((kind) => (
-              <option key={kind.type} value={kind.type}>
-                {kind.title}
-              </option>
-            ))}
-          </select>
-          <Button type="button" variant="outline" size="sm" onClick={() => props.onAdd(type)}>
+          <Button type="button" variant="outline" size="sm" onClick={props.onAdd}>
             <Plus aria-hidden />
             {t("addWidget")}
           </Button>
@@ -93,14 +86,18 @@ export function SectionBlock(props: SectionBlockProps) {
           {error}
         </p>
       ))}
-      <SortableContext id={section.id} items={widgetIds} strategy={rectSortingStrategy}>
-        <div ref={setAreaRef} className="grid min-h-16 grid-cols-12 gap-3">
-          {props.children}
-          {widgetIds.length === 0 ? (
-            <p className="col-span-12 self-center py-4 text-center text-sm text-muted-foreground">{t("emptySection")}</p>
-          ) : null}
-        </div>
-      </SortableContext>
+      <div {...{ [SECTION_GRID_ATTRIBUTE]: section.id }} className={cn(SECTION_GRID, "relative min-h-20")}>
+        {props.children}
+        {props.ghost ? (
+          <div
+            aria-hidden
+            data-move-ghost=""
+            className="pointer-events-none rounded-2xl border-2 border-dashed border-primary bg-primary/5"
+            style={{ gridColumn: `${props.ghost.column} / span ${props.ghost.width}`, gridRow: `${props.ghost.row} / span ${props.ghost.rows}` }}
+          />
+        ) : null}
+        {widgetIds.length === 0 ? <p className="col-span-12 self-center py-4 text-center text-sm text-muted-foreground">{t("emptySection")}</p> : null}
+      </div>
     </section>
   );
 }

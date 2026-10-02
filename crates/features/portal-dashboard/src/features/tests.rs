@@ -49,13 +49,18 @@ async fn the_layout_is_served_with_a_revision_sections_and_keyed_widgets() {
     assert!(tagged);
     assert_eq!(
         body["sections"],
-        serde_json::json!([{ "id": "main", "title": null }])
+        serde_json::json!([{ "id": "main", "title": null, "appearance": { "title": "shown", "surface": "none" } }])
     );
-    assert_eq!(body["widgets"][0]["key"], "riga");
-    assert_eq!(body["widgets"][0]["size"], "half");
+    assert_eq!(body["widgets"][0]["key"], "#0");
+    assert_eq!(body["widgets"][0]["id"], "riga");
+    assert_eq!(body["widgets"][0]["width"], 6);
+    assert!(body["widgets"][0].get("size").is_none());
+    assert_eq!(body["widgets"][0]["height"], "auto");
+    assert_eq!(body["widgets"][0]["appearance"]["surface"], "card");
     assert_eq!(body["widgets"][0]["section"], "main");
     assert_eq!(body["widgets"][1]["key"], "#1");
-    assert_eq!(body["widgets"][1]["size"], "full");
+    assert_eq!(body["widgets"][1]["id"], "status-summary");
+    assert_eq!(body["widgets"][1]["width"], 12);
 }
 
 #[tokio::test]

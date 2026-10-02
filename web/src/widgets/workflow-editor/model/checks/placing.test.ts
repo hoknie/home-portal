@@ -42,7 +42,7 @@ describe("where a step may go", () => {
   });
 
   it("the editor refuses a break outside a loop as the server does", () => {
-    const draft = { id: "w", title: "W", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], steps };
+    const draft = { id: "w", title: "W", enabled: true, description: null, tags: [], timeout_seconds: 300, inputs: [], outputs: [], steps };
     const problems = problemsOf(draft, catalogue, []);
     expect(problems["steps[1]"]).toBe("workflowEditor.problems.needsLoop");
     expect(problems["steps[0].body[0].branches[0][0]"]).toBeUndefined();

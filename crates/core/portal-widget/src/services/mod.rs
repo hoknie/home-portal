@@ -1,3 +1,4 @@
+mod flights;
 mod registry;
 mod validation;
 

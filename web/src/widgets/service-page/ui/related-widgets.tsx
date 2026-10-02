@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useDashboard } from "@/entities/dashboard";
 import type { Service } from "@/entities/service";
 import { BoardGrid } from "@/features/widget-board";
+import { DEFAULT_SECTION_APPEARANCE } from "@/shared/api";
 
 export type RelatedWidgetsProps = { service: Service; services: Service[] };
 
@@ -15,7 +16,7 @@ export function RelatedWidgets({ service, services }: RelatedWidgetsProps) {
   if (related.length === 0) {
     return null;
   }
-  const section = { id: "related", title: t("related") };
+  const section = { id: "related", title: t("related"), appearance: DEFAULT_SECTION_APPEARANCE };
   return (
     <BoardGrid
       sections={[section]}

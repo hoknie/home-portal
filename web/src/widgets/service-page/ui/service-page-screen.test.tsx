@@ -40,7 +40,7 @@ function serve(services: Services = copy(), client = testQueryClient()) {
       return jsonResponse(apiSamples.environment);
     }
     if (path.startsWith("/api/dashboard")) {
-      return jsonResponse({ sections: [{ id: "main", title: null }], widgets: [{ ...apiSamples.dashboard.widgets[1], key: "box", id: "box", type: "host-metrics", settings: {} }] });
+      return jsonResponse({ sections: [{ id: "main", title: null, appearance: { title: "shown", surface: "none" } }], widgets: [{ ...apiSamples.dashboard.widgets[1], key: "box", id: "box", type: "host-metrics", settings: {} }] });
     }
     if (path.startsWith("/api/widgets/")) {
       return jsonResponse(apiSamples.widgetHostMetrics);

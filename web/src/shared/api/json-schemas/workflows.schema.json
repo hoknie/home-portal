@@ -337,11 +337,40 @@
             "$ref": "#/$defs/TraceEntryResponse"
           },
           "type": "array"
+        },
+        "outputs": {
+          "additionalProperties": true,
+          "type": [
+            "object",
+            "null"
+          ]
         }
       },
       "required": [
         "entries",
         "dropped"
+      ],
+      "type": "object"
+    },
+    "WorkflowOutputResponse": {
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "description"
       ],
       "type": "object"
     },
@@ -385,6 +414,12 @@
             }
           ]
         },
+        "outputs": {
+          "items": {
+            "$ref": "#/$defs/WorkflowOutputResponse"
+          },
+          "type": "array"
+        },
         "steps": true,
         "steps_version": {
           "type": "string"
@@ -418,6 +453,7 @@
         "tags",
         "timeout_seconds",
         "inputs",
+        "outputs",
         "steps",
         "steps_version",
         "used_by",

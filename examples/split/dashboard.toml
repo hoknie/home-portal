@@ -1,6 +1,13 @@
-# The home page. Sections are drawn top to bottom; a widget's size is its share of a
-# 12-column row: quarter (3), third (4), half (6), two-thirds (8), full (12).
-# On a phone every widget takes the full width. The order here is the order on the page.
+# The home page. Widgets are defined once in the library ([[dashboard.library]]: type,
+# settings, look, who may see them) and placed on the page ([[dashboard.widgets]]: which
+# library widget, its section, its place and its size). The same widget may be placed twice.
+#
+# Sections are drawn top to bottom on a grid of 12 columns and rows of 80 px. A place's
+# width is its share of a row, from 1 to 12; `size` is an older way to write it: quarter (3),
+# third (4), half (6), two-thirds (8), full (12). `height` is "auto" (as tall as its content)
+# or 1 to 8 rows. `column` and `row` put a widget at a fixed place on a wide screen, leaving
+# empty places around it; widgets without them fill the free places in order. On a phone every
+# widget takes the full width, in the order of their rows and columns.
 
 [[dashboard.sections]]
 id = "now"
@@ -13,54 +20,111 @@ title = "Media"
 [[dashboard.sections]]
 id = "home"
 title = "Home"
+appearance = { surface = "card" }
+
+# ---- The library -------------------------------------------------------------------------
 
 # Counts of services per state.
-[[dashboard.widgets]]
+[[dashboard.library]]
+id = "summary"
 type = "status-summary"
-section = "now"
-size = "two-thirds"
 
 # The weather, also shown to visitors who are not signed in.
-[[dashboard.widgets]]
-type = "weather"
+[[dashboard.library]]
 id = "riga"
-section = "now"
-size = "third"
+type = "weather"
 public = true
 settings = { latitude = 56.95, longitude = 24.11, timezone = "Europe/Riga", units = "metric", days = 3 }
 
 # The family calendar, only at home and over the VPN. Its password is a secret.
-[[dashboard.widgets]]
-type = "calendar"
+[[dashboard.library]]
 id = "family"
-section = "now"
-size = "half"
+type = "calendar"
 environments = ["local", "vpn"]
 settings = { url = "https://calendar.example.com/family.ics", days = 7, limit = 8, secret = "calendar_password" }
 
-# The portal host's disks; also drawn on the NAS and Jellyfin pages.
-[[dashboard.widgets]]
-type = "host-metrics"
+# The portal host's disks, on a light green background; also drawn on the NAS and Jellyfin pages.
+[[dashboard.library]]
 id = "nas-disks"
-section = "now"
-size = "half"
+type = "host-metrics"
+appearance = { surface = "tinted", accent = "green" }
 settings = { disks = ["/"] }
 
 # The services of one group; the section's title already names it.
-[[dashboard.widgets]]
+[[dashboard.library]]
+id = "media-services"
 type = "services"
-section = "media"
-size = "full"
 settings = { groups = ["Media"] }
 
-[[dashboard.widgets]]
+[[dashboard.library]]
+id = "home-services"
 type = "services"
-section = "home"
-size = "half"
 settings = { groups = ["Home"] }
 
-# A narrow column: a quarter of the row on a wide screen, half on a tablet.
+# A widget of your own: the workflow "home-glance" gathers the data, the blocks show it.
+# Templates read the workflow's variables as data.<name>; colours come from the tones.
+# Pressing "Restart Jellyfin" runs that automation for the person who pressed it.
+[[dashboard.library]]
+id = "glance"
+type = "custom"
+title = "At a glance"
+appearance = { surface = "plain", title = "hidden" }
+
+[dashboard.library.settings]
+source = { workflow = "home-glance" }
+refresh_seconds = 120
+blocks = [
+  { kind = "list", items = "{{data.devices}}", text = "{{item.name}}", secondary = "{{item.state}}", tones = { up = "ok", down = "danger", degraded = "warning" } },
+  { kind = "row", blocks = [
+    { kind = "button", label = "Restart Jellyfin", icon = "rotate-ccw", confirm = "Restart Jellyfin now?", action = { id = "restart", automation = "restart-jellyfin" } },
+    { kind = "button", label = "Refresh", style = "ghost", icon = "refresh-cw", action = { refresh = true } },
+  ] },
+]
+
+# ---- The page ----------------------------------------------------------------------------
+
 [[dashboard.widgets]]
-type = "status-summary"
+widget = "summary"
+section = "now"
+size = "two-thirds"
+
+[[dashboard.widgets]]
+widget = "riga"
+section = "now"
+size = "third"
+
+# Half the row on the left, four rows tall.
+[[dashboard.widgets]]
+widget = "family"
+section = "now"
+size = "half"
+height = 4
+
+# Five columns on the right, from the third row, with a gap between it and the calendar.
+[[dashboard.widgets]]
+widget = "nas-disks"
+section = "now"
+width = 5
+column = 8
+row = 3
+
+[[dashboard.widgets]]
+widget = "media-services"
+section = "media"
+size = "full"
+
+[[dashboard.widgets]]
+widget = "home-services"
+section = "home"
+size = "half"
+
+[[dashboard.widgets]]
+widget = "glance"
+section = "home"
+width = 4
+
+# The summary once more: a narrow column, a quarter of the row on a wide screen.
+[[dashboard.widgets]]
+widget = "summary"
 section = "home"
 size = "quarter"

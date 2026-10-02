@@ -33,7 +33,7 @@ crates/core/           LAYER 1 — vocabulary and ports; knows no feature
   portal-widget/       the widget registry, its cache and its data endpoint
   portal-web/          serves the built interface found at start-up
 crates/features/       LAYER 2 — one crate per subject: auth, services, network, dashboard, proxy,
-                       dns, automations, scripts, notification, modules, …
+                       dns, automations, widgets, scripts, notification, modules, …
 crates/notification/   LAYER 2 — one crate per notification channel; core crates only
 bin/home-portal/       COMPOSITION ROOT — boot/, features/, adapters/, middlewares/, cli/
 web/                   the interface: a Next.js static export (§12)
@@ -206,11 +206,13 @@ Rules for every integration:
 
 ### 6.4. Widgets
 
-- A provider declares a type, checks its settings and fetches a reading; `portal-widget` caches,
-  bounds the fetch time and keeps the last good reading.
-- The layout is sections and sized widgets in file order; the editor moves tables, never
-  regenerates them.
-- Details: `openspec/specs/widgets/spec.md`, `dashboard-layout/spec.md`.
+- A provider declares a type, checks settings and fetches a reading; `portal-widget` caches it and
+  runs fetches in the background (a request waits ≤15 s, then gets the last reading, refreshing).
+- **Custom widgets render on the server** (`portal-widgets`): the page gets rendered blocks, never a
+  source's data; a button runs only the saved action. Templates, source runs and button runs reach
+  the automations engine through `portal-widgets/src/ports/`.
+- **Defined once, placed anywhere.** `[[dashboard.library]]` defines widgets, `[[dashboard.widgets]]`
+  places them; writes move older inline widgets into the library and keep the comments.
 
 ### 6.5. Service icons
 

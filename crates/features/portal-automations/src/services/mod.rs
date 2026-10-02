@@ -10,6 +10,7 @@ mod webhook_book;
 mod webhook_checks;
 mod webhook_reception;
 mod webhook_writer;
+mod widget_runs;
 mod workflow;
 
 #[cfg(test)]
@@ -22,15 +23,17 @@ pub use matcher::matching;
 pub use schedule_book::ScheduleBook;
 pub use system_clock::SystemClock;
 pub use validation::{
-    automation_problems, decoded, decoded_webhooks, validate_automations, webhook_problems,
+    automation_problems, call_problems, decoded, decoded_webhooks, validate_automations,
+    webhook_problems,
 };
 pub use views::Views;
 pub use webhook_book::WebhookBook;
 pub use webhook_checks::webhook_placeholder_errors;
 pub use webhook_reception::received;
 pub use webhook_writer::WebhookWriter;
+pub use widget_runs::{DeclaredPath, SourceRunner, declared_paths, template_problem};
 pub use workflow::{
     Budget, Frame, Secrets, WorkflowRunner, WorkflowTools, bind_inputs, decode_workflow,
-    decoded_workflows, entry_errors, input_problem, preview_transform, secrets_allowed, users_of,
-    webhook_variables_read, workflow_errors,
+    decoded_workflows, entry_errors, input_problem, preview_transform, render_text, render_value,
+    secrets_allowed, users_of, webhook_variables_read, workflow_errors,
 };

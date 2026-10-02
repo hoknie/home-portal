@@ -4,7 +4,8 @@ use super::Step;
 use serde_json::Value;
 
 use crate::types::{
-    Automation, Filters, InputDeclaration, InputValue, RunSettings, Trigger, WorkflowCall,
+    Automation, Filters, InputDeclaration, InputValue, OutputDeclaration, RunSettings, Trigger,
+    WorkflowCall,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,6 +17,7 @@ pub struct Workflow {
     pub tags: Vec<String>,
     pub timeout_seconds: u64,
     pub inputs: Vec<InputDeclaration>,
+    pub outputs: Vec<OutputDeclaration>,
     pub steps: Vec<Step>,
     pub version: String,
 }
@@ -39,6 +41,7 @@ impl Workflow {
     pub const MANUAL_PREFIX: &'static str = "workflow:";
     pub const DISABLED: &'static str = "the workflow is disabled";
     pub const MODULE_OFF: &'static str = "the workflows module is off";
+    pub const AUTOMATIONS_OFF: &'static str = "the automations module is off";
     pub const UNDECLARED_INPUT: &'static str = "is not an input of the workflow";
 
     pub fn manual_key(id: &str) -> String {

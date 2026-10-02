@@ -4,7 +4,7 @@ use portal_config::Snapshot;
 use toml_edit::{Array, ArrayOfTables, DocumentMut, Item, Table, Value};
 
 use super::{push, remove_at, set, table_at, tags_value};
-use crate::types::{InputDeclaration, RawStep, Workflow};
+use crate::types::{InputDeclaration, OutputDeclaration, RawStep, Workflow};
 
 pub const WORKFLOWS: &str = Workflow::SECTION;
 pub const STEP_LISTS: [&str; 3] = ["then", "else", "body"];
@@ -115,7 +115,23 @@ fn write_workflow(table: &mut Table, workflow: &Workflow, steps: &[RawStep]) {
             )
         }),
     );
+    set(
+        table,
+        OutputDeclaration::FIELD,
+        (!workflow.outputs.is_empty())
+            .then(|| Value::Array(workflow.outputs.iter().map(output_value).collect::<Array>())),
+    );
     table.insert("steps", steps_item(steps));
+}
+
+fn output_value(output: &OutputDeclaration) -> Value {
+    let mut inline = toml_edit::InlineTable::new();
+    inline.insert("name", output.name.as_str().into());
+    inline.insert("value", output.value.as_str().into());
+    if let Some(description) = &output.description {
+        inline.insert("description", description.as_str().into());
+    }
+    Value::InlineTable(inline)
 }
 
 fn steps_item(steps: &[RawStep]) -> Item {

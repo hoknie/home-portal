@@ -1,7 +1,3 @@
-import type { ComponentType } from "react";
+import type { LucideIcon } from "lucide-react";
 
-export type SettingsEditorProps = { value: Record<string, unknown>; onChange: (value: Record<string, unknown>) => void };
-
-export type WidgetKind = { type: string; title: string; editor: ComponentType<SettingsEditorProps> | null };
-
-export type PreviewScope = { environment: string; signedIn: boolean };
+export type KindLabel = { type: string; title: string; icon: LucideIcon };

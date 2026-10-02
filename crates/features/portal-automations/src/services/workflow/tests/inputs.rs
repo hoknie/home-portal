@@ -153,3 +153,97 @@ fn an_automation_step_names_a_known_automation_and_fields_of_its_event() {
         ]
     );
 }
+
+const WEATHER: &str = "[[workflows]]\nid = \"weather\"\ntitle = \"Weather\"\n[[workflows.steps]]\nid = \"open_meteo\"\nkind = \"set\"\nvariable = \"answer\"\njson = '{\"current\": {\"temperature_2m\": 20, \"wind_speed_10m\": 10.8}}'\n[[workflows.steps]]\nid = \"read\"\nkind = \"set\"\nvariable = \"wind\"\nvalue = \"{{vars.answer.current.wind_speed_10m}}\"\n";
+
+fn with_outputs(outputs: &str) -> String {
+    format!("{WEATHER}[[workflows.outputs]]\n{outputs}")
+}
+
+#[tokio::test]
+async fn outputs_are_rendered_in_order_when_a_run_succeeds_keeping_their_type() {
+    let text = format!(
+        "{}[[workflows.outputs]]\nname = \"wind\"\nvalue = \"{{{{vars.wind}}}} km/h\"\n",
+        with_outputs(
+            "name = \"temperature\"\nvalue = \"{{vars.answer.current.temperature_2m}}\"\ndescription = \"°C now\"\n"
+        )
+    );
+    assert!(workflow_errors(&super::support::section(&text)).is_empty());
+    let outcome = run(&text).await;
+    assert_eq!(outcome.ending, Ending::Succeeded(None));
+    let outputs = outcome.frame.outputs.expect("outputs");
+    assert_eq!(outputs["temperature"], json!(20));
+    assert_eq!(outputs["wind"], json!("10.8 km/h"));
+}
+
+#[tokio::test]
+async fn a_run_that_fails_has_no_outputs() {
+    let text = format!(
+        "{WEATHER}[[workflows.steps]]\nid = \"end\"\nkind = \"stop\"\noutcome = \"failed\"\n{}",
+        "[[workflows.outputs]]\nname = \"wind\"\nvalue = \"{{vars.wind}}\"\n"
+    );
+    let outcome = run(&text).await;
+    assert!(
+        matches!(outcome.ending, Ending::Failed(_)),
+        "{:?}",
+        outcome.ending
+    );
+    assert!(outcome.frame.outputs.is_none());
+}
+
+#[test]
+fn an_output_names_only_what_the_end_of_a_workflow_knows() {
+    let errors = workflow_errors(&super::support::section(&with_outputs(
+        "name = \"item\"\nvalue = \"{{loop.item}}\"\n[[workflows.outputs]]\nname = \"who\"\nvalue = \"{{event.service.id}}\"\n[[workflows.outputs]]\nname = \"gone\"\nvalue = \"{{vars.missing}}\"\n",
+    )));
+    let named: Vec<(&str, &str)> = errors
+        .iter()
+        .map(|error| (error.field.as_str(), error.message.as_str()))
+        .collect();
+    assert!(
+        named
+            .iter()
+            .any(|(field, message)| *field == "workflows[0].outputs[0].value"
+                && message.contains("only inside a loop")),
+        "{named:?}"
+    );
+    assert!(
+        named
+            .iter()
+            .any(|(field, message)| *field == "workflows[0].outputs[1].value"
+                && message.contains("not the event")),
+        "{named:?}"
+    );
+    assert!(
+        named
+            .iter()
+            .any(|(field, _)| *field == "workflows[0].outputs[2].value"),
+        "{named:?}"
+    );
+    let twice = workflow_errors(&super::support::section(&with_outputs(
+        "name = \"wind\"\nvalue = \"{{vars.wind}}\"\n[[workflows.outputs]]\nname = \"wind\"\nvalue = \"x\"\n",
+    )));
+    assert!(
+        twice
+            .iter()
+            .any(|error| error.field == "workflows[0].outputs[1].name"
+                && error.message.contains("another output")),
+        "{twice:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_secret_in_an_output_is_masked() {
+    use std::sync::Arc;
+    let lookup: crate::services::workflow::SecretLookup =
+        Arc::new(|key: &str| (key == "token").then(|| "abc123".to_string()));
+    let (_sender, stop) = tokio::sync::watch::channel(false);
+    let outcome = super::running::run_prepared(
+        &with_outputs("name = \"key\"\nvalue = \"{{secrets.token}}\"\n"),
+        (Arc::new(super::running::FakeActions::default()), stop),
+        &[],
+        crate::services::workflow::Secrets::new(lookup),
+    )
+    .await;
+    assert_eq!(outcome.frame.outputs.expect("outputs")["key"], json!("***"));
+}
