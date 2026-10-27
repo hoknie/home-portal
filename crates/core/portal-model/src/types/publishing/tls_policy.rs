@@ -18,6 +18,16 @@ impl TlsPolicy {
     pub const NEEDS_FILE: &'static str = "is required when mode is files";
     pub const INVALID_EMAIL: &'static str = "must be an email address";
 
+    pub fn normalized(&self) -> TlsPolicy {
+        let present = |text: &Option<String>| text.clone().filter(|text| !text.trim().is_empty());
+        TlsPolicy {
+            mode: self.mode,
+            email: present(&self.email),
+            certificate: present(&self.certificate),
+            key: present(&self.key),
+        }
+    }
+
     pub fn problems(&self) -> Vec<(&'static str, &'static str)> {
         let mut problems = Vec::new();
         if let Some(email) = &self.email

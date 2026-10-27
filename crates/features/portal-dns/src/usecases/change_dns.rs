@@ -36,7 +36,7 @@ impl ChangeDns {
             .unwrap_or_else(|| self.configuration.home_of(Section::Dns));
         self.configuration
             .update(&target, revision, |document| {
-                write_dns(document, choice);
+                write_dns(document, &choice.normalized());
                 Ok(())
             })
             .await?;

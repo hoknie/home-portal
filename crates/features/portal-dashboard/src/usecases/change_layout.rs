@@ -5,8 +5,10 @@ use std::sync::Arc;
 use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::ApiError;
 
-use crate::repositories::write_layout;
-use crate::services::{check_edited, layout_view, library_ids, renamed_for_the_editor};
+use crate::repositories::{apply_layout, apply_library_moves, stored_layout, stored_widgets};
+use crate::services::{
+    check_edited, layout_plan, layout_view, library_ids, library_moves, renamed_for_the_editor,
+};
 use crate::types::{EditedLayout, LayoutView};
 
 #[derive(Clone)]
@@ -33,7 +35,9 @@ impl ChangeLayout {
         let written = self
             .configuration
             .update(&target, revision, |document| {
-                write_layout(document, edited);
+                apply_library_moves(document, &library_moves(&stored_widgets(document)));
+                let (placements, sections) = stored_layout(document);
+                apply_layout(document, &layout_plan(&placements, &sections, edited));
                 Ok(())
             })
             .await;

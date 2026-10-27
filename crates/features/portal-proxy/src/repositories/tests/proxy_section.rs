@@ -1,6 +1,6 @@
 use toml_edit::DocumentMut;
 
-use super::write_managed;
+use crate::repositories::write_managed;
 
 const BEFORE: &str = "# the proxy\n[proxy]\nadmin = \"http://127.0.0.1:2019\" # on\nportal_host = \"portal.example.com\"\n";
 
@@ -42,7 +42,7 @@ fn writing_the_settings_leaves_other_keys_as_they_were_and_keeps_every_comment()
         "# mine\n[proxy]\nmanaged = false # not yet\ncookie_domain = \"old.example.com\"\n"
             .parse()
             .unwrap();
-    super::write_choice(&mut document, &choice());
+    crate::repositories::write_choice(&mut document, &choice());
     assert_eq!(
         document.to_string(),
         "# mine\n[proxy]\nmanaged = false # not yet\nportal_host = \"portal.example.com\"\ntls = { mode = \"acme\", email = \"owner@example.com\" }\n"
@@ -52,7 +52,7 @@ fn writing_the_settings_leaves_other_keys_as_they_were_and_keeps_every_comment()
 #[test]
 fn a_tls_table_is_edited_in_place() {
     let mut document: DocumentMut = "[proxy]\nmanaged = true\n\n# certificates\n[proxy.tls]\nmode = \"files\"\ncertificate = \"/a.pem\"\nkey = \"/a.key\"\n".parse().unwrap();
-    super::write_choice(&mut document, &choice());
+    crate::repositories::write_choice(&mut document, &choice());
     assert_eq!(
         document.to_string(),
         "[proxy]\nmanaged = true\nportal_host = \"portal.example.com\"\n\n# certificates\n[proxy.tls]\nmode = \"acme\"\nemail = \"owner@example.com\"\n"
@@ -62,7 +62,7 @@ fn a_tls_table_is_edited_in_place() {
 #[test]
 fn writing_the_settings_never_adds_a_switch() {
     let mut document = DocumentMut::new();
-    super::write_choice(&mut document, &choice());
+    crate::repositories::write_choice(&mut document, &choice());
     assert!(!document.to_string().contains("enabled"), "{document}");
 }
 
@@ -80,13 +80,18 @@ fn preparing_the_proxy_trusts_loopback_and_touches_only_the_network_section() {
     );
 }
 
+fn prepared(document: &mut DocumentMut) {
+    use portal_feature::ModulePreparer;
+    crate::usecases::PrepareProxy.prepare(document);
+}
+
 #[test]
 fn loopback_is_trusted_once() {
     let mut document: DocumentMut = "[network]\ntrusted_proxies = [\"10.0.0.1\"]\n"
         .parse()
         .unwrap();
-    super::trust_loopback(&mut document);
-    super::trust_loopback(&mut document);
+    prepared(&mut document);
+    prepared(&mut document);
     assert_eq!(
         document.to_string(),
         "[network]\ntrusted_proxies = [\"10.0.0.1\", \"127.0.0.1\"]\n"
@@ -94,13 +99,13 @@ fn loopback_is_trusted_once() {
     let mut covered: DocumentMut = "[network]\ntrusted_proxies = [\"127.0.0.0/8\"]\n"
         .parse()
         .unwrap();
-    super::trust_loopback(&mut covered);
+    prepared(&mut covered);
     assert_eq!(
         covered.to_string(),
         "[network]\ntrusted_proxies = [\"127.0.0.0/8\"]\n"
     );
     let mut empty = DocumentMut::new();
-    super::trust_loopback(&mut empty);
+    prepared(&mut empty);
     assert_eq!(
         empty.to_string(),
         "[network]\ntrusted_proxies = [\"127.0.0.1\"]\n"
@@ -117,7 +122,7 @@ fn pinned(version: &str) -> crate::types::CaddySource {
 #[test]
 fn pinning_a_caddy_version_writes_an_inline_table_and_keeps_every_comment() {
     let mut document: DocumentMut = BEFORE.parse().unwrap();
-    super::write_caddy_source(&mut document, &pinned("2.10.2"));
+    crate::repositories::write_caddy_source(&mut document, &pinned("2.10.2"));
     assert_eq!(
         document.to_string(),
         format!("{BEFORE}caddy = {{ version = \"2.10.2\" }}\n")
@@ -129,10 +134,10 @@ fn the_default_source_and_version_remove_the_caddy_key() {
     let mut document: DocumentMut = format!("{BEFORE}caddy = {{ version = \"2.10.2\" }}\n")
         .parse()
         .unwrap();
-    super::write_caddy_source(&mut document, &crate::types::CaddySource::default());
+    crate::repositories::write_caddy_source(&mut document, &crate::types::CaddySource::default());
     assert_eq!(document.to_string(), BEFORE);
     let mut empty = DocumentMut::new();
-    super::write_caddy_source(&mut empty, &crate::types::CaddySource::default());
+    crate::repositories::write_caddy_source(&mut empty, &crate::types::CaddySource::default());
     assert_eq!(empty.to_string(), "");
 }
 
@@ -143,7 +148,7 @@ fn a_caddy_table_is_edited_in_place() {
         base: "https://git.example.com/releases".into(),
         ..pinned("2.10.2")
     };
-    super::write_caddy_source(&mut document, &source);
+    crate::repositories::write_caddy_source(&mut document, &source);
     assert_eq!(
         document.to_string(),
         "[proxy]\nmanaged = true\n\n# where caddy comes from\n[proxy.caddy]\nsource = \"https://git.example.com/releases\" # mirror\nversion = \"2.10.2\"\n"
@@ -157,6 +162,6 @@ fn editing_the_settings_keeps_the_download_source() {
     let mut document: DocumentMut = format!("[proxy]\nmanaged = false\n{mirror}")
         .parse()
         .unwrap();
-    super::write_choice(&mut document, &choice());
+    crate::repositories::write_choice(&mut document, &choice());
     assert!(document.to_string().contains(mirror), "{document}");
 }

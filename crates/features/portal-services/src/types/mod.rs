@@ -10,6 +10,9 @@ mod shown_service;
 mod tracked;
 mod viewpoint;
 
+#[cfg(test)]
+mod tests;
+
 pub use history::{
     HistoryLine, HistoryRange, HistoryView, HistoryWrite, HourBucket, LatencyPoint, Sample,
     Transition, Uptime,

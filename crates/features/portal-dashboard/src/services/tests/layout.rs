@@ -1,6 +1,6 @@
 use toml_edit::DocumentMut;
 
-use super::{layout, validate_dashboard};
+use crate::services::{layout, validate_dashboard};
 
 fn document(text: &str) -> DocumentMut {
     text.parse().unwrap()
@@ -123,15 +123,15 @@ fn a_layout_editor_cannot_point_a_secret_somewhere_new_but_may_keep_one() {
     let editor = Rights::of([Right::new(Area::Layout, Action::Update)]);
     let stored = vec![calendar("https://cloud.home/cal.ics", "nas_token")];
     let borrowed = edited(vec![calendar("https://example.net/", "nas_token")]);
-    let refused = super::secrets_allowed(&borrowed, &stored, &editor).unwrap_err();
+    let refused = crate::services::secrets_allowed(&borrowed, &stored, &editor).unwrap_err();
     assert!(
         format!("{refused:?}").contains("widgets[0].secret"),
         "{refused:?}"
     );
     let kept = edited(vec![calendar("https://cloud.home/cal.ics", "nas_token")]);
-    assert!(super::secrets_allowed(&kept, &stored, &editor).is_ok());
+    assert!(crate::services::secrets_allowed(&kept, &stored, &editor).is_ok());
     let reader = Rights::of([Right::new(Area::Secrets, Action::Read)]);
-    assert!(super::secrets_allowed(&borrowed, &stored, &reader).is_ok());
+    assert!(crate::services::secrets_allowed(&borrowed, &stored, &reader).is_ok());
 }
 
 #[test]
@@ -226,7 +226,8 @@ fn a_new_source_needs_its_right_but_a_widget_keeps_the_one_it_had_through_other_
     let editor = Rights::of([Right::new(Area::Layout, Action::Update)]);
     let stored = vec![custom("disks", "router-clients.sh")];
     let added = keyed(vec![(None, custom("clients", "router-clients.sh"))]);
-    let refused = super::needs_allowed(&added, &stored, &editor, &scripted()).unwrap_err();
+    let refused =
+        crate::services::needs_allowed(&added, &stored, &editor, &scripted()).unwrap_err();
     assert!(
         format!("{refused:?}").contains("widgets[0].source"),
         "{refused:?}"
@@ -235,11 +236,11 @@ fn a_new_source_needs_its_right_but_a_widget_keeps_the_one_it_had_through_other_
     restyled.width = Some(5);
     restyled.settings["title"] = serde_json::json!("changed");
     let kept = keyed(vec![(Some("disks"), restyled)]);
-    assert!(super::needs_allowed(&kept, &stored, &editor, &scripted()).is_ok());
+    assert!(crate::services::needs_allowed(&kept, &stored, &editor, &scripted()).is_ok());
     let swapped = keyed(vec![(Some("disks"), custom("disks", "other.sh"))]);
-    assert!(super::needs_allowed(&swapped, &stored, &editor, &scripted()).is_err());
+    assert!(crate::services::needs_allowed(&swapped, &stored, &editor, &scripted()).is_err());
     let runner = Rights::of([Right::new(Area::Automations, Action::Execute)]);
-    assert!(super::needs_allowed(&added, &stored, &runner, &scripted()).is_ok());
+    assert!(crate::services::needs_allowed(&added, &stored, &runner, &scripted()).is_ok());
 }
 
 #[test]

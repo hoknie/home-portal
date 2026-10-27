@@ -2,7 +2,9 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
 use crate::repositories::HistoryFiles;
-use crate::services::StatusBoard;
+use time::OffsetDateTime;
+
+use crate::services::{StatusBoard, persist};
 
 pub struct HistoryWriter {
     pub board: Arc<StatusBoard>,
@@ -33,7 +35,8 @@ impl HistoryWriter {
         let _writing = self.writing.lock().unwrap_or_else(PoisonError::into_inner);
         let forgotten = self.board.take_forgotten();
         for (id, write) in self.board.take_dirty() {
-            if let Err(error) = self.files.save(&id, &write) {
+            let now = OffsetDateTime::now_utc().unix_timestamp();
+            if let Err(error) = persist(&self.files, &id, &write, now) {
                 tracing::warn!(service = %id, %error, "cannot write the service history; it will be rewritten whole next time");
                 self.board.rewrite_later(&id);
             }

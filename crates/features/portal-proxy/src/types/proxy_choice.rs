@@ -8,3 +8,12 @@ pub struct ProxyChoice {
     pub cookie_domain: Option<String>,
     pub tls: TlsPolicy,
 }
+
+impl ProxyChoice {
+    pub fn normalized(&self) -> ProxyChoice {
+        ProxyChoice {
+            tls: self.tls.normalized(),
+            ..self.clone()
+        }
+    }
+}

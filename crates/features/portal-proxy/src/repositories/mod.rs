@@ -4,5 +4,6 @@ mod proxy_section;
 mod tests;
 
 pub use proxy_section::{
-    NETWORK, SECTION, trust_loopback, write_caddy_source, write_choice, write_managed,
+    NETWORK, SECTION, append_trusted_proxy, trusted_proxies, write_caddy_source, write_choice,
+    write_managed,
 };

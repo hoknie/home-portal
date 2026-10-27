@@ -17,19 +17,12 @@ pub fn position(document: &DocumentMut, id: &str) -> Option<usize> {
         .position(|table| table.get("id").and_then(Item::as_str) == Some(id))
 }
 
-pub fn published_elsewhere(document: &DocumentMut, entry: &ServiceEntry, own_id: &str) -> bool {
-    let Some(host) = entry
-        .proxy
-        .as_ref()
-        .map(|publication| publication.host.as_str())
-    else {
-        return false;
-    };
+pub fn host_taken(document: &DocumentMut, host: &str, except_id: &str) -> bool {
     let Some(entries) = document.get(SECTION).and_then(Item::as_array_of_tables) else {
         return false;
     };
     entries.iter().any(|table| {
-        table.get("id").and_then(Item::as_str) != Some(own_id)
+        table.get("id").and_then(Item::as_str) != Some(except_id)
             && table
                 .get("proxy")
                 .and_then(|proxy| proxy.get("host"))
@@ -219,7 +212,7 @@ fn write_links(table: &mut Table, entry: &ServiceEntry) {
 }
 
 fn write_notes(table: &mut Table, notes: Option<&str>) {
-    let Some(notes) = notes.filter(|notes| !notes.trim().is_empty()) else {
+    let Some(notes) = notes else {
         table.remove("notes");
         return;
     };
@@ -256,7 +249,7 @@ fn write_flag(table: &mut Table, key: &str, flag: bool, default: bool) {
 }
 
 fn write_optional(table: &mut Table, key: &str, text: Option<&str>) {
-    match text.filter(|text| !text.is_empty()) {
+    match text {
         Some(text) => table[key] = value(text),
         None => {
             table.remove(key);

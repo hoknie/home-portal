@@ -5,6 +5,9 @@ mod dns_settings;
 mod dns_tls_choice;
 mod raw_dns;
 
+#[cfg(test)]
+mod tests;
+
 pub use dns_choice::DnsChoice;
 pub use dns_https_choice::DnsHttpsChoice;
 pub use dns_record::DnsRecord;

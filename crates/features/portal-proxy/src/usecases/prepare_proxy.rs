@@ -1,7 +1,8 @@
 use portal_feature::{Module, ModulePreparer};
 use toml_edit::DocumentMut;
 
-use crate::repositories::{NETWORK, trust_loopback};
+use crate::helpers::{LOOPBACK, covers_loopback};
+use crate::repositories::{NETWORK, append_trusted_proxy, trusted_proxies};
 
 pub const TOUCHED: &[&str] = &[NETWORK];
 
@@ -18,6 +19,9 @@ impl ModulePreparer for PrepareProxy {
     }
 
     fn prepare(&self, document: &mut DocumentMut) {
-        trust_loopback(document);
+        let trusted = trusted_proxies(document);
+        if !covers_loopback(trusted.iter().map(String::as_str)) {
+            append_trusted_proxy(document, &LOOPBACK.to_string());
+        }
     }
 }

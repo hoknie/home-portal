@@ -9,7 +9,7 @@ pub const HTTPS: &str = "https";
 
 pub fn write_dns(document: &mut DocumentMut, choice: &DnsChoice) {
     let table = section(document, SECTION);
-    set(table, "address", choice.address.trim().into());
+    set(table, "address", choice.address.as_str().into());
     set(table, "port", i64::from(choice.port).into());
     set(table, "zones", strings(&choice.zones).into());
     set(table, "ttl", i64::from(choice.ttl).into());
@@ -24,7 +24,7 @@ pub fn write_dns(document: &mut DocumentMut, choice: &DnsChoice) {
     }
     for (environment, found) in &choice.addresses {
         let written = match found.as_slice() {
-            [one] => Value::from(one.trim()),
+            [one] => Value::from(one.as_str()),
             many => strings(many).into(),
         };
         set(addresses, environment, written);
@@ -39,22 +39,16 @@ pub fn write_dns(document: &mut DocumentMut, choice: &DnsChoice) {
     optional(
         tls,
         "certificate",
-        present(&choice.tls.certificate).map(Value::from),
+        choice.tls.certificate.as_deref().map(Value::from),
     );
-    optional(tls, "key", present(&choice.tls.key).map(Value::from));
+    optional(tls, "key", choice.tls.key.as_deref().map(Value::from));
     let https = child(table, HTTPS);
     set(https, "enabled", choice.https.enabled.into());
-    optional(https, "host", present(&choice.https.host).map(Value::from));
-}
-
-fn present(text: &Option<String>) -> Option<&str> {
-    text.as_deref()
-        .map(str::trim)
-        .filter(|text| !text.is_empty())
+    optional(https, "host", choice.https.host.as_deref().map(Value::from));
 }
 
 fn strings(values: &[String]) -> Array {
-    values.iter().map(|text| text.trim()).collect()
+    values.iter().map(String::as_str).collect()
 }
 
 fn section<'a>(document: &'a mut DocumentMut, name: &str) -> &'a mut dyn TableLike {

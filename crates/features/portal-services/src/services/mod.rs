@@ -11,7 +11,7 @@ mod validation;
 #[cfg(test)]
 mod tests;
 
-pub use history::ServiceHistory;
+pub use history::{ServiceHistory, persist, restore};
 pub use one_probe::probe_once;
 pub use showcase::Showcase;
 pub use status_board::StatusBoard;

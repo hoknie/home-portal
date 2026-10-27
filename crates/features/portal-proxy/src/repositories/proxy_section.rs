@@ -1,7 +1,6 @@
 use portal_model::{Publication, TlsPolicy};
 use toml_edit::{Array, DocumentMut, InlineTable, Item, Table, TableLike, Value, value};
 
-use crate::helpers::{LOOPBACK, covers_loopback};
 use crate::types::{CaddySource, CaddyVersion, ProxyChoice};
 
 pub const SECTION: &str = "proxy";
@@ -95,26 +94,33 @@ pub fn write_choice(document: &mut DocumentMut, choice: &ProxyChoice) {
     }
 }
 
-pub fn trust_loopback(document: &mut DocumentMut) {
+pub fn trusted_proxies(document: &DocumentMut) -> Vec<String> {
+    document
+        .get(NETWORK)
+        .filter(|network| network.is_table())
+        .and_then(|network| network.get(TRUSTED_PROXIES))
+        .and_then(Item::as_array)
+        .map(|list| {
+            list.iter()
+                .filter_map(|entry| entry.as_str().map(String::from))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+pub fn append_trusted_proxy(document: &mut DocumentMut, entry: &str) {
     if !document.contains_table(NETWORK) {
         document.insert(NETWORK, Item::Table(Table::new()));
     }
     let network = &mut document[NETWORK];
-    let covered = network
-        .get(TRUSTED_PROXIES)
-        .and_then(Item::as_array)
-        .is_some_and(|list| covers_loopback(list.iter().filter_map(|entry| entry.as_str())));
-    if covered {
-        return;
-    }
     match network
         .get_mut(TRUSTED_PROXIES)
         .and_then(Item::as_array_mut)
     {
-        Some(list) => list.push(LOOPBACK.to_string()),
+        Some(list) => list.push(entry),
         None => {
             let mut list = Array::new();
-            list.push(LOOPBACK.to_string());
+            list.push(entry);
             network[TRUSTED_PROXIES] = value(list);
         }
     }
@@ -144,7 +150,7 @@ fn fill_tls(table: &mut dyn TableLike, tls: &TlsPolicy) {
         ("key", &tls.key),
     ];
     for (key, text) in texts {
-        match text.as_deref().filter(|text| !text.trim().is_empty()) {
+        match text.as_deref() {
             Some(text) => {
                 table.insert(key, value(text));
             }

@@ -5,4 +5,4 @@ mod services;
 mod tests;
 
 pub use history::HistoryFiles;
-pub use services::{append, origin, position, published_elsewhere, remove, replace};
+pub use services::{append, host_taken, origin, position, remove, replace};

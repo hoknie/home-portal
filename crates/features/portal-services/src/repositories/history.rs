@@ -4,10 +4,7 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, PoisonError};
 
-use time::OffsetDateTime;
-
-use crate::services::ServiceHistory;
-use crate::types::{HistoryLine, HistoryWrite};
+use crate::types::HistoryLine;
 
 pub struct HistoryFiles {
     directory: PathBuf,
@@ -33,11 +30,10 @@ impl HistoryFiles {
         self.directory.join(format!("{id}.{}", Self::EXTENSION))
     }
 
-    pub fn load(&self, wanted: &[String]) -> HashMap<String, ServiceHistory> {
+    pub fn ids(&self) -> Vec<String> {
         let Ok(entries) = fs::read_dir(&self.directory) else {
-            return HashMap::new();
+            return Vec::new();
         };
-        let now = OffsetDateTime::now_utc().unix_timestamp();
         let mut ids = BTreeSet::new();
         for path in entries.flatten().map(|entry| entry.path()) {
             let name = path
@@ -52,25 +48,14 @@ impl HistoryFiles {
             if extension != Some(Self::EXTENSION) {
                 continue;
             }
-            let Some(id) = path.file_stem().and_then(|stem| stem.to_str()) else {
-                continue;
-            };
-            if wanted.iter().any(|known| known == id) {
+            if let Some(id) = path.file_stem().and_then(|stem| stem.to_str()) {
                 ids.insert(id.to_string());
-            } else if let Err(error) = fs::remove_file(&path) {
-                tracing::warn!(path = %path.display(), %error, "cannot delete the history of a removed service");
             }
         }
-        let mut loaded = HashMap::new();
-        for id in ids {
-            if let Some(history) = self.load_one(&id, now) {
-                loaded.insert(id, history);
-            }
-        }
-        loaded
+        ids.into_iter().collect()
     }
 
-    fn load_one(&self, id: &str, now: i64) -> Option<ServiceHistory> {
+    pub fn recover(&self, id: &str) -> Option<Vec<HistoryLine>> {
         let lines_path = self.file_of(id);
         let mut lines = Vec::new();
         if lines_path.exists() {
@@ -82,35 +67,22 @@ impl HistoryFiles {
         if lines.is_empty() && !lines_path.exists() {
             return None;
         }
-        let history = ServiceHistory::from_lines(lines, now);
-        if let Err(error) = self.compact(id, &history) {
-            tracing::warn!(service = %id, %error, "cannot rewrite the service history");
-        }
-        Some(history)
+        Some(lines)
     }
 
-    pub fn save(&self, id: &str, write: &HistoryWrite) -> io::Result<()> {
-        match write {
-            HistoryWrite::Rewrite(history) => self.compact(id, history),
-            HistoryWrite::Append(lines) if lines.is_empty() => Ok(()),
-            HistoryWrite::Append(lines) => {
-                Self::create_private_directory(&self.directory)?;
-                let mut file = Self::open_appending(&self.file_of(id))?;
-                file.write_all(Self::text_of(lines)?.as_bytes())?;
-                file.sync_data()?;
-                let size = file.metadata()?.len();
-                if size > self.limit_of(id) {
-                    let history = Self::read_lines(&self.file_of(id)).map(|lines| {
-                        ServiceHistory::from_lines(
-                            lines,
-                            OffsetDateTime::now_utc().unix_timestamp(),
-                        )
-                    })?;
-                    self.compact(id, &history)?;
-                }
-                Ok(())
-            }
-        }
+    pub fn read(&self, id: &str) -> io::Result<Vec<HistoryLine>> {
+        Self::read_lines(&self.file_of(id))
+    }
+
+    pub fn append(&self, id: &str, lines: &[HistoryLine]) -> io::Result<()> {
+        Self::create_private_directory(&self.directory)?;
+        let mut file = Self::open_appending(&self.file_of(id))?;
+        file.write_all(Self::text_of(lines)?.as_bytes())?;
+        file.sync_data()
+    }
+
+    pub fn needs_compacting(&self, id: &str) -> bool {
+        fs::metadata(self.file_of(id)).is_ok_and(|metadata| metadata.len() > self.limit_of(id))
     }
 
     fn limit_of(&self, id: &str) -> u64 {
@@ -124,13 +96,13 @@ impl HistoryFiles {
         Self::COMPACT_AFTER_BYTES.max(compacted.saturating_mul(2))
     }
 
-    pub fn compact(&self, id: &str, history: &ServiceHistory) -> io::Result<()> {
+    pub fn rewrite(&self, id: &str, lines: &[HistoryLine]) -> io::Result<()> {
         Self::create_private_directory(&self.directory)?;
         let path = self.file_of(id);
         let mut temporary = path.clone().into_os_string();
         temporary.push(Self::TEMPORARY_SUFFIX);
         let temporary = PathBuf::from(temporary);
-        let text = Self::text_of(&history.lines())?;
+        let text = Self::text_of(lines)?;
         let mut file = Self::open_private(&temporary)?;
         file.write_all(text.as_bytes())?;
         file.sync_all()?;

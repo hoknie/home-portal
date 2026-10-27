@@ -83,7 +83,7 @@ and may hold kinds; a kind never holds another kind.
 | `clients/` | transport to one external service, with timeouts | what the answer means |
 | `probes/` | one status check per file | storage, handlers |
 | `parsers/` | bytes of a foreign format → records or a named refusal | io |
-| `repositories/` | storage access | domain decisions |
+| `repositories/` | storage access: find, map, keep the layout, write atomically | decisions, defaults, normalization, the clock |
 | `loops/` | what one tick of a background pass does | who starts it |
 | `types/` | domain values and their invariants | foreign wire formats |
 | `helpers/` | pure functions | state |
@@ -95,8 +95,8 @@ and may hold kinds; a kind never holds another kind.
 **Entry points reach storage only through use cases.** Files under `controllers/` and the root's
 `adapters/`, `middlewares/` and `cli/` never name `repositories`, `ConfigStore`, `Snapshot`,
 `.document` or `.configuration`. Only `cli/` opens the store. Other crates reach a feature's settings
-through its public use cases, and a use case answers `Revisioned`, never `Snapshot`.
-**Checked:** `tests/architecture/layers.rs`.
+through its public use cases, and a use case answers `Revisioned`, never `Snapshot`. A repository never
+imports the layers above it or reads the clock. **Checked:** `tests/architecture/layers/`.
 
 **The command line is declared once** (`bin/home-portal/src/types/command_line.rs`) and styled only
 through `cli/palette.rs`.
@@ -345,7 +345,7 @@ Rules for every integration:
 | Edition / toolchain | `2024`, `rust-toolchain.toml` | ✅ |
 | The gate | `just check`: fmt → clippy `-D warnings` → tests → web lint → typecheck → tests → build | ✅ |
 | Tests | no live service, no network | ✅ |
-| Rust architecture guards | `bin/home-portal/tests/architecture/`: comments, allows, `unsafe`, roots, sizes, folders, layers, registry, channels, rules | ✅ |
+| Rust architecture guards | `bin/home-portal/tests/architecture/`: comments, allows, `unsafe`, roots, sizes, folders, layers (entry points, repositories), registry, channels, rules | ✅ |
 | API samples | `bin/home-portal/tests/samples/` against the web schemas; `just samples` rewrites | ✅ |
 | Response schemas | the samples test writes a JSON Schema per typed answer (`schemars`); `web/scripts/generate-schemas.mjs` turns them into `web/src/shared/api/generated/`; both fail when stale | ✅ |
 | Test support | `crates/core/portal-testing` (dev only): `FakeHttp` for outbound calls, `written`/`split`/`opened` for configuration directories | ✅ |

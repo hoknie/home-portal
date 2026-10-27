@@ -1,6 +1,6 @@
 use portal_model::{Diagnosis, ProbeOutcome, ServiceState};
 
-use super::ServiceHistory;
+use crate::services::ServiceHistory;
 use crate::types::HistoryRange;
 
 const START: i64 = 1_790_000_000;

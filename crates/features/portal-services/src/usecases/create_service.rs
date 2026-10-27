@@ -4,7 +4,7 @@ use portal_config::{ConfigStore, Revision, Revisioned, Section};
 use portal_feature::{ApiError, EventName, EventSink, PortalEvent};
 use time::OffsetDateTime;
 
-use crate::repositories::{append, position, published_elsewhere};
+use crate::repositories::{append, host_taken, position};
 use crate::services::Showcase;
 use crate::types::{ServiceEntry, ShownService};
 
@@ -44,10 +44,12 @@ impl CreateService {
                 if position(document, &entry.id).is_some() {
                     return Err(ApiError::invalid("id", ServiceEntry::TAKEN_ID));
                 }
-                if published_elsewhere(document, &entry, &entry.id) {
+                if let Some(publication) = &entry.proxy
+                    && host_taken(document, &publication.host, &entry.id)
+                {
                     return Err(ApiError::invalid("proxy.host", ServiceEntry::TAKEN_HOST));
                 }
-                append(document, &entry);
+                append(document, &entry.normalized());
                 Ok(())
             })
             .await?;

@@ -35,7 +35,7 @@ impl ChangeProxy {
             .unwrap_or_else(|| self.configuration.home_of(Section::Proxy));
         self.configuration
             .update(&target, revision, |document| {
-                write_choice(document, choice);
+                write_choice(document, &choice.normalized());
                 Ok(())
             })
             .await?;

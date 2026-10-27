@@ -4,9 +4,8 @@ use portal_widget::{
 };
 use toml_edit::DocumentMut;
 
-use super::{remove_library_entry, write_layout, write_library_entry};
-use crate::responses::WidgetView;
-use crate::types::{EditedLayout, EditedWidget};
+use super::steps::{remove_library_entry, write_layout, write_library_entry};
+use crate::types::{EditedLayout, EditedWidget, PlacementKey};
 
 const OLDER: &str = r#"# the home page
 
@@ -34,7 +33,7 @@ fn current(document: &DocumentMut) -> EditedLayout {
             .into_iter()
             .enumerate()
             .map(|(index, widget)| EditedWidget {
-                key: Some(WidgetView::key_of(index)),
+                key: Some(PlacementKey::of(index)),
                 instance: WidgetInstance {
                     column: widget.column,
                     row: widget.row,

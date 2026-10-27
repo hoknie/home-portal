@@ -5,8 +5,12 @@ use portal_feature::{ApiError, Rights};
 use portal_widget::WidgetInstance;
 
 use super::change_layout::dashboard_file;
-use crate::repositories::{remove_library_entry, write_library_entry};
-use crate::services::{check_entry, library_views, needs_allowed, secrets_allowed};
+use crate::repositories::{
+    apply_library_moves, remove_library_entry, stored_library, stored_widgets, write_library_entry,
+};
+use crate::services::{
+    check_entry, library_entry_id, library_moves, library_views, needs_allowed, secrets_allowed,
+};
 use crate::types::{EditedLayout, EditedWidget, NeedsOf, no_needs};
 
 #[derive(Clone)]
@@ -83,7 +87,14 @@ impl LibraryCases {
         let (_, snapshot) = self
             .configuration
             .update(&target, revision, |document| {
-                saved = Some(write_library_entry(document, existing, &entry));
+                apply_library_moves(document, &library_moves(&stored_widgets(document)));
+                let id = library_entry_id(existing, &entry, &stored_library(document));
+                let written = WidgetInstance {
+                    id: Some(id.clone()),
+                    ..entry.clone()
+                };
+                write_library_entry(document, existing, &written);
+                saved = Some(id);
                 Ok(())
             })
             .await
@@ -122,6 +133,7 @@ impl LibraryCases {
         let (_, snapshot) = self
             .configuration
             .update(&target, revision, |document| {
+                apply_library_moves(document, &library_moves(&stored_widgets(document)));
                 remove_library_entry(document, id);
                 Ok(())
             })

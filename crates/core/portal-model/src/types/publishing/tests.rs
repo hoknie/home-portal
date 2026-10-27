@@ -73,3 +73,18 @@ fn an_acme_email_must_look_like_an_address() {
     };
     assert_eq!(policy.problems(), vec![("email", TlsPolicy::INVALID_EMAIL)]);
 }
+
+#[test]
+fn normalizing_a_tls_policy_drops_blank_texts_and_keeps_the_rest_as_given() {
+    let policy = TlsPolicy {
+        mode: TlsMode::Files,
+        email: Some("   ".into()),
+        certificate: Some(" /tls.pem ".into()),
+        key: Some(String::new()),
+    };
+    let normalized = policy.normalized();
+    assert_eq!(normalized.mode, TlsMode::Files);
+    assert_eq!(normalized.email, None);
+    assert_eq!(normalized.certificate.as_deref(), Some(" /tls.pem "));
+    assert_eq!(normalized.key, None);
+}

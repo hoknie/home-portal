@@ -1,11 +1,23 @@
 mod dashboard_state;
 mod edited_layout;
 mod edited_widget;
+mod inline_placement;
+mod layout_plan;
 mod layout_view;
+mod library_moves;
 mod needs_of;
+mod placement_key;
+mod planned_entry;
+mod stored_widgets;
 
 pub use dashboard_state::DashboardState;
 pub use edited_layout::EditedLayout;
 pub use edited_widget::EditedWidget;
+pub use inline_placement::InlinePlacement;
+pub use layout_plan::LayoutPlan;
 pub use layout_view::LayoutView;
+pub use library_moves::LibraryMoves;
 pub use needs_of::{NeedsOf, no_needs};
+pub use placement_key::PlacementKey;
+pub use planned_entry::PlannedEntry;
+pub use stored_widgets::StoredWidgets;

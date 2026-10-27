@@ -3,6 +3,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::types::PlacementKey;
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct WidgetView {
     pub key: String,
@@ -23,10 +25,8 @@ pub struct WidgetView {
 }
 
 impl WidgetView {
-    pub const POSITION_PREFIX: &'static str = "#";
-
     pub fn key_of(index: usize) -> String {
-        format!("{}{index}", Self::POSITION_PREFIX)
+        PlacementKey::of(index)
     }
 
     pub fn of(key: String, instance: WidgetInstance) -> WidgetView {

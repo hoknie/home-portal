@@ -243,3 +243,25 @@ fn removing_a_publication_drops_its_key_and_keeps_the_comment() {
     );
     assert_eq!(document.to_string(), BEFORE);
 }
+
+#[test]
+fn a_host_is_taken_only_by_another_service() {
+    let document: DocumentMut = "[[services]]\nid = \"media\"\nname = \"Media\"\nurl = \"http://10.0.0.5\"\nproxy = { host = \"media.example.com\" }\n"
+        .parse()
+        .unwrap();
+    assert!(crate::repositories::host_taken(
+        &document,
+        "media.example.com",
+        "nas"
+    ));
+    assert!(!crate::repositories::host_taken(
+        &document,
+        "media.example.com",
+        "media"
+    ));
+    assert!(!crate::repositories::host_taken(
+        &document,
+        "nas.example.com",
+        "nas"
+    ));
+}

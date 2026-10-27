@@ -68,6 +68,17 @@ impl ServiceEntry {
         }
     }
 
+    pub fn normalized(&self) -> ServiceEntry {
+        let present = |text: &Option<String>| text.clone().filter(|text| !text.is_empty());
+        ServiceEntry {
+            group: present(&self.group),
+            icon: present(&self.icon),
+            description: present(&self.description),
+            notes: self.notes.clone().filter(|notes| !notes.trim().is_empty()),
+            ..self.clone()
+        }
+    }
+
     pub fn address_for(&self, environment: &Environment) -> &str {
         self.addresses
             .get(environment.as_str())

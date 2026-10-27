@@ -12,7 +12,7 @@ use crate::controllers::{create, history, list, probe_now, remove, update};
 use crate::loops::HistoryWriter;
 use crate::probes::Probe;
 use crate::repositories::HistoryFiles;
-use crate::services::{Showcase, StatusBoard, Supervisor, validate_services};
+use crate::services::{Showcase, StatusBoard, Supervisor, restore, validate_services};
 use crate::types::{ServiceEntry, ServicesPorts, ServicesSection, ServicesState};
 use crate::usecases::{
     ChangeService, CreateService, CurrentStatus, DeleteService, ListServices, ProbeService,
@@ -51,7 +51,11 @@ impl ServicesFeature {
             .into_iter()
             .map(|entry| entry.id)
             .collect();
-        board.restore(files.load(&configured));
+        board.restore(restore(
+            &files,
+            &configured,
+            OffsetDateTime::now_utc().unix_timestamp(),
+        ));
         let history = Arc::new(HistoryWriter::new(board.clone(), files));
         let probe = Arc::new(Probe::new()?);
         let supervisor = Arc::new(Supervisor::new(

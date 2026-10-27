@@ -15,7 +15,6 @@ pub const TESTS_FILE: &str = "tests.rs";
 pub const TESTS_FOLDER: &str = "/tests/";
 pub const CRATE_ROOT: &str = "lib.rs";
 pub const REPOSITORY_EXPORTS: [&str; 2] = ["pubuserepositories", "pubusecrate::repositories"];
-
 pub fn violations(files: &[SourceFile]) -> Vec<String> {
     let mut found = Vec::new();
     for file in files {
@@ -75,7 +74,7 @@ fn export_violations(file: &SourceFile, found: &mut Vec<String>) {
     }
 }
 
-fn words(line: &str) -> impl Iterator<Item = &str> {
+pub fn words(line: &str) -> impl Iterator<Item = &str> {
     line.split(|current: char| !(current.is_alphanumeric() || current == '_'))
 }
 
